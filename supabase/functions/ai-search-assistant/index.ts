@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { Anthropic } from "npm:@anthropic-ai/sdk@0.18.0"
 import OpenAI from 'https://esm.sh/openai@4.20.1'
+import { GoogleGenerativeAI } from "npm:@google/generative-ai@0.2.1"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -36,7 +37,7 @@ serve(async (req) => {
     } catch (anthropicError) {
       console.error('Anthropic error:', anthropicError)
       
-      // Fallback to OpenAI
+      // Try OpenAI as first fallback
       try {
         const openai = new OpenAI({
           apiKey: Deno.env.get('OPENAI_API_KEY')!
@@ -59,7 +60,21 @@ serve(async (req) => {
         response = completion.choices[0].message.content || ""
       } catch (openaiError) {
         console.error('OpenAI error:', openaiError)
-        throw new Error('Both AI services failed to respond')
+
+        // Try Gemini as second fallback
+        try {
+          const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY')!);
+          const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+          
+          const result = await model.generateContent(
+            `Provide a brief, helpful reaction to this search query: "${query}". Keep it conversational and under 2 sentences.`
+          );
+          const geminiResponse = result.response.text();
+          response = geminiResponse;
+        } catch (geminiError) {
+          console.error('Gemini error:', geminiError)
+          throw new Error('All AI services failed to respond')
+        }
       }
     }
 
