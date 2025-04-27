@@ -23,7 +23,10 @@ const SearchResultCard = ({ result, index, hoverBorderColor }: SearchResultCardP
         </a>
       </h3>
       
-      <p className="text-xs text-gray-300 line-clamp-2 mb-3">{result.snippet}</p>
+      <div className="relative">
+        <p className="text-xs text-gray-300 mb-3 line-clamp-[7]">{result.snippet}</p>
+        <div className="absolute bottom-0 left-0 w-full h-8 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
+      </div>
       
       <a
         href={result.url}
