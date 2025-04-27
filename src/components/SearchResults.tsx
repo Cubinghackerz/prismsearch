@@ -4,6 +4,7 @@ import { LayoutGrid } from 'lucide-react';
 import { SearchResult } from './search/types';
 import SearchEngineColumn from './search/SearchEngineColumn';
 import LoadingSkeleton from './search/LoadingSkeleton';
+import { SearchEngine } from './search/SearchEngineSettings';
 
 interface SearchResultsProps {
   results: SearchResult[];
@@ -20,12 +21,6 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
     return null;
   }
 
-  const googleResults = results.filter(result => result.source === 'Google');
-  const bingResults = results.filter(result => result.source === 'Bing');
-  const duckduckgoResults = results.filter(result => result.source === 'DuckDuckGo');
-  const braveResults = results.filter(result => result.source === 'Brave');
-  const youResults = results.filter(result => result.source === 'You.com');
-
   return (
     <div className="w-full max-w-[95vw] mx-auto mt-8 pb-12">
       <div className="flex items-center justify-between mb-6">
@@ -34,45 +29,26 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
           <h2 className="text-xl font-semibold text-gray-100">Search Results</h2>
         </div>
         <div className="text-sm text-gray-400">
-          Found {results.length} results across all engines
+          Found {results.length} results across selected engines
         </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <SearchEngineColumn 
-          title="Google" 
-          results={googleResults}
-          bgColor="bg-blue-500"
-          hoverBorderColor="hover:border-blue-300"
-        />
-
-        <SearchEngineColumn 
-          title="Bing" 
-          results={bingResults}
-          bgColor="bg-blue-700"
-          hoverBorderColor="hover:border-blue-400"
-        />
-
-        <SearchEngineColumn 
-          title="DuckDuckGo" 
-          results={duckduckgoResults}
-          bgColor="bg-yellow-600"
-          hoverBorderColor="hover:border-yellow-300"
-        />
-
-        <SearchEngineColumn 
-          title="Brave" 
-          results={braveResults}
-          bgColor="bg-orange-500"
-          hoverBorderColor="hover:border-orange-300"
-        />
-
-        <SearchEngineColumn 
-          title="You.com" 
-          results={youResults}
-          bgColor="bg-purple-500"
-          hoverBorderColor="hover:border-purple-300"
-        />
+        {results.map(result => (
+          <SearchEngineColumn 
+            key={result.source}
+            title={result.source}
+            results={results.filter(r => r.source === result.source)}
+            bgColor={`bg-${result.source === 'Google' ? 'blue-500' : 
+              result.source === 'Bing' ? 'blue-700' : 
+              result.source === 'DuckDuckGo' ? 'yellow-600' : 
+              result.source === 'Brave' ? 'orange-500' : 'purple-500'}`}
+            hoverBorderColor={`hover:border-${result.source === 'Google' ? 'blue-300' : 
+              result.source === 'Bing' ? 'blue-400' : 
+              result.source === 'DuckDuckGo' ? 'yellow-300' : 
+              result.source === 'Brave' ? 'orange-300' : 'purple-300'}`}
+          />
+        ))}
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
@@ -11,23 +12,36 @@ import { Button } from '@/components/ui/button';
 import ParticleBackground from '../components/ParticleBackground';
 import ScrollToTop from '../components/ScrollToTop';
 import FooterWave from '../components/FooterWave';
+import { SearchEngineSettings, availableEngines, SearchEngine } from '../components/search/SearchEngineSettings';
 
-const engineUrls = {
-  'Google': 'https://www.google.com',
-  'Bing': 'https://www.bing.com',
-  'DuckDuckGo': 'https://duckduckgo.com',
-  'Brave': 'https://search.brave.com',
-  'You.com': 'https://you.com'
-};
+const DEFAULT_ENGINES: SearchEngine[] = ['Google', 'Bing', 'DuckDuckGo', 'Brave', 'You.com'];
 
 const Index = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const [selectedEngines, setSelectedEngines] = useState<SearchEngine[]>(DEFAULT_ENGINES);
+  const { toast } = useToast();
+
+  const handleEngineToggle = (engine: SearchEngine) => {
+    setSelectedEngines(prev => {
+      if (prev.includes(engine)) {
+        // Don't remove if it would leave less than 5 engines
+        if (prev.length <= 5) {
+          toast({
+            title: "Minimum Engines Required",
+            description: "Please keep at least 5 search engines selected.",
+            variant: "destructive"
+          });
+          return prev;
+        }
+        return prev.filter(e => e !== engine);
+      } else {
+        return [...prev, engine];
+      }
+    });
+  };
 
   const handleSearch = async (searchQuery: string) => {
     try {
@@ -49,55 +63,43 @@ const Index = () => {
     }
   };
 
-  return <div className="min-h-screen flex flex-col">
+  return (
+    <div className="min-h-screen flex flex-col">
       <ParticleBackground />
       <ScrollToTop />
       
       <header className="py-6 px-4 relative z-10">
-        <motion.div initial={{
-        opacity: 0,
-        y: -20
-      }} animate={{
-        opacity: 1,
-        y: 0
-      }} transition={{
-        duration: 0.5
-      }} className="text-center relative">
-          {hasSearched && <motion.div initial={{
-          opacity: 0,
-          x: -20
-        }} animate={{
-          opacity: 1,
-          x: 0
-        }} className="absolute left-4 top-1/2 -translate-y-1/2">
-              <Button variant="ghost" onClick={() => {
-            setHasSearched(false);
-            setResults([]);
-            setQuery('');
-          }} className="text-white bg-transparent">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
-              </Button>
-            </motion.div>}
-          
-          <motion.h1 className={`text-4xl font-bold bg-clip-text text-transparent 
-              bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 
-              animate-gradient-text mb-2 ${hasSearched ? 'text-2xl' : ''}`} animate={{
-          backgroundPosition: ['0% 50%', '100% 50%']
-        }} transition={{
-          duration: 3,
-          repeat: Infinity,
-          repeatType: 'reverse'
-        }}>
-            Prism Search
-          </motion.h1>
-          <motion.p initial={{
-          opacity: 0
-        }} animate={{
-          opacity: 1
-        }} transition={{
-          delay: 0.2
-        }} className={`text-gray-100 max-w-lg mx-auto ${hasSearched ? 'hidden' : ''}`}>
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} 
+          transition={{ duration: 0.5 }} className="text-center relative">
+          <div className="flex items-center justify-between">
+            {hasSearched && (
+              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} 
+                className="absolute left-4 top-1/2 -translate-y-1/2">
+                <Button variant="ghost" onClick={() => {
+                  setHasSearched(false);
+                  setResults([]);
+                  setQuery('');
+                }} className="text-white bg-transparent">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back
+                </Button>
+              </motion.div>
+            )}
+            <motion.h1 className={`text-4xl font-bold bg-clip-text text-transparent 
+                bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 
+                animate-gradient-text mb-2 mx-auto ${hasSearched ? 'text-2xl' : ''}`}>
+              Prism Search
+            </motion.h1>
+            <div className={`absolute right-4 top-1/2 -translate-y-1/2 ${!hasSearched ? 'opacity-0' : ''}`}>
+              <SearchEngineSettings 
+                selectedEngines={selectedEngines}
+                onEngineToggle={handleEngineToggle}
+              />
+            </div>
+          </div>
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} 
+            transition={{ delay: 0.2 }} 
+            className={`text-gray-100 max-w-lg mx-auto ${hasSearched ? 'hidden' : ''}`}>
             Search across the web's top engines for comprehensive results in one place
           </motion.p>
         </motion.div>
@@ -188,7 +190,8 @@ const Index = () => {
           © 2025 Prism Search. All rights reserved.
         </p>
       </footer>
-    </div>;
+    </div>
+  );
 };
 
 export default Index;
