@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { ChatClient as Anthropic } from "npm:@anthropic-ai/sdk@0.18.0"
+import { Anthropic } from "npm:@anthropic-ai/sdk@0.18.0"
 import OpenAI from 'https://esm.sh/openai@4.20.1'
 
 const corsHeaders = {

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Bot } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface AISearchResponseProps {
   query: string;
@@ -11,21 +12,35 @@ interface AISearchResponseProps {
 const AISearchResponse = ({ query }: AISearchResponseProps) => {
   const [aiResponse, setAiResponse] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const getAIResponse = async () => {
       if (!query) return;
       
       setIsLoading(true);
+      setHasError(false);
       try {
         const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
           body: { query }
         });
 
         if (error) throw error;
-        setAiResponse(data.response);
+        
+        if (data && data.response) {
+          setAiResponse(data.response);
+        } else {
+          throw new Error('No response data received');
+        }
       } catch (error) {
         console.error('AI Response Error:', error);
+        setHasError(true);
+        toast({
+          title: "AI Assistant Error",
+          description: "Could not get an AI response. Showing search results only.",
+          variant: "destructive"
+        });
         setAiResponse('');
       } finally {
         setIsLoading(false);
@@ -33,9 +48,13 @@ const AISearchResponse = ({ query }: AISearchResponseProps) => {
     };
 
     getAIResponse();
-  }, [query]);
+  }, [query, toast]);
 
-  if (!query || (!isLoading && !aiResponse)) return null;
+  // Don't render anything if there's no query, no response and no loading state
+  if (!query) return null;
+  
+  // Don't show the component if we had an error and aren't loading
+  if (hasError && !isLoading && !aiResponse) return null;
 
   return (
     <motion.div
