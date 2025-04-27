@@ -1,6 +1,12 @@
 import { motion } from 'framer-motion';
-import { LayoutGrid } from 'lucide-react';
+import { LayoutGrid, ChevronDown, ChevronUp } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
+import { useState } from 'react';
+import { 
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 
 export interface SearchResult {
   id: string;
@@ -91,6 +97,8 @@ interface SearchEngineColumnProps {
 }
 
 const SearchEngineColumn = ({ title, results, bgColor, hoverBorderColor }: SearchEngineColumnProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -98,48 +106,86 @@ const SearchEngineColumn = ({ title, results, bgColor, hoverBorderColor }: Searc
       transition={{ duration: 0.5 }}
       className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-gray-800 shadow-lg"
     >
-      <div className="flex items-center gap-2 mb-4">
-        <div className={`w-8 h-8 ${bgColor} rounded-full flex items-center justify-center`}>
-          <span className="text-white font-bold">{title[0]}</span>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className={`w-8 h-8 ${bgColor} rounded-full flex items-center justify-center`}>
+            <span className="text-white font-bold">{title[0]}</span>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-100">{title}</h3>
         </div>
-        <h3 className="text-lg font-semibold text-gray-100">{title}</h3>
+        <div className="text-sm text-gray-400">
+          {results.length} results
+        </div>
       </div>
-      
-      <div className="space-y-4">
-        {results.map((result, index) => (
+
+      {results.length > 0 && (
+        <div className="mb-4">
           <motion.div
-            key={result.id}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
+            transition={{ duration: 0.3 }}
             className={`result-card p-4 bg-white/10 rounded-lg border border-gray-700 ${hoverBorderColor} transition-all duration-300 hover:bg-white/15`}
           >
             <h3 className="text-sm font-medium text-blue-400 mt-1 hover:underline line-clamp-2">
-              <a href={result.url} target="_blank" rel="noopener noreferrer">
-                {result.title}
+              <a href={results[0].url} target="_blank" rel="noopener noreferrer">
+                {results[0].title}
               </a>
             </h3>
-            
-            <p className="text-xs text-gray-300 mt-1 line-clamp-3">{result.snippet}</p>
-            
-            <div className="mt-2 overflow-hidden">
-              <a 
-                href={result.url}
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-xs text-gray-400 hover:text-blue-400 transition-colors block truncate"
-              >
-                {result.url}
-              </a>
-            </div>
+            <p className="text-xs text-gray-300 mt-1 line-clamp-2">{results[0].snippet}</p>
           </motion.div>
-        ))}
-        {results.length === 0 && (
-          <div className="text-center py-8 text-gray-400">
-            No results from {title}
-          </div>
-        )}
-      </div>
+        </div>
+      )}
+      
+      {results.length > 1 && (
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <CollapsibleTrigger className="w-full flex items-center justify-center gap-2 py-2 text-sm text-gray-400 hover:text-gray-300 transition-colors">
+            {isOpen ? (
+              <>Show less <ChevronUp className="h-4 w-4" /></>
+            ) : (
+              <>Show more {results.length - 1} results <ChevronDown className="h-4 w-4" /></>
+            )}
+          </CollapsibleTrigger>
+          
+          <CollapsibleContent>
+            <div className="space-y-4 mt-4">
+              {results.slice(1).map((result, index) => (
+                <motion.div
+                  key={result.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  className={`result-card p-4 bg-white/10 rounded-lg border border-gray-700 ${hoverBorderColor} transition-all duration-300 hover:bg-white/15`}
+                >
+                  <h3 className="text-sm font-medium text-blue-400 mt-1 hover:underline line-clamp-2">
+                    <a href={result.url} target="_blank" rel="noopener noreferrer">
+                      {result.title}
+                    </a>
+                  </h3>
+                  
+                  <p className="text-xs text-gray-300 mt-1 line-clamp-3">{result.snippet}</p>
+                  
+                  <div className="mt-2 overflow-hidden">
+                    <a 
+                      href={result.url}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-xs text-gray-400 hover:text-blue-400 transition-colors block truncate"
+                    >
+                      {result.url}
+                    </a>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+
+      {results.length === 0 && (
+        <div className="text-center py-8 text-gray-400">
+          No results from {title}
+        </div>
+      )}
     </motion.div>
   );
 };
