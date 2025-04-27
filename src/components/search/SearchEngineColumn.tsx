@@ -26,7 +26,7 @@ const SearchEngineColumn = ({ title, results, bgColor, hoverBorderColor }: Searc
           <h3 className="text-lg font-semibold text-gray-100">{title}</h3>
         </div>
         <div className="text-sm text-gray-400">
-          {results.length} results
+          {results.length} {results.length === 1 ? 'Result' : 'Results'}
         </div>
       </div>
 
