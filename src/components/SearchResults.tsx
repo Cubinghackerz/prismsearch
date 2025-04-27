@@ -1,3 +1,4 @@
+
 import { motion } from 'framer-motion';
 import { LayoutGrid, ChevronDown, ChevronUp } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
@@ -138,7 +139,7 @@ const SearchEngineColumn = ({ title, results, bgColor, hoverBorderColor }: Searc
       
       {results.length > 1 && (
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-          <CollapsibleTrigger className="w-full flex items-center justify-center gap-2 py-2 text-sm text-gray-400 hover:text-gray-300 transition-colors">
+          <CollapsibleTrigger className="w-full flex items-center justify-center gap-2 py-2 px-3 text-sm bg-white/10 hover:bg-white/20 rounded-lg text-gray-200 hover:text-white transition-all duration-200 border border-gray-700">
             {isOpen ? (
               <>Show less <ChevronUp className="h-4 w-4" /></>
             ) : (
