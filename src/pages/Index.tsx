@@ -62,7 +62,7 @@ const Index = () => {
             setHasSearched(false);
             setResults([]);
             setQuery('');
-          }} className="text-white bg-zinc-950 hover:bg-zinc-800">
+          }} className="text-white bg-transparent">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back
               </Button>
