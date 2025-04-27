@@ -1,8 +1,10 @@
+
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import SearchBar from '../components/SearchBar';
 import SearchResults, { SearchResult } from '../components/SearchResults';
+import AISearchResponse from '../components/AISearchResponse';
 import { searchAcrossEngines } from '../services/searchService';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -111,6 +113,8 @@ const Index = () => {
               shadow-[0_8px_32px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_32px_rgba(155,135,245,0.1)] 
               transition-all duration-300"
           >
+            {/* Add AI Search Response component here */}
+            <AISearchResponse query={query} />
             <SearchResults results={results} isLoading={isSearching} query={query} />
           </motion.div>
         )}
