@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import SearchBar from '../components/SearchBar';
-import SearchResults, { SearchResult } from '../components/SearchResults';
+import SearchResults from '../components/SearchResults';
+import { SearchResult } from '../components/search/types';
 import AISearchResponse from '../components/AISearchResponse';
 import { searchAcrossEngines } from '../services/searchService';
 import { useToast } from '@/hooks/use-toast';
@@ -10,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import ParticleBackground from '../components/ParticleBackground';
 import ScrollToTop from '../components/ScrollToTop';
 import FooterWave from '../components/FooterWave';
+
 const Index = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -18,6 +20,7 @@ const Index = () => {
   const {
     toast
   } = useToast();
+
   const handleSearch = async (searchQuery: string) => {
     try {
       setQuery(searchQuery);
@@ -37,6 +40,7 @@ const Index = () => {
       setIsSearching(false);
     }
   };
+
   return <div className="min-h-screen flex flex-col">
       <ParticleBackground />
       <ScrollToTop />
@@ -113,7 +117,6 @@ const Index = () => {
       }} className="mt-4 backdrop-blur-md bg-white/5 p-6 rounded-xl border border-purple-500/20 
               shadow-[0_8px_32px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_32px_rgba(155,135,245,0.1)] 
               transition-all duration-300">
-            {/* Add AI Search Response component here */}
             <AISearchResponse query={query} />
             <SearchResults results={results} isLoading={isSearching} query={query} />
           </motion.div>}
@@ -169,4 +172,5 @@ const Index = () => {
       </footer>
     </div>;
 };
+
 export default Index;

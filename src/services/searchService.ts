@@ -1,5 +1,5 @@
 
-import { SearchResult } from '../components/SearchResults';
+import { SearchResult } from '../components/search/types';
 
 const generateId = () => Math.random().toString(36).substring(2, 15);
 
