@@ -16,6 +16,20 @@ import { SearchEngineSettings, availableEngines, SearchEngine } from '../compone
 
 const DEFAULT_ENGINES: SearchEngine[] = ['Google', 'Bing', 'DuckDuckGo', 'Brave', 'You.com'];
 
+// Define engine URLs matching the available engines in SearchEngineSettings
+const engineUrls = {
+  'Google': 'https://www.google.com',
+  'Bing': 'https://www.bing.com',
+  'DuckDuckGo': 'https://duckduckgo.com',
+  'Brave': 'https://search.brave.com',
+  'You.com': 'https://you.com',
+  'Qwant': 'https://www.qwant.com',
+  'Ecosia': 'https://www.ecosia.org',
+  'StartPage': 'https://www.startpage.com',
+  'Yahoo': 'https://search.yahoo.com',
+  'Yandex': 'https://yandex.com'
+};
+
 const Index = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
