@@ -46,10 +46,10 @@ const ChatInterface = () => {
   };
 
   return (
-    <div className="flex flex-col h-[60vh] bg-black/20 backdrop-blur-md rounded-xl border border-purple-500/20 shadow-lg">
+    <div className="flex flex-col h-[60vh] md:h-[70vh] lg:h-[80vh] bg-black/20 backdrop-blur-md rounded-xl border border-purple-500/20 shadow-lg">
       <div className="p-4 border-b border-gray-800">
         <Alert className="mb-4 bg-yellow-500/10 border-yellow-500/50 text-yellow-300">
-          <AlertTriangle className="h-4 w-4" />
+          <AlertTriangle className="h-4 w-4 text-white" />
           <p className="text-sm">
             Chat mode is experimental and may be unstable. We appreciate your patience as we improve it.
           </p>
@@ -67,7 +67,11 @@ const ChatInterface = () => {
               <RadioGroupItem value="claude" id="claude" className="peer sr-only" />
               <label
                 htmlFor="claude"
-                className="flex flex-col w-full p-4 bg-purple-900/20 border border-purple-500/30 rounded-lg cursor-pointer peer-checked:border-purple-400 peer-checked:bg-purple-500/20 hover:bg-purple-800/20 transition-all"
+                className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${
+                  selectedModel === 'claude'
+                    ? 'bg-purple-500/30 border-purple-400 ring-2 ring-purple-400/50'
+                    : 'bg-purple-900/20 border-purple-500/30 hover:bg-purple-800/20'
+                }`}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-semibold text-purple-100">Claude 3 Haiku</span>
@@ -81,7 +85,11 @@ const ChatInterface = () => {
               <RadioGroupItem value="gpt" id="gpt" className="peer sr-only" />
               <label
                 htmlFor="gpt"
-                className="flex flex-col w-full p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg cursor-pointer peer-checked:border-blue-400 peer-checked:bg-blue-500/20 hover:bg-blue-800/20 transition-all"
+                className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${
+                  selectedModel === 'gpt'
+                    ? 'bg-blue-500/30 border-blue-400 ring-2 ring-blue-400/50'
+                    : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'
+                }`}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-semibold text-blue-100">ChatGPT</span>
@@ -100,7 +108,7 @@ const ChatInterface = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 md:p-6">
         {messages.length === 0 ? (
           <div className="h-full flex items-center justify-center text-gray-400">
             <p>Send a message to start chatting</p>
@@ -118,7 +126,7 @@ const ChatInterface = () => {
                   <Bot className="w-4 h-4 text-purple-400" />
                 </div>
               )}
-              <div className={`max-w-[80%] rounded-lg p-3 ${
+              <div className={`max-w-[80%] md:max-w-[70%] lg:max-w-[60%] rounded-lg p-3 ${
                 message.isUser 
                   ? 'bg-purple-600/20 text-gray-200 rounded-tr-none' 
                   : 'bg-gray-800/40 text-gray-200 rounded-tl-none'
@@ -136,14 +144,14 @@ const ChatInterface = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={handleSubmit} className="p-4 border-t border-gray-800">
-        <div className="relative flex items-center">
+      <form onSubmit={handleSubmit} className="p-4 md:p-6 border-t border-gray-800">
+        <div className="relative flex items-center max-w-4xl mx-auto">
           <Textarea 
             value={inputValue} 
             onChange={e => setInputValue(e.target.value)} 
             onKeyDown={handleKeyDown} 
             placeholder="Ask anything..." 
-            className="resize-none bg-zinc-800/90 border-gray-700 focus-visible:ring-purple-500 text-white pr-12 min-h-[56px] py-3 rounded-xl"
+            className="resize-none bg-zinc-800/90 border-gray-700 focus-visible:ring-purple-500 text-white pr-12 min-h-[56px] py-3 rounded-xl md:min-h-[64px]"
             disabled={isLoading} 
           />
           <Button 
