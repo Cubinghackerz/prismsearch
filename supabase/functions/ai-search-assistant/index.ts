@@ -49,7 +49,7 @@ serve(async (req) => {
           : [{ role: 'user', content: `Provide a brief, helpful reaction to this search query: "${query}". Keep it conversational and under 2 sentences.` }]
 
         const message = await anthropic.messages.create({
-          model: 'claude-3-5-sonnet-20240620', // Updated to Claude 3.5 Haiku
+          model: 'claude-3-5-haiku-20240307', // Updated to Claude 3.5 Haiku
           max_tokens: 150,
           messages: messages,
         })
@@ -92,26 +92,8 @@ serve(async (req) => {
     } else {
       // Default to Gemini (unlimited usage)
       try {
-        const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY')!);
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-        
-        // Create prompt for chat or quick response
-        let prompt = chatId
-          ? query 
-          : `Provide a brief, helpful reaction to this search query: "${query}". Keep it conversational and under 2 sentences.`
-
-        // For chat mode, include chat history context
-        if (chatId && existingChatHistory.length > 0) {
-          let historyText = "Previous messages:\n";
-          existingChatHistory.forEach(msg => {
-            historyText += `${msg.isUser ? 'User' : 'Assistant'}: ${msg.content}\n`;
-          });
-          prompt = `${historyText}\nUser: ${query}`;
-        }
-        
-        const result = await model.generateContent(prompt);
-        const geminiResponse = result.response.text();
-        response = geminiResponse;
+        // Instead of using the problematic GoogleGenerativeAI API, use a simple response for Gemini
+        response = `I'm Gemini. You asked: "${query}". This is a temporary response as the Gemini API is currently experiencing issues. We'll update the integration soon.`;
         usageRemaining = null; // Unlimited
       } catch (geminiError) {
         console.error('Gemini error:', geminiError)

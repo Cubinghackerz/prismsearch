@@ -169,6 +169,14 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Use effect to clear messages when component unmounts to make chats temporary
+  useEffect(() => {
+    return () => {
+      setMessages([]);
+      setChatId(null);
+    };
+  }, []);
+
   return (
     <ChatContext.Provider value={{
       chatId,

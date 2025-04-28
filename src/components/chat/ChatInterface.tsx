@@ -141,7 +141,7 @@ const ChatInterface = () => {
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type your message..."
-            className="resize-none bg-gray-900/50 border-gray-700 focus-visible:ring-purple-500"
+            className="resize-none bg-gray-900/50 border-gray-700 focus-visible:ring-purple-500 text-white"
             disabled={isLoading || 
               (selectedModel === 'claude' && modelUsage.claude === 0) ||
               (selectedModel === 'gpt' && modelUsage.gpt === 0)
