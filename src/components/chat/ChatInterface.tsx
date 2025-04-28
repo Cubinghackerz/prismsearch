@@ -1,11 +1,12 @@
 
 import { useState, useRef, useEffect } from 'react';
-import { ArrowUp, Bot, User, Loader2, RefreshCw } from 'lucide-react';
+import { ArrowUp, Bot, User, Loader2, RefreshCw, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useChat, ChatModel } from '@/context/ChatContext';
 import { Textarea } from '@/components/ui/textarea';
 import { motion } from 'framer-motion';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Alert } from "@/components/ui/alert";
 
 const ChatInterface = () => {
   const {
@@ -47,36 +48,53 @@ const ChatInterface = () => {
   return (
     <div className="flex flex-col h-[60vh] bg-black/20 backdrop-blur-md rounded-xl border border-purple-500/20 shadow-lg">
       <div className="p-4 border-b border-gray-800">
+        <Alert className="mb-4 bg-yellow-500/10 border-yellow-500/50 text-yellow-300">
+          <AlertTriangle className="h-4 w-4" />
+          <p className="text-sm">
+            Chat mode is experimental and may be unstable. We appreciate your patience as we improve it.
+          </p>
+        </Alert>
+        
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-200">Select AI Model:</label>
-          <RadioGroup defaultValue={selectedModel} value={selectedModel} onValueChange={handleModelChange} className="flex gap-4">
-            <div className="flex items-center gap-2">
-              <RadioGroupItem value="claude" id="claude" />
-              <label htmlFor="claude" className="text-gray-200">
-                Claude 3 Haiku
-                <span className="ml-1 text-xs text-green-400">(Unlimited for a limited time!)</span>
+          <label className="text-sm font-medium text-purple-200">Select AI Model:</label>
+          <RadioGroup 
+            defaultValue={selectedModel} 
+            value={selectedModel} 
+            onValueChange={handleModelChange} 
+            className="grid grid-cols-1 md:grid-cols-2 gap-3"
+          >
+            <div className="relative flex items-center">
+              <RadioGroupItem value="claude" id="claude" className="peer sr-only" />
+              <label
+                htmlFor="claude"
+                className="flex flex-col w-full p-4 bg-purple-900/20 border border-purple-500/30 rounded-lg cursor-pointer peer-checked:border-purple-400 peer-checked:bg-purple-500/20 hover:bg-purple-800/20 transition-all"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-lg font-semibold text-purple-100">Claude 3 Haiku</span>
+                  <span className="px-2 py-1 text-xs bg-green-500/20 text-green-300 rounded-full">Unlimited</span>
+                </div>
+                <span className="mt-1 text-sm text-purple-200/70">Fast, accurate responses with deep understanding</span>
               </label>
             </div>
-            
-            <div className="flex items-center gap-2">
-              <RadioGroupItem value="gpt" id="gpt" />
-              <label htmlFor="gpt" className="text-gray-200">
-                ChatGPT
-                <span className="ml-1 text-xs text-green-400">(Unlimited for a limited time!)</span>
-              </label>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <RadioGroupItem value="gemini" id="gemini" />
-              <label htmlFor="gemini" className="text-gray-200">
-                Gemini 1.5 Flash
-                <span className="ml-1 text-xs text-gray-400">(Unlimited)</span>
+
+            <div className="relative flex items-center">
+              <RadioGroupItem value="gpt" id="gpt" className="peer sr-only" />
+              <label
+                htmlFor="gpt"
+                className="flex flex-col w-full p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg cursor-pointer peer-checked:border-blue-400 peer-checked:bg-blue-500/20 hover:bg-blue-800/20 transition-all"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-lg font-semibold text-blue-100">ChatGPT</span>
+                  <span className="px-2 py-1 text-xs bg-green-500/20 text-green-300 rounded-full">Unlimited</span>
+                </div>
+                <span className="mt-1 text-sm text-blue-200/70">Versatile AI with broad knowledge</span>
               </label>
             </div>
           </RadioGroup>
         </div>
+
         <div className="mt-4 flex justify-end">
-          <Button variant="outline" size="sm" onClick={startNewChat} className="text-slate-950">
+          <Button variant="outline" size="sm" onClick={startNewChat} className="text-purple-100 border-purple-500/50 hover:bg-purple-500/20">
             <RefreshCw className="mr-2 h-4 w-4" /> New Chat
           </Button>
         </div>
