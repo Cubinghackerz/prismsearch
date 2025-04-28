@@ -1,9 +1,10 @@
 
 import { motion } from 'framer-motion';
-import { Bot } from 'lucide-react';
+import { Bot, MessageSquare } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from './ui/button';
 
 interface AISearchResponseProps {
   query: string;
@@ -13,6 +14,7 @@ const AISearchResponse = ({ query }: AISearchResponseProps) => {
   const [aiResponse, setAiResponse] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [showChatButton, setShowChatButton] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -23,13 +25,17 @@ const AISearchResponse = ({ query }: AISearchResponseProps) => {
       setHasError(false);
       try {
         const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
-          body: { query }
+          body: { 
+            query,
+            model: 'gemini' // Default to gemini for quick search responses
+          }
         });
 
         if (error) throw error;
         
         if (data && data.response) {
           setAiResponse(data.response);
+          setShowChatButton(true);
         } else {
           throw new Error('No response data received');
         }
@@ -42,6 +48,7 @@ const AISearchResponse = ({ query }: AISearchResponseProps) => {
           variant: "destructive"
         });
         setAiResponse('');
+        setShowChatButton(false);
       } finally {
         setIsLoading(false);
       }
@@ -63,8 +70,8 @@ const AISearchResponse = ({ query }: AISearchResponseProps) => {
       transition={{ duration: 0.3 }}
       className="mb-6 p-4 bg-purple-500/10 backdrop-blur-sm rounded-xl border border-purple-500/20"
     >
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center">
+      <div className="flex items-start gap-3">
+        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center mt-1">
           <Bot className="w-5 h-5 text-purple-400" />
         </div>
         <div className="flex-1">
@@ -78,7 +85,26 @@ const AISearchResponse = ({ query }: AISearchResponseProps) => {
               </div>
             </div>
           ) : (
-            <p className="text-purple-100">{aiResponse}</p>
+            <div>
+              <p className="text-purple-100">{aiResponse}</p>
+              
+              {/* Chat button - links to Chat mode */}
+              {showChatButton && (
+                <div className="mt-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      window.location.href = '/chat';
+                    }}
+                    className="text-purple-200 border-purple-500/30 hover:bg-purple-500/20"
+                  >
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Continue in Chat Mode
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
