@@ -1,10 +1,12 @@
+
 import { useState, useRef, useEffect } from 'react';
-import { SendIcon, Bot, User, Loader2, RefreshCw } from 'lucide-react';
+import { ArrowUp, Bot, User, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useChat, ChatModel } from '@/context/ChatContext';
 import { Textarea } from '@/components/ui/textarea';
 import { motion } from 'framer-motion';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+
 const ChatInterface = () => {
   const {
     messages,
@@ -24,22 +26,27 @@ const ChatInterface = () => {
       behavior: 'smooth'
     });
   }, [messages]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || isLoading) return;
     sendMessage(inputValue);
     setInputValue('');
   };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
   };
+
   const handleModelChange = (value: string) => {
     selectModel(value as ChatModel);
   };
-  return <div className="flex flex-col h-[60vh] bg-black/20 backdrop-blur-md rounded-xl border border-purple-500/20 shadow-lg">
+
+  return (
+    <div className="flex flex-col h-[60vh] bg-black/20 backdrop-blur-md rounded-xl border border-purple-500/20 shadow-lg">
       {/* Model selection */}
       <div className="p-4 border-b border-gray-800">
         <div className="flex flex-col gap-2">
@@ -79,37 +86,73 @@ const ChatInterface = () => {
 
       {/* Chat messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 0 ? <div className="h-full flex items-center justify-center text-gray-400">
+        {messages.length === 0 ? (
+          <div className="h-full flex items-center justify-center text-gray-400">
             <p>Send a message to start chatting</p>
-          </div> : messages.map(message => <motion.div key={message.id} initial={{
-        opacity: 0,
-        y: 10
-      }} animate={{
-        opacity: 1,
-        y: 0
-      }} className={`flex gap-3 ${message.isUser ? 'justify-end' : ''}`}>
-              {!message.isUser && <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0">
+          </div>
+        ) : (
+          messages.map(message => (
+            <motion.div 
+              key={message.id} 
+              initial={{ opacity: 0, y: 10 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              className={`flex gap-3 ${message.isUser ? 'justify-end' : ''}`}
+            >
+              {!message.isUser && (
+                <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0">
                   <Bot className="w-4 h-4 text-purple-400" />
-                </div>}
-              <div className={`max-w-[80%] rounded-lg p-3 ${message.isUser ? 'bg-purple-600/20 text-gray-200 rounded-tr-none' : 'bg-gray-800/40 text-gray-200 rounded-tl-none'}`}>
+                </div>
+              )}
+              <div className={`max-w-[80%] rounded-lg p-3 ${
+                message.isUser 
+                  ? 'bg-purple-600/20 text-gray-200 rounded-tr-none' 
+                  : 'bg-gray-800/40 text-gray-200 rounded-tl-none'
+              }`}>
                 {message.content}
               </div>
-              {message.isUser && <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
+              {message.isUser && (
+                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
                   <User className="w-4 h-4 text-blue-400" />
-                </div>}
-            </motion.div>)}
+                </div>
+              )}
+            </motion.div>
+          ))
+        )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input area */}
+      {/* Input area - styled similar to the image */}
       <form onSubmit={handleSubmit} className="p-4 border-t border-gray-800">
-        <div className="flex gap-2">
-          <Textarea value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyDown={handleKeyDown} placeholder="Type your message..." className="resize-none bg-gray-900/50 border-gray-700 focus-visible:ring-purple-500 text-white" disabled={isLoading || selectedModel === 'claude' && modelUsage.claude === 0 || selectedModel === 'gpt' && modelUsage.gpt === 0} />
-          <Button type="submit" className="bg-purple-600 hover:bg-purple-700" disabled={!inputValue.trim() || isLoading || selectedModel === 'claude' && modelUsage.claude === 0 || selectedModel === 'gpt' && modelUsage.gpt === 0}>
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendIcon className="h-4 w-4" />}
+        <div className="relative flex items-center">
+          <Textarea 
+            value={inputValue} 
+            onChange={e => setInputValue(e.target.value)} 
+            onKeyDown={handleKeyDown} 
+            placeholder="Ask anything..." 
+            className="resize-none bg-zinc-800/90 border-gray-700 focus-visible:ring-purple-500 text-white pr-12 min-h-[56px] py-3 rounded-full"
+            disabled={isLoading || 
+              (selectedModel === 'claude' && modelUsage.claude === 0) || 
+              (selectedModel === 'gpt' && modelUsage.gpt === 0)
+            } 
+          />
+          <Button 
+            type="submit" 
+            size="icon"
+            className="absolute right-2 rounded-full bg-white hover:bg-gray-200 text-black w-10 h-10 flex items-center justify-center"
+            disabled={!inputValue.trim() || isLoading || 
+              (selectedModel === 'claude' && modelUsage.claude === 0) || 
+              (selectedModel === 'gpt' && modelUsage.gpt === 0)
+            }
+          >
+            {isLoading ? 
+              <Loader2 className="h-5 w-5 animate-spin text-gray-700" /> : 
+              <ArrowUp className="h-5 w-5 text-gray-700" />
+            }
           </Button>
         </div>
       </form>
-    </div>;
+    </div>
+  );
 };
+
 export default ChatInterface;

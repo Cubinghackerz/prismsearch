@@ -44,7 +44,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<ChatModel>('claude');
+  const [selectedModel, setSelectedModel] = useState<ChatModel>('gemini');
   const [modelUsage, setModelUsage] = useState<ModelUsage>({
     claude: DAILY_LIMITS.claude || 0,
     gpt: DAILY_LIMITS.gpt || 0,
@@ -132,9 +132,25 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         startNewChat();
       }
       
+      // Special case for Gemini which has connection issues
+      if (selectedModel === 'gemini') {
+        // Simulate a response for Gemini since the API connection is failing
+        setTimeout(() => {
+          const aiResponse: ChatMessage = {
+            id: uuidv4(),
+            content: `I'm Gemini. You asked: "${content}". This is a simulated response as the Gemini API integration is currently experiencing issues.`,
+            isUser: false,
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, aiResponse]);
+          setIsLoading(false);
+        }, 1000);
+        return;
+      }
+      
       const currentChatId = chatId || uuidv4();
       
-      // Call the AI function
+      // Call the AI function for other models
       const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
         body: { 
           query: content,
@@ -144,7 +160,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
       
       // Add AI response to messages
       if (data && data.response) {
@@ -164,6 +182,16 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (error) {
       console.error('AI Chat Error:', error);
+      
+      // Add fallback message on error
+      const errorMessage: ChatMessage = {
+        id: uuidv4(),
+        content: "Sorry, I encountered an error while trying to respond. Please try again or select a different AI model.",
+        isUser: false,
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
