@@ -27,7 +27,7 @@ const AISearchResponse = ({ query }: AISearchResponseProps) => {
         const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
           body: { 
             query,
-            model: 'claude' // Default to claude for quick search responses
+            model: 'gemini' // Default to gemini for quick search responses since it's more reliable
           }
         });
 

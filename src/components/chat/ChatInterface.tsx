@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { ArrowUp, Bot, User, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -52,7 +53,7 @@ const ChatInterface = () => {
             <div className="flex items-center gap-2">
               <RadioGroupItem value="claude" id="claude" />
               <label htmlFor="claude" className="text-gray-200">
-                Claude 3.5 Haiku
+                Claude 3 Haiku
                 <span className="ml-1 text-xs text-green-400">(Unlimited for a limited time!)</span>
               </label>
             </div>
@@ -68,7 +69,7 @@ const ChatInterface = () => {
             <div className="flex items-center gap-2">
               <RadioGroupItem value="gemini" id="gemini" />
               <label htmlFor="gemini" className="text-gray-200">
-                Gemini
+                Gemini 1.5 Flash
                 <span className="ml-1 text-xs text-gray-400">(Unlimited)</span>
               </label>
             </div>

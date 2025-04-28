@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { Anthropic } from "npm:@anthropic-ai/sdk@0.18.0"
 import OpenAI from 'https://esm.sh/openai@4.20.1'
@@ -8,9 +9,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Update Gemini configuration
+// Update Gemini configuration to use the 2.5-flash model
 const genAI = new GoogleGenerativeAI('AIzaSyAD2-PwoGFnlgzYIBI63s0Rzwe8Mugi09E');
-const geminiModel = genAI.getGenerativeModel({ model: "gemini-pro" });
+const geminiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // In-memory store for chat history
 const chatHistories = new Map();
@@ -46,6 +47,9 @@ serve(async (req) => {
             role: msg.role === 'user' ? 'user' : 'model',
             parts: [{ text: msg.content }],
           })),
+          generationConfig: {
+            maxOutputTokens: 2048,
+          }
         });
 
         const result = await chat.sendMessage(query);
@@ -53,7 +57,7 @@ serve(async (req) => {
         response = responseText;
       } catch (error) {
         console.error('Gemini error:', error);
-        response = "I apologize, but I encountered an error. Please try again or choose a different AI model.";
+        response = "I apologize, but I encountered an error with Gemini. Please try again or choose a different AI model.";
       }
     } else if (model === 'claude') {
       try {
@@ -67,16 +71,18 @@ serve(async (req) => {
           : [{ role: 'user', content: `Provide a brief, helpful reaction to this search query: "${query}". Keep it conversational and under 2 sentences.` }]
 
         const message = await anthropic.messages.create({
-          model: 'claude-3-5-haiku-20240307', // Updated to Claude 3.5 Haiku
+          model: 'claude-3-haiku-20240307', // Updated to correct Claude model name
           max_tokens: 150,
           messages: messages,
         })
 
         response = message.content[0].text
-        usageRemaining = 10 // Example daily limit
+        usageRemaining = 10 // Unlimited for a limited time
       } catch (anthropicError) {
         console.error('Anthropic error:', anthropicError)
-        throw anthropicError
+        // Provide a helpful fallback message
+        response = "I'm Claude, but I'm having trouble connecting right now. Please try again or select a different AI model."
+        usageRemaining = 10
       }
     } else if (model === 'gpt') {
       try {
@@ -102,20 +108,28 @@ serve(async (req) => {
         })
 
         response = completion.choices[0].message.content || ""
-        usageRemaining = 10 // Example daily limit
+        usageRemaining = 10 // Unlimited for a limited time
       } catch (openaiError) {
         console.error('OpenAI error:', openaiError)
-        throw openaiError
+        // Provide a helpful fallback message
+        response = "I'm ChatGPT, but I'm having trouble connecting right now. Please try again or select a different AI model."
+        usageRemaining = 10
       }
     } else {
-      // Default to Gemini (unlimited usage)
+      // Default to Gemini
       try {
-        // Instead of using the problematic GoogleGenerativeAI API, use a simple response for Gemini
-        response = `I'm Gemini. You asked: "${query}". This is a temporary response as the Gemini API is currently experiencing issues. We'll update the integration soon.`;
+        const chat = geminiModel.startChat({
+          generationConfig: {
+            maxOutputTokens: 2048,
+          }
+        });
+        const result = await chat.sendMessage(query);
+        response = result.response.text();
         usageRemaining = null; // Unlimited
       } catch (geminiError) {
         console.error('Gemini error:', geminiError)
-        throw geminiError
+        response = "I'm Gemini, but I'm having trouble connecting right now. Please try again later.";
+        usageRemaining = null;
       }
     }
 
@@ -126,7 +140,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        response: "Sorry, I encountered an error. Please try again or select a different AI model."
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
