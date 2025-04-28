@@ -101,7 +101,7 @@ const Index = () => {
           </div>
 
           <Link to="/chat" className="absolute right-4 top-1/2 -translate-y-1/2">
-            <Button variant="ghost" className="text-white bg-black/[0.31]">
+            <Button variant="ghost" className="text-white bg-transparent">
               <MessageSquare className="mr-2 h-4 w-4" />
               Chat Mode
             </Button>
