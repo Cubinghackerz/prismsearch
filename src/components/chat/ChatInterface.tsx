@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { ArrowUp, Bot, User, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,7 +19,6 @@ const ChatInterface = () => {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to bottom of messages when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: 'smooth'
@@ -47,24 +45,23 @@ const ChatInterface = () => {
 
   return (
     <div className="flex flex-col h-[60vh] bg-black/20 backdrop-blur-md rounded-xl border border-purple-500/20 shadow-lg">
-      {/* Model selection */}
       <div className="p-4 border-b border-gray-800">
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium text-gray-200">Select AI Model:</label>
           <RadioGroup defaultValue={selectedModel} value={selectedModel} onValueChange={handleModelChange} className="flex gap-4">
             <div className="flex items-center gap-2">
-              <RadioGroupItem value="claude" id="claude" disabled={modelUsage.claude === 0} />
-              <label htmlFor="claude" className={`${modelUsage.claude === 0 ? 'text-gray-500' : 'text-gray-200'}`}>
+              <RadioGroupItem value="claude" id="claude" />
+              <label htmlFor="claude" className="text-gray-200">
                 Claude 3.5 Haiku
-                {modelUsage.claude !== null && <span className="ml-1 text-xs text-gray-400">({modelUsage.claude} left)</span>}
+                <span className="ml-1 text-xs text-green-400">(Unlimited for a limited time!)</span>
               </label>
             </div>
             
             <div className="flex items-center gap-2">
-              <RadioGroupItem value="gpt" id="gpt" disabled={modelUsage.gpt === 0} />
-              <label htmlFor="gpt" className={`${modelUsage.gpt === 0 ? 'text-gray-500' : 'text-gray-200'}`}>
+              <RadioGroupItem value="gpt" id="gpt" />
+              <label htmlFor="gpt" className="text-gray-200">
                 ChatGPT
-                {modelUsage.gpt !== null && <span className="ml-1 text-xs text-gray-400">({modelUsage.gpt} left)</span>}
+                <span className="ml-1 text-xs text-green-400">(Unlimited for a limited time!)</span>
               </label>
             </div>
             
@@ -84,7 +81,6 @@ const ChatInterface = () => {
         </div>
       </div>
 
-      {/* Chat messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
           <div className="h-full flex items-center justify-center text-gray-400">
@@ -121,7 +117,6 @@ const ChatInterface = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input area - styled similar to the image */}
       <form onSubmit={handleSubmit} className="p-4 border-t border-gray-800">
         <div className="relative flex items-center">
           <Textarea 
@@ -129,20 +124,14 @@ const ChatInterface = () => {
             onChange={e => setInputValue(e.target.value)} 
             onKeyDown={handleKeyDown} 
             placeholder="Ask anything..." 
-            className="resize-none bg-zinc-800/90 border-gray-700 focus-visible:ring-purple-500 text-white pr-12 min-h-[56px] py-3 rounded-full"
-            disabled={isLoading || 
-              (selectedModel === 'claude' && modelUsage.claude === 0) || 
-              (selectedModel === 'gpt' && modelUsage.gpt === 0)
-            } 
+            className="resize-none bg-zinc-800/90 border-gray-700 focus-visible:ring-purple-500 text-white pr-12 min-h-[56px] py-3 rounded-xl"
+            disabled={isLoading} 
           />
           <Button 
             type="submit" 
             size="icon"
             className="absolute right-2 rounded-full bg-white hover:bg-gray-200 text-black w-10 h-10 flex items-center justify-center"
-            disabled={!inputValue.trim() || isLoading || 
-              (selectedModel === 'claude' && modelUsage.claude === 0) || 
-              (selectedModel === 'gpt' && modelUsage.gpt === 0)
-            }
+            disabled={!inputValue.trim() || isLoading}
           >
             {isLoading ? 
               <Loader2 className="h-5 w-5 animate-spin text-gray-700" /> : 

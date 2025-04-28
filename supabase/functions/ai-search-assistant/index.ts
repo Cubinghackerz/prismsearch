@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { Anthropic } from "npm:@anthropic-ai/sdk@0.18.0"
 import OpenAI from 'https://esm.sh/openai@4.20.1'
@@ -8,6 +7,10 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+// Update Gemini configuration
+const genAI = new GoogleGenerativeAI('AIzaSyAD2-PwoGFnlgzYIBI63s0Rzwe8Mugi09E');
+const geminiModel = genAI.getGenerativeModel({ model: "gemini-pro" });
 
 // In-memory store for chat history
 const chatHistories = new Map();
@@ -36,8 +39,23 @@ serve(async (req) => {
       content: msg.content
     }))
 
-    // Handle model selection
-    if (model === 'claude') {
+    if (model === 'gemini') {
+      try {
+        const chat = geminiModel.startChat({
+          history: formattedChatHistory.map(msg => ({
+            role: msg.role === 'user' ? 'user' : 'model',
+            parts: [{ text: msg.content }],
+          })),
+        });
+
+        const result = await chat.sendMessage(query);
+        const responseText = result.response.text();
+        response = responseText;
+      } catch (error) {
+        console.error('Gemini error:', error);
+        response = "I apologize, but I encountered an error. Please try again or choose a different AI model.";
+      }
+    } else if (model === 'claude') {
       try {
         const anthropic = new Anthropic({
           apiKey: Deno.env.get('ANTHROPIC_API_KEY')!
