@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, MessageSquare } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
 import SearchResults from '../components/SearchResults';
 import { SearchResult } from '../components/search/types';
@@ -54,52 +55,48 @@ const Index = () => {
       <ScrollToTop />
       
       <header className="py-6 px-4 relative z-10">
-        <motion.div initial={{
-        opacity: 0,
-        y: -20
-      }} animate={{
-        opacity: 1,
-        y: 0
-      }} transition={{
-        duration: 0.5
-      }} className="text-center relative">
-          {hasSearched && <motion.div initial={{
-          opacity: 0,
-          x: -20
-        }} animate={{
-          opacity: 1,
-          x: 0
-        }} className="absolute left-4 top-1/2 -translate-y-1/2">
+        <motion.div initial={{ opacity: 0, y: -20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          transition={{ duration: 0.5 }} 
+          className="text-center relative flex justify-between items-center max-w-7xl mx-auto"
+        >
+          {hasSearched && <motion.div initial={{ opacity: 0, x: -20 }} 
+            animate={{ opacity: 1, x: 0 }} 
+            className="absolute left-4 top-1/2 -translate-y-1/2">
               <Button variant="ghost" onClick={() => {
-            setHasSearched(false);
-            setResults([]);
-            setQuery('');
-          }} className="text-white bg-transparent">
+                setHasSearched(false);
+                setResults([]);
+                setQuery('');
+              }} className="text-white bg-transparent">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back
               </Button>
             </motion.div>}
           
-          <motion.h1 className={`text-4xl font-bold bg-clip-text text-transparent 
-              bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 
-              animate-gradient-text mb-2 ${hasSearched ? 'text-2xl' : ''}`} animate={{
-          backgroundPosition: ['0% 50%', '100% 50%']
-        }} transition={{
-          duration: 3,
-          repeat: Infinity,
-          repeatType: 'reverse'
-        }}>
-            Prism Search
-          </motion.h1>
-          <motion.p initial={{
-          opacity: 0
-        }} animate={{
-          opacity: 1
-        }} transition={{
-          delay: 0.2
-        }} className={`text-gray-100 max-w-lg mx-auto ${hasSearched ? 'hidden' : ''}`}>
-            Search across the web's top engines for comprehensive results in one place
-          </motion.p>
+          <div className="flex-1">
+            <motion.h1 className={`text-4xl font-bold bg-clip-text text-transparent 
+                bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 
+                animate-gradient-text mb-2 ${hasSearched ? 'text-2xl' : ''}`} 
+              animate={{ backgroundPosition: ['0% 50%', '100% 50%'] }}
+              transition={{ duration: 3, repeat: Infinity, repeatType: 'reverse' }}
+            >
+              Prism Search
+            </motion.h1>
+            <motion.p initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className={`text-gray-100 max-w-lg mx-auto ${hasSearched ? 'hidden' : ''}`}
+            >
+              Search across the web's top engines for comprehensive results in one place
+            </motion.p>
+          </div>
+
+          <Link to="/chat" className="absolute right-4 top-1/2 -translate-y-1/2">
+            <Button variant="ghost" className="text-white hover:bg-purple-500/20">
+              <MessageSquare className="mr-2 h-4 w-4" />
+              Chat Mode
+            </Button>
+          </Link>
         </motion.div>
       </header>
       
