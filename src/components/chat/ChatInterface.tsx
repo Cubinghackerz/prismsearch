@@ -41,7 +41,7 @@ const ChatInterface = () => {
   return <div className="flex flex-col h-[60vh] md:h-[70vh] lg:h-[80vh] bg-black/20 backdrop-blur-md rounded-xl border border-purple-500/20 shadow-lg">
       <div className="p-4 border-b border-gray-800">
         <Alert className="mb-4 bg-yellow-500/10 border-yellow-500/50 text-yellow-300">
-          <AlertTriangle className="h-4 w-4 text-white bg-slate-950" />
+          <AlertTriangle className="h-4 w-4 text-white bg-transparent" />
           <p className="text-sm">
             Chat mode is experimental and may be unstable. We appreciate your patience as we improve it.
           </p>
