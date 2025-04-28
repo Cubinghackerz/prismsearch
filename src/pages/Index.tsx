@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import ParticleBackground from '../components/ParticleBackground';
 import ScrollToTop from '../components/ScrollToTop';
 import FooterWave from '../components/FooterWave';
-
 const engineUrls = {
   'Google': 'https://www.google.com',
   'Bing': 'https://www.bing.com',
@@ -20,7 +19,6 @@ const engineUrls = {
   'Brave': 'https://search.brave.com',
   'You.com': 'https://you.com'
 };
-
 const Index = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -29,7 +27,6 @@ const Index = () => {
   const {
     toast
   } = useToast();
-
   const handleSearch = async (searchQuery: string) => {
     try {
       setQuery(searchQuery);
@@ -49,25 +46,32 @@ const Index = () => {
       setIsSearching(false);
     }
   };
-
   return <div className="min-h-screen flex flex-col">
       <ParticleBackground />
       <ScrollToTop />
       
       <header className="py-6 px-4 relative z-10">
-        <motion.div initial={{ opacity: 0, y: -20 }} 
-          animate={{ opacity: 1, y: 0 }} 
-          transition={{ duration: 0.5 }} 
-          className="text-center relative flex justify-between items-center max-w-7xl mx-auto"
-        >
-          {hasSearched && <motion.div initial={{ opacity: 0, x: -20 }} 
-            animate={{ opacity: 1, x: 0 }} 
-            className="absolute left-4 top-1/2 -translate-y-1/2">
+        <motion.div initial={{
+        opacity: 0,
+        y: -20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        duration: 0.5
+      }} className="text-center relative flex justify-between items-center max-w-7xl mx-auto">
+          {hasSearched && <motion.div initial={{
+          opacity: 0,
+          x: -20
+        }} animate={{
+          opacity: 1,
+          x: 0
+        }} className="absolute left-4 top-1/2 -translate-y-1/2">
               <Button variant="ghost" onClick={() => {
-                setHasSearched(false);
-                setResults([]);
-                setQuery('');
-              }} className="text-white bg-transparent">
+            setHasSearched(false);
+            setResults([]);
+            setQuery('');
+          }} className="text-white bg-transparent">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back
               </Button>
@@ -76,23 +80,28 @@ const Index = () => {
           <div className="flex-1">
             <motion.h1 className={`text-4xl font-bold bg-clip-text text-transparent 
                 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 
-                animate-gradient-text mb-2 ${hasSearched ? 'text-2xl' : ''}`} 
-              animate={{ backgroundPosition: ['0% 50%', '100% 50%'] }}
-              transition={{ duration: 3, repeat: Infinity, repeatType: 'reverse' }}
-            >
+                animate-gradient-text mb-2 ${hasSearched ? 'text-2xl' : ''}`} animate={{
+            backgroundPosition: ['0% 50%', '100% 50%']
+          }} transition={{
+            duration: 3,
+            repeat: Infinity,
+            repeatType: 'reverse'
+          }}>
               Prism Search
             </motion.h1>
-            <motion.p initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className={`text-gray-100 max-w-lg mx-auto ${hasSearched ? 'hidden' : ''}`}
-            >
+            <motion.p initial={{
+            opacity: 0
+          }} animate={{
+            opacity: 1
+          }} transition={{
+            delay: 0.2
+          }} className={`text-gray-100 max-w-lg mx-auto ${hasSearched ? 'hidden' : ''}`}>
               Search across the web's top engines for comprehensive results in one place
             </motion.p>
           </div>
 
           <Link to="/chat" className="absolute right-4 top-1/2 -translate-y-1/2">
-            <Button variant="ghost" className="text-white hover:bg-purple-500/20">
+            <Button variant="ghost" className="text-white bg-black/[0.31]">
               <MessageSquare className="mr-2 h-4 w-4" />
               Chat Mode
             </Button>
@@ -135,23 +144,14 @@ const Index = () => {
         duration: 0.5
       }} className="mt-20 text-center">
             <div className="flex justify-center space-x-6">
-              {['Google', 'Bing', 'DuckDuckGo', 'Brave', 'You.com'].map(engine => (
-                <motion.a
-                  key={engine}
-                  href={engineUrls[engine as keyof typeof engineUrls]}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-center cursor-pointer"
-                  whileHover={{
-                    scale: 1.1,
-                    y: -5
-                  }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 400,
-                    damping: 10
-                  }}
-                >
+              {['Google', 'Bing', 'DuckDuckGo', 'Brave', 'You.com'].map(engine => <motion.a key={engine} href={engineUrls[engine as keyof typeof engineUrls]} target="_blank" rel="noopener noreferrer" className="text-center cursor-pointer" whileHover={{
+            scale: 1.1,
+            y: -5
+          }} transition={{
+            type: "spring",
+            stiffness: 400,
+            damping: 10
+          }}>
                   <div className={`w-14 h-14 rounded-full mx-auto mb-3 flex items-center justify-center 
                     backdrop-blur-md border border-white/10
                     ${engine === 'Google' ? 'bg-blue-500/80' : engine === 'Bing' ? 'bg-blue-700/80' : engine === 'DuckDuckGo' ? 'bg-yellow-600/80' : engine === 'Brave' ? 'bg-orange-500/80' : 'bg-purple-500/80'} 
@@ -162,8 +162,7 @@ const Index = () => {
                   <span className="text-sm font-medium text-gray-100 opacity-90 hover:opacity-100 transition-opacity">
                     {engine}
                   </span>
-                </motion.a>
-              ))}
+                </motion.a>)}
             </div>
             <motion.p initial={{
           opacity: 0,
@@ -187,5 +186,4 @@ const Index = () => {
       </footer>
     </div>;
 };
-
 export default Index;
