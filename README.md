@@ -1,2 +1,2 @@
-Prism Search
-Some features may be expermental
+Prism Search,
+some features may be expermental
