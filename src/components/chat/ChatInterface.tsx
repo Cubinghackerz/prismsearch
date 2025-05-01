@@ -76,7 +76,7 @@ const ChatInterface = () => {
         </div>
 
         <div className="mt-4 flex justify-end">
-          <Button variant="outline" size="sm" onClick={startNewChat} className="border-blue-500/50 bg-transparent text-blue-200 hover:bg-blue-800/20 hover:border-blue-400/60 transition-all duration-300">
+          <Button variant="outline" size="sm" onClick={startNewChat} className="border-blue-500/50 text-blue-200 hover:border-blue-400/60 transition-all duration-300 bg-blue-950 hover:bg-blue-800">
             <RefreshCw className="mr-2 h-4 w-4" /> New Chat
           </Button>
         </div>
