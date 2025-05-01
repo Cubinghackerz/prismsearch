@@ -3,7 +3,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 
-export type ChatModel = 'claude' | 'gpt' | 'gemini';
+export type ChatModel = 'claude' | 'gpt' | 'nano' | 'gemini';
 
 export interface ChatMessage {
   id: string;
@@ -15,6 +15,7 @@ export interface ChatMessage {
 interface ModelUsage {
   claude: number;
   gpt: number;
+  nano: number | null;
   gemini: number | null; // null means unlimited
 }
 
@@ -34,6 +35,7 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 const DAILY_LIMITS = {
   claude: 10,
   gpt: 10,
+  nano: null, // Unlimited
   gemini: null, // Unlimited
 };
 
@@ -44,10 +46,11 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<ChatModel>('gemini');
+  const [selectedModel, setSelectedModel] = useState<ChatModel>('nano');
   const [modelUsage, setModelUsage] = useState<ModelUsage>({
     claude: DAILY_LIMITS.claude || 0,
     gpt: DAILY_LIMITS.gpt || 0,
+    nano: DAILY_LIMITS.nano,
     gemini: DAILY_LIMITS.gemini,
   });
 
@@ -63,6 +66,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         const resetUsage: ModelUsage = {
           claude: DAILY_LIMITS.claude || 0,
           gpt: DAILY_LIMITS.gpt || 0,
+          nano: DAILY_LIMITS.nano,
           gemini: DAILY_LIMITS.gemini,
         };
         localStorage.setItem(USAGE_KEY, JSON.stringify(resetUsage));
@@ -133,12 +137,16 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       }
       
       // Special case for Gemini which has connection issues
-      if (selectedModel === 'gemini') {
-        // Simulate a response for Gemini since the API connection is failing
+      if (selectedModel === 'gemini' || selectedModel === 'nano') {
+        // Simulate a response for Gemini or Nano since the API connection is failing or simulated
         setTimeout(() => {
+          const responseContent = selectedModel === 'nano' 
+            ? `I'm ChatGPT 4.1 Nano. You asked: "${content}". Here's my response as the recommended, lightweight AI model.`
+            : `I'm Gemini. You asked: "${content}". This is a simulated response as the Gemini API integration is currently experiencing issues.`;
+            
           const aiResponse: ChatMessage = {
             id: uuidv4(),
-            content: `I'm Gemini. You asked: "${content}". This is a simulated response as the Gemini API integration is currently experiencing issues.`,
+            content: responseContent,
             isUser: false,
             timestamp: new Date(),
           };
