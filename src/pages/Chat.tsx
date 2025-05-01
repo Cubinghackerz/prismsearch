@@ -29,7 +29,7 @@ const Chat = () => {
               opacity: 1,
               x: 0
             }} className="absolute left-4 top-1/2 -translate-y-1/2">
-                <Button variant="ghost" className="text-white bg-transparent">
+                <Button variant="ghost" className="text-sky-100 bg-sky-950 hover:bg-sky-800">
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back
                 </Button>
