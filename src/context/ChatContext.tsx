@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -112,7 +113,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     const displayNames = {
       claude: "Claude 3.5 Haiku",
       nano: "ChatGPT 4.1 Nano",
-      gpt: "ChatGPT 4o",
+      gpt: "ChatGPT 4o Mini",
       gemini: "Gemini",
     };
     return displayNames[model] || model;

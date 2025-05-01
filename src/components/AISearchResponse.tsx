@@ -1,3 +1,4 @@
+
 import { motion } from 'framer-motion';
 import { Bot, MessageSquare } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -95,7 +96,7 @@ const AISearchResponse = ({
               {showChatButton && <div className="mt-3">
                   <Button variant="outline" size="sm" onClick={() => {
               window.location.href = '/chat';
-            }} className="text-purple-200 border-purple-500/30 bg-transparent">
+            }} className="text-purple-200 border-purple-500/30 bg-transparent hover:bg-purple-500/10">
                     <MessageSquare className="mr-2 h-4 w-4" />
                     Continue in Chat Mode
                   </Button>

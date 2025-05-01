@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, MessageSquare } from 'lucide-react';
@@ -47,7 +48,8 @@ const Index = () => {
     }
   };
   return <div className="min-h-screen flex flex-col">
-      <ParticleBackground />
+      {/* Changed ParticleBackground to have purple particles */}
+      <ParticleBackground color="#9b87f5" />
       <ScrollToTop />
       
       <header className="py-6 px-4 relative z-10">
@@ -79,7 +81,7 @@ const Index = () => {
           
           <div className="flex-1">
             <motion.h1 className={`text-4xl font-bold bg-clip-text text-transparent 
-                bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 
+                bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 
                 animate-gradient-text mb-2 ${hasSearched ? 'text-2xl' : ''}`} animate={{
             backgroundPosition: ['0% 50%', '100% 50%']
           }} transition={{
@@ -128,8 +130,8 @@ const Index = () => {
         opacity: 1
       }} transition={{
         duration: 0.5
-      }} className="mt-4 backdrop-blur-md bg-white/5 p-6 rounded-xl border border-purple-500/20 
-              shadow-[0_8px_32px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_32px_rgba(155,135,245,0.1)] 
+      }} className="mt-4 backdrop-blur-md bg-purple-500/5 p-6 rounded-xl border border-purple-500/20 
+              shadow-[0_8px_32px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_32px_rgba(155,135,245,0.15)] 
               transition-all duration-300">
             <AISearchResponse query={query} />
             <SearchResults results={results} isLoading={isSearching} query={query} />
@@ -153,10 +155,10 @@ const Index = () => {
             damping: 10
           }}>
                   <div className={`w-14 h-14 rounded-full mx-auto mb-3 flex items-center justify-center 
-                    backdrop-blur-md border border-white/10
-                    ${engine === 'Google' ? 'bg-blue-500/80' : engine === 'Bing' ? 'bg-blue-700/80' : engine === 'DuckDuckGo' ? 'bg-yellow-600/80' : engine === 'Brave' ? 'bg-orange-500/80' : 'bg-purple-500/80'} 
-                    hover:border-white/20 transition-all duration-300
-                    shadow-lg hover:shadow-xl`}>
+                    backdrop-blur-md border border-purple-200/10
+                    ${engine === 'Google' ? 'bg-purple-500/80' : engine === 'Bing' ? 'bg-purple-700/80' : engine === 'DuckDuckGo' ? 'bg-purple-600/80' : engine === 'Brave' ? 'bg-purple-500/80' : 'bg-purple-500/80'} 
+                    hover:border-purple-300/20 transition-all duration-300
+                    shadow-lg shadow-purple-800/10 hover:shadow-xl hover:shadow-purple-700/20`}>
                     <span className="text-xl font-bold text-white">{engine.charAt(0)}</span>
                   </div>
                   <span className="text-sm font-medium text-gray-100 opacity-90 hover:opacity-100 transition-opacity">
@@ -172,15 +174,15 @@ const Index = () => {
           y: 0
         }} transition={{
           delay: 0.7
-        }} className="mt-12 text-gray-400">
+        }} className="mt-12 text-purple-100/70">
               Type your query above to search across all engines simultaneously
             </motion.p>
           </motion.div>}
       </main>
       
       <footer className="relative py-6 text-center">
-        <FooterWave />
-        <p className="relative z-10 text-gray-400 text-sm">
+        <FooterWave color="#9b87f5" />
+        <p className="relative z-10 text-purple-200/70 text-sm">
           © 2025 Prism Search. All rights reserved.
         </p>
       </footer>

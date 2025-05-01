@@ -1,7 +1,11 @@
 
 import { useEffect, useRef } from 'react';
 
-const ParticleBackground = () => {
+interface ParticleBackgroundProps {
+  color?: string;
+}
+
+const ParticleBackground = ({ color = '#3b82f6' }: ParticleBackgroundProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -22,7 +26,8 @@ const ParticleBackground = () => {
     // Particle settings
     const particles: Particle[] = [];
     const particleCount = 50;
-    const particleColor = '#3b82f6'; // Bright blue color
+    const particleColor = color; // Use the provided color
+    const particleGlowColor = color === '#3b82f6' ? '#60a5fa' : '#d6bcfa'; // Blue or purple glow
     
     class Particle {
       x: number;
@@ -54,10 +59,10 @@ const ParticleBackground = () => {
         ctx.fillStyle = particleColor;
         ctx.fill();
         
-        // Add blue glow effect
+        // Add glow effect
         ctx.shadowBlur = 15;
-        ctx.shadowColor = '#60a5fa';
-        ctx.strokeStyle = '#60a5fa';
+        ctx.shadowColor = particleGlowColor;
+        ctx.strokeStyle = particleGlowColor;
         ctx.stroke();
         ctx.shadowBlur = 0; // Reset shadow for next particle
       }
@@ -89,7 +94,7 @@ const ParticleBackground = () => {
       window.removeEventListener('resize', resizeCanvas);
       cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [color]);
 
   return (
     <canvas

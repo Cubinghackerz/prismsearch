@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { ArrowUp, Bot, User, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -86,7 +87,7 @@ const ChatInterface = () => {
               <RadioGroupItem value="gpt" id="gpt" className="peer sr-only" />
               <label htmlFor="gpt" className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${selectedModel === 'gpt' ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-400/50' : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-semibold text-blue-200">ChatGPT 4o</span>
+                  <span className="text-lg font-semibold text-blue-200">ChatGPT 4o Mini</span>
                   <span className="px-2 py-1 text-xs bg-blue-500/20 text-blue-300 rounded-full">Unlimited</span>
                 </div>
                 <span className="mt-1 text-sm text-blue-300/70">Versatile AI with broad knowledge</span>
