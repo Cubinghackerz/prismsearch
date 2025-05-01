@@ -1,6 +1,5 @@
-
 import { useState, useRef, useEffect } from 'react';
-import { ArrowUp, Bot, User, Loader2, RefreshCw, AlertTriangle } from 'lucide-react';
+import { ArrowUp, Bot, User, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useChat, ChatModel } from '@/context/ChatContext';
 import { Textarea } from '@/components/ui/textarea';

@@ -90,22 +90,31 @@ serve(async (req) => {
         response = "I'm Claude, but I'm having trouble connecting right now. Please try again or select a different AI model."
         usageRemaining = 10
       }
-    } else if (model === 'gpt') {
+    } else if (model === 'gpt' || model === 'nano') {
       try {
         const openai = new OpenAI({
           apiKey: Deno.env.get('OPENAI_API_KEY')!
         })
 
-        // Create system message based on context
-        const systemMessage = {
+        // Create system message based on context and model
+        let systemMessage = {
           role: 'system',
-          content: 'You are ChatGPT 4o, a helpful and knowledgeable AI assistant. Your responses should be informative, concise, and conversational. Always aim to provide accurate information while being engaging and friendly. If you are unsure about something, be honest about the limitations of your knowledge.'
+          content: ''
+        }
+        
+        if (model === 'nano') {
+          systemMessage.content = 'You are ChatGPT 4.1 Nano, a lightweight and efficient AI assistant. Your responses should be concise, helpful, and conversational. Focus on providing clear and straightforward answers while maintaining a friendly tone. Be accurate but prioritize brevity over exhaustive detail.'
+        } else {
+          systemMessage.content = 'You are ChatGPT 4o, a helpful and knowledgeable AI assistant. Your responses should be informative, concise, and conversational. Always aim to provide accurate information while being engaging and friendly. If you are unsure about something, be honest about the limitations of your knowledge.'
         }
 
         const messages = [systemMessage, ...formattedChatHistory, { role: 'user', content: query }]
+        
+        // Use appropriate model based on selection
+        const modelName = model === 'nano' ? 'gpt-4o-mini' : 'gpt-4o';
 
         const completion = await openai.chat.completions.create({
-          model: 'gpt-4o-mini',
+          model: modelName,
           messages: messages,
           temperature: 0.7,
           max_tokens: 1000,
@@ -116,7 +125,7 @@ serve(async (req) => {
       } catch (openaiError) {
         console.error('OpenAI error:', openaiError)
         // Provide a helpful fallback message
-        response = "I'm ChatGPT, but I'm having trouble connecting right now. Please try again or select a different AI model."
+        response = `I'm ${model === 'nano' ? 'ChatGPT 4.1 Nano' : 'ChatGPT 4o'}, but I'm having trouble connecting right now. Please try again or select a different AI model.`
         usageRemaining = 10
       }
     } else {

@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -148,31 +147,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  // Simulate response for locally handled models (nano and gemini)
-  const simulateModelResponse = (query: string, model: 'nano' | 'gemini'): Promise<string> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        let response = "";
-        
-        if (model === 'nano') {
-          response = `I'm ChatGPT 4.1 Nano, a lightweight but powerful AI assistant. ${
-            query.toLowerCase().includes("hello") || query.toLowerCase().includes("hi") 
-              ? "Hello! How can I help you today?" 
-              : `Regarding "${query}" - I've analyzed your question and I think I can help with that. What specific information are you looking for?`
-          }`;
-        } else {
-          response = `I'm Gemini, Google's advanced AI model. You asked about "${query}". ${
-            query.toLowerCase().includes("what") || query.toLowerCase().includes("how")
-              ? "That's an interesting question. Based on my training data, I can offer several perspectives on this topic."
-              : "I'd be happy to discuss this further and provide more detailed information if you'd like."
-          }`;
-        }
-        
-        resolve(response);
-      }, 800 + Math.random() * 400); // Simulate network delay between 800-1200ms
-    });
-  };
-  
   // Send a message to the AI
   const sendMessage = async (content: string) => {
     if (!content.trim()) return;
@@ -209,9 +183,10 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         setChatId(currentChatId);
       }
       
-      // Special case for Gemini or Nano which are handled locally
-      if (selectedModel === 'gemini' || selectedModel === 'nano') {
-        const responseContent = await simulateModelResponse(content, selectedModel);
+      // Special case for Gemini which is handled locally
+      if (selectedModel === 'gemini') {
+        // Simulate response for Gemini model
+        const responseContent = await simulateGeminiResponse(content);
         
         const aiResponse: ChatMessage = {
           id: uuidv4(),
@@ -225,7 +200,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       
-      // Call the AI function for other models
+      // Call the AI function for all other models (Claude, GPT, and now Nano)
       const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
         body: { 
           query: content,
@@ -265,6 +240,21 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Simulate Gemini response for local handling
+  const simulateGeminiResponse = (query: string): Promise<string> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const response = `I'm Gemini, Google's advanced AI model. You asked about "${query}". ${
+          query.toLowerCase().includes("what") || query.toLowerCase().includes("how")
+            ? "That's an interesting question. Based on my training data, I can offer several perspectives on this topic."
+            : "I'd be happy to discuss this further and provide more detailed information if you'd like."
+        }`;
+        
+        resolve(response);
+      }, 800 + Math.random() * 400); // Simulate network delay between 800-1200ms
+    });
   };
 
   // Clear messages when component unmounts to make chats temporary
