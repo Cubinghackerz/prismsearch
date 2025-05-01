@@ -22,7 +22,7 @@ const ParticleBackground = () => {
     // Particle settings
     const particles: Particle[] = [];
     const particleCount = 50;
-    const particleColor = '#9b87f5'; // Consistent neon purple color
+    const particleColor = '#3b82f6'; // Bright blue color
     
     class Particle {
       x: number;
@@ -54,10 +54,10 @@ const ParticleBackground = () => {
         ctx.fillStyle = particleColor;
         ctx.fill();
         
-        // Add glow effect
+        // Add blue glow effect
         ctx.shadowBlur = 15;
-        ctx.shadowColor = particleColor;
-        ctx.strokeStyle = particleColor;
+        ctx.shadowColor = '#60a5fa';
+        ctx.strokeStyle = '#60a5fa';
         ctx.stroke();
         ctx.shadowBlur = 0; // Reset shadow for next particle
       }
@@ -72,7 +72,7 @@ const ParticleBackground = () => {
     let animationFrameId: number;
     const animate = () => {
       // Clear background with higher opacity to remove trails
-      ctx.fillStyle = 'rgba(26, 31, 44, 0.3)';
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.3)'; // Dark blue background
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       particles.forEach(particle => {
@@ -94,10 +94,9 @@ const ParticleBackground = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 -z-10 bg-[#1A1F2C]"
+      className="fixed inset-0 -z-10 bg-slate-900" // Dark blue background
     />
   );
 };
 
 export default ParticleBackground;
-
