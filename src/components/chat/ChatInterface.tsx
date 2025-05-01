@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { ArrowUp, Bot, User, Loader2, RefreshCw, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { motion } from 'framer-motion';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert } from "@/components/ui/alert";
-
 const ChatInterface = () => {
   const {
     messages,
@@ -21,35 +19,30 @@ const ChatInterface = () => {
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: 'smooth'
     });
   }, [messages]);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || isLoading) return;
     sendMessage(inputValue);
     setInputValue('');
   };
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
   };
-
   const handleModelChange = (value: string) => {
     selectModel(value as ChatModel);
   };
-
   return <div className="flex flex-col h-[60vh] md:h-[75vh] lg:h-[80vh] bg-blue-950/20 backdrop-blur-md rounded-xl border border-blue-500/30 shadow-lg">
       <div className="p-4 border-b border-blue-900/40">
         <Alert className="mb-4 bg-blue-500/10 border-blue-500/50 text-blue-300">
-          <AlertTriangle className="h-4 w-4 text-blue-300" />
+          <AlertTriangle className="h-4 w-4 text-blue-300 bg-transparent" />
           <p className="text-sm">
             Chat mode is experimental and may be unstable. We appreciate your patience as we improve it.
           </p>
@@ -150,5 +143,4 @@ const ChatInterface = () => {
       </form>
     </div>;
 };
-
 export default ChatInterface;
