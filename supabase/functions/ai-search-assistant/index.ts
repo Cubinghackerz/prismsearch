@@ -1,6 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { Anthropic } from "npm:@anthropic-ai/sdk@0.18.0"
 import OpenAI from 'https://esm.sh/openai@4.20.1'
 import { GoogleGenerativeAI } from "npm:@google/generative-ai@0.2.1"
 
@@ -65,30 +64,6 @@ serve(async (req) => {
       } catch (error) {
         console.error('Gemini error:', error);
         response = "I apologize, but I encountered an error with Gemini. Please try again or choose a different AI model.";
-      }
-    } else if (model === 'claude') {
-      try {
-        const anthropic = new Anthropic({
-          apiKey: Deno.env.get('ANTHROPIC_API_KEY')!
-        })
-
-        // Create messages for chat mode
-        const messages = formattedChatHistory.concat([{ role: 'user', content: query }])
-
-        const message = await anthropic.messages.create({
-          model: 'claude-3-haiku-20240307', // Updated to correct Claude model name
-          max_tokens: 1000,
-          temperature: 0.7,
-          messages: messages,
-        })
-
-        response = message.content[0].text
-        usageRemaining = 10 // Unlimited for a limited time
-      } catch (anthropicError) {
-        console.error('Anthropic error:', anthropicError)
-        // Provide a helpful fallback message
-        response = "I'm Claude, but I'm having trouble connecting right now. Please try again or select a different AI model."
-        usageRemaining = 10
       }
     } else if (model === 'gpt' || model === 'nano') {
       try {

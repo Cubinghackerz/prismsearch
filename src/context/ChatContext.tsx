@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 
-export type ChatModel = 'claude' | 'gpt' | 'nano' | 'gemini';
+export type ChatModel = 'gpt' | 'nano' | 'gemini';
 
 export interface ChatMessage {
   id: string;
@@ -14,7 +14,6 @@ export interface ChatMessage {
 }
 
 interface ModelUsage {
-  claude: number;
   gpt: number;
   nano: number | null;
   gemini: number | null; // null means unlimited
@@ -34,7 +33,6 @@ interface ChatContextType {
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 const DAILY_LIMITS = {
-  claude: 10,
   gpt: 10,
   nano: null, // Unlimited
   gemini: null, // Unlimited
@@ -49,7 +47,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState<ChatModel>('nano');
   const [modelUsage, setModelUsage] = useState<ModelUsage>({
-    claude: DAILY_LIMITS.claude || 0,
     gpt: DAILY_LIMITS.gpt || 0,
     nano: DAILY_LIMITS.nano,
     gemini: DAILY_LIMITS.gemini,
@@ -66,7 +63,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       if (lastUsageDate !== today) {
         localStorage.setItem(LAST_USAGE_DATE_KEY, today);
         const resetUsage: ModelUsage = {
-          claude: DAILY_LIMITS.claude || 0,
           gpt: DAILY_LIMITS.gpt || 0,
           nano: DAILY_LIMITS.nano,
           gemini: DAILY_LIMITS.gemini,
@@ -111,7 +107,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   // Helper function to get display name for models
   const getModelDisplayName = (model: ChatModel): string => {
     const displayNames = {
-      claude: "Claude 3.5 Haiku",
       nano: "ChatGPT 4.1 Nano",
       gpt: "ChatGPT 4o Mini",
       gemini: "Gemini",
@@ -153,10 +148,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     if (!content.trim()) return;
     
     // Don't allow sending if we've reached the limit for paid models
-    if (
-      (selectedModel === 'claude' && modelUsage.claude <= 0) || 
-      (selectedModel === 'gpt' && modelUsage.gpt <= 0)
-    ) {
+    if (selectedModel === 'gpt' && modelUsage.gpt <= 0) {
       toast({
         variant: "destructive",
         title: "Usage Limit Reached",
@@ -201,7 +193,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       
-      // Call the AI function for all other models (Claude, GPT, and now Nano)
+      // Call the AI function for all other models (GPT and Nano)
       const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
         body: { 
           query: content,

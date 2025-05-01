@@ -57,18 +57,7 @@ const ChatInterface = () => {
         
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium text-blue-300">Select AI Model:</label>
-          <RadioGroup defaultValue={selectedModel} value={selectedModel} onValueChange={handleModelChange} className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="relative flex items-center">
-              <RadioGroupItem value="claude" id="claude" className="peer sr-only" />
-              <label htmlFor="claude" className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${selectedModel === 'claude' ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-400/50' : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'}`}>
-                <div className="flex items-center justify-between">
-                  <span className="text-lg font-semibold text-blue-200">Claude 3.5 Haiku</span>
-                  <span className="px-2 py-1 text-xs bg-blue-500/20 text-blue-300 rounded-full">Unlimited</span>
-                </div>
-                <span className="mt-1 text-sm text-blue-300/70">Fast, accurate responses with deep understanding</span>
-              </label>
-            </div>
-
+          <RadioGroup defaultValue={selectedModel} value={selectedModel} onValueChange={handleModelChange} className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="relative flex items-center">
               <RadioGroupItem value="nano" id="nano" className="peer sr-only" />
               <label htmlFor="nano" className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${selectedModel === 'nano' ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-400/50' : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'}`}>
