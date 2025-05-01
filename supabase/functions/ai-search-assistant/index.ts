@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { Anthropic } from "npm:@anthropic-ai/sdk@0.18.0"
 import OpenAI from 'https://esm.sh/openai@4.20.1'
@@ -25,6 +26,12 @@ serve(async (req) => {
     let response = ""
     let usageRemaining = null
 
+    if (!query) {
+      throw new Error("Missing query parameter")
+    }
+
+    console.log(`Processing ${model} request for chat ${chatId}`)
+
     // If we have a chatId and chatHistory, store it for future use
     if (chatId && chatHistory) {
       chatHistories.set(chatId, chatHistory)
@@ -48,6 +55,7 @@ serve(async (req) => {
           })),
           generationConfig: {
             maxOutputTokens: 2048,
+            temperature: 0.7,
           }
         });
 
@@ -64,14 +72,13 @@ serve(async (req) => {
           apiKey: Deno.env.get('ANTHROPIC_API_KEY')!
         })
 
-        // Create messages for chat mode or quick response
-        const messages = chatId 
-          ? formattedChatHistory.concat([{ role: 'user', content: query }])
-          : [{ role: 'user', content: `Provide a brief, helpful reaction to this search query: "${query}". Keep it conversational and under 2 sentences.` }]
+        // Create messages for chat mode
+        const messages = formattedChatHistory.concat([{ role: 'user', content: query }])
 
         const message = await anthropic.messages.create({
           model: 'claude-3-haiku-20240307', // Updated to correct Claude model name
-          max_tokens: 150,
+          max_tokens: 1000,
+          temperature: 0.7,
           messages: messages,
         })
 
@@ -89,21 +96,19 @@ serve(async (req) => {
           apiKey: Deno.env.get('OPENAI_API_KEY')!
         })
 
-        // Create messages for chat mode or quick response
+        // Create system message based on context
         const systemMessage = {
           role: 'system',
-          content: chatId 
-            ? 'You are a helpful assistant. Keep your responses concise.'
-            : 'You provide brief, helpful reactions to search queries. Keep responses conversational and under 2 sentences.'
+          content: 'You are ChatGPT 4o, a helpful and knowledgeable AI assistant. Your responses should be informative, concise, and conversational. Always aim to provide accurate information while being engaging and friendly. If you are unsure about something, be honest about the limitations of your knowledge.'
         }
 
-        const messages = chatId
-          ? [systemMessage, ...formattedChatHistory, { role: 'user', content: query }]
-          : [systemMessage, { role: 'user', content: query }]
+        const messages = [systemMessage, ...formattedChatHistory, { role: 'user', content: query }]
 
         const completion = await openai.chat.completions.create({
           model: 'gpt-4o-mini',
-          messages: messages
+          messages: messages,
+          temperature: 0.7,
+          max_tokens: 1000,
         })
 
         response = completion.choices[0].message.content || ""
@@ -115,21 +120,8 @@ serve(async (req) => {
         usageRemaining = 10
       }
     } else {
-      // Default to Gemini
-      try {
-        const chat = geminiModel.startChat({
-          generationConfig: {
-            maxOutputTokens: 2048,
-          }
-        });
-        const result = await chat.sendMessage(query);
-        response = result.response.text();
-        usageRemaining = null; // Unlimited
-      } catch (geminiError) {
-        console.error('Gemini error:', geminiError)
-        response = "I'm Gemini, but I'm having trouble connecting right now. Please try again later.";
-        usageRemaining = null;
-      }
+      // Default fallback
+      response = "Sorry, I don't recognize the selected AI model. Please try a different model.";
     }
 
     return new Response(

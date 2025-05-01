@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from "@/hooks/use-toast";
 
 export type ChatModel = 'claude' | 'gpt' | 'nano' | 'gemini';
 
@@ -53,6 +54,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     nano: DAILY_LIMITS.nano,
     gemini: DAILY_LIMITS.gemini,
   });
+  const { toast } = useToast();
 
   // Load and initialize usage data
   useEffect(() => {
@@ -89,11 +91,32 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     const newChatId = uuidv4();
     setChatId(newChatId);
     setMessages([]);
+    toast({
+      title: "New Chat Started",
+      description: "You've started a new conversation.",
+      duration: 2000,
+    });
   };
   
   // Select a model
   const selectModel = (model: ChatModel) => {
     setSelectedModel(model);
+    toast({
+      title: `Model Changed: ${getModelDisplayName(model)}`,
+      description: "Your messages will now be processed by this AI model.",
+      duration: 2000,
+    });
+  };
+
+  // Helper function to get display name for models
+  const getModelDisplayName = (model: ChatModel): string => {
+    const displayNames = {
+      claude: "Claude 3.5 Haiku",
+      nano: "ChatGPT 4.1 Nano",
+      gpt: "ChatGPT 4o",
+      gemini: "Gemini",
+    };
+    return displayNames[model] || model;
   };
 
   // Update usage for a model
@@ -107,6 +130,49 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     });
   };
   
+  // Handle errors in the chat flow
+  const handleChatError = (errorMessage: string) => {
+    const errorResponse: ChatMessage = {
+      id: uuidv4(),
+      content: errorMessage,
+      isUser: false,
+      timestamp: new Date(),
+    };
+    
+    setMessages(prev => [...prev, errorResponse]);
+    toast({
+      variant: "destructive",
+      title: "Chat Error",
+      description: "There was a problem connecting to the AI model. Please try again.",
+      duration: 3000,
+    });
+  };
+
+  // Simulate response for locally handled models (nano and gemini)
+  const simulateModelResponse = (query: string, model: 'nano' | 'gemini'): Promise<string> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        let response = "";
+        
+        if (model === 'nano') {
+          response = `I'm ChatGPT 4.1 Nano, a lightweight but powerful AI assistant. ${
+            query.toLowerCase().includes("hello") || query.toLowerCase().includes("hi") 
+              ? "Hello! How can I help you today?" 
+              : `Regarding "${query}" - I've analyzed your question and I think I can help with that. What specific information are you looking for?`
+          }`;
+        } else {
+          response = `I'm Gemini, Google's advanced AI model. You asked about "${query}". ${
+            query.toLowerCase().includes("what") || query.toLowerCase().includes("how")
+              ? "That's an interesting question. Based on my training data, I can offer several perspectives on this topic."
+              : "I'd be happy to discuss this further and provide more detailed information if you'd like."
+          }`;
+        }
+        
+        resolve(response);
+      }, 800 + Math.random() * 400); // Simulate network delay between 800-1200ms
+    });
+  };
+  
   // Send a message to the AI
   const sendMessage = async (content: string) => {
     if (!content.trim()) return;
@@ -116,6 +182,12 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       (selectedModel === 'claude' && modelUsage.claude <= 0) || 
       (selectedModel === 'gpt' && modelUsage.gpt <= 0)
     ) {
+      toast({
+        variant: "destructive",
+        title: "Usage Limit Reached",
+        description: `You've reached your daily limit for ${getModelDisplayName(selectedModel)}.`,
+        duration: 3000,
+      });
       return;
     }
     
@@ -132,31 +204,26 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       // Initialize chat if needed
+      const currentChatId = chatId || uuidv4();
       if (!chatId) {
-        startNewChat();
+        setChatId(currentChatId);
       }
       
-      // Special case for Gemini which has connection issues
+      // Special case for Gemini or Nano which are handled locally
       if (selectedModel === 'gemini' || selectedModel === 'nano') {
-        // Simulate a response for Gemini or Nano since the API connection is failing or simulated
-        setTimeout(() => {
-          const responseContent = selectedModel === 'nano' 
-            ? `I'm ChatGPT 4.1 Nano. You asked: "${content}". Here's my response as the recommended, lightweight AI model.`
-            : `I'm Gemini. You asked: "${content}". This is a simulated response as the Gemini API integration is currently experiencing issues.`;
-            
-          const aiResponse: ChatMessage = {
-            id: uuidv4(),
-            content: responseContent,
-            isUser: false,
-            timestamp: new Date(),
-          };
-          setMessages(prev => [...prev, aiResponse]);
-          setIsLoading(false);
-        }, 1000);
+        const responseContent = await simulateModelResponse(content, selectedModel);
+        
+        const aiResponse: ChatMessage = {
+          id: uuidv4(),
+          content: responseContent,
+          isUser: false,
+          timestamp: new Date(),
+        };
+        
+        setMessages(prev => [...prev, aiResponse]);
+        setIsLoading(false);
         return;
       }
-      
-      const currentChatId = chatId || uuidv4();
       
       // Call the AI function for other models
       const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
@@ -169,7 +236,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (error) {
-        throw error;
+        console.error("Supabase function error:", error);
+        handleChatError("Sorry, I encountered an error while trying to respond. Please try again or select a different AI model.");
+        return;
       }
       
       // Add AI response to messages
@@ -187,25 +256,18 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         if (data.usageRemaining !== undefined) {
           updateModelUsage(selectedModel, data.usageRemaining);
         }
+      } else {
+        handleChatError("Received an empty response from the AI. Please try again.");
       }
     } catch (error) {
       console.error('AI Chat Error:', error);
-      
-      // Add fallback message on error
-      const errorMessage: ChatMessage = {
-        id: uuidv4(),
-        content: "Sorry, I encountered an error while trying to respond. Please try again or select a different AI model.",
-        isUser: false,
-        timestamp: new Date(),
-      };
-      
-      setMessages(prev => [...prev, errorMessage]);
+      handleChatError("Sorry, I encountered an error while trying to respond. Please try again or select a different AI model.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Use effect to clear messages when component unmounts to make chats temporary
+  // Clear messages when component unmounts to make chats temporary
   useEffect(() => {
     return () => {
       setMessages([]);
