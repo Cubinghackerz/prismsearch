@@ -1,4 +1,3 @@
-
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -7,7 +6,6 @@ import ChatInterface from '@/components/chat/ChatInterface';
 import ParticleBackground from '../components/ParticleBackground';
 import FooterWave from '../components/FooterWave';
 import { ChatProvider } from '@/context/ChatContext';
-
 const Chat = () => {
   return <ChatProvider>
       <div className="min-h-screen flex flex-col">
@@ -31,24 +29,20 @@ const Chat = () => {
               opacity: 1,
               x: 0
             }} className="absolute left-4 top-1/2 -translate-y-1/2">
-                <Button variant="ghost" className="text-white bg-transparent hover:bg-blue-800/30">
+                <Button variant="ghost" className="text-white bg-transparent">
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back
                 </Button>
               </motion.div>
             </Link>
             
-            <motion.h1 
-              animate={{
-                backgroundPosition: ['0% 50%', '100% 50%']
-              }} 
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                repeatType: 'reverse'
-              }} 
-              className="font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-300 via-blue-500 to-blue-700 animate-gradient-text mb-2 text-4xl"
-            >
+            <motion.h1 animate={{
+            backgroundPosition: ['0% 50%', '100% 50%']
+          }} transition={{
+            duration: 3,
+            repeat: Infinity,
+            repeatType: 'reverse'
+          }} className="font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-300 via-blue-500 to-blue-700 animate-gradient-text mb-2 text-4xl">
               Prism Chat
             </motion.h1>
             <motion.p initial={{
@@ -84,5 +78,4 @@ const Chat = () => {
       </div>
     </ChatProvider>;
 };
-
 export default Chat;
