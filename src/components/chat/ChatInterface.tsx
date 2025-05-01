@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { ArrowUp, Bot, User, Loader2, RefreshCw, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { motion } from 'framer-motion';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert } from "@/components/ui/alert";
-
 const ChatInterface = () => {
   const {
     messages,
@@ -21,33 +19,27 @@ const ChatInterface = () => {
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: 'smooth'
     });
   }, [messages]);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || isLoading) return;
     sendMessage(inputValue);
     setInputValue('');
   };
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
   };
-
   const handleModelChange = (value: string) => {
     selectModel(value as ChatModel);
   };
-
-  return (
-    <div className="flex flex-col h-[60vh] md:h-[75vh] lg:h-[80vh] bg-blue-950/20 backdrop-blur-md rounded-xl border border-blue-500/20 shadow-lg">
+  return <div className="flex flex-col h-[60vh] md:h-[75vh] lg:h-[80vh] bg-blue-950/20 backdrop-blur-md rounded-xl border border-blue-500/20 shadow-lg">
       <div className="p-4 border-b border-blue-900/40">
         <Alert className="mb-4 bg-yellow-500/10 border-yellow-500/50 text-yellow-300">
           <AlertTriangle className="h-4 w-4 text-white bg-transparent" />
@@ -74,7 +66,7 @@ const ChatInterface = () => {
               <RadioGroupItem value="gpt" id="gpt" className="peer sr-only" />
               <label htmlFor="gpt" className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${selectedModel === 'gpt' ? 'bg-blue-500/30 border-blue-400 ring-2 ring-blue-400/50' : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-semibold text-blue-100">ChatGPT</span>
+                  <span className="text-lg font-semibold text-blue-100">ChatGPT 4o</span>
                   <span className="px-2 py-1 text-xs bg-green-500/20 text-green-300 rounded-full">Unlimited</span>
                 </div>
                 <span className="mt-1 text-sm text-blue-200/70">Versatile AI with broad knowledge</span>
@@ -84,113 +76,71 @@ const ChatInterface = () => {
         </div>
 
         <div className="mt-4 flex justify-end">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={startNewChat} 
-            className="border-blue-500/50 bg-transparent text-slate-50 hover:bg-blue-800/20 hover:border-blue-400/60 transition-all duration-300"
-          >
+          <Button variant="outline" size="sm" onClick={startNewChat} className="border-blue-500/50 bg-transparent text-slate-50 hover:bg-blue-800/20 hover:border-blue-400/60 transition-all duration-300">
             <RefreshCw className="mr-2 h-4 w-4" /> New Chat
           </Button>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4 md:p-6 bg-gradient-to-b from-blue-950/10 to-blue-900/5">
-        {messages.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-blue-300/60">
+        {messages.length === 0 ? <div className="h-full flex items-center justify-center text-blue-300/60">
             <p>Send a message to start chatting</p>
-          </div>
-        ) : messages.map(message => (
-          <motion.div 
-            key={message.id} 
-            initial={{ opacity: 0, y: 10 }} 
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className={`flex gap-3 ${message.isUser ? 'justify-end' : ''}`}
-          >
-            {!message.isUser && (
-              <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
+          </div> : messages.map(message => <motion.div key={message.id} initial={{
+        opacity: 0,
+        y: 10
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        duration: 0.3
+      }} className={`flex gap-3 ${message.isUser ? 'justify-end' : ''}`}>
+            {!message.isUser && <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
                 <Bot className="w-4 h-4 text-blue-400" />
-              </div>
-            )}
-            <motion.div 
-              initial={{ scale: 0.95 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 0.2 }}
-              className={`max-w-[80%] md:max-w-[75%] lg:max-w-[65%] rounded-lg p-3 ${
-                message.isUser 
-                  ? 'bg-blue-600/20 text-gray-200 rounded-tr-none shadow-md shadow-blue-900/10' 
-                  : 'bg-blue-800/40 text-gray-200 rounded-tl-none shadow-md shadow-blue-900/10'
-              }`}
-            >
+              </div>}
+            <motion.div initial={{
+          scale: 0.95
+        }} animate={{
+          scale: 1
+        }} transition={{
+          duration: 0.2
+        }} className={`max-w-[80%] md:max-w-[75%] lg:max-w-[65%] rounded-lg p-3 ${message.isUser ? 'bg-blue-600/20 text-gray-200 rounded-tr-none shadow-md shadow-blue-900/10' : 'bg-blue-800/40 text-gray-200 rounded-tl-none shadow-md shadow-blue-900/10'}`}>
               {message.content}
             </motion.div>
-            {message.isUser && (
-              <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
+            {message.isUser && <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
                 <User className="w-4 h-4 text-blue-400" />
-              </div>
-            )}
-          </motion.div>
-        ))}
+              </div>}
+          </motion.div>)}
         <div ref={messagesEndRef} />
       </div>
 
       <form onSubmit={handleSubmit} className="p-4 md:p-6 border-t border-blue-900/40 bg-blue-950/10">
         <div className="relative flex items-center max-w-4xl mx-auto">
-          <Textarea 
-            value={inputValue} 
-            onChange={e => setInputValue(e.target.value)} 
-            onKeyDown={handleKeyDown}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            placeholder="Ask anything..." 
-            className={`
+          <Textarea value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyDown={handleKeyDown} onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)} placeholder="Ask anything..." className={`
               resize-none bg-[#1A1F2C]/90 border text-white pr-12 
               min-h-[56px] py-3 rounded-xl md:min-h-[64px] shadow-lg
               transition-all duration-300 placeholder:text-blue-200/30 
               focus:placeholder:opacity-50 focus:text-white
-              ${isFocused || inputValue 
-                ? 'shadow-[0_0_35px_rgba(59,130,246,0.4)] border-blue-400/50 scale-[1.02]' 
-                : 'border-blue-500/30'}
-              ${isFocused 
-                ? 'shadow-[0_0_40px_rgba(59,130,246,0.4)] border-blue-300/50' 
-                : ''}
+              ${isFocused || inputValue ? 'shadow-[0_0_35px_rgba(59,130,246,0.4)] border-blue-400/50 scale-[1.02]' : 'border-blue-500/30'}
+              ${isFocused ? 'shadow-[0_0_40px_rgba(59,130,246,0.4)] border-blue-300/50' : ''}
               hover:shadow-[0_0_30px_rgba(59,130,246,0.35)] hover:border-blue-400/40
               hover:scale-[1.01] hover:bg-[#1A1F2C]/95
-            `}
-            disabled={isLoading} 
-          />
-          <div 
-            className={`
+            `} disabled={isLoading} />
+          <div className={`
               absolute inset-0 -z-10 transition-opacity duration-500
               bg-gradient-to-r from-blue-500/20 via-blue-400/20 to-sky-500/20
               blur-3xl rounded-full
               ${isFocused ? 'opacity-100' : 'opacity-0'}
-            `} 
-          />
-          <Button 
-            type="submit" 
-            size="icon" 
-            className={`
+            `} />
+          <Button type="submit" size="icon" className={`
               absolute right-2 rounded-full text-white 
               w-10 h-10 flex items-center justify-center shadow-md
               transition-all duration-300
-              ${(!inputValue.trim() || isLoading) 
-                ? 'bg-gray-700/30 cursor-not-allowed opacity-50' 
-                : 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 cursor-pointer shadow-lg shadow-blue-900/30 hover:shadow-blue-800/40 hover:scale-105 active:scale-95'}
-            `}
-            disabled={!inputValue.trim() || isLoading}
-          >
-            {isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin text-white" />
-            ) : (
-              <ArrowUp className="h-5 w-5 text-white" />
-            )}
+              ${!inputValue.trim() || isLoading ? 'bg-gray-700/30 cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 cursor-pointer shadow-lg shadow-blue-900/30 hover:shadow-blue-800/40 hover:scale-105 active:scale-95'}
+            `} disabled={!inputValue.trim() || isLoading}>
+            {isLoading ? <Loader2 className="h-5 w-5 animate-spin text-white" /> : <ArrowUp className="h-5 w-5 text-white" />}
           </Button>
         </div>
       </form>
-    </div>
-  );
+    </div>;
 };
-
 export default ChatInterface;
