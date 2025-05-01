@@ -51,9 +51,7 @@ const Chat = () => {
             opacity: 1
           }} transition={{
             delay: 0.2
-          }} className="text-gray-100 max-w-lg mx-auto text-sm">
-              Chat with AI assistants powered by Claude, ChatGPT, and Gemini
-            </motion.p>
+          }} className="text-gray-100 max-w-lg mx-auto text-sm">Chat with AI assistants powered by Claude and ChatGPT!</motion.p>
           </motion.div>
         </header>
         
