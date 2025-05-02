@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { ArrowUp, Bot, User, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { motion } from 'framer-motion';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert } from "@/components/ui/alert";
+import { Form, FormField, FormItem } from "@/components/ui/form";
 
 const ChatInterface = () => {
   const {
@@ -18,6 +20,7 @@ const ChatInterface = () => {
   } = useChat();
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const [openAIKey, setOpenAIKey] = useState(localStorage.getItem('openai_api_key') || '');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -44,6 +47,12 @@ const ChatInterface = () => {
     selectModel(value as ChatModel);
   };
 
+  const handleAPIKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setOpenAIKey(value);
+    localStorage.setItem('openai_api_key', value);
+  };
+
   return (
     <div className="flex flex-col h-[60vh] md:h-[75vh] lg:h-[80vh] bg-blue-950/20 backdrop-blur-md rounded-xl border border-blue-500/30 shadow-lg">
       <div className="p-4 border-b border-blue-900/40">
@@ -57,10 +66,10 @@ const ChatInterface = () => {
           <label className="text-sm font-medium text-blue-300">Select AI Model:</label>
           <RadioGroup defaultValue={selectedModel} value={selectedModel} onValueChange={handleModelChange} className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="relative flex items-center">
-              <RadioGroupItem value="nano" id="nano" className="peer sr-only" />
-              <label htmlFor="nano" className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${selectedModel === 'nano' ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-400/50' : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'}`}>
+              <RadioGroupItem value="openai" id="openai" className="peer sr-only" />
+              <label htmlFor="openai" className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${selectedModel === 'openai' ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-400/50' : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-semibold text-blue-200">Gemini 2.5 Flash Preview</span>
+                  <span className="text-lg font-semibold text-blue-200">ChatGPT-4.1 Nano</span>
                   <span className="px-2 py-1 text-xs bg-green-500/30 text-green-300 rounded-full">Recommended</span>
                 </div>
                 <div className="flex items-center mt-1">
@@ -74,7 +83,7 @@ const ChatInterface = () => {
               <RadioGroupItem value="gemini" id="gemini" className="peer sr-only" />
               <label htmlFor="gemini" className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${selectedModel === 'gemini' ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-400/50' : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-semibold text-blue-200">Gemini</span>
+                  <span className="text-lg font-semibold text-blue-200">Gemini 2.5 Flash Preview</span>
                   <span className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">Standard</span>
                 </div>
                 <span className="mt-1 text-sm text-blue-300/70">Google's powerful AI model</span>
@@ -82,6 +91,22 @@ const ChatInterface = () => {
             </div>
           </RadioGroup>
         </div>
+
+        {selectedModel === 'openai' && (
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-blue-300 mb-1">OpenAI API Key:</label>
+            <input 
+              type="password" 
+              value={openAIKey} 
+              onChange={handleAPIKeyChange}
+              placeholder="Enter your OpenAI API key" 
+              className="w-full p-2 bg-blue-950/40 border border-blue-500/30 rounded-md text-blue-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <p className="mt-1 text-xs text-blue-300/70">
+              Your API key is stored locally and never sent to our servers.
+            </p>
+          </div>
+        )}
 
         <div className="mt-4 flex justify-end">
           <Button variant="outline" size="sm" onClick={startNewChat} className="border-blue-500/50 text-blue-200 hover:border-blue-400/60 transition-all duration-300 bg-transparent">

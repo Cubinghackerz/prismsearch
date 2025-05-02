@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 
-export type ChatModel = 'gemini' | 'nano';
+export type ChatModel = 'gemini' | 'openai';
 
 export interface ChatMessage {
   id: string;
@@ -14,7 +14,7 @@ export interface ChatMessage {
 }
 
 interface ModelUsage {
-  nano: number | null;
+  openai: number | null;
   gemini: number | null; // null means unlimited
 }
 
@@ -32,7 +32,7 @@ interface ChatContextType {
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 const DAILY_LIMITS = {
-  nano: null, // Unlimited
+  openai: null, // Unlimited
   gemini: null, // Unlimited
 };
 
@@ -43,9 +43,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<ChatModel>('nano');
+  const [selectedModel, setSelectedModel] = useState<ChatModel>('openai');
   const [modelUsage, setModelUsage] = useState<ModelUsage>({
-    nano: DAILY_LIMITS.nano,
+    openai: DAILY_LIMITS.openai,
     gemini: DAILY_LIMITS.gemini,
   });
   const { toast } = useToast();
@@ -60,7 +60,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       if (lastUsageDate !== today) {
         localStorage.setItem(LAST_USAGE_DATE_KEY, today);
         const resetUsage: ModelUsage = {
-          nano: DAILY_LIMITS.nano,
+          openai: DAILY_LIMITS.openai,
           gemini: DAILY_LIMITS.gemini,
         };
         localStorage.setItem(USAGE_KEY, JSON.stringify(resetUsage));
@@ -103,8 +103,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   // Helper function to get display name for models
   const getModelDisplayName = (model: ChatModel): string => {
     const displayNames = {
-      nano: "Gemini 2.5 Flash Preview",
-      gemini: "Gemini",
+      openai: "ChatGPT-4.1 Nano",
+      gemini: "Gemini 2.5 Flash Preview",
     };
     return displayNames[model] || model;
   };
@@ -149,7 +149,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         setChatId(currentChatId);
       }
       
-      // Call the AI function (now all models use Gemini)
+      // Call the AI function
       const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
         body: { 
           query: content,

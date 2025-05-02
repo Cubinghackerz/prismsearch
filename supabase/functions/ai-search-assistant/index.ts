@@ -1,16 +1,23 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { GoogleGenerativeAI } from "npm:@google/generative-ai@0.2.1"
+import { Configuration, OpenAIApi } from "npm:openai@3.2.1"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Get API key from environment variable for better security
-const API_KEY = Deno.env.get('GEMINI_API_KEY') || 'AIzaSyAD2-PwoGFnlgzYIBI63s0Rzwe8Mugi09E';
-const genAI = new GoogleGenerativeAI(API_KEY);
+// Get API keys from environment variables for better security
+const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY') || 'AIzaSyAD2-PwoGFnlgzYIBI63s0Rzwe8Mugi09E';
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY') || '';
+
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const geminiModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+// Configure OpenAI
+const openaiConfig = new Configuration({ apiKey: OPENAI_API_KEY });
+const openai = new OpenAIApi(openaiConfig);
 
 // In-memory store for chat history
 const chatHistories = new Map();
@@ -38,31 +45,61 @@ serve(async (req) => {
     // Get chat history if it exists
     const existingChatHistory = chatId ? (chatHistories.get(chatId) || []) : []
     
-    // Create messages array for the Gemini model
+    // Create messages array for the model
     const formattedChatHistory = existingChatHistory.map(msg => ({
       role: msg.isUser ? 'user' : 'assistant',
       content: msg.content
     }))
 
-    // All models now use Gemini
-    try {
-      const chat = geminiModel.startChat({
-        history: formattedChatHistory.map(msg => ({
-          role: msg.role === 'user' ? 'user' : 'model',
-          parts: [{ text: msg.content }],
-        })),
-        generationConfig: {
-          maxOutputTokens: 2048,
-          temperature: 0.7,
+    // Use the appropriate model based on the request
+    if (model === 'openai') {
+      try {
+        if (!OPENAI_API_KEY) {
+          throw new Error("OpenAI API key is not configured");
         }
-      });
 
-      const result = await chat.sendMessage(query);
-      const responseText = result.response.text();
-      response = responseText;
-    } catch (error) {
-      console.error('Gemini error:', error);
-      response = "I apologize, but I encountered an error. Please try again.";
+        const messages = [
+          ...formattedChatHistory.map(msg => ({
+            role: msg.role,
+            content: msg.content
+          })),
+          { role: 'user', content: query }
+        ];
+
+        const completion = await openai.createChatCompletion({
+          model: "gpt-4o",
+          messages: messages,
+          max_tokens: 2048,
+          temperature: 0.7,
+        });
+
+        response = completion.data.choices[0].message?.content || 
+                  "I apologize, but I couldn't generate a response. Please try again.";
+      } catch (error) {
+        console.error('OpenAI error:', error);
+        response = "I apologize, but I encountered an error with the OpenAI service. Please try again or check if the API key is valid.";
+      }
+    } else {
+      // Use Gemini as fallback
+      try {
+        const chat = geminiModel.startChat({
+          history: formattedChatHistory.map(msg => ({
+            role: msg.role === 'user' ? 'user' : 'model',
+            parts: [{ text: msg.content }],
+          })),
+          generationConfig: {
+            maxOutputTokens: 2048,
+            temperature: 0.7,
+          }
+        });
+
+        const result = await chat.sendMessage(query);
+        const responseText = result.response.text();
+        response = responseText;
+      } catch (error) {
+        console.error('Gemini error:', error);
+        response = "I apologize, but I encountered an error. Please try again.";
+      }
     }
 
     return new Response(
