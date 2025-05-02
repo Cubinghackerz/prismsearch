@@ -107,8 +107,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   // Helper function to get display name for models
   const getModelDisplayName = (model: ChatModel): string => {
     const displayNames = {
-      nano: "ChatGPT 4.1 Nano",
-      gpt: "ChatGPT 4o Mini",
+      nano: "Gemini 2.5 Flash Preview",
+      gpt: "Gemini 2.5 Flash Preview",
       gemini: "Gemini",
     };
     return displayNames[model] || model;

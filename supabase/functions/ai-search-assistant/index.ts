@@ -78,9 +78,9 @@ serve(async (req) => {
         }
         
         if (model === 'nano') {
-          systemMessage.content = 'You are ChatGPT 4.1 Nano, a lightweight and efficient AI assistant. Your responses should be concise, helpful, and conversational. Focus on providing clear and straightforward answers while maintaining a friendly tone. Be accurate but prioritize brevity over exhaustive detail.'
+          systemMessage.content = 'You are Gemini 2.5 Flash Preview, a lightweight and efficient AI assistant. Your responses should be concise, helpful, and conversational. Focus on providing clear and straightforward answers while maintaining a friendly tone. Be accurate but prioritize brevity over exhaustive detail.'
         } else {
-          systemMessage.content = 'You are ChatGPT 4o Mini, a helpful and knowledgeable AI assistant. Your responses should be informative, concise, and conversational. Always aim to provide accurate information while being engaging and friendly. If you are unsure about something, be honest about the limitations of your knowledge.'
+          systemMessage.content = 'You are Gemini 2.5 Flash Preview, a helpful and knowledgeable AI assistant. Your responses should be informative, concise, and conversational. Always aim to provide accurate information while being engaging and friendly. If you are unsure about something, be honest about the limitations of your knowledge.'
         }
 
         const messages = [systemMessage, ...formattedChatHistory, { role: 'user', content: query }]
@@ -100,7 +100,7 @@ serve(async (req) => {
       } catch (openaiError) {
         console.error('OpenAI error:', openaiError)
         // Provide a helpful fallback message
-        response = `I'm ${model === 'nano' ? 'ChatGPT 4.1 Nano' : 'ChatGPT 4o Mini'}, but I'm having trouble connecting right now. Please try again or select a different AI model.`
+        response = `I'm Gemini 2.5 Flash Preview, but I'm having trouble connecting right now. Please try again or select a different AI model.`
         usageRemaining = 10
       }
     } else {
