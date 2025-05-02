@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { ArrowUp, Bot, User, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,8 +14,7 @@ const ChatInterface = () => {
     isLoading,
     startNewChat,
     selectModel,
-    selectedModel,
-    modelUsage
+    selectedModel
   } = useChat();
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -46,10 +44,10 @@ const ChatInterface = () => {
     selectModel(value as ChatModel);
   };
 
-  return <div className="flex flex-col h-[60vh] md:h-[75vh] lg:h-[80vh] bg-blue-950/20 backdrop-blur-md rounded-xl border border-blue-500/30 shadow-lg">
+  return (
+    <div className="flex flex-col h-[60vh] md:h-[75vh] lg:h-[80vh] bg-blue-950/20 backdrop-blur-md rounded-xl border border-blue-500/30 shadow-lg">
       <div className="p-4 border-b border-blue-900/40">
         <Alert className="mb-4 bg-blue-500/10 border-blue-500/50 text-blue-300">
-          
           <p className="text-sm">
             Chat mode is experimental and may be unstable. We appreciate your patience as we improve it.
           </p>
@@ -62,7 +60,7 @@ const ChatInterface = () => {
               <RadioGroupItem value="nano" id="nano" className="peer sr-only" />
               <label htmlFor="nano" className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${selectedModel === 'nano' ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-400/50' : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-semibold text-blue-200">ChatGPT 4.1 Nano</span>
+                  <span className="text-lg font-semibold text-blue-200">Gemini 2.5 Flash Preview</span>
                   <span className="px-2 py-1 text-xs bg-green-500/30 text-green-300 rounded-full">Recommended</span>
                 </div>
                 <div className="flex items-center mt-1">
@@ -73,13 +71,13 @@ const ChatInterface = () => {
             </div>
 
             <div className="relative flex items-center">
-              <RadioGroupItem value="gpt" id="gpt" className="peer sr-only" />
-              <label htmlFor="gpt" className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${selectedModel === 'gpt' ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-400/50' : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'}`}>
+              <RadioGroupItem value="gemini" id="gemini" className="peer sr-only" />
+              <label htmlFor="gemini" className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${selectedModel === 'gemini' ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-400/50' : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-semibold text-blue-200">ChatGPT 4o Mini</span>
-                  <span className="px-2 py-1 text-xs bg-blue-500/20 text-blue-300 rounded-full">Unlimited</span>
+                  <span className="text-lg font-semibold text-blue-200">Gemini</span>
+                  <span className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">Standard</span>
                 </div>
-                <span className="mt-1 text-sm text-blue-300/70">Versatile AI with broad knowledge</span>
+                <span className="mt-1 text-sm text-blue-300/70">Google's powerful AI model</span>
               </label>
             </div>
           </RadioGroup>
@@ -151,7 +149,8 @@ const ChatInterface = () => {
           </Button>
         </div>
       </form>
-    </div>;
+    </div>
+  );
 };
 
 export default ChatInterface;

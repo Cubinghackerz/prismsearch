@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 
-export type ChatModel = 'gpt' | 'nano' | 'gemini';
+export type ChatModel = 'gemini' | 'nano';
 
 export interface ChatMessage {
   id: string;
@@ -14,7 +14,6 @@ export interface ChatMessage {
 }
 
 interface ModelUsage {
-  gpt: number;
   nano: number | null;
   gemini: number | null; // null means unlimited
 }
@@ -33,7 +32,6 @@ interface ChatContextType {
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 const DAILY_LIMITS = {
-  gpt: 10,
   nano: null, // Unlimited
   gemini: null, // Unlimited
 };
@@ -47,7 +45,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState<ChatModel>('nano');
   const [modelUsage, setModelUsage] = useState<ModelUsage>({
-    gpt: DAILY_LIMITS.gpt || 0,
     nano: DAILY_LIMITS.nano,
     gemini: DAILY_LIMITS.gemini,
   });
@@ -63,7 +60,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       if (lastUsageDate !== today) {
         localStorage.setItem(LAST_USAGE_DATE_KEY, today);
         const resetUsage: ModelUsage = {
-          gpt: DAILY_LIMITS.gpt || 0,
           nano: DAILY_LIMITS.nano,
           gemini: DAILY_LIMITS.gemini,
         };
@@ -107,22 +103,10 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   // Helper function to get display name for models
   const getModelDisplayName = (model: ChatModel): string => {
     const displayNames = {
-      nano: "ChatGPT 4.1 Nano",
-      gpt: "ChatGPT 4o Mini",
+      nano: "Gemini 2.5 Flash Preview",
       gemini: "Gemini",
     };
     return displayNames[model] || model;
-  };
-
-  // Update usage for a model
-  const updateModelUsage = (model: ChatModel, remaining: number | null) => {
-    if (remaining === null) return; // Skip for unlimited models
-    
-    setModelUsage(prev => {
-      const updated = { ...prev, [model]: remaining };
-      localStorage.setItem(USAGE_KEY, JSON.stringify(updated));
-      return updated;
-    });
   };
   
   // Handle errors in the chat flow
@@ -147,17 +131,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const sendMessage = async (content: string) => {
     if (!content.trim()) return;
     
-    // Don't allow sending if we've reached the limit for paid models
-    if (selectedModel === 'gpt' && modelUsage.gpt <= 0) {
-      toast({
-        variant: "destructive",
-        title: "Usage Limit Reached",
-        description: `You've reached your daily limit for ${getModelDisplayName(selectedModel)}.`,
-        duration: 3000,
-      });
-      return;
-    }
-    
     // Create a new message
     const userMessage: ChatMessage = {
       id: uuidv4(),
@@ -176,24 +149,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         setChatId(currentChatId);
       }
       
-      // Special case for Gemini which is handled locally
-      if (selectedModel === 'gemini') {
-        // Simulate response for Gemini model
-        const responseContent = await simulateGeminiResponse(content);
-        
-        const aiResponse: ChatMessage = {
-          id: uuidv4(),
-          content: responseContent,
-          isUser: false,
-          timestamp: new Date(),
-        };
-        
-        setMessages(prev => [...prev, aiResponse]);
-        setIsLoading(false);
-        return;
-      }
-      
-      // Call the AI function for all other models (GPT and Nano)
+      // Call the AI function (now all models use Gemini)
       const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
         body: { 
           query: content,
@@ -205,7 +161,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) {
         console.error("Supabase function error:", error);
-        handleChatError("Sorry, I encountered an error while trying to respond. Please try again or select a different AI model.");
+        handleChatError("Sorry, I encountered an error while trying to respond. Please try again.");
         return;
       }
       
@@ -219,35 +175,15 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         };
         
         setMessages(prev => [...prev, aiMessage]);
-        
-        // Update usage if available
-        if (data.usageRemaining !== undefined) {
-          updateModelUsage(selectedModel, data.usageRemaining);
-        }
       } else {
         handleChatError("Received an empty response from the AI. Please try again.");
       }
     } catch (error) {
       console.error('AI Chat Error:', error);
-      handleChatError("Sorry, I encountered an error while trying to respond. Please try again or select a different AI model.");
+      handleChatError("Sorry, I encountered an error while trying to respond. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Simulate Gemini response for local handling
-  const simulateGeminiResponse = (query: string): Promise<string> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const response = `I'm Gemini, Google's advanced AI model. You asked about "${query}". ${
-          query.toLowerCase().includes("what") || query.toLowerCase().includes("how")
-            ? "That's an interesting question. Based on my training data, I can offer several perspectives on this topic."
-            : "I'd be happy to discuss this further and provide more detailed information if you'd like."
-        }`;
-        
-        resolve(response);
-      }, 800 + Math.random() * 400); // Simulate network delay between 800-1200ms
-    });
   };
 
   // Clear messages when component unmounts to make chats temporary

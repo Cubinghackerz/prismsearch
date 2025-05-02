@@ -1,6 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import OpenAI from 'https://esm.sh/openai@4.20.1'
 import { GoogleGenerativeAI } from "npm:@google/generative-ai@0.2.1"
 
 const corsHeaders = {
@@ -8,8 +7,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Update Gemini configuration to use the 2.0-flash model
-const genAI = new GoogleGenerativeAI('AIzaSyAD2-PwoGFnlgzYIBI63s0Rzwe8Mugi09E');
+// Get API key from environment variable for better security
+const API_KEY = Deno.env.get('GEMINI_API_KEY') || 'AIzaSyAD2-PwoGFnlgzYIBI63s0Rzwe8Mugi09E';
+const genAI = new GoogleGenerativeAI(API_KEY);
 const geminiModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 // In-memory store for chat history
@@ -23,7 +23,6 @@ serve(async (req) => {
   try {
     const { query, chatId, chatHistory, model } = await req.json()
     let response = ""
-    let usageRemaining = null
 
     if (!query) {
       throw new Error("Missing query parameter")
@@ -39,77 +38,35 @@ serve(async (req) => {
     // Get chat history if it exists
     const existingChatHistory = chatId ? (chatHistories.get(chatId) || []) : []
     
-    // Create messages array for the chosen model
+    // Create messages array for the Gemini model
     const formattedChatHistory = existingChatHistory.map(msg => ({
       role: msg.isUser ? 'user' : 'assistant',
       content: msg.content
     }))
 
-    if (model === 'gemini') {
-      try {
-        const chat = geminiModel.startChat({
-          history: formattedChatHistory.map(msg => ({
-            role: msg.role === 'user' ? 'user' : 'model',
-            parts: [{ text: msg.content }],
-          })),
-          generationConfig: {
-            maxOutputTokens: 2048,
-            temperature: 0.7,
-          }
-        });
-
-        const result = await chat.sendMessage(query);
-        const responseText = result.response.text();
-        response = responseText;
-      } catch (error) {
-        console.error('Gemini error:', error);
-        response = "I apologize, but I encountered an error with Gemini. Please try again or choose a different AI model.";
-      }
-    } else if (model === 'gpt' || model === 'nano') {
-      try {
-        const openai = new OpenAI({
-          apiKey: Deno.env.get('OPENAI_API_KEY')!
-        })
-
-        // Create system message based on context and model
-        let systemMessage = {
-          role: 'system',
-          content: ''
-        }
-        
-        if (model === 'nano') {
-          systemMessage.content = 'You are ChatGPT 4.1 Nano, a lightweight and efficient AI assistant. Your responses should be concise, helpful, and conversational. Focus on providing clear and straightforward answers while maintaining a friendly tone. Be accurate but prioritize brevity over exhaustive detail.'
-        } else {
-          systemMessage.content = 'You are ChatGPT 4o Mini, a helpful and knowledgeable AI assistant. Your responses should be informative, concise, and conversational. Always aim to provide accurate information while being engaging and friendly. If you are unsure about something, be honest about the limitations of your knowledge.'
-        }
-
-        const messages = [systemMessage, ...formattedChatHistory, { role: 'user', content: query }]
-        
-        // Use appropriate model based on selection - both now use gpt-4o-mini
-        const modelName = 'gpt-4o-mini';
-
-        const completion = await openai.chat.completions.create({
-          model: modelName,
-          messages: messages,
+    // All models now use Gemini
+    try {
+      const chat = geminiModel.startChat({
+        history: formattedChatHistory.map(msg => ({
+          role: msg.role === 'user' ? 'user' : 'model',
+          parts: [{ text: msg.content }],
+        })),
+        generationConfig: {
+          maxOutputTokens: 2048,
           temperature: 0.7,
-          max_tokens: 1000,
-        })
+        }
+      });
 
-        response = completion.choices[0].message.content || ""
-        usageRemaining = 10 // Unlimited for a limited time
-      } catch (openaiError) {
-        console.error('OpenAI error:', openaiError)
-        // Provide a helpful fallback message
-        response = `I'm ${model === 'nano' ? 'ChatGPT 4.1 Nano' : 'ChatGPT 4o Mini'}, but I'm having trouble connecting right now. Please try again or select a different AI model.`
-        usageRemaining = 10
-      }
-    } else {
-      // Default fallback
-      response = "Sorry, I don't recognize the selected AI model. Please try a different model.";
+      const result = await chat.sendMessage(query);
+      const responseText = result.response.text();
+      response = responseText;
+    } catch (error) {
+      console.error('Gemini error:', error);
+      response = "I apologize, but I encountered an error. Please try again.";
     }
 
     return new Response(
-      JSON.stringify({ response, usageRemaining }),
+      JSON.stringify({ response, usageRemaining: null }), // All models are now unlimited
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
@@ -117,7 +74,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        response: "Sorry, I encountered an error. Please try again or select a different AI model."
+        response: "Sorry, I encountered an error. Please try again."
       }),
       { 
         status: 500,
