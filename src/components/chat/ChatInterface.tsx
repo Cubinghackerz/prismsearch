@@ -59,27 +59,27 @@ const ChatInterface = () => {
           <label className="text-sm font-medium text-blue-300">Select AI Model:</label>
           <RadioGroup defaultValue={selectedModel} value={selectedModel} onValueChange={handleModelChange} className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="relative flex items-center">
-              <RadioGroupItem value="openai" id="openai" className="peer sr-only" />
-              <label htmlFor="openai" className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${selectedModel === 'openai' ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-400/50' : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'}`}>
+              <RadioGroupItem value="mistral" id="mistral" className="peer sr-only" />
+              <label htmlFor="mistral" className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${selectedModel === 'mistral' ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-400/50' : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-semibold text-blue-200">ChatGPT-4.1 Nano</span>
+                  <span className="text-lg font-semibold text-blue-200">Mistral Medium</span>
                   <span className="px-2 py-1 text-xs bg-green-500/30 text-green-300 rounded-full">Recommended</span>
                 </div>
                 <div className="flex items-center mt-1">
                   <span className="px-2 py-0.5 text-xs bg-blue-500/20 text-blue-300 rounded-full mr-2">Unlimited</span>
-                  <span className="text-sm text-blue-300/70">Lightweight & efficient AI assistant</span>
+                  <span className="text-sm text-blue-300/70">Powerful & efficient AI assistant</span>
                 </div>
               </label>
             </div>
 
             <div className="relative flex items-center">
-              <RadioGroupItem value="gemini" id="gemini" className="peer sr-only" />
-              <label htmlFor="gemini" className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${selectedModel === 'gemini' ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-400/50' : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'}`}>
+              <RadioGroupItem value="deepseek" id="deepseek" className="peer sr-only" />
+              <label htmlFor="deepseek" className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${selectedModel === 'deepseek' ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-400/50' : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-semibold text-blue-200">Gemini 2.5 Flash Preview</span>
-                  <span className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">Standard</span>
+                  <span className="text-lg font-semibold text-blue-200">DeepSeek-R1</span>
+                  <span className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">Advanced</span>
                 </div>
-                <span className="mt-1 text-sm text-blue-300/70">Google's powerful AI model</span>
+                <span className="mt-1 text-sm text-blue-300/70">70B model for nuanced responses</span>
               </label>
             </div>
           </RadioGroup>

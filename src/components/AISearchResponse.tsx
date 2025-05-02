@@ -30,7 +30,7 @@ const AISearchResponse = ({
         } = await supabase.functions.invoke('ai-search-assistant', {
           body: {
             query,
-            model: 'gemini' // Default to gemini for quick search responses since it's more reliable
+            model: 'deepseek' // Default to deepseek for quick search responses
           }
         });
         if (error) throw error;

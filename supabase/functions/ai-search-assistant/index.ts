@@ -1,7 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { GoogleGenerativeAI } from "npm:@google/generative-ai@0.2.1"
-import { Configuration, OpenAIApi } from "npm:openai@3.2.1"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,14 +9,11 @@ const corsHeaders = {
 
 // Get API keys from environment variables for better security
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY') || 'AIzaSyAD2-PwoGFnlgzYIBI63s0Rzwe8Mugi09E';
-const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY') || '';
+const MISTRAL_API_KEY = Deno.env.get('MISTRAL_API_KEY') || '';
+const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY') || '';
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const geminiModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
-// Configure OpenAI
-const openaiConfig = new Configuration({ apiKey: OPENAI_API_KEY });
-const openai = new OpenAIApi(openaiConfig);
 
 // In-memory store for chat history
 const chatHistories = new Map();
@@ -52,10 +48,10 @@ serve(async (req) => {
     }))
 
     // Use the appropriate model based on the request
-    if (model === 'openai') {
+    if (model === 'mistral') {
       try {
-        if (!OPENAI_API_KEY) {
-          throw new Error("OpenAI API key is not configured");
+        if (!MISTRAL_API_KEY) {
+          throw new Error("Mistral API key is not configured");
         }
 
         const messages = [
@@ -66,18 +62,73 @@ serve(async (req) => {
           { role: 'user', content: query }
         ];
 
-        const completion = await openai.createChatCompletion({
-          model: "gpt-4o",
-          messages: messages,
-          max_tokens: 2048,
-          temperature: 0.7,
+        const completion = await fetch("https://api.mistral.ai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${MISTRAL_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "mistral-medium",
+            messages: messages,
+            max_tokens: 2048,
+            temperature: 0.7,
+          })
         });
 
-        response = completion.data.choices[0].message?.content || 
+        const data = await completion.json();
+        
+        if (data.error) {
+          console.error('Mistral API error:', data.error);
+          throw new Error(data.error.message || 'Mistral API error');
+        }
+        
+        response = data.choices[0].message.content || 
                   "I apologize, but I couldn't generate a response. Please try again.";
       } catch (error) {
-        console.error('OpenAI error:', error);
-        response = "I apologize, but I encountered an error with the OpenAI service. Please check if the API key is valid and configured properly.";
+        console.error('Mistral error:', error);
+        response = "I apologize, but I encountered an error with the Mistral service. Please check if the API key is valid and configured properly.";
+      }
+    } else if (model === 'deepseek') {
+      try {
+        if (!DEEPSEEK_API_KEY) {
+          throw new Error("DeepSeek API key is not configured");
+        }
+
+        const messages = [
+          ...formattedChatHistory.map(msg => ({
+            role: msg.role,
+            content: msg.content
+          })),
+          { role: 'user', content: query }
+        ];
+
+        const completion = await fetch("https://api.deepseek.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${DEEPSEEK_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "deepseek-r1-distill-llama-70b",
+            messages: messages,
+            max_tokens: 2048,
+            temperature: 0.7,
+          })
+        });
+
+        const data = await completion.json();
+        
+        if (data.error) {
+          console.error('DeepSeek API error:', data.error);
+          throw new Error(data.error.message || 'DeepSeek API error');
+        }
+        
+        response = data.choices[0].message.content || 
+                  "I apologize, but I couldn't generate a response. Please try again.";
+      } catch (error) {
+        console.error('DeepSeek error:', error);
+        response = "I apologize, but I encountered an error with the DeepSeek service. Please check if the API key is valid and configured properly.";
       }
     } else {
       // Use Gemini as fallback

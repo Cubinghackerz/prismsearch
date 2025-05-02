@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 
-export type ChatModel = 'gemini' | 'openai';
+export type ChatModel = 'mistral' | 'deepseek';
 
 export interface ChatMessage {
   id: string;
@@ -14,8 +14,8 @@ export interface ChatMessage {
 }
 
 interface ModelUsage {
-  openai: number | null;
-  gemini: number | null; // null means unlimited
+  mistral: number | null;
+  deepseek: number | null; // null means unlimited
 }
 
 interface ChatContextType {
@@ -32,8 +32,8 @@ interface ChatContextType {
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 const DAILY_LIMITS = {
-  openai: null, // Unlimited
-  gemini: null, // Unlimited
+  mistral: null, // Unlimited
+  deepseek: null, // Unlimited
 };
 
 const USAGE_KEY = 'prism_search_ai_usage';
@@ -43,10 +43,10 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<ChatModel>('openai');
+  const [selectedModel, setSelectedModel] = useState<ChatModel>('mistral');
   const [modelUsage, setModelUsage] = useState<ModelUsage>({
-    openai: DAILY_LIMITS.openai,
-    gemini: DAILY_LIMITS.gemini,
+    mistral: DAILY_LIMITS.mistral,
+    deepseek: DAILY_LIMITS.deepseek,
   });
   const { toast } = useToast();
 
@@ -60,8 +60,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       if (lastUsageDate !== today) {
         localStorage.setItem(LAST_USAGE_DATE_KEY, today);
         const resetUsage: ModelUsage = {
-          openai: DAILY_LIMITS.openai,
-          gemini: DAILY_LIMITS.gemini,
+          mistral: DAILY_LIMITS.mistral,
+          deepseek: DAILY_LIMITS.deepseek,
         };
         localStorage.setItem(USAGE_KEY, JSON.stringify(resetUsage));
         setModelUsage(resetUsage);
@@ -103,8 +103,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   // Helper function to get display name for models
   const getModelDisplayName = (model: ChatModel): string => {
     const displayNames = {
-      openai: "ChatGPT-4.1 Nano",
-      gemini: "Gemini 2.5 Flash Preview",
+      mistral: "Mistral Medium",
+      deepseek: "DeepSeek-R1-Distill-Llama-70B",
     };
     return displayNames[model] || model;
   };
