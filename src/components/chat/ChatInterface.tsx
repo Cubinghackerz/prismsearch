@@ -20,7 +20,6 @@ const ChatInterface = () => {
   } = useChat();
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
-  const [openAIKey, setOpenAIKey] = useState(localStorage.getItem('openai_api_key') || '');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,12 +44,6 @@ const ChatInterface = () => {
 
   const handleModelChange = (value: string) => {
     selectModel(value as ChatModel);
-  };
-
-  const handleAPIKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setOpenAIKey(value);
-    localStorage.setItem('openai_api_key', value);
   };
 
   return (
@@ -91,22 +84,6 @@ const ChatInterface = () => {
             </div>
           </RadioGroup>
         </div>
-
-        {selectedModel === 'openai' && (
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-blue-300 mb-1">OpenAI API Key:</label>
-            <input 
-              type="password" 
-              value={openAIKey} 
-              onChange={handleAPIKeyChange}
-              placeholder="Enter your OpenAI API key" 
-              className="w-full p-2 bg-blue-950/40 border border-blue-500/30 rounded-md text-blue-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <p className="mt-1 text-xs text-blue-300/70">
-              Your API key is stored locally and never sent to our servers.
-            </p>
-          </div>
-        )}
 
         <div className="mt-4 flex justify-end">
           <Button variant="outline" size="sm" onClick={startNewChat} className="border-blue-500/50 text-blue-200 hover:border-blue-400/60 transition-all duration-300 bg-transparent">

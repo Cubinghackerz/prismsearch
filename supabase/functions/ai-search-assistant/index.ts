@@ -77,7 +77,7 @@ serve(async (req) => {
                   "I apologize, but I couldn't generate a response. Please try again.";
       } catch (error) {
         console.error('OpenAI error:', error);
-        response = "I apologize, but I encountered an error with the OpenAI service. Please try again or check if the API key is valid.";
+        response = "I apologize, but I encountered an error with the OpenAI service. Please check if the API key is valid and configured properly.";
       }
     } else {
       // Use Gemini as fallback
