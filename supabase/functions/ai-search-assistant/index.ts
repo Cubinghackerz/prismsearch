@@ -8,9 +8,9 @@ const corsHeaders = {
 }
 
 // Get API keys from environment variables for better security
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY') || 'AIzaSyAD2-PwoGFnlgzYIBI63s0Rzwe8Mugi09E';
+const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY') || '';
 const MISTRAL_API_KEY = Deno.env.get('MISTRAL_API_KEY') || '';
-const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY') || '';
+const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY') || '';
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const geminiModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
@@ -89,10 +89,10 @@ serve(async (req) => {
         console.error('Mistral error:', error);
         response = "I apologize, but I encountered an error with the Mistral service. Please check if the API key is valid and configured properly.";
       }
-    } else if (model === 'deepseek') {
+    } else if (model === 'groq') {
       try {
-        if (!DEEPSEEK_API_KEY) {
-          throw new Error("DeepSeek API key is not configured");
+        if (!GROQ_API_KEY) {
+          throw new Error("Groq API key is not configured");
         }
 
         const messages = [
@@ -103,14 +103,14 @@ serve(async (req) => {
           { role: 'user', content: query }
         ];
 
-        const completion = await fetch("https://api.deepseek.com/v1/chat/completions", {
+        const completion = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${DEEPSEEK_API_KEY}`
+            "Authorization": `Bearer ${GROQ_API_KEY}`
           },
           body: JSON.stringify({
-            model: "deepseek-r1-distill-llama-70b",
+            model: "llama3-70b-8192",
             messages: messages,
             max_tokens: 2048,
             temperature: 0.7,
@@ -120,15 +120,15 @@ serve(async (req) => {
         const data = await completion.json();
         
         if (data.error) {
-          console.error('DeepSeek API error:', data.error);
-          throw new Error(data.error.message || 'DeepSeek API error');
+          console.error('Groq API error:', data.error);
+          throw new Error(data.error.message || 'Groq API error');
         }
         
         response = data.choices[0].message.content || 
                   "I apologize, but I couldn't generate a response. Please try again.";
       } catch (error) {
-        console.error('DeepSeek error:', error);
-        response = "I apologize, but I encountered an error with the DeepSeek service. Please check if the API key is valid and configured properly.";
+        console.error('Groq error:', error);
+        response = "I apologize, but I encountered an error with the Groq service. Please check if the API key is valid and configured properly.";
       }
     } else {
       // Use Gemini as fallback

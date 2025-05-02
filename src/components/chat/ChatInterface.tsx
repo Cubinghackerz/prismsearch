@@ -57,29 +57,40 @@ const ChatInterface = () => {
         
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium text-blue-300">Select AI Model:</label>
-          <RadioGroup defaultValue={selectedModel} value={selectedModel} onValueChange={handleModelChange} className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <RadioGroup defaultValue={selectedModel} value={selectedModel} onValueChange={handleModelChange} className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="relative flex items-center">
               <RadioGroupItem value="mistral" id="mistral" className="peer sr-only" />
               <label htmlFor="mistral" className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${selectedModel === 'mistral' ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-400/50' : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'}`}>
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-semibold text-blue-200">Mistral Medium</span>
-                  <span className="px-2 py-1 text-xs bg-green-500/30 text-green-300 rounded-full">Recommended</span>
+                  <span className="px-2 py-1 text-xs bg-green-500/30 text-green-300 rounded-full">Fast</span>
                 </div>
                 <div className="flex items-center mt-1">
                   <span className="px-2 py-0.5 text-xs bg-blue-500/20 text-blue-300 rounded-full mr-2">Unlimited</span>
-                  <span className="text-sm text-blue-300/70">Powerful & efficient AI assistant</span>
+                  <span className="text-sm text-blue-300/70">Efficient AI assistant</span>
                 </div>
               </label>
             </div>
 
             <div className="relative flex items-center">
-              <RadioGroupItem value="deepseek" id="deepseek" className="peer sr-only" />
-              <label htmlFor="deepseek" className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${selectedModel === 'deepseek' ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-400/50' : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'}`}>
+              <RadioGroupItem value="groq" id="groq" className="peer sr-only" />
+              <label htmlFor="groq" className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${selectedModel === 'groq' ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-400/50' : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-semibold text-blue-200">DeepSeek-R1</span>
-                  <span className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">Advanced</span>
+                  <span className="text-lg font-semibold text-blue-200">Llama-3-70B</span>
+                  <span className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">Groq</span>
                 </div>
-                <span className="mt-1 text-sm text-blue-300/70">70B model for nuanced responses</span>
+                <span className="mt-1 text-sm text-blue-300/70">High-performance model</span>
+              </label>
+            </div>
+
+            <div className="relative flex items-center">
+              <RadioGroupItem value="gemini" id="gemini" className="peer sr-only" />
+              <label htmlFor="gemini" className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${selectedModel === 'gemini' ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-400/50' : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'}`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-lg font-semibold text-blue-200">Gemini 2.5 Flash</span>
+                  <span className="px-2 py-1 text-xs bg-yellow-500/30 text-yellow-300 rounded-full">Recommended</span>
+                </div>
+                <span className="mt-1 text-sm text-blue-300/70">Google's latest AI model</span>
               </label>
             </div>
           </RadioGroup>

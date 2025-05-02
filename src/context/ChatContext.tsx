@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 
-export type ChatModel = 'mistral' | 'deepseek';
+export type ChatModel = 'mistral' | 'groq' | 'gemini';
 
 export interface ChatMessage {
   id: string;
@@ -15,7 +15,8 @@ export interface ChatMessage {
 
 interface ModelUsage {
   mistral: number | null;
-  deepseek: number | null; // null means unlimited
+  groq: number | null;
+  gemini: number | null; // null means unlimited
 }
 
 interface ChatContextType {
@@ -33,7 +34,8 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 const DAILY_LIMITS = {
   mistral: null, // Unlimited
-  deepseek: null, // Unlimited
+  groq: null, // Unlimited
+  gemini: null, // Unlimited
 };
 
 const USAGE_KEY = 'prism_search_ai_usage';
@@ -46,7 +48,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [selectedModel, setSelectedModel] = useState<ChatModel>('mistral');
   const [modelUsage, setModelUsage] = useState<ModelUsage>({
     mistral: DAILY_LIMITS.mistral,
-    deepseek: DAILY_LIMITS.deepseek,
+    groq: DAILY_LIMITS.groq,
+    gemini: DAILY_LIMITS.gemini,
   });
   const { toast } = useToast();
 
@@ -61,7 +64,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem(LAST_USAGE_DATE_KEY, today);
         const resetUsage: ModelUsage = {
           mistral: DAILY_LIMITS.mistral,
-          deepseek: DAILY_LIMITS.deepseek,
+          groq: DAILY_LIMITS.groq,
+          gemini: DAILY_LIMITS.gemini,
         };
         localStorage.setItem(USAGE_KEY, JSON.stringify(resetUsage));
         setModelUsage(resetUsage);
@@ -104,7 +108,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const getModelDisplayName = (model: ChatModel): string => {
     const displayNames = {
       mistral: "Mistral Medium",
-      deepseek: "DeepSeek-R1-Distill-Llama-70B",
+      groq: "Llama-3-70B (Groq)",
+      gemini: "Gemini 2.5 Flash",
     };
     return displayNames[model] || model;
   };

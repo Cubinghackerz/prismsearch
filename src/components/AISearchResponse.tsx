@@ -1,4 +1,3 @@
-
 import { motion } from 'framer-motion';
 import { Bot, MessageSquare } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -30,7 +29,7 @@ const AISearchResponse = ({
         } = await supabase.functions.invoke('ai-search-assistant', {
           body: {
             query,
-            model: 'deepseek' // Default to deepseek for quick search responses
+            model: 'gemini' // Default to Gemini for quick search responses
           }
         });
         if (error) throw error;
