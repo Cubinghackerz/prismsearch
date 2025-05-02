@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { ArrowUp, Bot, User, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { motion } from 'framer-motion';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert } from "@/components/ui/alert";
-
 const ChatInterface = () => {
   const {
     messages,
@@ -21,31 +19,26 @@ const ChatInterface = () => {
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: 'smooth'
     });
   }, [messages]);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || isLoading) return;
     sendMessage(inputValue);
     setInputValue('');
   };
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
   };
-
   const handleModelChange = (value: string) => {
     selectModel(value as ChatModel);
   };
-
   return <div className="flex flex-col h-[60vh] md:h-[75vh] lg:h-[80vh] bg-blue-950/20 backdrop-blur-md rounded-xl border border-blue-500/30 shadow-lg">
       <div className="p-4 border-b border-blue-900/40">
         <Alert className="mb-4 bg-blue-500/10 border-blue-500/50 text-blue-300">
@@ -76,7 +69,7 @@ const ChatInterface = () => {
               <RadioGroupItem value="gpt" id="gpt" className="peer sr-only" />
               <label htmlFor="gpt" className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${selectedModel === 'gpt' ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-400/50' : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'}`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-semibold text-blue-200">Gemini 2.5 Flash Preview</span>
+                  <span className="text-lg font-semibold text-blue-200">ChatGPT 4.1 Nano</span>
                   <span className="px-2 py-1 text-xs bg-blue-500/20 text-blue-300 rounded-full">Unlimited</span>
                 </div>
                 <span className="mt-1 text-sm text-blue-300/70">Versatile AI with broad knowledge</span>
@@ -153,5 +146,4 @@ const ChatInterface = () => {
       </form>
     </div>;
 };
-
 export default ChatInterface;
