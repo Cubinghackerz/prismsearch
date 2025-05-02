@@ -7,6 +7,7 @@ import ChatInterface from '@/components/chat/ChatInterface';
 import ParticleBackground from '../components/ParticleBackground';
 import Footer from '../components/Footer';
 import { ChatProvider } from '@/context/ChatContext';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 
 const Chat = () => {
   return (
@@ -52,14 +53,32 @@ const Chat = () => {
           </motion.div>
         </header>
         
-        <main className="flex-1 px-4 container mx-auto max-w-[90vw] md:max-w-[700px]">
+        <main className="flex-1 px-4 container mx-auto max-w-[90vw] md:max-w-[90vw] lg:max-w-[90vw] relative">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="mt-4"
           >
-            <ChatInterface />
+            <ResizablePanelGroup direction="horizontal" className="min-h-[70vh]">
+              <ResizablePanel defaultSize={75} minSize={30}>
+                <div className="h-full">
+                  <ChatInterface />
+                </div>
+              </ResizablePanel>
+              <ResizableHandle withHandle />
+              <ResizablePanel defaultSize={25} minSize={15}>
+                <div className="h-full p-4 bg-blue-950/20 backdrop-blur-md rounded-xl border border-blue-500/30 shadow-lg flex items-center justify-center">
+                  <div className="text-center">
+                    <h3 className="text-xl font-semibold text-blue-200 mb-2">Notes & Resources</h3>
+                    <p className="text-blue-300/70 text-sm">
+                      You can drag this panel to resize the chat window.
+                      Add notes or context about your conversation here.
+                    </p>
+                  </div>
+                </div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
           </motion.div>
         </main>
         

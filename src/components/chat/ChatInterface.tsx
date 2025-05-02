@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { ArrowUp, Bot, User, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -47,7 +46,7 @@ const ChatInterface = () => {
   };
 
   return (
-    <div className="flex flex-col h-[60vh] md:h-[75vh] lg:h-[80vh] bg-blue-950/20 backdrop-blur-md rounded-xl border border-blue-500/30 shadow-lg">
+    <div className="flex flex-col h-full bg-blue-950/20 backdrop-blur-md rounded-xl border border-blue-500/30 shadow-lg">
       <div className="p-4 border-b border-blue-900/40">
         <Alert className="mb-4 bg-blue-500/10 border-blue-500/50 text-blue-300">
           <p className="text-sm">

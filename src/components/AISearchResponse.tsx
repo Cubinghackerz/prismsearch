@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from './ui/button';
+
 interface AISearchResponseProps {
   query: string;
 }
+
 const AISearchResponse = ({
   query
 }: AISearchResponseProps) => {
@@ -17,6 +19,7 @@ const AISearchResponse = ({
   const {
     toast
   } = useToast();
+  
   useEffect(() => {
     const getAIResponse = async () => {
       if (!query) return;
@@ -61,48 +64,52 @@ const AISearchResponse = ({
 
   // Don't show the component if we had an error and aren't loading
   if (hasError && !isLoading && !aiResponse) return null;
-  return <motion.div initial={{
-    opacity: 0,
-    y: 20
-  }} animate={{
-    opacity: 1,
-    y: 0
-  }} transition={{
-    duration: 0.3
-  }} className="mb-6 p-4 bg-purple-500/10 backdrop-blur-sm rounded-xl border border-purple-500/20">
+  
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }} 
+      animate={{ opacity: 1, y: 0 }} 
+      transition={{ duration: 0.3 }} 
+      className="mb-6 p-4 bg-purple-500/10 backdrop-blur-sm rounded-xl border border-purple-500/20"
+    >
       <div className="flex items-start gap-3">
         <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center mt-1">
           <Bot className="w-5 h-5 text-purple-400" />
         </div>
         <div className="flex-1">
-          {isLoading ? <div className="flex items-center gap-2 text-purple-300/70">
+          {isLoading ? (
+            <div className="flex items-center gap-2 text-purple-300/70">
               <div className="animate-pulse">Thinking</div>
               <div className="flex space-x-1">
-                <div className="w-1.5 h-1.5 bg-purple-400/60 rounded-full animate-bounce" style={{
-              animationDelay: '0s'
-            }} />
-                <div className="w-1.5 h-1.5 bg-purple-400/60 rounded-full animate-bounce" style={{
-              animationDelay: '0.2s'
-            }} />
-                <div className="w-1.5 h-1.5 bg-purple-400/60 rounded-full animate-bounce" style={{
-              animationDelay: '0.4s'
-            }} />
+                <div className="w-1.5 h-1.5 bg-purple-400/60 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
+                <div className="w-1.5 h-1.5 bg-purple-400/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                <div className="w-1.5 h-1.5 bg-purple-400/60 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
               </div>
-            </div> : <div>
+            </div>
+          ) : (
+            <div>
               <p className="text-purple-100">{aiResponse}</p>
               
-              {/* Chat button - links to Chat mode */}
-              {showChatButton && <div className="mt-3">
-                  <Button variant="outline" size="sm" onClick={() => {
-              window.location.href = '/chat';
-            }} className="text-purple-200 border-purple-500/30 bg-transparent hover:bg-purple-500/10">
+              {/* Chat button - links to Chat mode with proper router navigation */}
+              {showChatButton && (
+                <div className="mt-3">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => { window.location.href = '/chat'; }} 
+                    className="text-purple-200 border-purple-500/30 bg-transparent hover:bg-purple-500/10"
+                  >
                     <MessageSquare className="mr-2 h-4 w-4" />
                     Continue in Chat Mode
                   </Button>
-                </div>}
-            </div>}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
-    </motion.div>;
+    </motion.div>
+  );
 };
+
 export default AISearchResponse;
