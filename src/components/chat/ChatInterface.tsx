@@ -1,5 +1,6 @@
+
 import { useState, useRef, useEffect } from 'react';
-import { ArrowUp, Bot, User, Loader2, RefreshCw } from 'lucide-react';
+import { ArrowUp, Bot, User, Loader2, RefreshCw, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useChat, ChatModel, ChatMessage } from '@/context/ChatContext';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,6 +10,7 @@ import { Alert } from "@/components/ui/alert";
 import TypingIndicator from './TypingIndicator';
 import MessageActions from './MessageActions';
 import { useToast } from '@/hooks/use-toast';
+
 const ChatInterface = () => {
   const {
     messages,
@@ -26,11 +28,13 @@ const ChatInterface = () => {
   const [isFocused, setIsFocused] = useState(false);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: 'smooth'
     });
   }, [messages, isTyping]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || isLoading) return;
@@ -38,19 +42,23 @@ const ChatInterface = () => {
     setInputValue('');
     setReplyingTo(null);
   };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
   };
+
   const handleModelChange = (value: string) => {
     selectModel(value as ChatModel);
   };
+
   const getReplyingToMessage = () => {
     if (!replyingTo) return null;
     return messages.find(m => m.id === replyingTo);
   };
+
   const renderThreadIndicator = (message: ChatMessage) => {
     if (!message.parentMessageId) return null;
     const parentMessage = messages.find(m => m.id === message.parentMessageId);
@@ -60,6 +68,7 @@ const ChatInterface = () => {
         <span>In reply to: "{parentMessage.content.substring(0, 30)}..."</span>
       </div>;
   };
+
   return <div className="flex flex-col h-full bg-blue-950/20 backdrop-blur-md rounded-xl border border-blue-500/30 shadow-lg">
       <div className="p-4 border-b border-blue-900/40">
         <Alert className="mb-4 bg-blue-500/10 border-blue-500/50 text-blue-300">
@@ -210,4 +219,5 @@ const ChatInterface = () => {
       </form>
     </div>;
 };
+
 export default ChatInterface;
