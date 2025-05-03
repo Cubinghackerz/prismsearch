@@ -5,7 +5,7 @@ import { FileText, Image as ImageIcon, X, AlertTriangle, Paperclip, FileCode } f
 interface FileAttachmentProps {
   file: {
     type: 'image' | 'file';
-    url: string;
+    url: string | null;
     name: string;
   };
   onRemove?: () => void;
@@ -19,7 +19,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({ file, onRemove, isPrevi
   useEffect(() => {
     // For preview mode (when file is just selected but not yet uploaded),
     // create object URL from the file object if it's a Blob-like object
-    if (isPreview && typeof file.url === 'object') {
+    if (isPreview && file.url && typeof file.url === 'object') {
       // Check if the object has blob-like properties
       if ('size' in file.url && 'type' in file.url) {
         const objectUrl = URL.createObjectURL(file.url as unknown as Blob);
@@ -30,7 +30,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({ file, onRemove, isPrevi
           URL.revokeObjectURL(objectUrl);
         };
       }
-    } else {
+    } else if (file.url) {
       setPreviewUrl(file.url);
     }
   }, [file.url, isPreview]);
@@ -66,10 +66,10 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({ file, onRemove, isPrevi
 
   return (
     <div className={`relative rounded-lg overflow-hidden border ${isPreview ? 'border-blue-500/30 bg-blue-500/10' : 'border-blue-400/20'}`}>
-      {file.type === 'image' && !isErrored ? (
+      {file.type === 'image' && !isErrored && previewUrl ? (
         <div className="relative">
           <img 
-            src={previewUrl || ''} 
+            src={previewUrl} 
             alt={file.name} 
             className="max-h-40 object-contain rounded-lg"
             onError={handleImageError}
