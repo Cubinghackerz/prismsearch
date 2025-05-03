@@ -44,7 +44,9 @@ serve(async (req) => {
     // Create messages array for the model
     const formattedChatHistory = existingChatHistory.map(msg => ({
       role: msg.isUser ? 'user' : 'assistant',
-      content: msg.content
+      content: msg.content,
+      // Include information about attachments
+      attachments: msg.attachments ? msg.attachments.map(att => `[${att.type}: ${att.name}]`).join(" ") : undefined
     }))
 
     // Use the appropriate model based on the request
@@ -57,7 +59,7 @@ serve(async (req) => {
         const messages = [
           ...formattedChatHistory.map(msg => ({
             role: msg.role,
-            content: msg.content
+            content: msg.content + (msg.attachments ? " " + msg.attachments : "")
           })),
           { role: 'user', content: query }
         ];
@@ -98,7 +100,7 @@ serve(async (req) => {
         const messages = [
           ...formattedChatHistory.map(msg => ({
             role: msg.role,
-            content: msg.content
+            content: msg.content + (msg.attachments ? " " + msg.attachments : "")
           })),
           { role: 'user', content: query }
         ];
@@ -136,7 +138,7 @@ serve(async (req) => {
         const chat = geminiModel.startChat({
           history: formattedChatHistory.map(msg => ({
             role: msg.role === 'user' ? 'user' : 'model',
-            parts: [{ text: msg.content }],
+            parts: [{ text: msg.content + (msg.attachments ? " " + msg.attachments : "") }],
           })),
           generationConfig: {
             maxOutputTokens: 2048,
@@ -152,6 +154,13 @@ serve(async (req) => {
         response = "I apologize, but I encountered an error. Please try again.";
       }
     }
+
+    // Simulate typing delay (500-2000ms depending on response length)
+    const typingDelay = Math.min(Math.max(response.length * 10, 500), 2000);
+    console.log(`Response generated, adding ${typingDelay}ms typing delay`);
+    
+    // Use setTimeout to delay the response
+    await new Promise(resolve => setTimeout(resolve, typingDelay));
 
     return new Response(
       JSON.stringify({ response, usageRemaining: null }), // All models are now unlimited

@@ -11,6 +11,12 @@ export interface ChatMessage {
   content: string;
   isUser: boolean;
   timestamp: Date;
+  parentMessageId?: string; // For thread replies
+  attachments?: {
+    type: 'image' | 'file';
+    url: string;
+    name: string;
+  }[];
 }
 
 interface ModelUsage {
@@ -25,9 +31,11 @@ interface ChatContextType {
   modelUsage: ModelUsage;
   selectedModel: ChatModel;
   isLoading: boolean;
-  sendMessage: (content: string) => Promise<void>;
+  isTyping: boolean;
+  sendMessage: (content: string, parentMessageId?: string, attachments?: ChatMessage['attachments']) => Promise<void>;
   startNewChat: () => void;
   selectModel: (model: ChatModel) => void;
+  uploadFile: (file: File) => Promise<string>;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -45,6 +53,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const [selectedModel, setSelectedModel] = useState<ChatModel>('mistral');
   const [modelUsage, setModelUsage] = useState<ModelUsage>({
     mistral: DAILY_LIMITS.mistral,
@@ -132,9 +141,47 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  // Upload file to Supabase Storage
+  const uploadFile = async (file: File): Promise<string> => {
+    try {
+      // Generate a unique filename to avoid collisions
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${uuidv4()}.${fileExt}`;
+      const filePath = `chat-attachments/${fileName}`;
+
+      // Upload the file
+      const { error: uploadError, data } = await supabase.storage
+        .from('public')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get the public URL for the file
+      const { data: { publicUrl } } = supabase.storage
+        .from('public')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('File upload error:', error);
+      toast({
+        variant: "destructive",
+        title: "Upload Failed",
+        description: "Failed to upload file. Please try again.",
+        duration: 3000,
+      });
+      throw error;
+    }
+  };
+
   // Send a message to the AI
-  const sendMessage = async (content: string) => {
-    if (!content.trim()) return;
+  const sendMessage = async (content: string, parentMessageId?: string, attachments?: ChatMessage['attachments']) => {
+    if (!content.trim() && (!attachments || attachments.length === 0)) return;
     
     // Create a new message
     const userMessage: ChatMessage = {
@@ -142,10 +189,13 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       content,
       isUser: true,
       timestamp: new Date(),
+      parentMessageId,
+      attachments,
     };
     
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
+    setIsTyping(true);
 
     try {
       // Initialize chat if needed
@@ -154,10 +204,19 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         setChatId(currentChatId);
       }
       
+      // Prepare the message content including any attachments
+      let messageWithAttachments = content;
+      if (attachments && attachments.length > 0) {
+        const attachmentDescriptions = attachments.map(att => 
+          `[Attached ${att.type}: ${att.name}]`
+        ).join(' ');
+        messageWithAttachments = `${content} ${attachmentDescriptions}`;
+      }
+      
       // Call the AI function
       const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
         body: { 
-          query: content,
+          query: messageWithAttachments,
           chatId: currentChatId,
           chatHistory: messages,
           model: selectedModel
@@ -177,6 +236,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           content: data.response,
           isUser: false,
           timestamp: new Date(),
+          parentMessageId: userMessage.id, // This makes it a direct reply to the user's message
         };
         
         setMessages(prev => [...prev, aiMessage]);
@@ -188,6 +248,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       handleChatError("Sorry, I encountered an error while trying to respond. Please try again.");
     } finally {
       setIsLoading(false);
+      setIsTyping(false);
     }
   };
 
@@ -206,9 +267,11 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       modelUsage,
       selectedModel,
       isLoading,
+      isTyping,
       sendMessage,
       startNewChat,
       selectModel,
+      uploadFile,
     }}>
       {children}
     </ChatContext.Provider>
