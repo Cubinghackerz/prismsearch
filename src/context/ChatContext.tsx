@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,8 +28,6 @@ interface ChatContextType {
   sendMessage: (content: string) => Promise<void>;
   startNewChat: () => void;
   selectModel: (model: ChatModel) => void;
-  loadChat: (id: string) => void;
-  deleteChat: (id: string) => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -103,110 +102,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       description: "Your messages will now be processed by this AI model.",
       duration: 2000,
     });
-  };
-
-  // Load a saved chat
-  const loadChat = (id: string) => {
-    try {
-      // Get all saved chats
-      const savedChatsData = localStorage.getItem('prism_saved_chats');
-      if (!savedChatsData) {
-        toast({
-          variant: "destructive", 
-          title: "Error",
-          description: "No saved chats found.",
-          duration: 3000,
-        });
-        return;
-      }
-      
-      const savedChats = JSON.parse(savedChatsData);
-      const chat = savedChats.find((c: any) => c.id === id);
-      
-      if (!chat) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Chat not found.",
-          duration: 3000,
-        });
-        return;
-      }
-      
-      // Get chat messages from localStorage
-      const chatMessagesData = localStorage.getItem(`prism_chat_${id}`);
-      if (!chatMessagesData) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Chat messages not found.",
-          duration: 3000,
-        });
-        return;
-      }
-      
-      const chatMessages = JSON.parse(chatMessagesData);
-      
-      // Restore messages and chat ID
-      setChatId(id);
-      setMessages(chatMessages.map((msg: any) => ({
-        ...msg,
-        timestamp: new Date(msg.timestamp)
-      })));
-      
-      toast({
-        title: "Chat Loaded",
-        description: "Previous conversation has been restored.",
-        duration: 2000,
-      });
-    } catch (error) {
-      console.error('Error loading chat:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load chat.",
-        duration: 3000,
-      });
-    }
-  };
-  
-  // Delete a saved chat
-  const deleteChat = (id: string) => {
-    try {
-      // Get all saved chats
-      const savedChatsData = localStorage.getItem('prism_saved_chats');
-      if (!savedChatsData) return;
-      
-      const savedChats = JSON.parse(savedChatsData);
-      
-      // Filter out the chat to delete
-      const updatedChats = savedChats.filter((chat: any) => chat.id !== id);
-      
-      // Update localStorage
-      localStorage.setItem('prism_saved_chats', JSON.stringify(updatedChats));
-      
-      // Remove chat messages
-      localStorage.removeItem(`prism_chat_${id}`);
-      
-      // If current chat was deleted, start a new one
-      if (chatId === id) {
-        startNewChat();
-      }
-      
-      toast({
-        title: "Chat Deleted",
-        description: "The conversation has been removed.",
-        duration: 2000,
-      });
-    } catch (error) {
-      console.error('Error deleting chat:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to delete chat.",
-        duration: 3000,
-      });
-    }
   };
 
   // Helper function to get display name for models
@@ -284,13 +179,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           timestamp: new Date(),
         };
         
-        const updatedMessages = [...messages, userMessage, aiMessage];
-        setMessages(updatedMessages);
-        
-        // Save chat to localStorage
-        if (currentChatId) {
-          localStorage.setItem(`prism_chat_${currentChatId}`, JSON.stringify(updatedMessages));
-        }
+        setMessages(prev => [...prev, aiMessage]);
       } else {
         handleChatError("Received an empty response from the AI. Please try again.");
       }
@@ -320,8 +209,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       sendMessage,
       startNewChat,
       selectModel,
-      loadChat,
-      deleteChat,
     }}>
       {children}
     </ChatContext.Provider>

@@ -6,9 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { motion } from 'framer-motion';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert } from "@/components/ui/alert";
-import TypingIndicator from './TypingIndicator';
-import MessageActions from './MessageActions';
-
+import { Form, FormField, FormItem } from "@/components/ui/form";
 const ChatInterface = () => {
   const {
     messages,
@@ -21,31 +19,26 @@ const ChatInterface = () => {
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: 'smooth'
     });
   }, [messages]);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || isLoading) return;
     sendMessage(inputValue);
     setInputValue('');
   };
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
   };
-
   const handleModelChange = (value: string) => {
     selectModel(value as ChatModel);
   };
-
   return <div className="flex flex-col h-full bg-blue-950/20 backdrop-blur-md rounded-xl border border-blue-500/30 shadow-lg">
       <div className="p-4 border-b border-blue-900/40">
         <Alert className="mb-4 bg-blue-500/10 border-blue-500/50 text-blue-300">
@@ -106,83 +99,37 @@ const ChatInterface = () => {
       <div className="flex-1 overflow-y-auto p-4 space-y-4 md:p-6 bg-gradient-to-b from-blue-950/10 to-blue-900/5">
         {messages.length === 0 ? <div className="h-full flex items-center justify-center text-blue-300/60">
             <p>Send a message to start chatting</p>
-          </div> : messages.map(message => <motion.div 
-            key={message.id} 
-            initial={{
-              opacity: 0,
-              y: 10
-            }} 
-            animate={{
-              opacity: 1,
-              y: 0
-            }} 
-            transition={{
-              duration: 0.3
-            }} 
-            className={`group flex gap-3 ${message.isUser ? 'justify-end' : ''}`}>
+          </div> : messages.map(message => <motion.div key={message.id} initial={{
+        opacity: 0,
+        y: 10
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        duration: 0.3
+      }} className={`flex gap-3 ${message.isUser ? 'justify-end' : ''}`}>
             {!message.isUser && <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
                 <Bot className="w-4 h-4 text-blue-400" />
               </div>}
-            <motion.div 
-              initial={{
-                scale: 0.95
-              }} 
-              animate={{
-                scale: 1
-              }} 
-              transition={{
-                duration: 0.2
-              }} 
-              className={`relative max-w-[80%] md:max-w-[75%] lg:max-w-[65%] rounded-lg p-3 ${message.isUser ? 'bg-blue-600/20 text-blue-100 rounded-tr-none shadow-md shadow-blue-900/10' : 'bg-blue-800/40 text-blue-100 rounded-tl-none shadow-md shadow-blue-900/10'}`}
-            >
+            <motion.div initial={{
+          scale: 0.95
+        }} animate={{
+          scale: 1
+        }} transition={{
+          duration: 0.2
+        }} className={`max-w-[80%] md:max-w-[75%] lg:max-w-[65%] rounded-lg p-3 ${message.isUser ? 'bg-blue-600/20 text-blue-100 rounded-tr-none shadow-md shadow-blue-900/10' : 'bg-blue-800/40 text-blue-100 rounded-tl-none shadow-md shadow-blue-900/10'}`}>
               {message.content}
-              {!isLoading && <MessageActions 
-                content={message.content}
-                className="absolute top-2 right-2"
-              />}
             </motion.div>
             {message.isUser && <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
                 <User className="w-4 h-4 text-blue-400" />
               </div>}
           </motion.div>)}
-        
-        {isLoading && (
-          <motion.div 
-            initial={{
-              opacity: 0,
-              y: 10
-            }} 
-            animate={{
-              opacity: 1,
-              y: 0
-            }} 
-            transition={{
-              duration: 0.3
-            }} 
-            className="flex gap-3"
-          >
-            <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
-              <Bot className="w-4 h-4 text-blue-400" />
-            </div>
-            <div className="max-w-[80%] md:max-w-[75%] lg:max-w-[65%] rounded-lg p-3 bg-blue-800/40 text-blue-100 rounded-tl-none shadow-md shadow-blue-900/10">
-              <TypingIndicator />
-            </div>
-          </motion.div>
-        )}
-        
         <div ref={messagesEndRef} />
       </div>
 
       <form onSubmit={handleSubmit} className="p-4 md:p-6 border-t border-blue-900/40 bg-blue-950/10">
         <div className="relative flex items-center max-w-4xl mx-auto">
-          <Textarea 
-            value={inputValue} 
-            onChange={e => setInputValue(e.target.value)} 
-            onKeyDown={handleKeyDown} 
-            onFocus={() => setIsFocused(true)} 
-            onBlur={() => setIsFocused(false)} 
-            placeholder="Ask anything..." 
-            className={`
+          <Textarea value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyDown={handleKeyDown} onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)} placeholder="Ask anything..." className={`
               resize-none bg-[#0f172a]/90 border text-blue-100 pr-12 
               min-h-[56px] py-3 rounded-xl md:min-h-[64px] shadow-lg
               transition-all duration-300 placeholder:text-blue-300/30 
@@ -191,33 +138,23 @@ const ChatInterface = () => {
               ${isFocused ? 'shadow-[0_0_40px_rgba(59,130,246,0.4)] border-blue-300/50' : ''}
               hover:shadow-[0_0_30px_rgba(59,130,246,0.35)] hover:border-blue-400/40
               hover:scale-[1.01] hover:bg-[#0f172a]/95
-            `} 
-            disabled={isLoading} 
-          />
-          <div 
-            className={`
+            `} disabled={isLoading} />
+          <div className={`
               absolute inset-0 -z-10 transition-opacity duration-500
               bg-gradient-to-r from-blue-500/20 via-blue-400/20 to-blue-600/20
               blur-3xl rounded-full
               ${isFocused ? 'opacity-100' : 'opacity-0'}
-            `} 
-          />
-          <Button 
-            type="submit" 
-            size="icon" 
-            className={`
+            `} />
+          <Button type="submit" size="icon" className={`
               absolute right-2 rounded-full text-white 
               w-10 h-10 flex items-center justify-center shadow-md
               transition-all duration-300
               ${!inputValue.trim() || isLoading ? 'bg-gray-700/30 cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 cursor-pointer shadow-lg shadow-blue-900/30 hover:shadow-blue-800/40 hover:scale-105 active:scale-95'}
-            `} 
-            disabled={!inputValue.trim() || isLoading}
-          >
+            `} disabled={!inputValue.trim() || isLoading}>
             {isLoading ? <Loader2 className="h-5 w-5 animate-spin text-white" /> : <ArrowUp className="h-5 w-5 text-white" />}
           </Button>
         </div>
       </form>
     </div>;
 };
-
 export default ChatInterface;
