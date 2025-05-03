@@ -1,6 +1,7 @@
 
 import { useState, KeyboardEvent } from 'react';
 import { Search, X } from 'lucide-react';
+import LoadingAnimation from './LoadingAnimation';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -89,10 +90,8 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
               `}
             >
               {isSearching ? (
-                <div className="flex items-center justify-center space-x-1">
-                  <div className="w-1.5 h-1.5 bg-white/90 rounded-full animate-[bounce_1s_ease-in-out_infinite]"></div>
-                  <div className="w-1.5 h-1.5 bg-white/90 rounded-full animate-[bounce_1s_ease-in-out_infinite_0.2s]"></div>
-                  <div className="w-1.5 h-1.5 bg-white/90 rounded-full animate-[bounce_1s_ease-in-out_infinite_0.4s]"></div>
+                <div className="flex items-center justify-center">
+                  <LoadingAnimation color="purple" size="small" />
                 </div>
               ) : 'Search'}
             </button>
