@@ -23,7 +23,9 @@ const TypingIndicator: React.FC = () => {
       >
         <div className="flex items-center gap-1.5">
           <span className="text-blue-300">Thinking</span>
-          <LoadingAnimation color="blue" size="small" className="ml-2" />
+          <div className="ml-2">
+            <LoadingAnimation color="blue" size="small" />
+          </div>
         </div>
       </motion.div>
     </motion.div>
