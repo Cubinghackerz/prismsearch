@@ -1,6 +1,6 @@
 
 import { useState, useRef, useEffect } from 'react';
-import { ArrowUp, Bot, User, Loader2, RefreshCw, Image as ImageIcon, Paperclip, X } from 'lucide-react';
+import { ArrowUp, Bot, User, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useChat, ChatModel, ChatMessage } from '@/context/ChatContext';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,7 +9,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert } from "@/components/ui/alert";
 import TypingIndicator from './TypingIndicator';
 import MessageActions from './MessageActions';
-import FileAttachment from './FileAttachment';
 import { useToast } from '@/hooks/use-toast';
 
 const ChatInterface = () => {
@@ -20,16 +19,13 @@ const ChatInterface = () => {
     isTyping,
     startNewChat,
     selectModel,
-    selectedModel,
-    uploadFile
+    selectedModel
   } = useChat();
   
   const { toast } = useToast();
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [attachments, setAttachments] = useState<ChatMessage['attachments']>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
@@ -40,12 +36,11 @@ const ChatInterface = () => {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!inputValue.trim() && (!attachments || attachments.length === 0)) || isLoading) return;
+    if (!inputValue.trim() || isLoading) return;
     
-    await sendMessage(inputValue, replyingTo, attachments);
+    await sendMessage(inputValue, replyingTo);
     setInputValue('');
     setReplyingTo(null);
-    setAttachments([]);
   };
   
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -57,62 +52,6 @@ const ChatInterface = () => {
   
   const handleModelChange = (value: string) => {
     selectModel(value as ChatModel);
-  };
-  
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    
-    const file = e.target.files[0];
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    
-    if (file.size > maxSize) {
-      toast({
-        title: "File too large",
-        description: "Files must be less than 5MB",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    try {
-      // Create a preview right away
-      const fileType = file.type.startsWith('image/') ? 'image' : 'file';
-      const newAttachment = {
-        type: fileType as 'image' | 'file',
-        url: file as unknown as string, // Temporary URL for preview
-        name: file.name
-      };
-      
-      setAttachments(prev => [...(prev || []), newAttachment]);
-      
-      // Start upload in background
-      const url = await uploadFile(file);
-      
-      // Replace the preview with the real URL
-      setAttachments(prev => 
-        prev?.map(a => 
-          a === newAttachment 
-            ? { ...a, url } 
-            : a
-        ) || []
-      );
-      
-    } catch (error) {
-      console.error("File upload failed:", error);
-      // Remove the failed attachment
-      setAttachments(prev => prev?.filter(a => a.url !== file as unknown as string) || []);
-    }
-    
-    // Clear the file input
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-  
-  const removeAttachment = (index: number) => {
-    setAttachments(prev => {
-      const updated = [...(prev || [])];
-      updated.splice(index, 1);
-      return updated;
-    });
   };
   
   const getReplyingToMessage = () => {
@@ -225,18 +164,6 @@ const ChatInterface = () => {
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       {message.content}
-                      
-                      {/* Display attachments */}
-                      {message.attachments && message.attachments.length > 0 && (
-                        <div className="mt-2 space-y-2">
-                          {message.attachments.map((attachment, index) => (
-                            <FileAttachment 
-                              key={index} 
-                              file={attachment} 
-                            />
-                          ))}
-                        </div>
-                      )}
                     </div>
                     
                     <div className="ml-2 mt-1">
@@ -287,20 +214,6 @@ const ChatInterface = () => {
           </div>
         )}
         
-        {/* Attachments preview */}
-        {attachments && attachments.length > 0 && (
-          <div className="mb-2 grid grid-cols-3 gap-2">
-            {attachments.map((attachment, index) => (
-              <FileAttachment 
-                key={index} 
-                file={attachment} 
-                onRemove={() => removeAttachment(index)} 
-                isPreview 
-              />
-            ))}
-          </div>
-        )}
-        
         <div className="relative flex items-center max-w-4xl mx-auto">
           <Textarea 
             value={inputValue} 
@@ -330,28 +243,6 @@ const ChatInterface = () => {
             `} 
           />
           
-          {/* File upload button */}
-          <div className="absolute right-14">
-            <input 
-              type="file" 
-              id="fileInput" 
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              className="hidden" 
-              accept="image/*,application/pdf,application/msword,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            />
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 rounded-full text-blue-300 hover:text-blue-200 hover:bg-blue-800/30"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isLoading}
-            >
-              <Paperclip className="h-4 w-4" />
-            </Button>
-          </div>
-          
           <Button 
             type="submit" 
             size="icon" 
@@ -359,9 +250,9 @@ const ChatInterface = () => {
               absolute right-2 rounded-full text-white 
               w-10 h-10 flex items-center justify-center shadow-md
               transition-all duration-300
-              ${!inputValue.trim() && (!attachments || attachments.length === 0) || isLoading ? 'bg-gray-700/30 cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 cursor-pointer shadow-lg shadow-blue-900/30 hover:shadow-blue-800/40 hover:scale-105 active:scale-95'}
+              ${!inputValue.trim() || isLoading ? 'bg-gray-700/30 cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 cursor-pointer shadow-lg shadow-blue-900/30 hover:shadow-blue-800/40 hover:scale-105 active:scale-95'}
             `} 
-            disabled={(!inputValue.trim() && (!attachments || attachments.length === 0)) || isLoading}
+            disabled={!inputValue.trim() || isLoading}
           >
             {isLoading ? <Loader2 className="h-5 w-5 animate-spin text-white" /> : <ArrowUp className="h-5 w-5 text-white" />}
           </Button>

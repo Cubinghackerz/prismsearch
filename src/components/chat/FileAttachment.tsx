@@ -18,15 +18,18 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({ file, onRemove, isPrevi
   
   useEffect(() => {
     // For preview mode (when file is just selected but not yet uploaded),
-    // create object URL from the file object if it's a Blob
-    if (isPreview && typeof file.url === 'object' && file.url instanceof Blob) {
-      const objectUrl = URL.createObjectURL(file.url);
-      setPreviewUrl(objectUrl);
-      
-      // Clean up the object URL when component unmounts
-      return () => {
-        URL.revokeObjectURL(objectUrl);
-      };
+    // create object URL from the file object if it's a Blob-like object
+    if (isPreview && typeof file.url === 'object') {
+      // Check if the object has blob-like properties
+      if ('size' in file.url && 'type' in file.url) {
+        const objectUrl = URL.createObjectURL(file.url as unknown as Blob);
+        setPreviewUrl(objectUrl);
+        
+        // Clean up the object URL when component unmounts
+        return () => {
+          URL.revokeObjectURL(objectUrl);
+        };
+      }
     } else {
       setPreviewUrl(file.url);
     }

@@ -12,11 +12,6 @@ export interface ChatMessage {
   isUser: boolean;
   timestamp: Date;
   parentMessageId?: string; // For thread replies
-  attachments?: {
-    type: 'image' | 'file';
-    url: string;
-    name: string;
-  }[];
 }
 
 interface ModelUsage {
@@ -32,10 +27,9 @@ interface ChatContextType {
   selectedModel: ChatModel;
   isLoading: boolean;
   isTyping: boolean;
-  sendMessage: (content: string, parentMessageId?: string, attachments?: ChatMessage['attachments']) => Promise<void>;
+  sendMessage: (content: string, parentMessageId?: string) => Promise<void>;
   startNewChat: () => void;
   selectModel: (model: ChatModel) => void;
-  uploadFile: (file: File) => Promise<string>;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -49,24 +43,6 @@ const DAILY_LIMITS = {
 const USAGE_KEY = 'prism_search_ai_usage';
 const LAST_USAGE_DATE_KEY = 'prism_search_last_usage_date';
 
-// Allowed file types
-const ALLOWED_IMAGE_TYPES = [
-  'image/jpeg',
-  'image/jpg',
-  'image/png',
-  'image/gif',
-  'image/svg+xml'
-];
-
-const ALLOWED_FILE_TYPES = [
-  'text/plain',
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'text/markdown',
-  'text/csv'
-];
-
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -78,7 +54,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     groq: DAILY_LIMITS.groq,
     gemini: DAILY_LIMITS.gemini,
   });
-  const [storageBucketReady, setStorageBucketReady] = useState(false);
   const { toast } = useToast();
 
   // Load and initialize usage data
@@ -108,31 +83,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     };
     
     loadUsageData();
-    
-    // Setup storage bucket if needed
-    const setupStorageBucket = async () => {
-      try {
-        // Invoke the setup storage bucket function
-        const { error } = await supabase.functions.invoke('setup-storage-bucket');
-        
-        if (error) {
-          console.error("Error setting up storage bucket:", error);
-          toast({
-            title: "Storage Setup Issue",
-            description: "There was a problem setting up file storage. File uploads may not work properly.",
-            variant: "destructive",
-            duration: 5000,
-          });
-          return;
-        }
-        
-        setStorageBucketReady(true);
-      } catch (err) {
-        console.error("Failed to setup storage bucket:", err);
-      }
-    };
-    
-    setupStorageBucket();
   }, [toast]);
   
   // Start a new chat
@@ -185,85 +135,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  // Validate file type security
-  const validateFileType = (file: File): boolean => {
-    // Check if file type is allowed
-    if (ALLOWED_IMAGE_TYPES.includes(file.type) || ALLOWED_FILE_TYPES.includes(file.type)) {
-      return true;
-    }
-    
-    // Check common unsafe extensions
-    const extension = file.name.split('.').pop()?.toLowerCase();
-    const unsafeExtensions = ['exe', 'bat', 'js', 'vbs', 'msi', 'xlsm', 'docm', 'php', 'py', 'sh'];
-    
-    if (extension && unsafeExtensions.includes(extension)) {
-      return false;
-    }
-    
-    // If type is unknown but doesn't have unsafe extension, allow it
-    return true;
-  };
-
-  // Upload file to Supabase Storage
-  const uploadFile = async (file: File): Promise<string> => {
-    // Security validation
-    if (!validateFileType(file)) {
-      toast({
-        variant: "destructive",
-        title: "Unsafe File Type",
-        description: "This file type is not allowed for security reasons.",
-        duration: 3000,
-      });
-      throw new Error("Unsafe file type");
-    }
-    
-    try {
-      // Check if storage bucket is ready
-      if (!storageBucketReady) {
-        // Try to set it up again
-        const { error } = await supabase.functions.invoke('setup-storage-bucket');
-        if (error) throw new Error("Storage not available");
-      }
-      
-      // Generate a unique filename to avoid collisions
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${uuidv4()}.${fileExt}`;
-      const filePath = `chat-attachments/${fileName}`;
-
-      // Upload the file
-      const { error: uploadError, data } = await supabase.storage
-        .from('public')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false,
-        });
-
-      if (uploadError) {
-        console.error("File upload error:", uploadError);
-        throw uploadError;
-      }
-
-      // Get the public URL for the file
-      const { data: { publicUrl } } = supabase.storage
-        .from('public')
-        .getPublicUrl(filePath);
-
-      return publicUrl;
-    } catch (error) {
-      console.error('File upload error:', error);
-      toast({
-        variant: "destructive",
-        title: "Upload Failed",
-        description: "Failed to upload file. Please try again.",
-        duration: 3000,
-      });
-      throw error;
-    }
-  };
-
   // Send a message to the AI
-  const sendMessage = async (content: string, parentMessageId?: string, attachments?: ChatMessage['attachments']) => {
-    if (!content.trim() && (!attachments || attachments.length === 0)) return;
+  const sendMessage = async (content: string, parentMessageId?: string) => {
+    if (!content.trim()) return;
     
     // Create a new message
     const userMessage: ChatMessage = {
@@ -272,7 +146,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       isUser: true,
       timestamp: new Date(),
       parentMessageId,
-      attachments,
     };
     
     setMessages(prev => [...prev, userMessage]);
@@ -286,23 +159,13 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         setChatId(currentChatId);
       }
       
-      // Prepare the message content including any attachments
-      let messageWithAttachments = content;
-      if (attachments && attachments.length > 0) {
-        const attachmentDescriptions = attachments.map(att => 
-          `[Attached ${att.type}: ${att.name}]`
-        ).join(' ');
-        messageWithAttachments = `${content} ${attachmentDescriptions}`;
-      }
-      
       // Call the AI function
       const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
         body: { 
-          query: messageWithAttachments,
+          query: content,
           chatId: currentChatId,
           chatHistory: messages,
-          model: selectedModel,
-          attachments: attachments // Pass attachments to the function
+          model: selectedModel
         }
       });
 
@@ -354,7 +217,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       sendMessage,
       startNewChat,
       selectModel,
-      uploadFile,
     }}>
       {children}
     </ChatContext.Provider>

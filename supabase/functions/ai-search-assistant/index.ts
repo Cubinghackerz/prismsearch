@@ -18,19 +18,6 @@ const geminiModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 // In-memory store for chat history
 const chatHistories = new Map();
 
-// Helper function to create a formatted prompt that includes attachment info
-function formatAttachmentsForPrompt(attachments) {
-  if (!attachments || attachments.length === 0) return '';
-  
-  return attachments.map(att => {
-    if (att.type === 'image') {
-      return `[Attached image: ${att.name}] The user has attached an image file named "${att.name}". This is a visual element to consider in your response.`;
-    } else {
-      return `[Attached file: ${att.name}] The user has attached a file named "${att.name}". This is additional context to consider in your response.`;
-    }
-  }).join("\n\n");
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -56,27 +43,11 @@ serve(async (req) => {
     
     // Create messages array for the model
     const formattedChatHistory = existingChatHistory.map(msg => {
-      // Process the message content with any attachments
-      let content = msg.content;
-      
-      // Add attachment descriptions to the content if they exist
-      if (msg.attachments && msg.attachments.length > 0) {
-        const attachmentsText = formatAttachmentsForPrompt(msg.attachments);
-        content = `${content}\n\n${attachmentsText}`;
-      }
-      
       return {
         role: msg.isUser ? 'user' : 'assistant',
-        content: content
+        content: msg.content
       };
     });
-
-    // Format any attachments in the current query
-    let fullQuery = query;
-    const attachmentsInfo = req.attachments ? formatAttachmentsForPrompt(req.attachments) : '';
-    if (attachmentsInfo) {
-      fullQuery = `${query}\n\n${attachmentsInfo}`;
-    }
 
     // Use the appropriate model based on the request
     if (model === 'mistral') {
@@ -87,7 +58,7 @@ serve(async (req) => {
 
         const messages = [
           ...formattedChatHistory,
-          { role: 'user', content: fullQuery }
+          { role: 'user', content: query }
         ];
 
         const completion = await fetch("https://api.mistral.ai/v1/chat/completions", {
@@ -125,7 +96,7 @@ serve(async (req) => {
 
         const messages = [
           ...formattedChatHistory,
-          { role: 'user', content: fullQuery }
+          { role: 'user', content: query }
         ];
 
         const completion = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -170,7 +141,7 @@ serve(async (req) => {
           }
         });
 
-        const result = await chat.sendMessage(fullQuery);
+        const result = await chat.sendMessage(query);
         const responseText = result.response.text();
         response = responseText;
       } catch (error) {
