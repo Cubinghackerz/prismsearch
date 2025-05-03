@@ -1,1 +1,39 @@
+
 project_id = "fgpdfkvabwemivzjeitx"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://localhost:54321"
+
+[inbucket]
+enabled = true
+port = 54324
+
+[storage]
+enabled = true
+port = 5000
+
+[auth]
+enabled = true
+port = 54325
+
+[realtime]
+enabled = true
+
+[edge_functions]
+[edge_functions."ai-search-assistant"]
+verify_jwt = false
+
+[edge_functions."setup-storage-bucket"]
+verify_jwt = false
