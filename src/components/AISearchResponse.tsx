@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from './ui/button';
+import { Link } from 'react-router-dom';
+
 interface AISearchResponseProps {
   query: string;
 }
@@ -91,13 +93,13 @@ const AISearchResponse = ({
             </div> : <div>
               <p className="text-purple-100">{aiResponse}</p>
               
-              {/* Chat button - links to Chat mode with proper router navigation */}
+              {/* Chat button - Using Link component from react-router-dom */}
               {showChatButton && <div className="mt-3">
-                  <Button variant="outline" size="sm" onClick={() => {
-              window.location.href = '/chat';
-            }} className="border-purple-500/30 text-white bg-transparent">
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    Continue in Chat Mode
+                  <Button variant="outline" size="sm" asChild className="border-purple-500/30 text-white bg-transparent">
+                    <Link to="/chat">
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      Continue in Chat Mode
+                    </Link>
                   </Button>
                 </div>}
             </div>}
