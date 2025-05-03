@@ -10,13 +10,13 @@ interface SearchEngineColumnProps {
   hoverBorderColor: string;
 }
 
-// Define logo URLs for each search engine
+// Define logo URLs for each search engine with updated images
 const engineLogos: Record<string, string> = {
-  'Google': 'https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_92x30dp.png',
-  'Bing': 'https://www.bing.com/sa/simg/bing_p_rr_teal_min.ico',
+  'Google': '/lovable-uploads/616c674a-121c-4474-bc2d-a9606bc729a0.png',
+  'Bing': '/lovable-uploads/d1b1c7b4-acea-4a6a-a7ac-86e12c8be0c2.png',
   'DuckDuckGo': 'https://duckduckgo.com/assets/logo_header.v108.svg',
   'Brave': 'https://brave.com/static-assets/images/brave-logo-sans-text.svg',
-  'You.com': 'https://you.com/favicon.ico'
+  'You.com': '/lovable-uploads/3f6bf968-0fd9-4357-bc92-b18c07666134.png'
 };
 
 const SearchEngineColumn = ({ title, results, bgColor, hoverBorderColor }: SearchEngineColumnProps) => {
