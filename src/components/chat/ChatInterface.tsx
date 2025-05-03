@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { ArrowUp, Bot, User, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,6 @@ import { Alert } from "@/components/ui/alert";
 import TypingIndicator from './TypingIndicator';
 import MessageActions from './MessageActions';
 import { useToast } from '@/hooks/use-toast';
-
 const ChatInterface = () => {
   const {
     messages,
@@ -21,60 +19,48 @@ const ChatInterface = () => {
     selectModel,
     selectedModel
   } = useChat();
-  
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: 'smooth'
     });
   }, [messages, isTyping]);
-  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || isLoading) return;
-    
     await sendMessage(inputValue, replyingTo);
     setInputValue('');
     setReplyingTo(null);
   };
-  
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
   };
-  
   const handleModelChange = (value: string) => {
     selectModel(value as ChatModel);
   };
-  
   const getReplyingToMessage = () => {
     if (!replyingTo) return null;
     return messages.find(m => m.id === replyingTo);
   };
-  
   const renderThreadIndicator = (message: ChatMessage) => {
     if (!message.parentMessageId) return null;
-    
     const parentMessage = messages.find(m => m.id === message.parentMessageId);
     if (!parentMessage) return null;
-    
-    return (
-      <div className="ml-11 mb-1 mt-1 flex items-center text-xs text-blue-300/50">
+    return <div className="ml-11 mb-1 mt-1 flex items-center text-xs text-blue-300/50">
         <div className="h-5 border-l-2 border-blue-500/30 mr-2"></div>
         <span>In reply to: "{parentMessage.content.substring(0, 30)}..."</span>
-      </div>
-    );
+      </div>;
   };
-
-  return (
-    <div className="flex flex-col h-full bg-blue-950/20 backdrop-blur-md rounded-xl border border-blue-500/30 shadow-lg">
+  return <div className="flex flex-col h-full bg-blue-950/20 backdrop-blur-md rounded-xl border border-blue-500/30 shadow-lg">
       <div className="p-4 border-b border-blue-900/40">
         <Alert className="mb-4 bg-blue-500/10 border-blue-500/50 text-blue-300">
           <p className="text-sm">
@@ -93,7 +79,7 @@ const ChatInterface = () => {
                   <span className="px-2 py-1 text-xs bg-green-500/30 text-green-300 rounded-full">Recommended</span>
                 </div>
                 <div className="flex items-center mt-1">
-                  <span className="px-2 py-0.5 text-xs bg-blue-500/20 text-blue-300 rounded-full mr-2">Unlimited</span>
+                  
                   <span className="text-sm text-blue-300/70">Efficient AI assistant</span>
                 </div>
               </label>
@@ -131,59 +117,46 @@ const ChatInterface = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4 md:p-6 bg-gradient-to-b from-blue-950/10 to-blue-900/5">
-        {messages.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-blue-300/60">
+        {messages.length === 0 ? <div className="h-full flex items-center justify-center text-blue-300/60">
             <p>Send a message to start chatting</p>
-          </div>
-        ) : (
-          messages.map(message => (
-            <div key={message.id}>
+          </div> : messages.map(message => <div key={message.id}>
               {renderThreadIndicator(message)}
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }} 
-                animate={{ opacity: 1, y: 0 }} 
-                transition={{ duration: 0.3 }}
-                className={`flex gap-3 ${message.isUser ? 'justify-end' : ''} group`}
-              >
-                {!message.isUser && (
-                  <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
+              <motion.div initial={{
+          opacity: 0,
+          y: 10
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} transition={{
+          duration: 0.3
+        }} className={`flex gap-3 ${message.isUser ? 'justify-end' : ''} group`}>
+                {!message.isUser && <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
                     <Bot className="w-4 h-4 text-blue-400" />
-                  </div>
-                )}
+                  </div>}
                 
-                <motion.div 
-                  initial={{ scale: 0.95 }} 
-                  animate={{ scale: 1 }} 
-                  transition={{ duration: 0.2 }}
-                  className={`max-w-[80%] md:max-w-[75%] lg:max-w-[65%] rounded-lg p-3 relative ${
-                    message.isUser 
-                      ? 'bg-blue-600/20 text-blue-100 rounded-tr-none shadow-md shadow-blue-900/10' 
-                      : 'bg-blue-800/40 text-blue-100 rounded-tl-none shadow-md shadow-blue-900/10'
-                  }`}
-                >
+                <motion.div initial={{
+            scale: 0.95
+          }} animate={{
+            scale: 1
+          }} transition={{
+            duration: 0.2
+          }} className={`max-w-[80%] md:max-w-[75%] lg:max-w-[65%] rounded-lg p-3 relative ${message.isUser ? 'bg-blue-600/20 text-blue-100 rounded-tr-none shadow-md shadow-blue-900/10' : 'bg-blue-800/40 text-blue-100 rounded-tl-none shadow-md shadow-blue-900/10'}`}>
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       {message.content}
                     </div>
                     
                     <div className="ml-2 mt-1">
-                      <MessageActions 
-                        message={message.content} 
-                        onReply={() => setReplyingTo(message.id)} 
-                      />
+                      <MessageActions message={message.content} onReply={() => setReplyingTo(message.id)} />
                     </div>
                   </div>
                 </motion.div>
                 
-                {message.isUser && (
-                  <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
+                {message.isUser && <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
                     <User className="w-4 h-4 text-blue-400" />
-                  </div>
-                )}
+                  </div>}
               </motion.div>
-            </div>
-          ))
-        )}
+            </div>)}
         
         {/* Display typing indicator when AI is generating a response */}
         {isTyping && <TypingIndicator />}
@@ -193,8 +166,7 @@ const ChatInterface = () => {
 
       <form onSubmit={handleSubmit} className="p-4 md:p-6 border-t border-blue-900/40 bg-blue-950/10">
         {/* Replying to message indicator */}
-        {replyingTo && (
-          <div className="mb-2 p-2 rounded-lg bg-blue-900/30 border border-blue-700/30 flex justify-between items-center">
+        {replyingTo && <div className="mb-2 p-2 rounded-lg bg-blue-900/30 border border-blue-700/30 flex justify-between items-center">
             <div className="flex items-center text-sm text-blue-300">
               <span>
                 Replying to: "{getReplyingToMessage()?.content.substring(0, 50)}
@@ -202,27 +174,13 @@ const ChatInterface = () => {
                 "
               </span>
             </div>
-            <Button 
-              type="button" 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setReplyingTo(null)}
-              className="p-1 h-6 w-6"
-            >
+            <Button type="button" variant="ghost" size="sm" onClick={() => setReplyingTo(null)} className="p-1 h-6 w-6">
               <X className="h-4 w-4" />
             </Button>
-          </div>
-        )}
+          </div>}
         
         <div className="relative flex items-center max-w-4xl mx-auto">
-          <Textarea 
-            value={inputValue} 
-            onChange={e => setInputValue(e.target.value)} 
-            onKeyDown={handleKeyDown} 
-            onFocus={() => setIsFocused(true)} 
-            onBlur={() => setIsFocused(false)} 
-            placeholder="Ask anything..." 
-            className={`
+          <Textarea value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyDown={handleKeyDown} onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)} placeholder="Ask anything..." className={`
               resize-none bg-[#0f172a]/90 border text-blue-100 pr-12 
               min-h-[56px] py-3 rounded-xl md:min-h-[64px] shadow-lg
               transition-all duration-300 placeholder:text-blue-300/30 
@@ -231,35 +189,25 @@ const ChatInterface = () => {
               ${isFocused ? 'shadow-[0_0_40px_rgba(59,130,246,0.4)] border-blue-300/50' : ''}
               hover:shadow-[0_0_30px_rgba(59,130,246,0.35)] hover:border-blue-400/40
               hover:scale-[1.01] hover:bg-[#0f172a]/95
-            `} 
-            disabled={isLoading} 
-          />
+            `} disabled={isLoading} />
           
           <div className={`
               absolute inset-0 -z-10 transition-opacity duration-500
               bg-gradient-to-r from-blue-500/20 via-blue-400/20 to-blue-600/20
               blur-3xl rounded-full
               ${isFocused ? 'opacity-100' : 'opacity-0'}
-            `} 
-          />
+            `} />
           
-          <Button 
-            type="submit" 
-            size="icon" 
-            className={`
+          <Button type="submit" size="icon" className={`
               absolute right-2 rounded-full text-white 
               w-10 h-10 flex items-center justify-center shadow-md
               transition-all duration-300
               ${!inputValue.trim() || isLoading ? 'bg-gray-700/30 cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 cursor-pointer shadow-lg shadow-blue-900/30 hover:shadow-blue-800/40 hover:scale-105 active:scale-95'}
-            `} 
-            disabled={!inputValue.trim() || isLoading}
-          >
+            `} disabled={!inputValue.trim() || isLoading}>
             {isLoading ? <Loader2 className="h-5 w-5 animate-spin text-white" /> : <ArrowUp className="h-5 w-5 text-white" />}
           </Button>
         </div>
       </form>
-    </div>
-  );
+    </div>;
 };
-
 export default ChatInterface;
