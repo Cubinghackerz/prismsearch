@@ -1,3 +1,4 @@
+
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -7,29 +8,28 @@ import ParticleBackground from '../components/ParticleBackground';
 import Footer from '../components/Footer';
 import { ChatProvider } from '@/context/ChatContext';
 import { ResizablePanelGroup, ResizablePanel } from '@/components/ui/resizable';
+import ChatSidebar from '@/components/chat/ChatSidebar';
+import { SidebarProvider, Sidebar, SidebarContent, SidebarInset } from '@/components/ui/sidebar';
+
 const Chat = () => {
-  return <ChatProvider>
+  return (
+    <ChatProvider>
       <div className="min-h-screen flex flex-col">
         <ParticleBackground />
         
         <header className="py-6 px-4 relative z-10">
-          <motion.div initial={{
-          opacity: 0,
-          y: -20
-        }} animate={{
-          opacity: 1,
-          y: 0
-        }} transition={{
-          duration: 0.5
-        }} className="text-center relative">
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.5 }} 
+            className="text-center relative"
+          >
             <Link to="/">
-              <motion.div initial={{
-              opacity: 0,
-              x: -20
-            }} animate={{
-              opacity: 1,
-              x: 0
-            }} className="absolute left-4 top-1/2 -translate-y-1/2">
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }} 
+                animate={{ opacity: 1, x: 0 }} 
+                className="absolute left-4 top-1/2 -translate-y-1/2"
+              >
                 <Button variant="ghost" className="text-white bg-transparent">
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back
@@ -37,42 +37,45 @@ const Chat = () => {
               </motion.div>
             </Link>
             
-            <motion.h1 animate={{
-            backgroundPosition: ['0% 50%', '100% 50%']
-          }} transition={{
-            duration: 3,
-            repeat: Infinity,
-            repeatType: 'reverse'
-          }} className="font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-300 via-blue-500 to-blue-700 animate-gradient-text mb-2 text-4xl">
+            <motion.h1 
+              animate={{ backgroundPosition: ['0% 50%', '100% 50%'] }} 
+              transition={{ duration: 3, repeat: Infinity, repeatType: 'reverse' }} 
+              className="font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-300 via-blue-500 to-blue-700 animate-gradient-text mb-2 text-4xl"
+            >
               Prism Chat
             </motion.h1>
-            <motion.p initial={{
-            opacity: 0
-          }} animate={{
-            opacity: 1
-          }} transition={{
-            delay: 0.2
-          }} className="text-blue-100 max-w-lg mx-auto text-sm">Chat with AI assistants powered by Gemini 2.5 Flash Preview, Mistral Medium and Llama-3-70B</motion.p>
+            <motion.p 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              transition={{ delay: 0.2 }} 
+              className="text-blue-100 max-w-lg mx-auto text-sm"
+            >
+              Chat with AI assistants powered by Gemini 2.5 Flash Preview, Mistral Medium and Llama-3-70B
+            </motion.p>
           </motion.div>
         </header>
         
         <main className="flex-1 px-4 container mx-auto max-w-[90vw] md:max-w-[90vw] lg:max-w-[90vw] relative">
-          <motion.div initial={{
-          opacity: 0,
-          y: 20
-        }} animate={{
-          opacity: 1,
-          y: 0
-        }} transition={{
-          duration: 0.5
-        }} className="mt-4">
-            <ResizablePanelGroup direction="horizontal" className="min-h-[70vh]">
-              <ResizablePanel defaultSize={100} minSize={75}>
-                <div className="h-full">
-                  <ChatInterface />
-                </div>
-              </ResizablePanel>
-            </ResizablePanelGroup>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.5 }} 
+            className="mt-4"
+          >
+            <SidebarProvider defaultOpen={true}>
+              <div className="min-h-[70vh] flex">
+                <Sidebar side="left" variant="floating" collapsible="icon">
+                  <SidebarContent>
+                    <ChatSidebar />
+                  </SidebarContent>
+                </Sidebar>
+                <SidebarInset>
+                  <div className="h-full p-0 md:p-2">
+                    <ChatInterface />
+                  </div>
+                </SidebarInset>
+              </div>
+            </SidebarProvider>
           </motion.div>
         </main>
         
@@ -80,6 +83,8 @@ const Chat = () => {
           <Footer />
         </footer>
       </div>
-    </ChatProvider>;
+    </ChatProvider>
+  );
 };
+
 export default Chat;
