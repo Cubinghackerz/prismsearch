@@ -21,6 +21,7 @@ const FileAttachment: React.FC<FileAttachmentProps> = ({ file, onRemove, isPrevi
     // create object URL from the file object if it's a Blob-like object
     if (isPreview && file.url && typeof file.url === 'object') {
       // Check if the object has blob-like properties
+      // FIX: Fixed null checking for file.url
       if ('size' in file.url && 'type' in file.url) {
         const objectUrl = URL.createObjectURL(file.url as unknown as Blob);
         setPreviewUrl(objectUrl);

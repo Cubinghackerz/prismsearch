@@ -69,7 +69,7 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
           {
             id: generateId(),
             text: `This is a simulated response to: "${userMessage}". In a real application, this would be an actual response from the ${selectedModel} model.`,
-            sender: 'bot',
+            sender: 'bot' as const, // Fix: Explicitly type as 'bot'
             timestamp: new Date(),
             model: selectedModel
           }
@@ -80,10 +80,10 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
   
   // Send a message
   const sendMessage = useCallback((text: string) => {
-    const newUserMessage = {
+    const newUserMessage: ChatMessage = {
       id: generateId(),
       text,
-      sender: 'user',
+      sender: 'user', // This is fine since it's a literal
       timestamp: new Date(),
     };
     

@@ -53,7 +53,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
         <div className="whitespace-pre-wrap">{message.text}</div>
         
         <div className={`absolute ${isBot ? '-right-1' : '-left-1'} top-1 opacity-0 group-hover:opacity-100 transition-opacity`}>
-          <MessageActions isBot={isBot} message={message} />
+          <MessageActions isBot={isBot} messageText={message.text} />
         </div>
       </motion.div>
       {!isBot && (

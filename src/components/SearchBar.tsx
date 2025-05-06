@@ -1,4 +1,3 @@
-
 import { useState, KeyboardEvent, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -101,10 +100,9 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
     
     // Filter chat prompts
     const chat = chatPrompts
-      .filter(({ text }) => 
+      .filter(({ text, description }) => 
         text.toLowerCase().includes(lowerInput) || 
-        // Also match if the description contains the input
-        (text.toLowerCase().description || '').includes(lowerInput)
+        description.toLowerCase().includes(lowerInput)
       )
       .slice(0, 3)
       .map(({ text, description }) => {

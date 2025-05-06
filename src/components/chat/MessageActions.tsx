@@ -1,40 +1,42 @@
 
 import React, { useState } from 'react';
-import { Copy, Check, Reply } from 'lucide-react';
+import { Copy, CheckIcon } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface MessageActionsProps {
-  message: string;
-  onReply: () => void;
+  isBot: boolean;
+  messageText: string;  // Changed from message: ChatMessage to messageText: string
 }
 
-const MessageActions: React.FC<MessageActionsProps> = ({ message, onReply }) => {
+const MessageActions: React.FC<MessageActionsProps> = ({ isBot, messageText }) => {
   const [copied, setCopied] = useState(false);
-
+  
   const handleCopy = () => {
-    navigator.clipboard.writeText(message);
+    navigator.clipboard.writeText(messageText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
+  
+  if (!isBot) return null; // Only show actions for bot messages
+  
   return (
-    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-      <button
-        onClick={handleCopy}
-        className="p-1 rounded-md hover:bg-blue-700/30 text-blue-300 transition-colors"
-        aria-label="Copy message"
-        title="Copy to clipboard"
-      >
-        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-      </button>
-      
-      <button
-        onClick={onReply}
-        className="p-1 rounded-md hover:bg-blue-700/30 text-blue-300 transition-colors"
-        aria-label="Reply to this message"
-        title="Reply to this message"
-      >
-        <Reply className="h-4 w-4" />
-      </button>
+    <div className="flex flex-col items-center space-y-1">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button 
+            onClick={handleCopy} 
+            className="p-1 rounded-full bg-blue-600/30 hover:bg-blue-600/50 transition-colors"
+          >
+            {copied ? 
+              <CheckIcon className="h-3 w-3 text-blue-300" /> : 
+              <Copy className="h-3 w-3 text-blue-300" />
+            }
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="left">
+          <p>{copied ? "Copied!" : "Copy message"}</p>
+        </TooltipContent>
+      </Tooltip>
     </div>
   );
 };
