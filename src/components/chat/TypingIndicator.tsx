@@ -2,7 +2,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Bot } from 'lucide-react';
-import LoadingAnimation from '../LoadingAnimation';
 
 const TypingIndicator: React.FC = () => {
   return (
@@ -21,9 +20,9 @@ const TypingIndicator: React.FC = () => {
         transition={{ duration: 0.2 }}
         className="max-w-[80%] md:max-w-[75%] lg:max-w-[65%] rounded-lg p-4 bg-blue-800/40 text-blue-100 rounded-tl-none"
       >
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <span className="text-blue-300">Thinking</span>
-          <LoadingAnimation color="blue" size="small" className="ml-2" />
+          <div className="loader-triangle"></div>
         </div>
       </motion.div>
     </motion.div>

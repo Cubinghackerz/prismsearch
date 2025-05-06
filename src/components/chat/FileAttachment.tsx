@@ -1,103 +1,39 @@
 
-import React, { useState, useEffect } from 'react';
-import { FileText, Image as ImageIcon, X, AlertTriangle, Paperclip, FileCode } from 'lucide-react';
+import React from 'react';
+import { Paperclip, File, Download } from 'lucide-react';
+import { Button } from '../ui/button';
 
 interface FileAttachmentProps {
   file: {
-    type: 'image' | 'file';
-    url: string | null;
     name: string;
+    url: string | null;
+    size?: number;
+    type?: string;
   };
-  onRemove?: () => void;
-  isPreview?: boolean;
 }
 
-const FileAttachment: React.FC<FileAttachmentProps> = ({ file, onRemove, isPreview = false }) => {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isErrored, setIsErrored] = useState(false);
+const FileAttachment: React.FC<FileAttachmentProps> = ({ file }) => {
+  // Safely extract file URL with null check
+  const fileUrl = file?.url || null;
   
-  useEffect(() => {
-    // For preview mode (when file is just selected but not yet uploaded),
-    // create object URL from the file object if it's a Blob-like object
-    if (isPreview && file.url) {
-      // Check if url is an object and has blob-like properties
-      if (typeof file.url === 'object' && file.url !== null) {
-        const fileUrl = file.url; // Create a non-null reference
-        if ('size' in fileUrl && 'type' in fileUrl) {
-          const objectUrl = URL.createObjectURL(fileUrl as unknown as Blob);
-          setPreviewUrl(objectUrl);
-          
-          // Clean up the object URL when component unmounts
-          return () => {
-            URL.revokeObjectURL(objectUrl);
-          };
-        }
-      }
-    } else if (file.url) {
-      setPreviewUrl(file.url);
+  const handleDownload = () => {
+    if (fileUrl) {
+      window.open(fileUrl, '_blank');
     }
-  }, [file.url, isPreview]);
-  
-  // Determine if file is potentially unsafe
-  const fileExtension = file.name.split('.').pop()?.toLowerCase();
-  const unsafeExtensions = ['exe', 'bat', 'js', 'vbs', 'msi', 'xlsm', 'docm', 'py', 'sh'];
-  const isPotentiallyUnsafe = unsafeExtensions.includes(fileExtension || '');
-  
-  // Safe file types for preview
-  const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'];
-  const textExtensions = ['txt', 'md', 'csv'];
-  
-  const getFileIcon = () => {
-    if (isPotentiallyUnsafe) {
-      return <AlertTriangle className="h-5 w-5 text-yellow-400" />;
-    }
-    
-    if (file.type === 'image') {
-      return <ImageIcon className="h-5 w-5 text-blue-400" />;
-    }
-    
-    if (textExtensions.includes(fileExtension || '')) {
-      return <FileText className="h-5 w-5 text-blue-400" />;
-    }
-    
-    return <Paperclip className="h-5 w-5 text-blue-400" />;
   };
-
-  const handleImageError = () => {
-    setIsErrored(true);
-  };
-
+  
   return (
-    <div className={`relative rounded-lg overflow-hidden border ${isPreview ? 'border-blue-500/30 bg-blue-500/10' : 'border-blue-400/20'}`}>
-      {file.type === 'image' && !isErrored && previewUrl ? (
-        <div className="relative">
-          <img 
-            src={previewUrl} 
-            alt={file.name} 
-            className="max-h-40 object-contain rounded-lg"
-            onError={handleImageError}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end p-2">
-            <span className="text-white text-xs truncate max-w-full">{file.name}</span>
-          </div>
-        </div>
-      ) : (
-        <div className="p-2 flex items-center gap-2">
-          {getFileIcon()}
-          <span className="text-sm text-blue-200 truncate">{file.name}</span>
-          {isPotentiallyUnsafe && (
-            <span className="text-xs text-yellow-300 ml-1">(potentially unsafe)</span>
-          )}
-        </div>
-      )}
-      
-      {onRemove && isPreview && (
-        <button 
-          onClick={onRemove}
-          className="absolute top-1 right-1 bg-blue-900/80 p-1 rounded-full hover:bg-blue-800 transition-colors"
-        >
-          <X className="h-3 w-3 text-white" />
-        </button>
+    <div className="flex items-center gap-2 mt-2 p-2 bg-blue-950/40 rounded-md max-w-xs">
+      <div className="bg-blue-500/20 p-1.5 rounded">
+        <File className="h-4 w-4 text-blue-300" />
+      </div>
+      <div className="flex-1 overflow-hidden">
+        <p className="text-sm font-medium text-blue-200 truncate">{file.name}</p>
+      </div>
+      {fileUrl && (
+        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleDownload}>
+          <Download className="h-4 w-4 text-blue-300" />
+        </Button>
       )}
     </div>
   );
