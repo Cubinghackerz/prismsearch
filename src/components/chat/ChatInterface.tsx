@@ -11,7 +11,6 @@ import MessageBubble from './MessageBubble';
 import TypingIndicator from './TypingIndicator';
 import { useToast } from '@/hooks/use-toast';
 import ModelSelector from './ModelSelector';
-import { useLocation } from 'react-router-dom';
 
 const ChatInterface = () => {
   const { messages, sendMessage, isLoading, isTyping, startNewChat, selectedModel } = useChat();
@@ -19,20 +18,21 @@ const ChatInterface = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const location = useLocation();
 
   // Scroll to bottom on new messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: 'smooth'
-    });
-  }, [messages]);
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({
+        behavior: 'smooth'
+      });
+    }
+  }, [messages, isTyping]);
 
   // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'inherit';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 150)}px`;
     }
   }, [messageText]);
 
@@ -41,6 +41,11 @@ const ChatInterface = () => {
     if (messageText.trim()) {
       sendMessage(messageText.trim());
       setMessageText('');
+      
+      // Reset textarea height
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'inherit';
+      }
     }
   };
 
@@ -48,12 +53,11 @@ const ChatInterface = () => {
   const handleTextareaKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
       e.preventDefault(); // Prevent default to avoid adding a newline
-      handleSendMessage();
+      if (!isLoading) {
+        handleSendMessage();
+      }
     }
     // Allow Ctrl+Enter or Shift+Enter for new lines
-    else if (e.key === 'Enter' && (e.ctrlKey || e.shiftKey)) {
-      // Let the default behavior happen (add a new line)
-    }
   };
 
   return (
@@ -88,7 +92,7 @@ const ChatInterface = () => {
                 Model: {selectedModel}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80">
+            <PopoverContent className="w-80 bg-blue-950/90 border border-blue-500/30">
               <ModelSelector />
             </PopoverContent>
           </Popover>
@@ -98,18 +102,28 @@ const ChatInterface = () => {
       <div className="flex-1 overflow-hidden relative">
         <ScrollArea className="h-full">
           <div className="p-4 space-y-4">
-            {messages.map((message) => (
-              <MessageBubble key={message.id} message={message} />
-            ))}
+            {messages.length === 0 ? (
+              <div className="flex items-center justify-center h-32 text-blue-300/60">
+                <p>Start a conversation by typing a message below...</p>
+              </div>
+            ) : (
+              messages.map((message) => (
+                <MessageBubble key={message.id} message={message} />
+              ))
+            )}
+            {isTyping && (
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+                  <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
+                </div>
+                <div className="bg-blue-800/40 text-blue-100 rounded-lg p-4 rounded-tl-none max-w-[80%]">
+                  <TypingIndicator />
+                </div>
+              </div>
+            )}
             <div ref={messagesEndRef} /> 
           </div>
         </ScrollArea>
-        
-        {isTyping && (
-          <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-[#0E141B]/80 to-transparent backdrop-blur-sm">
-            <TypingIndicator />
-          </div>
-        )}
       </div>
       
       <div className="p-4 border-t border-blue-500/20">
@@ -121,6 +135,8 @@ const ChatInterface = () => {
             onKeyDown={handleTextareaKeyDown}
             placeholder="Type your message here... (Enter to send, Ctrl+Enter for new line)"
             className="resize-none flex-1 bg-transparent text-blue-100 placeholder:text-blue-300/50 border-blue-500/30 focus-visible:ring-blue-400"
+            disabled={isLoading}
+            rows={1}
           />
           
           <TooltipProvider>

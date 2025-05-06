@@ -1,5 +1,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export interface ChatMessage {
   id: string;
@@ -35,10 +37,8 @@ export const useChat = () => useContext(ChatContext);
 
 // Available models
 export const availableModels = [
-  { id: 'gpt-4o', name: 'GPT-4o', description: 'Most capable GPT-4 model, optimized for speed and instruction following' },
-  { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', description: 'Optimized for more natural language responses' },
-  { id: 'mistral-large', name: 'Mistral Large', description: 'High-quality model optimized for contextual understanding' },
-  { id: 'claude-3', name: 'Claude 3', description: 'Advanced model from Anthropic with strong reasoning capabilities' },
+  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', description: 'Fast and efficient model from Google with strong language capabilities' },
+  { id: 'mistral-medium', name: 'Mistral Medium', description: 'High-quality model optimized for contextual understanding' },
   { id: 'llama-3', name: 'Llama 3', description: 'Open-source large language model from Meta' },
 ];
 
@@ -53,43 +53,86 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [selectedModel, setSelectedModel] = useState(availableModels[0].id);
+  const { toast } = useToast();
   
-  // Simulate AI response
-  const simulateResponse = useCallback((userMessage: string) => {
-    setIsLoading(true);
-    setIsTyping(true);
-    
-    setTimeout(() => {
+  // Call AI search assistant function
+  const callAIAssistant = useCallback(async (query: string) => {
+    try {
+      setIsLoading(true);
+      setIsTyping(true);
+      
+      const existingChatHistory = messages.map(msg => ({
+        isUser: msg.sender === 'user',
+        content: msg.text
+      }));
+      
+      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
+        body: {
+          query,
+          model: selectedModel,
+          chatHistory: existingChatHistory,
+          chatId: 'chat-' + Date.now()
+        }
+      });
+      
       setIsLoading(false);
       
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      // Simulate a short typing delay for natural feel
       setTimeout(() => {
         setIsTyping(false);
         setMessages(prev => [
           ...prev,
           {
             id: generateId(),
-            text: `This is a simulated response to: "${userMessage}". In a real application, this would be an actual response from the ${selectedModel} model.`,
-            sender: 'bot' as const, // Fix: Explicitly type as 'bot'
+            text: data.response || "Sorry, I couldn't generate a response. Please try again.",
+            sender: 'bot',
             timestamp: new Date(),
             model: selectedModel
           }
         ]);
-      }, 1500); // Typing indicator delay
-    }, 1000); // Loading delay
-  }, [selectedModel]);
+      }, 800);
+      
+    } catch (error) {
+      console.error('Error calling AI assistant:', error);
+      setIsLoading(false);
+      setIsTyping(false);
+      
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: `Failed to get response: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      });
+      
+      // Add error message to chat
+      setMessages(prev => [
+        ...prev,
+        {
+          id: generateId(),
+          text: "I'm sorry, I encountered an error. Please try again or select a different model.",
+          sender: 'bot',
+          timestamp: new Date(),
+          model: selectedModel
+        }
+      ]);
+    }
+  }, [messages, selectedModel, toast]);
   
   // Send a message
   const sendMessage = useCallback((text: string) => {
     const newUserMessage: ChatMessage = {
       id: generateId(),
       text,
-      sender: 'user', // This is fine since it's a literal
+      sender: 'user',
       timestamp: new Date(),
     };
     
     setMessages(prev => [...prev, newUserMessage]);
-    simulateResponse(text);
-  }, [simulateResponse]);
+    callAIAssistant(text);
+  }, [callAIAssistant]);
   
   // Set initial prompt
   const setInitialPrompt = useCallback((prompt: string) => {
