@@ -92,9 +92,7 @@ const AISearchResponse = ({
             <div className="flex flex-col items-start gap-2 text-purple-300/70">
               <div className="flex items-center gap-3">
                 <div>Thinking</div>
-                <div className="ml-2">
-                  <LoadingAnimation color="purple" size="small" />
-                </div>
+                <LoadingAnimation color="purple" size="small" className="ml-2" />
               </div>
             </div>
           ) : (

@@ -13,20 +13,18 @@ const LoadingAnimation = ({
   className
 }: LoadingAnimationProps) => {
   const sizeClasses = {
-    small: "w-6 h-5.2", // Adjusted height to maintain aspect ratio
-    medium: "w-10 h-8.66", // Adjusted height to maintain aspect ratio
-    large: "w-16 h-13.86" // Adjusted height to maintain aspect ratio
+    small: "w-6 h-6",
+    medium: "w-10 h-10",
+    large: "w-16 h-16"
   };
-  
-  // Color based on theme
-  const colorClass = color === "blue" ? "bg-blue-500" : "bg-purple-500";
+
+  const colorClass = color === "blue" ? "blue" : "";
   
   return (
     <div className={cn(
       "loader", 
       colorClass,
       sizeClasses[size],
-      "relative inline-block",
       className
     )} />
   );
