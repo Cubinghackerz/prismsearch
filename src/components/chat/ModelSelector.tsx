@@ -7,12 +7,17 @@ import { useChat, availableModels } from '@/context/ChatContext';
 const ModelSelector = () => {
   const { selectedModel, setSelectedModel } = useChat();
   
+  const handleModelChange = (value: string) => {
+    console.log(`Selected model: ${value}`);
+    setSelectedModel(value);
+  };
+  
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium text-blue-100 mb-3">Select AI Model</h3>
       <RadioGroup 
         value={selectedModel} 
-        onValueChange={setSelectedModel}
+        onValueChange={handleModelChange}
         className="space-y-2"
       >
         {availableModels.map(model => (

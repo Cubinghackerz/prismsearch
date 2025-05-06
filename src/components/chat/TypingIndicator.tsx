@@ -22,7 +22,7 @@ const TypingIndicator: React.FC = () => {
       >
         <div className="flex items-center gap-2">
           <span className="text-blue-300">Thinking</span>
-          <div className="loader-triangle"></div>
+          <div className="loader-triangle scale-[0.4] origin-left"></div>
         </div>
       </motion.div>
     </motion.div>

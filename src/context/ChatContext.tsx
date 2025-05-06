@@ -66,6 +66,8 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
         content: msg.text
       }));
       
+      console.log(`Sending request with model: ${selectedModel}`);
+      
       const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
         body: {
           query,

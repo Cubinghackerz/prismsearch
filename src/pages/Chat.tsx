@@ -32,29 +32,26 @@ const Chat = () => {
       <ScrollToTop />
       
       <header className="py-6 px-4 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="relative flex items-center justify-center max-w-7xl mx-auto"
-        >
-          <Link to="/" className="absolute left-4 top-1/2 -translate-y-1/2">
-            <Button variant="ghost" className="text-white bg-transparent">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Search
-            </Button>
-          </Link>
-          
-          <motion.h1
-            animate={{ backgroundPosition: ['0% 50%', '100% 50%'] }}
-            transition={{ duration: 3, repeat: Infinity, repeatType: 'reverse' }}
-            className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 animate-gradient-text"
-          >
-            Prism Chat
-          </motion.h1>
-          
-          <div className="w-[100px]"></div>
-        </motion.div>
+        <div className="max-w-7xl mx-auto relative">
+          <div className="flex justify-between items-center">
+            <Link to="/" className="absolute left-0">
+              <Button variant="ghost" className="text-white bg-transparent">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Search
+              </Button>
+            </Link>
+            
+            <motion.h1
+              className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 animate-gradient-text mx-auto"
+              animate={{ backgroundPosition: ['0% 50%', '100% 50%'] }}
+              transition={{ duration: 3, repeat: Infinity, repeatType: 'reverse' }}
+            >
+              Prism Chat
+            </motion.h1>
+            
+            <div className="w-[100px]"></div>
+          </div>
+        </div>
       </header>
       
       <main className="flex-1 px-4 container mx-auto max-w-4xl">
