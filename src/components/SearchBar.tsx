@@ -1,7 +1,8 @@
 
-import { useState, KeyboardEvent } from 'react';
+import { useState, KeyboardEvent, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
 import LoadingAnimation from './LoadingAnimation';
+import SearchSuggestions from './SearchSuggestions';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -12,25 +13,58 @@ interface SearchBarProps {
 const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
-
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && query.trim()) {
       onSearch(query);
+      setShowSuggestions(false);
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false);
     }
   };
 
   const handleSearch = () => {
     if (query.trim()) {
       onSearch(query);
+      setShowSuggestions(false);
     }
   };
 
   const handleClear = () => {
     setQuery('');
+    setShowSuggestions(false);
   };
+  
+  const handleSelectSuggestion = (suggestion: string) => {
+    setQuery(suggestion);
+    onSearch(suggestion);
+    setShowSuggestions(false);
+  };
+  
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchContainerRef.current && 
+        !searchContainerRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
-    <div className={`search-bar-container w-full max-w-3xl mx-auto transition-all duration-500 ${expanded ? 'search-bar-expanded' : ''}`}>
+    <div 
+      ref={searchContainerRef}
+      className={`search-bar-container w-full max-w-3xl mx-auto transition-all duration-500 relative ${expanded ? 'search-bar-expanded' : ''}`}
+    >
       <div className="relative">
         <div 
           className={`
@@ -53,9 +87,15 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
             </div>
             <input
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setShowSuggestions(true);
+              }}
               onKeyDown={handleKeyDown}
-              onFocus={() => setIsFocused(true)}
+              onFocus={() => {
+                setIsFocused(true);
+                setShowSuggestions(true);
+              }}
               onBlur={() => setIsFocused(false)}
               className="peer h-full w-full outline-none text-lg text-white/90 px-2 bg-transparent 
                 placeholder:text-purple-200/30 
@@ -97,6 +137,13 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
             </button>
           </div>
         </div>
+        
+        <SearchSuggestions
+          query={query}
+          onSelectSuggestion={handleSelectSuggestion}
+          visible={showSuggestions && (isFocused || query.trim().length > 0)}
+        />
+        
         {/* Decorative gradient blur effect */}
         <div className={`
           absolute inset-0 -z-10 transition-opacity duration-500
