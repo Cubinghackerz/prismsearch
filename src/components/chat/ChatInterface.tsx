@@ -73,7 +73,7 @@ const ChatInterface = () => {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" onClick={startNewChat} className="text-blue-300 hover:text-blue-200">
+                <Button variant="ghost" size="icon" onClick={startNewChat} className="text-blue-300 hover:text-blue-200 bg-transparent">
                   <RefreshCw className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
