@@ -10,7 +10,7 @@ const corsHeaders = {
 // Get API keys from environment variables for better security
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY') || '';
 const MISTRAL_API_KEY = Deno.env.get('MISTRAL_API_KEY') || '';
-const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY') || '';  // For Llama 3 access
+const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY') || '';
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const geminiModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
@@ -50,7 +50,7 @@ serve(async (req) => {
     });
 
     // Use the appropriate model based on the request
-    if (model === 'mistral-medium') {
+    if (model === 'mistral') {
       try {
         if (!MISTRAL_API_KEY) {
           throw new Error("Mistral API key is not configured");
@@ -88,7 +88,7 @@ serve(async (req) => {
         console.error('Mistral error:', error);
         response = "I apologize, but I encountered an error with the Mistral service. Please check if the API key is valid and configured properly.";
       }
-    } else if (model === 'llama-3') {
+    } else if (model === 'groq') {
       try {
         if (!GROQ_API_KEY) {
           throw new Error("Groq API key is not configured");
@@ -126,13 +126,9 @@ serve(async (req) => {
         console.error('Groq error:', error);
         response = "I apologize, but I encountered an error with the Groq service. Please check if the API key is valid and configured properly.";
       }
-    } else if (model === 'gemini-2.5-flash') {
-      // Use Gemini 2.5 Flash model
+    } else {
+      // Use Gemini as fallback
       try {
-        if (!GEMINI_API_KEY) {
-          throw new Error("Gemini API key is not configured");
-        }
-
         // Process the chat history for Gemini
         const chat = geminiModel.startChat({
           history: formattedChatHistory.map(msg => ({
@@ -152,35 +148,10 @@ serve(async (req) => {
         console.error('Gemini error:', error);
         response = "I apologize, but I encountered an error with the Gemini service. Please try again.";
       }
-    } else {
-      // Default to Gemini if model is not specified
-      try {
-        if (!GEMINI_API_KEY) {
-          throw new Error("Gemini API key is not configured");
-        }
-        
-        const chat = geminiModel.startChat({
-          history: formattedChatHistory.map(msg => ({
-            role: msg.role === 'user' ? 'user' : 'model',
-            parts: [{ text: msg.content }],
-          })),
-          generationConfig: {
-            maxOutputTokens: 2048,
-            temperature: 0.7,
-          }
-        });
-
-        const result = await chat.sendMessage(query);
-        const responseText = result.response.text();
-        response = responseText;
-      } catch (error) {
-        console.error('Default Gemini error:', error);
-        response = "I apologize, but I encountered an error with the Gemini service. Please try again.";
-      }
     }
 
     // Simulate typing delay (500-2000ms depending on response length)
-    const typingDelay = Math.min(Math.max(response.length * 5, 300), 1500);
+    const typingDelay = Math.min(Math.max(response.length * 10, 500), 2000);
     console.log(`Response generated, adding ${typingDelay}ms typing delay`);
     
     // Use setTimeout to delay the response
@@ -203,4 +174,4 @@ serve(async (req) => {
       }
     )
   }
-});
+})

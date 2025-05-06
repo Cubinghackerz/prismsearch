@@ -1,38 +1,38 @@
 
 import React from 'react';
-import { Paperclip, File, Download } from 'lucide-react';
+import { X, FileText } from 'lucide-react';
 import { Button } from '../ui/button';
 
 interface FileAttachmentProps {
   file: {
+    id: string;
     name: string;
+    size: number;
     url: string | null;
-    size?: number;
-    type?: string;
   };
+  onRemove?: (id: string) => void;
 }
 
-const FileAttachment: React.FC<FileAttachmentProps> = ({ file }) => {
-  // Safely extract file URL with null check
-  const fileUrl = file?.url || null;
-  
-  const handleDownload = () => {
-    if (fileUrl) {
-      window.open(fileUrl, '_blank');
-    }
-  };
-  
+const FileAttachment: React.FC<FileAttachmentProps> = ({ file, onRemove }) => {
   return (
-    <div className="flex items-center gap-2 mt-2 p-2 bg-blue-950/40 rounded-md max-w-xs">
-      <div className="bg-blue-500/20 p-1.5 rounded">
-        <File className="h-4 w-4 text-blue-300" />
+    <div className="flex items-center gap-2 p-2 bg-blue-500/10 rounded-md border border-blue-500/20 max-w-xs">
+      <FileText className="h-4 w-4 text-blue-400 shrink-0" />
+      <div className="truncate flex-1 text-sm">
+        <a 
+          href={file.url || '#'} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className={file.url ? "text-blue-300 hover:underline" : "text-gray-400 cursor-not-allowed"}
+        >
+          {file.name}
+        </a>
+        <div className="text-xs text-gray-400">
+          {Math.round(file.size / 1024)} KB
+        </div>
       </div>
-      <div className="flex-1 overflow-hidden">
-        <p className="text-sm font-medium text-blue-200 truncate">{file.name}</p>
-      </div>
-      {fileUrl && (
-        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleDownload}>
-          <Download className="h-4 w-4 text-blue-300" />
+      {onRemove && (
+        <Button variant="ghost" size="sm" onClick={() => onRemove(file.id)} className="p-0 h-6 w-6">
+          <X className="h-3.5 w-3.5" />
         </Button>
       )}
     </div>

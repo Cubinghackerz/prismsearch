@@ -1,167 +1,232 @@
 
-import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from "@/hooks/use-toast";
+
+export type ChatModel = 'mistral' | 'groq' | 'gemini';
 
 export interface ChatMessage {
   id: string;
-  text: string;
-  sender: 'user' | 'bot';
+  content: string;
+  isUser: boolean;
   timestamp: Date;
-  model?: string;
+  parentMessageId?: string; // For thread replies
+}
+
+interface ModelUsage {
+  mistral: number | null;
+  groq: number | null;
+  gemini: number | null; // null means unlimited
 }
 
 interface ChatContextType {
+  chatId: string | null;
   messages: ChatMessage[];
+  modelUsage: ModelUsage;
+  selectedModel: ChatModel;
   isLoading: boolean;
   isTyping: boolean;
-  sendMessage: (text: string) => void;
+  sendMessage: (content: string, parentMessageId?: string) => Promise<void>;
   startNewChat: () => void;
-  selectedModel: string;
-  setSelectedModel: (model: string) => void;
-  setInitialPrompt: (prompt: string) => void;
+  selectModel: (model: ChatModel) => void;
 }
 
-const ChatContext = createContext<ChatContextType>({
-  messages: [],
-  isLoading: false,
-  isTyping: false,
-  sendMessage: () => {},
-  startNewChat: () => {},
-  selectedModel: '',
-  setSelectedModel: () => {},
-  setInitialPrompt: () => {},
-});
+const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
-export const useChat = () => useContext(ChatContext);
+const DAILY_LIMITS = {
+  mistral: null, // Unlimited
+  groq: null, // Unlimited
+  gemini: null, // Unlimited
+};
 
-// Available models
-export const availableModels = [
-  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', description: 'Fast and efficient model from Google with strong language capabilities' },
-  { id: 'mistral-medium', name: 'Mistral Medium', description: 'High-quality model optimized for contextual understanding' },
-  { id: 'llama-3', name: 'Llama 3', description: 'Open-source large language model from Meta' },
-];
+const USAGE_KEY = 'prism_search_ai_usage';
+const LAST_USAGE_DATE_KEY = 'prism_search_last_usage_date';
 
-interface ChatProviderProps {
-  children: ReactNode;
-}
-
-const generateId = () => Math.random().toString(36).substring(2, 15);
-
-export const ChatProvider = ({ children }: ChatProviderProps) => {
+export const ChatProvider = ({ children }: { children: ReactNode }) => {
+  const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const [selectedModel, setSelectedModel] = useState(availableModels[0].id);
+  const [selectedModel, setSelectedModel] = useState<ChatModel>('mistral');
+  const [modelUsage, setModelUsage] = useState<ModelUsage>({
+    mistral: DAILY_LIMITS.mistral,
+    groq: DAILY_LIMITS.groq,
+    gemini: DAILY_LIMITS.gemini,
+  });
   const { toast } = useToast();
-  
-  // Call AI search assistant function
-  const callAIAssistant = useCallback(async (query: string) => {
-    try {
-      setIsLoading(true);
-      setIsTyping(true);
+
+  // Load and initialize usage data
+  useEffect(() => {
+    const loadUsageData = () => {
+      const today = new Date().toDateString();
+      const lastUsageDate = localStorage.getItem(LAST_USAGE_DATE_KEY);
       
-      const existingChatHistory = messages.map(msg => ({
-        isUser: msg.sender === 'user',
-        content: msg.text
-      }));
-      
-      console.log(`Sending request with model: ${selectedModel}`);
-      
-      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
-        body: {
-          query,
-          model: selectedModel,
-          chatHistory: existingChatHistory,
-          chatId: 'chat-' + Date.now()
-        }
-      });
-      
-      setIsLoading(false);
-      
-      if (error) {
-        throw new Error(error.message);
+      // Reset usage if it's a new day
+      if (lastUsageDate !== today) {
+        localStorage.setItem(LAST_USAGE_DATE_KEY, today);
+        const resetUsage: ModelUsage = {
+          mistral: DAILY_LIMITS.mistral,
+          groq: DAILY_LIMITS.groq,
+          gemini: DAILY_LIMITS.gemini,
+        };
+        localStorage.setItem(USAGE_KEY, JSON.stringify(resetUsage));
+        setModelUsage(resetUsage);
+        return;
       }
       
-      // Simulate a short typing delay for natural feel
-      setTimeout(() => {
-        setIsTyping(false);
-        setMessages(prev => [
-          ...prev,
-          {
-            id: generateId(),
-            text: data.response || "Sorry, I couldn't generate a response. Please try again.",
-            sender: 'bot',
-            timestamp: new Date(),
-            model: selectedModel
-          }
-        ]);
-      }, 800);
-      
-    } catch (error) {
-      console.error('Error calling AI assistant:', error);
-      setIsLoading(false);
-      setIsTyping(false);
-      
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: `Failed to get response: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      });
-      
-      // Add error message to chat
-      setMessages(prev => [
-        ...prev,
-        {
-          id: generateId(),
-          text: "I'm sorry, I encountered an error. Please try again or select a different model.",
-          sender: 'bot',
-          timestamp: new Date(),
-          model: selectedModel
-        }
-      ]);
-    }
-  }, [messages, selectedModel, toast]);
+      // Load existing usage data
+      const savedUsage = localStorage.getItem(USAGE_KEY);
+      if (savedUsage) {
+        setModelUsage(JSON.parse(savedUsage));
+      }
+    };
+    
+    loadUsageData();
+  }, [toast]);
   
-  // Send a message
-  const sendMessage = useCallback((text: string) => {
-    const newUserMessage: ChatMessage = {
-      id: generateId(),
-      text,
-      sender: 'user',
+  // Start a new chat
+  const startNewChat = () => {
+    const newChatId = uuidv4();
+    setChatId(newChatId);
+    setMessages([]);
+    toast({
+      title: "New Chat Started",
+      description: "You've started a new conversation.",
+      duration: 2000,
+    });
+  };
+  
+  // Select a model
+  const selectModel = (model: ChatModel) => {
+    setSelectedModel(model);
+    toast({
+      title: `Model Changed: ${getModelDisplayName(model)}`,
+      description: "Your messages will now be processed by this AI model.",
+      duration: 2000,
+    });
+  };
+
+  // Helper function to get display name for models
+  const getModelDisplayName = (model: ChatModel): string => {
+    const displayNames = {
+      mistral: "Mistral Medium",
+      groq: "Llama-3-70B (Groq)",
+      gemini: "Gemini 2.5 Flash",
+    };
+    return displayNames[model] || model;
+  };
+  
+  // Handle errors in the chat flow
+  const handleChatError = (errorMessage: string) => {
+    const errorResponse: ChatMessage = {
+      id: uuidv4(),
+      content: errorMessage,
+      isUser: false,
       timestamp: new Date(),
     };
     
-    setMessages(prev => [...prev, newUserMessage]);
-    callAIAssistant(text);
-  }, [callAIAssistant]);
-  
-  // Set initial prompt
-  const setInitialPrompt = useCallback((prompt: string) => {
-    if (prompt && messages.length === 0) {
-      sendMessage(prompt);
+    setMessages(prev => [...prev, errorResponse]);
+    toast({
+      variant: "destructive",
+      title: "Chat Error",
+      description: "There was a problem connecting to the AI model. Please try again.",
+      duration: 3000,
+    });
+  };
+
+  // Send a message to the AI
+  const sendMessage = async (content: string, parentMessageId?: string) => {
+    if (!content.trim()) return;
+    
+    // Create a new message
+    const userMessage: ChatMessage = {
+      id: uuidv4(),
+      content,
+      isUser: true,
+      timestamp: new Date(),
+      parentMessageId,
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+    setIsTyping(true);
+
+    try {
+      // Initialize chat if needed
+      const currentChatId = chatId || uuidv4();
+      if (!chatId) {
+        setChatId(currentChatId);
+      }
+      
+      // Call the AI function
+      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
+        body: { 
+          query: content,
+          chatId: currentChatId,
+          chatHistory: messages,
+          model: selectedModel
+        }
+      });
+
+      if (error) {
+        console.error("Supabase function error:", error);
+        handleChatError("Sorry, I encountered an error while trying to respond. Please try again.");
+        return;
+      }
+      
+      // Add AI response to messages
+      if (data && data.response) {
+        const aiMessage: ChatMessage = {
+          id: uuidv4(),
+          content: data.response,
+          isUser: false,
+          timestamp: new Date(),
+          parentMessageId: userMessage.id, // This makes it a direct reply to the user's message
+        };
+        
+        setMessages(prev => [...prev, aiMessage]);
+      } else {
+        handleChatError("Received an empty response from the AI. Please try again.");
+      }
+    } catch (error) {
+      console.error('AI Chat Error:', error);
+      handleChatError("Sorry, I encountered an error while trying to respond. Please try again.");
+    } finally {
+      setIsLoading(false);
+      setIsTyping(false);
     }
-  }, [messages.length, sendMessage]);
-  
-  // Start a new chat
-  const startNewChat = useCallback(() => {
-    setMessages([]);
+  };
+
+  // Clear messages when component unmounts to make chats temporary
+  useEffect(() => {
+    return () => {
+      setMessages([]);
+      setChatId(null);
+    };
   }, []);
-  
+
   return (
-    <ChatContext.Provider
-      value={{
-        messages,
-        isLoading,
-        isTyping,
-        sendMessage,
-        startNewChat,
-        selectedModel,
-        setSelectedModel,
-        setInitialPrompt
-      }}
-    >
+    <ChatContext.Provider value={{
+      chatId,
+      messages,
+      modelUsage,
+      selectedModel,
+      isLoading,
+      isTyping,
+      sendMessage,
+      startNewChat,
+      selectModel,
+    }}>
       {children}
     </ChatContext.Provider>
   );
+};
+
+export const useChat = () => {
+  const context = useContext(ChatContext);
+  if (context === undefined) {
+    throw new Error('useChat must be used within a ChatProvider');
+  }
+  return context;
 };
