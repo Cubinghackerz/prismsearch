@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -128,9 +129,9 @@ const ChatInterface = () => {
                   <TooltipContent>
                     <p>Settings</p>
                   </TooltipContent>
-                </TooltipProvider>
-              </TooltipTrigger>
-            </Popover>
+                </Tooltip>
+              </TooltipProvider>
+            </PopoverTrigger>
             <PopoverContent className="w-80">
               <ModelSelector />
             </PopoverContent>
@@ -170,9 +171,9 @@ const ChatInterface = () => {
                   <TooltipContent>
                     <p>Attach Files</p>
                   </TooltipContent>
-                </TooltipProvider>
-              </SheetTrigger>
-            </Sheet>
+                </Tooltip>
+              </TooltipProvider>
+            </SheetTrigger>
             <SheetContent side="bottom" className="flex flex-col">
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
