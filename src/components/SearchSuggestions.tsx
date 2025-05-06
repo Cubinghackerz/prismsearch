@@ -3,7 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 import { MessageSquare, Search, TrendingUp } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface SearchSuggestionsProps {
   query: string;
@@ -34,6 +34,8 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
   onSelectSuggestion,
   visible 
 }) => {
+  const navigate = useNavigate();
+  
   // Filter suggestions based on the query
   const filteredSearches = popularSearches.filter(search => 
     search.toLowerCase().includes(query.toLowerCase())
@@ -44,6 +46,11 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
   );
 
   if (!visible) return null;
+  
+  const handleChatPromptClick = (prompt: string) => {
+    // Navigate to chat page with the prompt encoded in the URL
+    navigate(`/chat?prompt=${encodeURIComponent(prompt)}`);
+  };
 
   return (
     <motion.div
@@ -87,15 +94,11 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
               {filteredPrompts.map((prompt, index) => (
                 <CommandItem 
                   key={`prompt-${index}`}
+                  onSelect={() => handleChatPromptClick(prompt)}
                   className="flex items-center gap-2 px-4 py-2 cursor-pointer text-blue-100 hover:bg-blue-500/20"
                 >
-                  <Link 
-                    to={`/chat?prompt=${encodeURIComponent(prompt)}`} 
-                    className="flex items-center gap-2 w-full"
-                  >
-                    <MessageSquare className="h-4 w-4 text-blue-400" />
-                    <span>{prompt}</span>
-                  </Link>
+                  <MessageSquare className="h-4 w-4 text-blue-400" />
+                  <span>{prompt}</span>
                 </CommandItem>
               ))}
             </CommandGroup>

@@ -1,28 +1,15 @@
 
 import React, { useRef, useState, useEffect } from 'react';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import {
-  RefreshCw, 
-  SendHorizontal, 
-  Sparkles, 
-  Loader2, 
-  Settings, 
-  FileUp,
-  Bot
-} from 'lucide-react';
-import { useChat, ChatModel } from '@/context/ChatContext';
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { RefreshCw, SendHorizontal, Loader2 } from 'lucide-react';
+import { useChat } from '@/context/ChatContext';
 import MessageBubble from './MessageBubble';
 import TypingIndicator from './TypingIndicator';
-import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import ModelSelector from './ModelSelector';
-import FileAttachment from './FileAttachment';
 import { useLocation } from 'react-router-dom';
 
 const ChatInterface = () => {
@@ -32,11 +19,11 @@ const ChatInterface = () => {
     isLoading, 
     isTyping, 
     startNewChat,
-    selectedModel
+    selectedModel,
+    selectModel
   } = useChat();
   
   const [messageText, setMessageText] = useState('');
-  const [files, setFiles] = useState<File[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -72,25 +59,21 @@ const ChatInterface = () => {
     if (messageText.trim()) {
       sendMessage(messageText.trim());
       setMessageText('');
-      setFiles([]);
     }
   };
 
-  // Handle text area key press (Ctrl + Enter to send)
+  // Handle text area key press (Enter to send, Ctrl + Enter for new line)
   const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && e.ctrlKey) {
-      e.preventDefault();
-      handleSendMessage();
+    if (e.key === 'Enter') {
+      if (e.ctrlKey) {
+        // Add a new line when Ctrl+Enter is pressed
+        setMessageText(prev => prev + '\n');
+      } else {
+        // Send message when Enter is pressed without Ctrl
+        e.preventDefault();
+        handleSendMessage();
+      }
     }
-  };
-
-  // Handle file attachment
-  const handleFileSelect = (acceptedFiles: File[]) => {
-    setFiles(acceptedFiles);
-    toast({
-      title: "Files Attached",
-      description: `You've attached ${acceptedFiles.length} file(s) to your message.`,
-    });
   };
 
   return (
@@ -116,27 +99,12 @@ const ChatInterface = () => {
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          
-          <Popover>
-            <PopoverTrigger asChild>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="text-blue-300 hover:text-blue-200">
-                      <Settings className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Settings</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </PopoverTrigger>
-            <PopoverContent className="w-80">
-              <ModelSelector />
-            </PopoverContent>
-          </Popover>
         </div>
+      </div>
+      
+      {/* Model Selector */}
+      <div className="px-4 py-2 border-b border-blue-500/20">
+        <ModelSelector />
       </div>
       
       {/* Messages Area */}
@@ -159,35 +127,12 @@ const ChatInterface = () => {
       {/* Input Area */}
       <div className="p-4 border-t border-blue-500/20">
         <div className="flex items-center space-x-2">
-          <Sheet>
-            <SheetTrigger asChild>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="text-blue-300 hover:text-blue-200">
-                      <FileUp className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Attach Files</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </SheetTrigger>
-            <SheetContent side="bottom" className="flex flex-col">
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <FileAttachment onFileSelect={handleFileSelect} />
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
           <Textarea
             ref={textareaRef}
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
             onKeyDown={handleTextareaKeyDown}
-            placeholder="Type your message here... (Ctrl + Enter to send)"
+            placeholder="Type your message here... (Press Enter to send, Ctrl + Enter for new line)"
             className="resize-none flex-1 bg-transparent text-blue-100 placeholder:text-blue-300 border-blue-500/30 focus-visible:ring-blue-400"
           />
           <TooltipProvider>

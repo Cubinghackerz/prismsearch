@@ -31,18 +31,18 @@ const ModelSelector: React.FC = () => {
 
   return (
     <div className="p-2">
-      <h3 className="font-medium text-lg mb-4">Select Model</h3>
+      <h3 className="font-medium text-lg mb-2">Select Model</h3>
       <RadioGroup 
         value={selectedModel} 
         onValueChange={(value) => selectModel(value as ChatModel)}
-        className="space-y-3"
+        className="space-y-2"
       >
         {models.map((model) => {
           const Icon = model.icon;
           return (
             <div
               key={model.id}
-              className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer ${
+              className={`flex items-center gap-3 p-2 rounded-lg border cursor-pointer ${
                 selectedModel === model.id 
                   ? 'border-blue-500 bg-blue-500/10' 
                   : 'border-gray-200 hover:bg-gray-100/10'
@@ -50,12 +50,12 @@ const ModelSelector: React.FC = () => {
             >
               <RadioGroupItem value={model.id} id={model.id} className="sr-only" />
               <Label htmlFor={model.id} className="flex items-center gap-3 cursor-pointer flex-1">
-                <div className={`p-2 rounded-full ${selectedModel === model.id ? 'bg-blue-500' : 'bg-gray-200'}`}>
-                  <Icon className={`h-4 w-4 ${selectedModel === model.id ? 'text-white' : 'text-gray-700'}`} />
+                <div className={`p-2 rounded-full ${selectedModel === model.id ? 'bg-blue-500' : 'bg-gray-200/50'}`}>
+                  <Icon className={`h-4 w-4 ${selectedModel === model.id ? 'text-white' : 'text-gray-400'}`} />
                 </div>
                 <div className="flex-1">
-                  <div className="font-medium">{model.name}</div>
-                  <div className="text-sm text-gray-500">{model.description}</div>
+                  <div className="font-medium text-white">{model.name}</div>
+                  <div className="text-xs text-gray-400">{model.description}</div>
                 </div>
                 {selectedModel === model.id && (
                   <Check className="h-4 w-4 text-blue-500" />
