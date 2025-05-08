@@ -1,7 +1,10 @@
 
-import { useState, KeyboardEvent } from 'react';
+import { useState, KeyboardEvent, useRef, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
 import LoadingAnimation from './LoadingAnimation';
+import AutocompleteDropdown from './search/AutocompleteDropdown';
+import { useAutocomplete } from '@/hooks/useAutocomplete';
+import { AnimatePresence } from 'framer-motion';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -10,14 +13,44 @@ interface SearchBarProps {
 }
 
 const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
-  const [query, setQuery] = useState('');
+  const {
+    inputValue: query,
+    handleInputChange,
+    suggestions,
+    isOpen,
+    highlightedIndex,
+    handleKeyDown,
+    handleSelectSuggestion,
+    handleClickOutside
+  } = useAutocomplete({
+    minChars: 2,
+    maxSuggestions: 7,
+    debounceMs: 200
+  });
+  
   const [isFocused, setIsFocused] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && query.trim()) {
-      onSearch(query);
-    }
-  };
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutsideListener = (e: MouseEvent) => {
+      if (
+        dropdownRef.current && 
+        !dropdownRef.current.contains(e.target as Node) && 
+        inputRef.current && 
+        !inputRef.current.contains(e.target as Node)
+      ) {
+        handleClickOutside();
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutsideListener);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutsideListener);
+    };
+  }, [handleClickOutside]);
 
   const handleSearch = () => {
     if (query.trim()) {
@@ -26,7 +59,15 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
   };
 
   const handleClear = () => {
-    setQuery('');
+    handleInputChange('');
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+  
+  const handleSuggestionClick = (suggestion: string) => {
+    handleSelectSuggestion(suggestion);
+    onSearch(suggestion);
   };
 
   return (
@@ -52,9 +93,15 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
               `} />
             </div>
             <input
+              ref={inputRef}
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
+              onChange={(e) => handleInputChange(e.target.value)}
+              onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+                handleKeyDown(e);
+                if (e.key === 'Enter' && query.trim() && !isOpen) {
+                  onSearch(query);
+                }
+              }}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               className="peer h-full w-full outline-none text-lg text-white/90 px-2 bg-transparent 
@@ -66,6 +113,10 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
               type="text"
               placeholder="Search across the web..."
               disabled={isSearching}
+              aria-label="Search input"
+              aria-autocomplete="list"
+              aria-controls="search-suggestions"
+              aria-expanded={isOpen}
             />
             {query && !isSearching && (
               <button
@@ -74,6 +125,7 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
                   hover:text-purple-200 transition-all duration-300 rounded-full 
                   hover:bg-purple-500/10 hover:scale-110
                   active:scale-95"
+                aria-label="Clear search"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -88,6 +140,7 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
                   ? 'bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 cursor-pointer shadow-lg shadow-purple-900/30 hover:shadow-purple-800/40 hover:scale-105 active:scale-95' 
                   : 'bg-gray-700/30 cursor-not-allowed opacity-50'}
               `}
+              aria-label="Search button"
             >
               {isSearching ? (
                 <div className="flex items-center justify-center">
@@ -97,6 +150,20 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
             </button>
           </div>
         </div>
+        
+        {/* Dropdown suggestions container */}
+        <div ref={dropdownRef} className="relative w-full">
+          <AnimatePresence>
+            <AutocompleteDropdown
+              suggestions={suggestions}
+              isOpen={isOpen && isFocused}
+              highlightedIndex={highlightedIndex}
+              onSelectSuggestion={handleSuggestionClick}
+              inputValue={query}
+            />
+          </AnimatePresence>
+        </div>
+        
         {/* Decorative gradient blur effect */}
         <div className={`
           absolute inset-0 -z-10 transition-opacity duration-500
