@@ -1,5 +1,6 @@
 
 import { motion } from 'framer-motion';
+import { TrendingUp, Star, Users } from 'lucide-react';
 import { AutocompleteOption } from '@/hooks/useAutocomplete';
 
 interface AutocompleteDropdownProps {
@@ -42,6 +43,16 @@ const AutocompleteDropdown = ({
     );
   };
 
+  // Function to determine if a suggestion is trending
+  const isTrending = (score?: number): boolean => {
+    return score !== undefined && score > 0.85;
+  };
+
+  // Function to determine if a suggestion is popular
+  const isPopular = (score?: number): boolean => {
+    return score !== undefined && score > 0.75 && score <= 0.85;
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -10 }}
@@ -77,8 +88,35 @@ const AutocompleteDropdown = ({
                   title={`Relevance: ${Math.round(suggestion.score * 100)}%`}
                 />
               )}
+              
+              {/* Display trending or popular icon if applicable */}
+              {isTrending(suggestion.score) && (
+                <TrendingUp className="h-3 w-3 mr-2 text-purple-400" title="Trending search" />
+              )}
+              
+              {isPopular(suggestion.score) && !isTrending(suggestion.score) && (
+                <Star className="h-3 w-3 mr-2 text-purple-400" title="Popular search" />
+              )}
+              
+              {/* Show people icon for community searches */}
+              {suggestion.score && suggestion.score <= 0.75 && suggestion.score > 0.6 && (
+                <Users className="h-3 w-3 mr-2 text-purple-400" title="Community search" />
+              )}
+              
               {highlightMatch(suggestion.text, inputValue)}
             </div>
+            
+            {/* Show popularity gauge */}
+            {suggestion.score && (
+              <div className="ml-2 flex items-center">
+                <div className="w-8 h-1.5 bg-purple-900/30 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full rounded-full bg-gradient-to-r from-purple-300 to-purple-500"
+                    style={{ width: `${Math.min(100, suggestion.score * 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
           </li>
         ))}
       </ul>

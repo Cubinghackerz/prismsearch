@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import ParticleBackground from '../components/ParticleBackground';
 import ScrollToTop from '../components/ScrollToTop';
 import Footer from '../components/Footer';
+import PopularSearches from '../components/search/PopularSearches';
 
 // Search engine information with logo URLs
 const engineInfo = {
@@ -157,9 +158,12 @@ const Index = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.5 }}
-            className="mt-20 text-center"
+            className="mt-6 text-center"
           >
-            <div className="flex justify-center space-x-6">
+            {/* Add Popular Searches component */}
+            <PopularSearches onSelectSearch={handleSearch} />
+            
+            <div className="flex justify-center space-x-6 mt-8">
               {Object.entries(engineInfo).map(([engine, info]) => (
                 <motion.a 
                   key={engine} 
