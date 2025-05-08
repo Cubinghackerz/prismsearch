@@ -5,4 +5,5 @@ export interface SearchResult {
   url: string;
   snippet: string;
   source: string;
+  relevance?: number; // Added relevance property for search ranking
 }
