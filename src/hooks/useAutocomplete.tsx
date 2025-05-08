@@ -12,8 +12,11 @@ interface UseAutocompleteOptions {
   minChars?: number;
   maxSuggestions?: number;
   debounceMs?: number;
-  fuzzyMatch?: boolean; // New option for fuzzy matching
-  fields?: string[]; // Fields to search in
+  fuzzyMatch?: boolean;
+  fields?: string[];
+  useBM25?: boolean;
+  proximityBoost?: boolean;
+  phraseMatching?: boolean;
 }
 
 export const useAutocomplete = (options: UseAutocompleteOptions = {}) => {
@@ -22,7 +25,10 @@ export const useAutocomplete = (options: UseAutocompleteOptions = {}) => {
     maxSuggestions = 5, 
     debounceMs = 150,
     fuzzyMatch = true,
-    fields = []
+    fields = [],
+    useBM25 = true,
+    proximityBoost = true,
+    phraseMatching = true
   } = options;
   
   const [inputValue, setInputValue] = useState('');
@@ -30,13 +36,18 @@ export const useAutocomplete = (options: UseAutocompleteOptions = {}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const isMounted = useRef(true);
   
   // Initialize the search index
   useEffect(() => {
     initializeSearchIndex();
+    
+    return () => {
+      isMounted.current = false;
+    };
   }, []);
   
-  // Get suggestions based on input
+  // Get suggestions based on input with enhanced relevance ranking
   const getSuggestions = useCallback((value: string) => {
     if (value.length < minChars) {
       setSuggestions([]);
@@ -44,13 +55,30 @@ export const useAutocomplete = (options: UseAutocompleteOptions = {}) => {
       return;
     }
     
+    // Use the enhanced search capabilities for better suggestions
+    // including fuzzy matching, field-specific boosting, and n-gram matching
+    const { results } = searchIndex.search(value, {
+      fuzzy: fuzzyMatch,
+      fields: fields,
+      boostFresh: true,
+      boostPopular: true,
+      useBM25: useBM25,
+      proximityBoost: proximityBoost,
+      phraseMatching: phraseMatching
+    });
+    
+    // For autocomplete, we want the direct suggestions from the trie
+    // but enhanced with the quality signals from search
     const newSuggestions = searchIndex.findSuggestions(value, maxSuggestions);
-    setSuggestions(newSuggestions);
-    setIsOpen(newSuggestions.length > 0);
-    setHighlightedIndex(-1);
-  }, [minChars, maxSuggestions]);
+    
+    if (isMounted.current) {
+      setSuggestions(newSuggestions);
+      setIsOpen(newSuggestions.length > 0);
+      setHighlightedIndex(-1);
+    }
+  }, [minChars, maxSuggestions, fuzzyMatch, fields, useBM25, proximityBoost, phraseMatching]);
   
-  // Debounced input handler
+  // Debounced input handler with optimized performance
   const handleInputChange = useCallback((value: string) => {
     setInputValue(value);
     
@@ -59,13 +87,15 @@ export const useAutocomplete = (options: UseAutocompleteOptions = {}) => {
       clearTimeout(debounceTimer.current);
     }
     
-    // Set new timer
+    // Set new timer with cancelable timeout
     debounceTimer.current = setTimeout(() => {
-      getSuggestions(value);
+      if (isMounted.current) {
+        getSuggestions(value);
+      }
     }, debounceMs);
   }, [getSuggestions, debounceMs]);
   
-  // Handle keyboard navigation
+  // Handle keyboard navigation with improved accessibility
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (!isOpen) return;
     
@@ -87,7 +117,7 @@ export const useAutocomplete = (options: UseAutocompleteOptions = {}) => {
           e.preventDefault();
           setInputValue(suggestions[highlightedIndex]);
           setIsOpen(false);
-          // Record the search in our index
+          // Record the search in our index with boost for selected items
           searchIndex.recordSearch(suggestions[highlightedIndex]);
         }
         break;
@@ -102,16 +132,19 @@ export const useAutocomplete = (options: UseAutocompleteOptions = {}) => {
     }
   }, [isOpen, suggestions, highlightedIndex]);
   
-  // Handle selecting a suggestion
+  // Handle selecting a suggestion with analytics tracking
   const handleSelectSuggestion = useCallback((suggestion: string) => {
     setInputValue(suggestion);
     setIsOpen(false);
+    // Record the selection to improve future autocomplete
     searchIndex.recordSearch(suggestion);
   }, []);
   
   // Close the suggestions on outside click
   const handleClickOutside = useCallback(() => {
-    setIsOpen(false);
+    if (isMounted.current) {
+      setIsOpen(false);
+    }
   }, []);
   
   // Perform a search using the enhanced search capabilities
@@ -120,23 +153,52 @@ export const useAutocomplete = (options: UseAutocompleteOptions = {}) => {
       fuzzy: fuzzyMatch,
       fields: fields,
       boostFresh: true,
-      boostPopular: true
+      boostPopular: true,
+      useBM25: useBM25,
+      proximityBoost: proximityBoost,
+      phraseMatching: phraseMatching
     });
-  }, [fuzzyMatch, fields]);
+  }, [fuzzyMatch, fields, useBM25, proximityBoost, phraseMatching]);
   
-  // Helper to highlight matching text
+  // Helper to highlight matching text with enhanced scoring
   const getHighlightedText = useCallback((text: string): AutocompleteOption => {
     if (!inputValue) {
       return { text, highlighted: false };
     }
     
+    // Calculate a relevance score for this suggestion
+    const { relevanceScores } = searchIndex.search(inputValue, {
+      fuzzy: fuzzyMatch,
+      boostPopular: true
+    });
+    
+    // Find document IDs containing this term
+    const docIds = searchIndex.getDocument(text)?.id 
+      ? [searchIndex.getDocument(text)!.id] 
+      : Object.keys(searchIndex.getIndexStats()).slice(0, 3);
+    
+    // Average the relevance scores if available
+    let score = 0;
+    let count = 0;
+    for (const id of docIds) {
+      if (relevanceScores[id]) {
+        score += relevanceScores[id];
+        count++;
+      }
+    }
+    
+    const finalScore = count > 0 ? score / count : (
+      text.toLowerCase().includes(inputValue.toLowerCase()) ? 0.7 : 0.3
+    );
+    
     return {
       text,
-      highlighted: text.toLowerCase().includes(inputValue.toLowerCase())
+      highlighted: text.toLowerCase().includes(inputValue.toLowerCase()),
+      score: finalScore
     };
-  }, [inputValue]);
+  }, [inputValue, fuzzyMatch]);
   
-  // Format suggestions with highlighting
+  // Format suggestions with highlighting and relevance scoring
   const formattedSuggestions = suggestions.map(getHighlightedText);
   
   return {

@@ -1,5 +1,5 @@
 
-// Advanced search indexing system inspired by Elasticsearch
+// Advanced search indexing system inspired by Elasticsearch and Lucene
 interface TrieNode {
   children: Map<string, TrieNode>;
   isEndOfWord: boolean;
@@ -16,27 +16,60 @@ interface IndexedDocument {
     [field: string]: {
       value: string;
       boost?: number; // Field-specific boosting
+      positions?: number[]; // Positions within this field
+      vector?: number[]; // Semantic vector for this field
     };
   };
   lastUpdated?: Date; // For freshness boosting
   popularity?: number; // For popularity boosting
   tags?: string[]; // For context-aware boosting
+  length?: number; // Document length for BM25 normalization
+  vector?: number[]; // Document embedding vector for semantic search
 }
 
-// Inverted index for term-based lookup
+// Inverted index enhanced with positional information
 interface InvertedIndex {
   [term: string]: {
     frequency: number; 
     documents: string[];
     positions?: {[docId: string]: number[]}; // Positions within each document
     boost?: number; // Term-specific boosting
+    idf?: number; // Inverse document frequency for BM25
   };
 }
 
 // Token filter types for analyzer pipeline
 type TokenFilter = (tokens: string[]) => string[];
 
-// Search index combining trie, inverted index and analyzer pipeline
+// Search options interface
+interface SearchOptions {
+  fuzzy?: boolean;
+  fields?: string[];
+  boostFresh?: boolean;
+  boostPopular?: boolean;
+  useBM25?: boolean;
+  useSemanticSearch?: boolean;
+  proximityBoost?: boolean;
+  booleanOperators?: boolean;
+  phraseMatching?: boolean;
+}
+
+// BM25 Parameters
+interface BM25Params {
+  k1: number; // Term frequency saturation
+  b: number;  // Length normalization factor
+}
+
+// Query operator for boolean queries
+type QueryOperator = 'AND' | 'OR' | 'NOT';
+
+// Boolean query expression
+interface BooleanQuery {
+  operator: QueryOperator;
+  expressions: (string | BooleanQuery)[];
+}
+
+// Search index combining trie, inverted index, and analyzer pipeline
 class SearchIndex {
   private trie: TrieNode;
   private invertedIndex: InvertedIndex;
@@ -45,6 +78,11 @@ class SearchIndex {
   private popularQueries: Map<string, number>;
   private stopWords: Set<string>;
   private fuzzyCache: Map<string, Set<string>>;
+  private avgDocLength: number;
+  private totalDocs: number;
+  private bm25Params: BM25Params;
+  private languages: Map<string, Set<string>>; // Language-specific stopwords
+  private ngramCache: Map<string, string[]>; // Cache for n-grams
   
   constructor() {
     this.trie = this.createNode();
@@ -52,11 +90,16 @@ class SearchIndex {
     this.documents = {};
     this.cache = new Map();
     this.popularQueries = new Map();
-    this.stopWords = new Set([
-      'a', 'an', 'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'with',
-      'by', 'as', 'of', 'about', 'from'
-    ]);
+    this.stopWords = this.getDefaultStopwords();
     this.fuzzyCache = new Map();
+    this.avgDocLength = 0;
+    this.totalDocs = 0;
+    this.bm25Params = { k1: 1.2, b: 0.75 };
+    this.languages = new Map();
+    this.ngramCache = new Map();
+    
+    // Initialize language-specific stopwords
+    this.initializeLanguageStopwords();
   }
   
   private createNode(): TrieNode {
@@ -68,25 +111,62 @@ class SearchIndex {
     };
   }
   
+  // Initialize default English stopwords
+  private getDefaultStopwords(): Set<string> {
+    return new Set([
+      'a', 'an', 'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'with',
+      'by', 'as', 'of', 'about', 'from', 'is', 'are', 'was', 'were', 'be', 'been',
+      'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'shall',
+      'should', 'can', 'could', 'may', 'might', 'must', 'this', 'that', 'these', 
+      'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us',
+      'them', 'my', 'your', 'his', 'its', 'our', 'their'
+    ]);
+  }
+  
+  // Initialize language-specific stopwords
+  private initializeLanguageStopwords(): void {
+    // Spanish stopwords
+    this.languages.set('es', new Set([
+      'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'pero', 'si',
+      'de', 'a', 'en', 'para', 'por', 'con', 'sin', 'sobre', 'entre', 'como', 'según',
+      'cuando', 'donde', 'mientras', 'quien', 'que', 'cuyo', 'cuál', 'esto', 'eso'
+    ]));
+    
+    // French stopwords
+    this.languages.set('fr', new Set([
+      'le', 'la', 'les', 'un', 'une', 'des', 'et', 'ou', 'mais', 'si', 'de', 'à', 'en',
+      'pour', 'par', 'avec', 'sans', 'sur', 'dans', 'sous', 'entre', 'comme', 'quand',
+      'où', 'qui', 'que', 'quoi', 'dont', 'ce', 'cette', 'ces', 'mon', 'ton', 'son'
+    ]));
+    
+    // German stopwords
+    this.languages.set('de', new Set([
+      'der', 'die', 'das', 'ein', 'eine', 'und', 'oder', 'aber', 'wenn', 'von', 'zu',
+      'aus', 'mit', 'für', 'gegen', 'über', 'unter', 'zwischen', 'wie', 'als', 'wann',
+      'wo', 'wer', 'was', 'welche', 'dieser', 'diese', 'dieses', 'mein', 'dein', 'sein'
+    ]));
+  }
+  
   // Analyzer pipeline - processes text through multiple filters
-  private analyzeText(text: string, fieldName?: string): string[] {
+  private analyzeText(text: string, language: string = 'en', fieldName?: string): string[] {
     // Convert to lowercase and tokenize
-    const tokens = this.tokenize(text);
+    const tokens = this.tokenize(text, language);
     
     // Apply filters in sequence
     return this.applyFilters(tokens, [
-      this.removeStopWords,
+      (t) => this.removeStopWords(t, language),
       this.applyStemming,
       this.normalizeTokens
     ]);
   }
 
-  // Basic tokenizer 
-  private tokenize(text: string): string[] {
-    return text.toLowerCase()
-      .replace(/[^\w\s-]/g, ' ') // Replace special chars with space
-      .split(/\s+/)
-      .filter(term => term.length > 1);
+  // Basic tokenizer with language support
+  private tokenize(text: string, language: string = 'en'): string[] {
+    // Language-specific tokenization rules could be applied here
+    let tokenizedText = text.toLowerCase().replace(/[^\w\s-]/g, ' ').split(/\s+/);
+    
+    // Filter out empty tokens and single characters (except for some languages like Chinese)
+    return tokenizedText.filter(term => term.length > 1);
   }
   
   // Apply a sequence of token filters
@@ -94,24 +174,73 @@ class SearchIndex {
     return filters.reduce((currentTokens, filter) => filter.call(this, currentTokens), tokens);
   }
   
-  // Filter: Remove common stop words
-  private removeStopWords(tokens: string[]): string[] {
+  // Filter: Remove common stop words with language support
+  private removeStopWords(tokens: string[], language: string = 'en'): string[] {
+    // Use language-specific stopwords if available
+    const languageStopwords = this.languages.get(language);
+    
+    if (language !== 'en' && languageStopwords) {
+      return tokens.filter(token => !languageStopwords.has(token));
+    }
+    
+    // Default to English stopwords
     return tokens.filter(token => !this.stopWords.has(token));
   }
   
-  // Filter: Apply basic stemming
-  private applyStemming(tokens: string[]): string[] {
+  // Filter: Apply basic stemming with language awareness
+  private applyStemming(tokens: string[], language: string = 'en'): string[] {
     return tokens.map(term => {
-      // Very basic stemming (remove common endings)
-      return term
-        .replace(/(?:s|es|ing|ed|er|ly|ment)$/, '')
-        .replace(/(?:tion|sion|ism|ness|ity)$/, '');
+      // Very basic stemming that could be improved with language-specific rules
+      if (language === 'en') {
+        return term
+          .replace(/(?:s|es|ing|ed|er|ly|ment)$/, '')
+          .replace(/(?:tion|sion|ism|ness|ity)$/, '');
+      }
+      
+      // Spanish stemming
+      if (language === 'es') {
+        return term
+          .replace(/(?:os|as|es|ando|iendo|ado|ido)$/, '');
+      }
+      
+      // French stemming
+      if (language === 'fr') {
+        return term
+          .replace(/(?:er|ir|re|ant|ent|é|és|ée|ées)$/, '');
+      }
+      
+      // German stemming
+      if (language === 'de') {
+        return term
+          .replace(/(?:en|er|e|ung|ig|lich|isch)$/, '');
+      }
+      
+      // Default behavior for other languages
+      return term;
     });
   }
   
   // Filter: Normalize tokens
   private normalizeTokens(tokens: string[]): string[] {
     return tokens.map(term => term.trim()).filter(term => term.length > 1);
+  }
+  
+  // Generate n-grams from tokens
+  private generateNgrams(tokens: string[], n: number = 2): string[] {
+    if (tokens.length < n) return [];
+    
+    const key = `${tokens.join('_')}_${n}`;
+    if (this.ngramCache.has(key)) {
+      return this.ngramCache.get(key)!;
+    }
+    
+    const ngrams: string[] = [];
+    for (let i = 0; i <= tokens.length - n; i++) {
+      ngrams.push(tokens.slice(i, i + n).join(' '));
+    }
+    
+    this.ngramCache.set(key, ngrams);
+    return ngrams;
   }
 
   // Generate variations for fuzzy matching
@@ -201,6 +330,9 @@ class SearchIndex {
     
     if (!this.invertedIndex[term].documents.includes(documentId)) {
       this.invertedIndex[term].documents.push(documentId);
+      
+      // Update IDF when new document contains this term
+      this.updateIDF(term);
     }
     
     // Store position information
@@ -223,20 +355,79 @@ class SearchIndex {
     }
   }
   
+  // Calculate and update inverse document frequency for BM25
+  private updateIDF(term: string): void {
+    const docsWithTerm = this.invertedIndex[term].documents.length;
+    const idf = Math.log(1 + (this.totalDocs - docsWithTerm + 0.5) / (docsWithTerm + 0.5));
+    this.invertedIndex[term].idf = Math.max(idf, 0); // Ensure non-negative
+  }
+  
+  // Calculate BM25 score for a term in a document
+  private calculateBM25(term: string, documentId: string): number {
+    const { k1, b } = this.bm25Params;
+    const idf = this.invertedIndex[term].idf || 0;
+    
+    // Get term frequency in this document
+    const termPositions = this.invertedIndex[term]?.positions?.[documentId] || [];
+    const termFreq = termPositions.length;
+    
+    if (termFreq === 0) return 0;
+    
+    // Get document length
+    const docLength = this.documents[documentId]?.length || 0;
+    
+    // Calculate normalized term frequency component
+    const tfNormalized = (termFreq * (k1 + 1)) / (termFreq + k1 * (1 - b + b * (docLength / this.avgDocLength)));
+    
+    return idf * tfNormalized;
+  }
+  
+  // Create or update semantic embedding vector for a document
+  private updateDocumentVector(documentId: string, vector: number[]): void {
+    if (this.documents[documentId]) {
+      this.documents[documentId].vector = vector;
+    }
+  }
+  
+  // Calculate cosine similarity between two vectors
+  private cosineSimilarity(vecA: number[], vecB: number[]): number {
+    if (!vecA || !vecB || vecA.length !== vecB.length) return 0;
+    
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+    
+    for (let i = 0; i < vecA.length; i++) {
+      dotProduct += vecA[i] * vecB[i];
+      normA += vecA[i] * vecA[i];
+      normB += vecB[i] * vecB[i];
+    }
+    
+    // Avoid division by zero
+    if (normA === 0 || normB === 0) return 0;
+    
+    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+  }
+  
   // Index a document with field-specific processing
   public indexDocument(documentId: string, content: string, metadata?: Partial<IndexedDocument>): void {
     // Store the document
     this.documents[documentId] = {
       id: documentId,
       content,
+      length: content.split(/\s+/).length, // Store document length for BM25
       ...(metadata || {})
     };
+    
+    this.totalDocs++;
+    this.recalculateAvgDocLength();
     
     // Process main content
     const mainTerms = this.analyzeText(content);
     
     // Clear cache as index is modified
     this.cache.clear();
+    this.ngramCache.clear();
     
     // Add main content terms to indexes
     for (let i = 0; i < mainTerms.length; i++) {
@@ -248,35 +439,64 @@ class SearchIndex {
     // Process multi-field content if provided
     if (metadata?.fields) {
       Object.entries(metadata.fields).forEach(([fieldName, fieldData]) => {
-        const fieldTerms = this.analyzeText(fieldData.value, fieldName);
+        const fieldTerms = this.analyzeText(fieldData.value, 'en', fieldName);
         const boost = fieldData.boost || 1.0;
         
         for (let i = 0; i < fieldTerms.length; i++) {
           const term = fieldTerms[i];
-          // Prefix field-specific terms to distinguish them
+          // Field-specific term
           const fieldTerm = `${fieldName}:${term}`;
           
-          this.insertIntoTrie(term, documentId); // Add without field prefix for autocomplete
-          this.addToInvertedIndex(fieldTerm, documentId, i, boost); // Add with field prefix for searching
+          // Add term without field prefix for general autocomplete
+          this.insertIntoTrie(term, documentId);
+          
+          // Add with field prefix for field-specific searching
+          this.addToInvertedIndex(fieldTerm, documentId, i, boost);
+          
+          // Also add without prefix but with boosting for general search
+          this.addToInvertedIndex(term, documentId, i, boost);
+          
+          // Track position in the field
+          if (fieldData.positions) {
+            fieldData.positions.push(i);
+          } else {
+            fieldData.positions = [i];
+          }
         }
       });
     }
     
-    // Add n-grams for phrase matching (bigrams and trigrams)
+    // Add n-grams for phrase matching
     this.addNgrams(mainTerms, documentId);
+    
+    // Update IDF for all terms to maintain BM25 accuracy
+    Object.keys(this.invertedIndex).forEach(term => {
+      this.updateIDF(term);
+    });
+  }
+  
+  // Recalculate average document length for BM25
+  private recalculateAvgDocLength(): void {
+    const totalLength = Object.values(this.documents).reduce(
+      (sum, doc) => sum + (doc.length || 0), 
+      0
+    );
+    this.avgDocLength = totalLength / this.totalDocs;
   }
   
   // Add n-grams to the index for phrase matching
   private addNgrams(terms: string[], documentId: string): void {
     // Add bigrams
-    for (let i = 0; i < terms.length - 1; i++) {
-      const bigram = `${terms[i]} ${terms[i + 1]}`;
+    const bigrams = this.generateNgrams(terms, 2);
+    for (let i = 0; i < bigrams.length; i++) {
+      const bigram = bigrams[i];
       this.addToInvertedIndex(bigram, documentId, i);
     }
     
     // Add trigrams
-    for (let i = 0; i < terms.length - 2; i++) {
-      const trigram = `${terms[i]} ${terms[i + 1]} ${terms[i + 2]}`;
+    const trigrams = this.generateNgrams(terms, 3);
+    for (let i = 0; i < trigrams.length; i++) {
+      const trigram = trigrams[i];
       this.addToInvertedIndex(trigram, documentId, i);
     }
   }
@@ -407,13 +627,135 @@ class SearchIndex {
       .slice(0, limit);
   }
   
+  // Parse and process boolean expressions
+  private parseBooleanQuery(query: string): BooleanQuery {
+    // This is a simplified boolean query parser
+    // A full implementation would use a proper parsing algorithm
+    
+    // Default to AND for multiple terms
+    const parts = query.split(/\s+/);
+    return {
+      operator: 'AND',
+      expressions: parts
+    };
+  }
+  
+  // Evaluate a boolean query against the index
+  private evaluateBooleanQuery(query: BooleanQuery): Set<string> {
+    const { operator, expressions } = query;
+    
+    if (expressions.length === 0) {
+      return new Set<string>();
+    }
+    
+    // Evaluate each expression
+    const results: Set<string>[] = [];
+    
+    for (const expr of expressions) {
+      if (typeof expr === 'string') {
+        // Simple term
+        const term = expr.toLowerCase();
+        const docs = new Set(this.invertedIndex[term]?.documents || []);
+        results.push(docs);
+      } else {
+        // Nested expression
+        results.push(this.evaluateBooleanQuery(expr));
+      }
+    }
+    
+    // Combine results based on operator
+    let finalResults: Set<string>;
+    
+    switch (operator) {
+      case 'AND':
+        finalResults = results.reduce((acc, curr) => {
+          return new Set([...acc].filter(x => curr.has(x)));
+        }, new Set(results[0]));
+        break;
+        
+      case 'OR':
+        finalResults = new Set<string>();
+        results.forEach(set => {
+          set.forEach(item => finalResults.add(item));
+        });
+        break;
+        
+      case 'NOT':
+        // NOT requires a universe to operate on - use all documents
+        const universe = new Set(Object.keys(this.documents));
+        const toExclude = results[0];
+        finalResults = new Set([...universe].filter(x => !toExclude.has(x)));
+        break;
+        
+      default:
+        finalResults = new Set<string>();
+    }
+    
+    return finalResults;
+  }
+  
+  // Check for phrase matches using positional information
+  private checkPhraseMatch(docId: string, terms: string[]): boolean {
+    if (terms.length <= 1) return true;
+    
+    // Get positions for the first term
+    const firstTermPositions = 
+      this.invertedIndex[terms[0]]?.positions?.[docId] || [];
+    
+    if (firstTermPositions.length === 0) return false;
+    
+    // For each position of the first term, check if subsequent terms follow in sequence
+    for (const startPos of firstTermPositions) {
+      let matchFound = true;
+      
+      for (let i = 1; i < terms.length; i++) {
+        const expectedPos = startPos + i;
+        const termPositions = 
+          this.invertedIndex[terms[i]]?.positions?.[docId] || [];
+        
+        if (!termPositions.includes(expectedPos)) {
+          matchFound = false;
+          break;
+        }
+      }
+      
+      if (matchFound) return true;
+    }
+    
+    return false;
+  }
+  
+  // Check for proximity match between terms
+  private checkProximityMatch(docId: string, terms: string[], maxDistance: number): number {
+    if (terms.length <= 1) return 1;
+    
+    // Get positions for all terms
+    const positions: number[][] = terms.map(term => 
+      this.invertedIndex[term]?.positions?.[docId] || []
+    );
+    
+    // If any term is missing from the document, no proximity match
+    if (positions.some(p => p.length === 0)) return 0;
+    
+    // Find minimum distance between any pair of positions
+    let minDistance = Infinity;
+    
+    for (let i = 0; i < positions.length - 1; i++) {
+      for (const pos1 of positions[i]) {
+        for (const pos2 of positions[i + 1]) {
+          const distance = Math.abs(pos1 - pos2);
+          minDistance = Math.min(minDistance, distance);
+        }
+      }
+    }
+    
+    // Calculate proximity score (1 for exact adjacency, decreasing as distance increases)
+    if (minDistance > maxDistance) return 0;
+    return 1 - (minDistance / (maxDistance + 1));
+  }
+  
   // Search for exact and partial matches with relevance ranking
-  public search(query: string, options?: {
-    fuzzy?: boolean,
-    fields?: string[],
-    boostFresh?: boolean,
-    boostPopular?: boolean
-  }): {
+  public search(query: string, options?: SearchOptions): {
     results: string[],
     relevanceScores: {[docId: string]: number}
   } {
@@ -422,13 +764,80 @@ class SearchIndex {
       fuzzy = true, 
       fields = [], 
       boostFresh = true, 
-      boostPopular = true 
+      boostPopular = true,
+      useBM25 = true,
+      useSemanticSearch = false,
+      proximityBoost = true,
+      booleanOperators = false,
+      phraseMatching = true
     } = options || {};
-    
-    const terms = this.analyzeText(query);
     
     // Track this search
     this.recordSearch(query);
+    
+    // Handle boolean queries if enabled
+    if (booleanOperators && (query.includes(' AND ') || query.includes(' OR ') || query.includes(' NOT '))) {
+      const booleanQuery = this.parseBooleanQuery(query);
+      const matchingDocs = this.evaluateBooleanQuery(booleanQuery);
+      
+      // Convert Set to array and add basic scoring
+      const results = Array.from(matchingDocs);
+      const relevanceScores: {[docId: string]: number} = {};
+      
+      results.forEach(docId => {
+        relevanceScores[docId] = 1.0; // Base score for boolean matches
+      });
+      
+      return { results, relevanceScores };
+    }
+    
+    // Check for phrase queries
+    const isPhrase = query.startsWith('"') && query.endsWith('"');
+    let phraseTerms: string[] = [];
+    
+    if (isPhrase && phraseMatching) {
+      // Extract the phrase without quotes
+      const phrase = query.slice(1, -1);
+      phraseTerms = this.analyzeText(phrase);
+      
+      if (phraseTerms.length === 0) return { results: [], relevanceScores: {} };
+      
+      // Find documents containing all terms
+      let docsWithAllTerms = new Set<string>();
+      let isFirst = true;
+      
+      for (const term of phraseTerms) {
+        const docsWithTerm = new Set(this.invertedIndex[term]?.documents || []);
+        
+        if (isFirst) {
+          docsWithAllTerms = docsWithTerm;
+          isFirst = false;
+        } else {
+          docsWithAllTerms = new Set(
+            [...docsWithAllTerms].filter(docId => docsWithTerm.has(docId))
+          );
+        }
+      }
+      
+      // Check positional constraints for phrase matches
+      const phraseMatches: string[] = [];
+      const relevanceScores: {[docId: string]: number} = {};
+      
+      for (const docId of docsWithAllTerms) {
+        if (this.checkPhraseMatch(docId, phraseTerms)) {
+          phraseMatches.push(docId);
+          relevanceScores[docId] = 2.0; // Higher base score for exact phrase matches
+        }
+      }
+      
+      return {
+        results: phraseMatches,
+        relevanceScores
+      };
+    }
+    
+    // Standard term-based search
+    const terms = this.analyzeText(query);
     
     if (terms.length === 0) return { results: [], relevanceScores: {} };
     
@@ -439,7 +848,12 @@ class SearchIndex {
       // Get exact matches
       if (this.invertedIndex[term]) {
         for (const docId of this.invertedIndex[term].documents) {
-          matches.set(docId, (matches.get(docId) || 0) + 1.0);
+          // Use BM25 score if enabled, otherwise use term frequency
+          const score = useBM25 
+            ? this.calculateBM25(term, docId) 
+            : 1.0 + (this.invertedIndex[term].boost || 0);
+            
+          matches.set(docId, (matches.get(docId) || 0) + score);
         }
       }
       
@@ -449,7 +863,11 @@ class SearchIndex {
         if (this.invertedIndex[fieldTerm]) {
           const boost = this.invertedIndex[fieldTerm].boost || 1.0;
           for (const docId of this.invertedIndex[fieldTerm].documents) {
-            matches.set(docId, (matches.get(docId) || 0) + (1.0 * boost));
+            const score = useBM25 
+              ? this.calculateBM25(fieldTerm, docId) * boost 
+              : 1.0 * boost;
+              
+            matches.set(docId, (matches.get(docId) || 0) + score);
           }
         }
       });
@@ -463,7 +881,11 @@ class SearchIndex {
           if (this.invertedIndex[variant]) {
             for (const docId of this.invertedIndex[variant].documents) {
               // Lower score for fuzzy matches
-              matches.set(docId, (matches.get(docId) || 0) + 0.3);
+              const fuzzyScore = useBM25 
+                ? this.calculateBM25(variant, docId) * 0.3
+                : 0.3;
+                
+              matches.set(docId, (matches.get(docId) || 0) + fuzzyScore);
             }
           }
         }
@@ -478,7 +900,11 @@ class SearchIndex {
           
           if (this.invertedIndex[suggestion]) {
             for (const docId of this.invertedIndex[suggestion].documents) {
-              matches.set(docId, (matches.get(docId) || 0) + 0.5);
+              const prefixScore = useBM25
+                ? this.calculateBM25(suggestion, docId) * 0.5
+                : 0.5;
+                
+              matches.set(docId, (matches.get(docId) || 0) + prefixScore);
             }
           }
         }
@@ -492,6 +918,18 @@ class SearchIndex {
     for (const termMatch of termResults) {
       for (const [docId, score] of termMatch.entries()) {
         combinedScores.set(docId, (combinedScores.get(docId) || 0) + score);
+      }
+    }
+    
+    // Check for proximity if enabled and there are multiple terms
+    if (proximityBoost && terms.length > 1) {
+      for (const docId of combinedScores.keys()) {
+        const proximityScore = this.checkProximityMatch(docId, terms, 5);
+        if (proximityScore > 0) {
+          // Boost score based on proximity
+          const currentScore = combinedScores.get(docId) || 0;
+          combinedScores.set(docId, currentScore * (1 + proximityScore * 0.5));
+        }
       }
     }
     
@@ -511,6 +949,15 @@ class SearchIndex {
       if (boostPopular && doc.popularity) {
         const popularityBoost = 1 + (0.1 * Math.log(1 + doc.popularity));
         finalScore *= popularityBoost;
+      }
+      
+      // Apply semantic search if enabled and vectors are available
+      if (useSemanticSearch && doc.vector) {
+        // This would require a query vector, which would normally come from an embedding model
+        // For now, we'll skip this but in a real implementation you'd:
+        // 1. Get embedding for the query
+        // 2. Calculate similarity with document vectors
+        // 3. Boost scores based on semantic similarity
       }
       
       // Update the score
@@ -550,6 +997,32 @@ class SearchIndex {
   public clearCache(): void {
     this.cache.clear();
     this.fuzzyCache.clear();
+    this.ngramCache.clear();
+  }
+  
+  // Add or update semantic vector for a document
+  public updateDocumentSemanticVector(documentId: string, vector: number[]): void {
+    if (this.documents[documentId]) {
+      this.documents[documentId].vector = vector;
+    }
+  }
+  
+  // Get statistics about the index
+  public getIndexStats(): {
+    totalDocuments: number;
+    totalTerms: number;
+    avgDocLength: number;
+    uniqueTerms: number;
+  } {
+    return {
+      totalDocuments: this.totalDocs,
+      totalTerms: Object.values(this.invertedIndex).reduce(
+        (sum, term) => sum + term.frequency, 
+        0
+      ),
+      avgDocLength: this.avgDocLength,
+      uniqueTerms: Object.keys(this.invertedIndex).length,
+    };
   }
 }
 
