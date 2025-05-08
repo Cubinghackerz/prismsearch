@@ -67,14 +67,17 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
   };
   
   const handleSuggestionClick = (suggestion: string) => {
-    // Update the input value with the selected suggestion
+    // First update input value
     setInputValue(suggestion);
     
-    // Call the selection handler from the hook to update internal state
+    // Record the selection in the hook's internal state
     handleSelectSuggestion(suggestion);
     
-    // Trigger the search with the selected suggestion
-    onSearch(suggestion);
+    // Then trigger the search with a slight delay to ensure state updates have completed
+    // This helps ensure the search is triggered with the updated value
+    setTimeout(() => {
+      onSearch(suggestion);
+    }, 0);
   };
 
   return (
