@@ -15,6 +15,7 @@ interface SearchBarProps {
 const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
   const {
     inputValue: query,
+    setInputValue,
     handleInputChange,
     suggestions,
     isOpen,
@@ -66,7 +67,13 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
   };
   
   const handleSuggestionClick = (suggestion: string) => {
+    // Update the input value with the selected suggestion
+    setInputValue(suggestion);
+    
+    // Call the selection handler from the hook to update internal state
     handleSelectSuggestion(suggestion);
+    
+    // Trigger the search with the selected suggestion
     onSearch(suggestion);
   };
 
