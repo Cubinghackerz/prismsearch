@@ -101,7 +101,8 @@ const AISearchResponse = ({
           ) : (
             <div>
               <div className="text-purple-100 markdown-content">
-                <ReactMarkdown className="prose prose-invert prose-purple max-w-none">
+                {/* Fixed ReactMarkdown implementation - removed className prop */}
+                <ReactMarkdown>
                   {aiResponse}
                 </ReactMarkdown>
               </div>
