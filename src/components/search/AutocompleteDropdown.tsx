@@ -32,7 +32,7 @@ const AutocompleteDropdown = ({
       <>
         {parts.map((part, i) => 
           part.toLowerCase() === query.toLowerCase() ? (
-            <span key={i} className="bg-purple-500/50 font-semibold">{part}</span>
+            <span key={i} className="autocomplete-highlight">{part}</span>
           ) : (
             <span key={i}>{part}</span>
           )
@@ -49,7 +49,7 @@ const AutocompleteDropdown = ({
       transition={{ duration: 0.15 }}
       className="absolute left-0 right-0 mt-2 z-50 bg-[#1A1F2C]/95 backdrop-blur-lg 
                 rounded-xl border border-purple-500/30 shadow-xl 
-                shadow-purple-900/20 py-2 max-h-60 overflow-y-auto"
+                shadow-purple-900/20 py-2 autocomplete-dropdown"
     >
       <ul className="divide-y divide-purple-500/10">
         {suggestions.map((suggestion, index) => (
@@ -57,8 +57,10 @@ const AutocompleteDropdown = ({
             key={index}
             onClick={() => onSelectSuggestion(suggestion.text)}
             className={`px-4 py-2 cursor-pointer text-gray-200 hover:bg-purple-500/20
-                      transition-colors duration-150 flex items-center
+                      transition-colors duration-150 flex items-center autocomplete-item
                       ${highlightedIndex === index ? 'bg-purple-500/30' : ''}`}
+            role="option"
+            aria-selected={highlightedIndex === index}
           >
             <div className="flex-1">
               {highlightMatch(suggestion.text, inputValue)}

@@ -1,5 +1,6 @@
 
 import { SearchResult } from '../components/search/types';
+import { searchIndex } from '../utils/searchIndex';
 
 const generateId = () => Math.random().toString(36).substring(2, 15);
 
@@ -9,6 +10,17 @@ export const searchAcrossEngines = async (
   return new Promise((resolve) => {
     setTimeout(() => {
       const encodedQuery = encodeURIComponent(query);
+      
+      // Record search query for analytics
+      searchIndex.recordSearch(query);
+      
+      // Use our enhanced search index to determine relevance
+      const { results, relevanceScores } = searchIndex.search(query, {
+        fuzzy: true,
+        fields: ['title', 'description'],
+        boostFresh: true,
+        boostPopular: true
+      });
       
       const mockResults: SearchResult[] = [
         // Google mock results

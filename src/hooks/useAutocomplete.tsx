@@ -5,19 +5,24 @@ import { searchIndex, initializeSearchIndex } from '../utils/searchIndex';
 export interface AutocompleteOption {
   text: string;
   highlighted: boolean;
+  score?: number; // Added relevance score
 }
 
 interface UseAutocompleteOptions {
   minChars?: number;
   maxSuggestions?: number;
   debounceMs?: number;
+  fuzzyMatch?: boolean; // New option for fuzzy matching
+  fields?: string[]; // Fields to search in
 }
 
 export const useAutocomplete = (options: UseAutocompleteOptions = {}) => {
   const { 
     minChars = 1, 
     maxSuggestions = 5, 
-    debounceMs = 150 
+    debounceMs = 150,
+    fuzzyMatch = true,
+    fields = []
   } = options;
   
   const [inputValue, setInputValue] = useState('');
@@ -109,6 +114,16 @@ export const useAutocomplete = (options: UseAutocompleteOptions = {}) => {
     setIsOpen(false);
   }, []);
   
+  // Perform a search using the enhanced search capabilities
+  const performSearch = useCallback((query: string) => {
+    return searchIndex.search(query, {
+      fuzzy: fuzzyMatch,
+      fields: fields,
+      boostFresh: true,
+      boostPopular: true
+    });
+  }, [fuzzyMatch, fields]);
+  
   // Helper to highlight matching text
   const getHighlightedText = useCallback((text: string): AutocompleteOption => {
     if (!inputValue) {
@@ -134,5 +149,6 @@ export const useAutocomplete = (options: UseAutocompleteOptions = {}) => {
     handleKeyDown,
     handleSelectSuggestion,
     handleClickOutside,
+    performSearch,
   };
 };
