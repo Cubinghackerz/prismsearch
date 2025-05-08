@@ -12,7 +12,7 @@ export interface PopularSearch {
   query: string;
   frequency: number;
   recency: number;
-  trending?: boolean;
+  trending: boolean; // Changed from optional to required to match usage in searchService.ts
   category?: string;
   score: number;
   clickRate?: number;
@@ -27,4 +27,3 @@ export enum SearchCategory {
   SPORTS = 'Sports',
   OTHER = 'Other'
 }
-
