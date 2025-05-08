@@ -1,4 +1,3 @@
-
 import { SearchResult, PopularSearch, SearchCategory } from '../components/search/types';
 import { searchIndex } from '../utils/searchIndex';
 
@@ -103,7 +102,7 @@ export const getPopularSearches = async (
             : 0;
             
           // Calculate trending score based on recent frequency increase
-          const trending = stats.recentFrequency / (stats.frequency / 10) > 1.5;
+          const trending = (stats.recentFrequency || 0) / (stats.frequency / 10) > 1.5;
           
           // Assign a category based on query content (in a real app, this would use ML/NLP)
           const category = assignSearchCategory(query);
@@ -229,4 +228,3 @@ const generateExploratorySuggestions = (): PopularSearch[] => {
     clickRate: Math.random() * 0.2 + 0.4 // 40-60% CTR
   }));
 };
-

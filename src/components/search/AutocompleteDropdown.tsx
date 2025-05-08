@@ -89,18 +89,18 @@ const AutocompleteDropdown = ({
                 />
               )}
               
-              {/* Display trending or popular icon if applicable */}
+              {/* Display trending or popular icon if applicable - Fixed with aria-label instead of title */}
               {isTrending(suggestion.score) && (
-                <TrendingUp className="h-3 w-3 mr-2 text-purple-400" title="Trending search" />
+                <TrendingUp className="h-3 w-3 mr-2 text-purple-400" aria-label="Trending search" />
               )}
               
               {isPopular(suggestion.score) && !isTrending(suggestion.score) && (
-                <Star className="h-3 w-3 mr-2 text-purple-400" title="Popular search" />
+                <Star className="h-3 w-3 mr-2 text-purple-400" aria-label="Popular search" />
               )}
               
-              {/* Show people icon for community searches */}
+              {/* Show people icon for community searches - Fixed with aria-label instead of title */}
               {suggestion.score && suggestion.score <= 0.75 && suggestion.score > 0.6 && (
-                <Users className="h-3 w-3 mr-2 text-purple-400" title="Community search" />
+                <Users className="h-3 w-3 mr-2 text-purple-400" aria-label="Community search" />
               )}
               
               {highlightMatch(suggestion.text, inputValue)}
