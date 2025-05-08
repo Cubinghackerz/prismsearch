@@ -43,12 +43,11 @@ const AutocompleteDropdown = ({
     );
   };
 
-  // Function to determine if a suggestion is trending
+  // Simple functions to determine suggestion type based on score
   const isTrending = (score?: number): boolean => {
     return score !== undefined && score > 0.85;
   };
 
-  // Function to determine if a suggestion is popular
   const isPopular = (score?: number): boolean => {
     return score !== undefined && score > 0.75 && score <= 0.85;
   };
@@ -85,11 +84,10 @@ const AutocompleteDropdown = ({
                   style={{ 
                     backgroundColor: `rgba(168, 85, 247, ${Math.min(0.3 + suggestion.score * 0.7, 1)})`
                   }}
-                  title={`Relevance: ${Math.round(suggestion.score * 100)}%`}
                 />
               )}
               
-              {/* Display trending or popular icon if applicable - Using aria-label instead of title */}
+              {/* Display trending or popular icon if applicable */}
               {isTrending(suggestion.score) && (
                 <TrendingUp className="h-3 w-3 mr-2 text-purple-400" aria-label="Trending search" />
               )}
@@ -98,7 +96,7 @@ const AutocompleteDropdown = ({
                 <Star className="h-3 w-3 mr-2 text-purple-400" aria-label="Popular search" />
               )}
               
-              {/* Show people icon for community searches - Using aria-label instead of title */}
+              {/* Show people icon for community searches */}
               {suggestion.score && suggestion.score <= 0.75 && suggestion.score > 0.6 && (
                 <Users className="h-3 w-3 mr-2 text-purple-400" aria-label="Community search" />
               )}

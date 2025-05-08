@@ -1,4 +1,3 @@
-
 import { useState, KeyboardEvent, useRef, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
 import LoadingAnimation from './LoadingAnimation';
@@ -74,10 +73,9 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
     handleSelectSuggestion(suggestion);
     
     // Then trigger the search with a slight delay to ensure state updates have completed
-    // This helps ensure the search is triggered with the updated value
     setTimeout(() => {
       onSearch(suggestion);
-    }, 0);
+    }, 10);
   };
 
   return (

@@ -1,7 +1,101 @@
+
 import { SearchResult, PopularSearch, SearchCategory } from '../components/search/types';
-import { searchIndex } from '../utils/searchIndex';
 
 const generateId = () => Math.random().toString(36).substring(2, 15);
+
+// Static data for popular searches
+const POPULAR_SEARCHES = [
+  {
+    query: 'machine learning',
+    frequency: 952,
+    recency: 0.95,
+    trending: true,
+    category: SearchCategory.TECHNOLOGY,
+    score: 8.7,
+    clickRate: 0.78
+  },
+  {
+    query: 'javascript',
+    frequency: 845,
+    recency: 0.87,
+    trending: true,
+    category: SearchCategory.TECHNOLOGY,
+    score: 8.5,
+    clickRate: 0.76
+  },
+  {
+    query: 'data science',
+    frequency: 780,
+    recency: 0.92,
+    trending: true,
+    category: SearchCategory.SCIENCE,
+    score: 8.3,
+    clickRate: 0.72
+  },
+  {
+    query: 'react',
+    frequency: 742,
+    recency: 0.85,
+    trending: false,
+    category: SearchCategory.TECHNOLOGY,
+    score: 7.9,
+    clickRate: 0.82
+  },
+  {
+    query: 'artificial intelligence',
+    frequency: 685,
+    recency: 0.88,
+    trending: true,
+    category: SearchCategory.TECHNOLOGY,
+    score: 7.8,
+    clickRate: 0.75
+  },
+  {
+    query: 'web development',
+    frequency: 635,
+    recency: 0.82,
+    trending: false,
+    category: SearchCategory.TECHNOLOGY,
+    score: 7.5,
+    clickRate: 0.71
+  },
+  {
+    query: 'cloud computing',
+    frequency: 520,
+    recency: 0.79,
+    trending: false,
+    category: SearchCategory.TECHNOLOGY,
+    score: 7.2,
+    clickRate: 0.67
+  },
+  {
+    query: 'blockchain',
+    frequency: 475,
+    recency: 0.76,
+    trending: false,
+    category: SearchCategory.TECHNOLOGY,
+    score: 6.8,
+    clickRate: 0.64
+  },
+  {
+    query: 'cybersecurity',
+    frequency: 420,
+    recency: 0.72,
+    trending: false,
+    category: SearchCategory.TECHNOLOGY,
+    score: 6.5,
+    clickRate: 0.68
+  },
+  {
+    query: 'python programming',
+    frequency: 398,
+    recency: 0.81,
+    trending: false,
+    category: SearchCategory.TECHNOLOGY,
+    score: 6.3,
+    clickRate: 0.70
+  }
+];
 
 export const searchAcrossEngines = async (
   query: string
@@ -10,70 +104,55 @@ export const searchAcrossEngines = async (
     setTimeout(() => {
       const encodedQuery = encodeURIComponent(query);
       
-      // Record search query for analytics
-      searchIndex.recordSearch(query);
-      
-      // Use our enhanced search index with BM25 scoring, proximity boosting,
-      // and field-specific weighting for more relevant results
-      const { results, relevanceScores } = searchIndex.search(query, {
-        fuzzy: true,
-        fields: ['title', 'description'],
-        boostFresh: true,
-        boostPopular: true,
-        useBM25: true,
-        proximityBoost: true,
-        phraseMatching: true
-      });
-      
       const mockResults: SearchResult[] = [
-        // Google mock results with relevance-based customization
+        // Google mock results
         {
           id: generateId(),
           title: `Google result for "${query}" - Official Website`,
           url: `https://www.google.com/search?q=${encodedQuery}`,
           snippet: `This is a comprehensive resource about ${query} from Google's search index.`,
           source: 'Google',
-          relevance: relevanceScores[results[0]] || 1.0
+          relevance: 1.0
         },
         
-        // Bing mock results with phrase matching
+        // Bing mock results
         {
           id: generateId(),
           title: `${query} - Latest News and Updates`,
           url: `https://www.bing.com/search?q=${encodedQuery}`,
           snippet: `Stay updated with the latest information about ${query}.`,
           source: 'Bing',
-          relevance: relevanceScores[results[1]] || 0.9
+          relevance: 0.9
         },
         
-        // DuckDuckGo mock results with semantic matching
+        // DuckDuckGo mock results
         {
           id: generateId(),
           title: `${query} Explained Simply`,
           url: `https://duckduckgo.com/?q=${encodedQuery}`,
           snippet: `An easy-to-understand explanation of ${query} without unnecessary jargon.`,
           source: 'DuckDuckGo',
-          relevance: relevanceScores[results[2]] || 0.85
+          relevance: 0.85
         },
 
-        // Brave Search mock results with field boosting
+        // Brave Search mock results
         {
           id: generateId(),
           title: `${query} - Brave Search Results`,
           url: `https://search.brave.com/search?q=${encodedQuery}`,
           snippet: `Privacy-focused search results about ${query} from Brave Search.`,
           source: 'Brave',
-          relevance: relevanceScores[results[3]] || 0.8
+          relevance: 0.8
         },
 
-        // You.com mock results with proximity boosting
+        // You.com mock results
         {
           id: generateId(),
           title: `${query} - AI-Enhanced Results`,
           url: `https://you.com/search?q=${encodedQuery}`,
           snippet: `AI-powered search results about ${query} with enhanced context.`,
           source: 'You.com',
-          relevance: relevanceScores[results[4]] || 0.75
+          relevance: 0.75
         },
       ];
 
@@ -89,54 +168,8 @@ export const getPopularSearches = async (
   return new Promise((resolve) => {
     // Simulate a network request delay
     setTimeout(() => {
-      // Get search statistics from our index
-      const searchStats = searchIndex.getSearchStats();
-      
-      // Convert to array format with additional metrics
-      let popularSearches: PopularSearch[] = Object.entries(searchStats)
-        .map(([query, stats]) => {
-          // Calculate time decay factor (more recent = higher score)
-          const now = Date.now();
-          const recency = stats.lastSearched 
-            ? Math.min(1, Math.exp(-(now - stats.lastSearched) / (7 * 24 * 60 * 60 * 1000))) // Decay over a week
-            : 0;
-            
-          // Calculate trending score based on recent frequency increase
-          const trending = (stats.recentFrequency || 0) / (stats.frequency / 10) > 1.5;
-          
-          // Assign a category based on query content (in a real app, this would use ML/NLP)
-          const category = assignSearchCategory(query);
-          
-          // Click-through rate (normally would be from analytics)
-          const clickRate = Math.random() * 0.5 + 0.3; // 30-80% for demo
-          
-          // Personalization score (would normally come from user similarity model)
-          const personalizationFactor = Math.random() * 0.4 + 0.6; // 60-100% for demo
-          
-          // Calculate final score with multiple signals
-          const score = (
-            (stats.frequency * 0.5) +  // Base popularity
-            (recency * 2) +            // Recency boost  
-            (trending ? 1 : 0) +       // Trending bonus
-            (clickRate * 1.5) +        // Engagement quality
-            (personalizationFactor * 1)// Personalization
-          );
-          
-          return {
-            query,
-            frequency: stats.frequency,
-            recency: recency,
-            trending,
-            category,
-            score,
-            clickRate
-          };
-        })
-        .sort((a, b) => b.score - a.score); // Sort by overall score
-      
-      // Filter out inappropriate content (in a real app, this would be more sophisticated)
-      popularSearches = popularSearches.filter(search => 
-        !search.query.includes('inappropriate'));
+      // Start with our static popular searches
+      let popularSearches = [...POPULAR_SEARCHES];
       
       // Add a few recommended searches based on current query context
       if (currentQuery) {
@@ -152,7 +185,7 @@ export const getPopularSearches = async (
         .slice(0, 12); // Limit to top 12 results
       
       resolve(popularSearches);
-    }, 300); // Much faster than full search
+    }, 300);
   });
 };
 
@@ -186,8 +219,7 @@ const assignSearchCategory = (query: string): SearchCategory => {
 const generateContextualSuggestions = (currentQuery: string): PopularSearch[] => {
   const baseScore = 5.0; // Strong score to prioritize contextual suggestions
   
-  // In a real app, these would be based on semantic similarity with embeddings
-  // or collaborative filtering from similar users
+  // Simple contextually relevant suggestions
   const suggestions = [
     `${currentQuery} tutorial`,
     `how to ${currentQuery}`,
