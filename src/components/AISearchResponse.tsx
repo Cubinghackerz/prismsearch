@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from './ui/button';
 import { Link } from 'react-router-dom';
 import LoadingAnimation from './LoadingAnimation';
+import ReactMarkdown from 'react-markdown';
 
 interface AISearchResponseProps {
   query: string;
@@ -99,10 +100,10 @@ const AISearchResponse = ({
             </div>
           ) : (
             <div>
-              <div className="text-purple-100 whitespace-pre-line">
-                {aiResponse.split('\n').map((paragraph, i) => (
-                  paragraph.trim() ? <p key={i} className="mb-2">{paragraph}</p> : <br key={i} />
-                ))}
+              <div className="text-purple-100 markdown-content">
+                <ReactMarkdown className="prose prose-invert prose-purple max-w-none">
+                  {aiResponse}
+                </ReactMarkdown>
               </div>
               
               {/* Chat button - Using Link component from react-router-dom */}
