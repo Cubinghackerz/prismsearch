@@ -18,6 +18,24 @@ const geminiModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 // In-memory store for chat history
 const chatHistories = new Map();
 
+// Function to format response text properly
+function formatResponseText(text) {
+  if (!text) return "";
+  
+  // Handle very short queries with simple responses
+  if (text.trim().length < 10 && text.includes("?")) {
+    return text.trim();
+  }
+  
+  // Clean up extra whitespace while preserving paragraph breaks
+  const cleanedText = text
+    .replace(/\n{3,}/g, '\n\n') // Replace multiple newlines with double newline
+    .replace(/\s{2,}/g, ' ')    // Replace multiple spaces with single space
+    .trim();                    // Trim extra whitespace
+  
+  return cleanedText;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -27,8 +45,15 @@ serve(async (req) => {
     const { query, chatId, chatHistory, model } = await req.json()
     let response = ""
 
-    if (!query) {
-      throw new Error("Missing query parameter")
+    // Handle very short or unclear queries
+    if (!query || query.trim().length < 3) {
+      return new Response(
+        JSON.stringify({ 
+          response: "Could you please provide more details for your question?",
+          usageRemaining: null
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log(`Processing ${model} request for chat ${chatId}`)
@@ -129,12 +154,24 @@ serve(async (req) => {
     } else {
       // Use Gemini as fallback
       try {
+        // Add system message to instruct formatting
+        const systemMessage = {
+          role: 'system',
+          content: 'Provide concise, well-formatted responses with proper paragraphs and spacing. Use standard HTML-compatible formatting.'
+        };
+        
         // Process the chat history for Gemini
         const chat = geminiModel.startChat({
-          history: formattedChatHistory.map(msg => ({
-            role: msg.role === 'user' ? 'user' : 'model',
-            parts: [{ text: msg.content }],
-          })),
+          history: [
+            {
+              role: 'model',
+              parts: [{ text: systemMessage.content }]
+            },
+            ...formattedChatHistory.map(msg => ({
+              role: msg.role === 'user' ? 'user' : 'model',
+              parts: [{ text: msg.content }],
+            }))
+          ],
           generationConfig: {
             maxOutputTokens: 2048,
             temperature: 0.7,
@@ -149,6 +186,9 @@ serve(async (req) => {
         response = "I apologize, but I encountered an error with the Gemini service. Please try again.";
       }
     }
+
+    // Format the response for proper display
+    response = formatResponseText(response);
 
     // Simulate typing delay (500-2000ms depending on response length)
     const typingDelay = Math.min(Math.max(response.length * 10, 500), 2000);

@@ -99,7 +99,11 @@ const AISearchResponse = ({
             </div>
           ) : (
             <div>
-              <p className="text-purple-100">{aiResponse}</p>
+              <div className="text-purple-100 whitespace-pre-line">
+                {aiResponse.split('\n').map((paragraph, i) => (
+                  paragraph.trim() ? <p key={i} className="mb-2">{paragraph}</p> : <br key={i} />
+                ))}
+              </div>
               
               {/* Chat button - Using Link component from react-router-dom */}
               {showChatButton && (
