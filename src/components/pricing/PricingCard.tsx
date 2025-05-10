@@ -1,0 +1,104 @@
+
+import React from 'react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { PricingPlan } from './PricingTable';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ChevronDown, ChevronUp } from 'lucide-react';
+
+interface PricingCardProps {
+  plan: PricingPlan;
+}
+
+export const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+
+  return (
+    <div className={cn(
+      "border rounded-lg overflow-hidden transition-all duration-200 hover:shadow-pricing-hover",
+      plan.popular ? "border-prism-violet" : "border-gray-200",
+      plan.popular ? "bg-blue-50" : "bg-white",
+    )}>
+      {plan.popular && (
+        <div className="bg-prism-violet text-white text-center text-sm font-medium py-1 font-montserrat">
+          MOST POPULAR
+        </div>
+      )}
+      
+      <div className="p-6">
+        <h3 className="text-xl font-bold text-prism-charcoal font-montserrat">{plan.name}</h3>
+        <div className="mt-4 flex items-baseline">
+          <span className="text-3xl font-bold text-prism-charcoal font-montserrat">{plan.price}</span>
+          {plan.period && (
+            <span className="ml-1 text-gray-500 font-inter">{plan.period}</span>
+          )}
+        </div>
+        
+        <div className="mt-5">
+          <h4 className="text-sm font-medium text-gray-900 font-montserrat">Usage Limits</h4>
+          <div className="mt-2 text-sm text-gray-700 font-inter">
+            {Array.isArray(plan.usage) ? (
+              plan.usage.map((item, i) => <div key={i} className="mb-1">{item}</div>)
+            ) : (
+              plan.usage
+            )}
+          </div>
+        </div>
+
+        <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-6">
+          <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-medium text-prism-violet">
+            <span>View details</span>
+            {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-4">
+            <div className="space-y-5">
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 font-montserrat">Features</h4>
+                <ul className="mt-2 space-y-2">
+                  {plan.features.map((feature, i) => (
+                    <li key={i} className="text-sm text-gray-700 font-inter flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 font-montserrat">Support & SLA</h4>
+                <div className="mt-2 text-sm text-gray-700 font-inter">
+                  {plan.support}
+                </div>
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
+        <div className="mt-6">
+          <Button
+            onClick={plan.buttonAction}
+            variant={plan.available ? "default" : "outline"}
+            disabled={!plan.available}
+            className={cn(
+              "w-full transition-colors",
+              plan.available 
+                ? "bg-prism-violet hover:bg-prism-teal text-white" 
+                : "text-gray-400 border-gray-300"
+            )}
+          >
+            {plan.buttonText}
+          </Button>
+          {!plan.available && (
+            <div className="text-xs text-gray-500 mt-2 text-center font-inter">
+              Currently unavailable
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};

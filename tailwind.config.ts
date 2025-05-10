@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,17 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Custom brand colors
+				'prism-violet': '#6C63FF',
+				'prism-charcoal': '#333333',
+				'prism-teal': '#20C997',
+				'prism-light': '#F1F1F1',
+				'prism-darkgray': '#222222',
+			},
+			fontFamily: {
+				'montserrat': ['Montserrat', 'sans-serif'],
+				'inter': ['Inter', 'sans-serif'],
 			},
 			keyframes: {
 				"accordion-down": {
@@ -130,6 +141,9 @@ export default {
 			},
 			backgroundSize: {
 				'size-200': '200% 200%',
+			},
+			boxShadow: {
+				'pricing-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
 			}
 		}
 	},
