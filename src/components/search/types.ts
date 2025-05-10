@@ -13,7 +13,7 @@ export interface PopularSearch {
   frequency: number;
   recency: number;
   trending: boolean; // Changed from optional to required to match usage in searchService.ts
-  category?: SearchCategory;
+  category: SearchCategory; // Changed from optional to required to match usage in searchService.ts
   score: number;
   clickRate?: number;
 }

@@ -2,7 +2,7 @@
 import React, { useRef } from 'react';
 import { PricingTable, PricingPlan } from '@/components/pricing/PricingTable';
 import { PricingCard } from '@/components/pricing/PricingCard';
-import { Footer } from '@/components/Footer';
+import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Link } from 'react-router-dom';

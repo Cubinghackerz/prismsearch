@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Check, X, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -9,7 +8,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from '@/components/ui/button';
-import { ScrollToTopLink } from '../ScrollToTop';
 
 interface PricingFeature {
   name: string;
