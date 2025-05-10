@@ -15,7 +15,7 @@ export interface PopularSearch {
   trending: boolean; // Changed from optional to required to match usage in searchService.ts
   category: SearchCategory; // Changed from optional to required to match usage in searchService.ts
   score: number;
-  clickRate?: number;
+  clickRate: number; // Changed from optional to required to match usage in searchService.ts
 }
 
 export enum SearchCategory {
