@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { PricingTable, PricingPlan } from '@/components/pricing/PricingTable';
 import { PricingCard } from '@/components/pricing/PricingCard';
@@ -8,117 +7,84 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Link } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 import { Info } from 'lucide-react';
-
 const Pricing: React.FC = () => {
   const formRef = useRef<HTMLDivElement>(null);
-
   const scrollToForm = () => {
     if (formRef.current) {
-      formRef.current.scrollIntoView({ behavior: 'smooth' });
+      formRef.current.scrollIntoView({
+        behavior: 'smooth'
+      });
     }
   };
-
   const handleContactSales = () => {
     scrollToForm();
   };
-
   const handleGetStarted = () => {
     toast({
       title: "Getting started with Free plan",
-      description: "Thank you for choosing PrismSearch! Your free plan is being activated.",
+      description: "Thank you for choosing PrismSearch! Your free plan is being activated."
     });
     // You could redirect to signup here or show a modal
   };
-
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     toast({
       title: "Message received",
-      description: "Thank you for your interest. Our team will contact you shortly.",
+      description: "Thank you for your interest. Our team will contact you shortly."
     });
   };
-
-  const pricingPlans: PricingPlan[] = [
-    {
-      name: "Basic",
-      price: "$0",
-      period: "",
-      description: "For individuals and small projects",
-      features: [
-        "Basic web search integration",
-        "Community forum access", 
-        "7-day data retention"
-      ],
-      usage: "1000 searches & 500 chat messages",
-      support: "Community support only",
-      available: true,
-      buttonText: "Get Started",
-      buttonAction: handleGetStarted
-    },
-    {
-      name: "Starter",
-      price: "$15",
-      period: "/month",
-      description: "For growing teams and projects",
-      features: [
-        "Advanced filtering & facets", 
-        "Upgraded chat context memory (Unlimited)",
-        "Access to premium AI models", 
-        "Email support (48h SLAs)"
-      ],
-      usage: "5,000 searches & 1,000 chat messages",
-      support: "Email support",
-      available: false,
-      buttonText: "Coming Soon",
-      buttonAction: handleContactSales
-    },
-    {
-      name: "Professional",
-      price: "$30",
-      period: "/month",
-      description: "For businesses with advanced needs",
-      features: [
-        "API access & key management", 
-        "Custom embeddings", 
-        "Analytics dashboard", 
-        "Chat context memory (Unlimited)"
-      ],
-      usage: "50,000 searches & 15,000 chat messages",
-      support: "Priority email & Slack support (24h SLAs)",
-      available: false,
-      popular: true,
-      buttonText: "Coming Soon",
-      buttonAction: handleContactSales
-    },
-    {
-      name: "Enterprise",
-      price: "Custom",
-      period: "",
-      description: "For large organizations requiring custom solutions",
-      features: [
-        "Dedicated instance (isolated infrastructure)", 
-        "Custom feature development & integrations", 
-        "Audit logs"
-      ],
-      usage: "Unlimited searches, chat, notes and other special enterprise features",
-      support: "24/7 phone/Slack & dedicated CSM",
-      available: false,
-      buttonText: "Contact Sales",
-      buttonAction: handleContactSales
-    }
-  ];
-
-  return (
-    <div className="min-h-screen flex flex-col">
+  const pricingPlans: PricingPlan[] = [{
+    name: "Basic",
+    price: "$0",
+    period: "",
+    description: "For individuals and small projects",
+    features: ["Basic web search integration", "Community forum access", "7-day data retention"],
+    usage: "1000 searches & 500 chat messages",
+    support: "Community support only",
+    available: true,
+    buttonText: "Get Started",
+    buttonAction: handleGetStarted
+  }, {
+    name: "Starter",
+    price: "$15",
+    period: "/month",
+    description: "For growing teams and projects",
+    features: ["Advanced filtering & facets", "Upgraded chat context memory (Unlimited)", "Access to premium AI models", "Email support (48h SLAs)"],
+    usage: "5,000 searches & 1,000 chat messages",
+    support: "Email support",
+    available: false,
+    buttonText: "Coming Soon",
+    buttonAction: handleContactSales
+  }, {
+    name: "Professional",
+    price: "$30",
+    period: "/month",
+    description: "For businesses with advanced needs",
+    features: ["API access & key management", "Custom embeddings", "Analytics dashboard", "Chat context memory (Unlimited)"],
+    usage: "50,000 searches & 15,000 chat messages",
+    support: "Priority email & Slack support (24h SLAs)",
+    available: false,
+    popular: true,
+    buttonText: "Coming Soon",
+    buttonAction: handleContactSales
+  }, {
+    name: "Enterprise",
+    price: "Custom",
+    period: "",
+    description: "For large organizations requiring custom solutions",
+    features: ["Dedicated instance (isolated infrastructure)", "Custom feature development & integrations", "Audit logs"],
+    usage: "Unlimited searches, chat, notes and other special enterprise features",
+    support: "24/7 phone/Slack & dedicated CSM",
+    available: false,
+    buttonText: "Contact Sales",
+    buttonAction: handleContactSales
+  }];
+  return <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center">
-            <img 
-              src="/lovable-uploads/3c38b6c8-23f1-4e72-bd31-5fcf258572d9.png" 
-              alt="Prism Search Logo" 
-              className="h-8 w-auto"
-            />
+            <img src="/lovable-uploads/3c38b6c8-23f1-4e72-bd31-5fcf258572d9.png" alt="Prism Search Logo" className="h-8 w-auto" />
             <span className="ml-2 text-xl font-bold text-prism-charcoal font-montserrat">PrismSearch</span>
           </Link>
           <nav className="hidden md:flex items-center space-x-6">
@@ -126,7 +92,7 @@ const Pricing: React.FC = () => {
             <Link to="/pricing" className="text-prism-violet font-medium font-inter">Pricing</Link>
             <Link to="/chat" className="text-gray-600 hover:text-prism-violet font-inter">Chat</Link>
           </nav>
-          <Button className="bg-prism-violet hover:bg-prism-teal text-white font-inter">Sign In</Button>
+          
         </div>
       </header>
 
@@ -158,9 +124,7 @@ const Pricing: React.FC = () => {
             
             {/* Mobile Pricing Cards */}
             <div className="md:hidden space-y-8">
-              {pricingPlans.map((plan) => (
-                <PricingCard key={plan.name} plan={plan} />
-              ))}
+              {pricingPlans.map(plan => <PricingCard key={plan.name} plan={plan} />)}
             </div>
           </div>
         </section>
@@ -277,48 +241,26 @@ const Pricing: React.FC = () => {
               <form onSubmit={handleFormSubmit} className="space-y-6">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 font-montserrat">Name</label>
-                  <input
-                    type="text"
-                    id="name"
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-prism-violet focus:border-prism-violet font-inter"
-                    required
-                  />
+                  <input type="text" id="name" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-prism-violet focus:border-prism-violet font-inter" required />
                 </div>
                 
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 font-montserrat">Email</label>
-                  <input
-                    type="email"
-                    id="email"
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-prism-violet focus:border-prism-violet font-inter"
-                    required
-                  />
+                  <input type="email" id="email" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-prism-violet focus:border-prism-violet font-inter" required />
                 </div>
                 
                 <div>
                   <label htmlFor="company" className="block text-sm font-medium text-gray-700 font-montserrat">Company</label>
-                  <input
-                    type="text"
-                    id="company"
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-prism-violet focus:border-prism-violet font-inter"
-                  />
+                  <input type="text" id="company" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-prism-violet focus:border-prism-violet font-inter" />
                 </div>
                 
                 <div>
                   <label htmlFor="message" className="block text-sm font-medium text-gray-700 font-montserrat">Message</label>
-                  <textarea
-                    id="message"
-                    rows={4}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-prism-violet focus:border-prism-violet font-inter"
-                    required
-                  ></textarea>
+                  <textarea id="message" rows={4} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-prism-violet focus:border-prism-violet font-inter" required></textarea>
                 </div>
                 
                 <div>
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-prism-violet hover:bg-prism-teal text-white font-inter"
-                  >
+                  <Button type="submit" className="w-full bg-prism-violet hover:bg-prism-teal text-white font-inter">
                     Send Message
                   </Button>
                 </div>
@@ -329,8 +271,6 @@ const Pricing: React.FC = () => {
       </main>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Pricing;
