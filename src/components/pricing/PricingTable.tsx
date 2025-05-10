@@ -39,9 +39,7 @@ export const PricingTable: React.FC<PricingTableProps> = ({
               <th className="px-6 py-5 text-left text-sm font-bold text-prism-charcoal font-montserrat">
                 Plan
               </th>
-              <th className="px-6 py-5 text-center text-sm font-bold text-prism-charcoal font-montserrat">
-                Price (AUD/mo)
-              </th>
+              <th className="px-6 py-5 text-center text-sm font-bold text-prism-charcoal font-montserrat">Price (USD/mo)</th>
               <th className="px-6 py-5 text-center text-sm font-bold text-prism-charcoal font-montserrat">
                 Usage Limits
               </th>
