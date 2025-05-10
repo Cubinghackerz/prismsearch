@@ -216,7 +216,7 @@ const Pricing: React.FC = () => {
               
               <div className="border border-gray-200 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-prism-charcoal mb-2 font-montserrat">When will paid plans be available?</h3>
-                <p className="text-gray-600 font-inter">We're currently in beta, and only the Free plan is available. Paid plans are expected to launch in Q3 2023. Join our waitlist to be notified when they become available.</p>
+                <p className="text-gray-600 font-inter">We're currently in beta, and only the Free plan is available. Paid plans are expected to launch in Late 2025.</p>
               </div>
               
               <div className="border border-gray-200 rounded-lg p-6">
