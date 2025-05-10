@@ -164,7 +164,7 @@ const Pricing: React.FC = () => {
                   </tr>
                   <tr>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 font-inter">Data retention</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 font-inter">7 days</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 font-inter">❌</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 font-inter">30 days</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 font-inter">90 days</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 font-inter">Custom</td>
