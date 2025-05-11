@@ -8,7 +8,7 @@ const Footer = ({
   return <div className="py-4 text-center">
       <p style={{
       color
-    }} className="text-sm opacity-70 text-teal-200">
+    }} className="text-sm opacity-70 text-inherit">
         © 2025 Prism Search. All rights reserved.
       </p>
     </div>;
