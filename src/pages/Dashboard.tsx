@@ -29,11 +29,11 @@ const Dashboard = () => {
   };
   
   const recentActivity = [
-    { id: 1, type: 'search', query: 'machine learning frameworks', timestamp: '2 hours ago' },
-    { id: 2, type: 'chat', topic: 'How to implement neural networks', timestamp: '4 hours ago' },
-    { id: 3, type: 'search', query: 'best practices for data visualization', timestamp: '1 day ago' },
-    { id: 4, type: 'chat', topic: 'Differences between supervised and unsupervised learning', timestamp: '2 days ago' },
-    { id: 5, type: 'search', query: 'python vs javascript for data science', timestamp: '3 days ago' }
+    { id: 1, type: 'search' as const, query: 'machine learning frameworks', timestamp: '2 hours ago' },
+    { id: 2, type: 'chat' as const, topic: 'How to implement neural networks', timestamp: '4 hours ago' },
+    { id: 3, type: 'search' as const, query: 'best practices for data visualization', timestamp: '1 day ago' },
+    { id: 4, type: 'chat' as const, topic: 'Differences between supervised and unsupervised learning', timestamp: '2 days ago' },
+    { id: 5, type: 'search' as const, query: 'python vs javascript for data science', timestamp: '3 days ago' }
   ];
   
   const stats = {
