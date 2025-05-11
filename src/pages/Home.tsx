@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -9,9 +8,10 @@ import Footer from '@/components/Footer';
 import ParticleBackground from '@/components/ParticleBackground';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, navigationMenuTriggerStyle } from '@/components/ui/navigation-menu';
-
 const container = {
-  hidden: { opacity: 0 },
+  hidden: {
+    opacity: 0
+  },
   show: {
     opacity: 1,
     transition: {
@@ -19,12 +19,16 @@ const container = {
     }
   }
 };
-
 const item = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 }
+  hidden: {
+    opacity: 0,
+    y: 20
+  },
+  show: {
+    opacity: 1,
+    y: 0
+  }
 };
-
 const Home = () => {
   // Scroll to top when component mounts
   useEffect(() => {
@@ -32,28 +36,22 @@ const Home = () => {
   }, []);
 
   // Mock search results
-  const mockSearchResults = [
-    {
-      title: "Machine Learning Applications in Healthcare",
-      snippet: "Recent advances in AI have revolutionized diagnostic procedures, with deep learning models achieving 96% accuracy in early disease detection..."
-    },
-    {
-      title: "Sustainable Energy Solutions for Urban Development",
-      snippet: "Smart grid technologies combined with renewable energy sources have demonstrated a 42% reduction in carbon emissions across pilot cities..."
-    }
-  ];
+  const mockSearchResults = [{
+    title: "Machine Learning Applications in Healthcare",
+    snippet: "Recent advances in AI have revolutionized diagnostic procedures, with deep learning models achieving 96% accuracy in early disease detection..."
+  }, {
+    title: "Sustainable Energy Solutions for Urban Development",
+    snippet: "Smart grid technologies combined with renewable energy sources have demonstrated a 42% reduction in carbon emissions across pilot cities..."
+  }];
 
   // Mock chat exchanges
-  const mockChatExchanges = [
-    {
-      question: "How does quantum computing differ from classical computing?",
-      answer: "Quantum computing leverages quantum bits or qubits that can exist in multiple states simultaneously through superposition, unlike classical bits that are either 0 or 1..."
-    },
-    {
-      question: "What are the ethical implications of AI in healthcare?",
-      answer: "AI in healthcare raises concerns about data privacy, algorithm bias, and the changing doctor-patient relationship. For example, AI systems trained on non-diverse datasets may..."
-    }
-  ];
+  const mockChatExchanges = [{
+    question: "How does quantum computing differ from classical computing?",
+    answer: "Quantum computing leverages quantum bits or qubits that can exist in multiple states simultaneously through superposition, unlike classical bits that are either 0 or 1..."
+  }, {
+    question: "What are the ethical implications of AI in healthcare?",
+    answer: "AI in healthcare raises concerns about data privacy, algorithm bias, and the changing doctor-patient relationship. For example, AI systems trained on non-diverse datasets may..."
+  }];
 
   // Pricing features
   const pricingFeatures = {
@@ -61,9 +59,7 @@ const Home = () => {
     pro: ["Unlimited searches", "Advanced chat with file upload", "Priority response time", "Custom data integration"],
     enterprise: ["All Pro features", "Dedicated support team", "Custom model training", "SLA guarantees"]
   };
-
-  return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-prism-darkgray to-black text-white">
+  return <div className="min-h-screen flex flex-col bg-gradient-to-b from-prism-darkgray to-black text-white">
       <ParticleBackground />
       
       {/* Fixed Header */}
@@ -123,36 +119,19 @@ const Home = () => {
       
       {/* Hero Section */}
       <section className="relative py-20 px-4 overflow-hidden">
-        <motion.div 
-          className="container mx-auto text-center"
-          initial="hidden"
-          animate="show"
-          variants={container}
-        >
-          <motion.h1 
-            className="text-4xl md:text-6xl lg:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-teal-400 mb-6"
-            variants={item}
-          >
+        <motion.div className="container mx-auto text-center" initial="hidden" animate="show" variants={container}>
+          <motion.h1 className="text-4xl md:text-6xl lg:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-teal-400 mb-6" variants={item}>
             Welcome to Prism Search!
           </motion.h1>
           
-          <motion.p 
-            className="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto mb-8"
-            variants={item}
-          >
+          <motion.p className="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto mb-8" variants={item}>
             Experience enhanced search with our AI-powered tools. Find what you need faster and get smarter, more comprehensive answers to your complex questions.
           </motion.p>
           
-          <motion.div 
-            className="flex flex-col md:flex-row gap-4 justify-center mt-8"
-            variants={container}
-          >
+          <motion.div className="flex flex-col md:flex-row gap-4 justify-center mt-8" variants={container}>
             <motion.div variants={item}>
               <Link to="/search">
-                <Button 
-                  size="lg" 
-                  className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 border-none shadow-lg shadow-blue-500/20 transition-all duration-300 hover:shadow-blue-500/40"
-                >
+                <Button size="lg" className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 border-none shadow-lg shadow-blue-500/20 transition-all duration-300 hover:shadow-blue-500/40">
                   <Search className="mr-2 h-5 w-5" /> Start Search
                 </Button>
               </Link>
@@ -160,10 +139,7 @@ const Home = () => {
             
             <motion.div variants={item}>
               <Link to="/chat">
-                <Button 
-                  size="lg" 
-                  className="w-full md:w-auto bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 border-none shadow-lg shadow-teal-500/20 transition-all duration-300 hover:shadow-teal-500/40"
-                >
+                <Button size="lg" className="w-full md:w-auto bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 border-none shadow-lg shadow-teal-500/20 transition-all duration-300 hover:shadow-teal-500/40">
                   <MessageCircle className="mr-2 h-5 w-5" /> Open Chat
                 </Button>
               </Link>
@@ -171,10 +147,7 @@ const Home = () => {
             
             <motion.div variants={item}>
               <Link to="/pricing">
-                <Button 
-                  size="lg" 
-                  className="w-full md:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 border-none shadow-lg shadow-purple-500/20 transition-all duration-300 hover:shadow-purple-500/40"
-                >
+                <Button size="lg" className="w-full md:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 border-none shadow-lg shadow-purple-500/20 transition-all duration-300 hover:shadow-purple-500/40">
                   <DollarSign className="mr-2 h-5 w-5" /> View Pricing
                 </Button>
               </Link>
@@ -186,24 +159,34 @@ const Home = () => {
       {/* Feature Cards with Mock Content */}
       <section className="py-16 px-4 bg-gradient-to-b from-prism-darkgray/50 to-prism-darkgray/80">
         <div className="container mx-auto">
-          <motion.h2 
-            className="text-3xl font-bold text-center mb-12 text-blue-100"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
+          <motion.h2 className="text-3xl font-bold text-center mb-12 text-blue-100" initial={{
+          opacity: 0,
+          y: 20
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} transition={{
+          delay: 0.2
+        }}>
             Explore Our Features
           </motion.h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Search Feature Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              whileHover={{ y: -5, transition: { duration: 0.2 } }}
-              className="h-full"
-            >
+            <motion.div initial={{
+            opacity: 0,
+            y: 30
+          }} animate={{
+            opacity: 1,
+            y: 0
+          }} transition={{
+            delay: 0.3
+          }} whileHover={{
+            y: -5,
+            transition: {
+              duration: 0.2
+            }
+          }} className="h-full">
               <Card className="h-full bg-gradient-to-br from-gray-900 to-blue-900/50 border-t-2 border-blue-400 transition-all duration-300 shadow-xl hover:shadow-blue-500/20">
                 <CardHeader className="text-center pb-2">
                   <div className="mx-auto bg-blue-900/40 p-4 rounded-full w-16 h-16 flex items-center justify-center mb-4">
@@ -239,13 +222,20 @@ const Home = () => {
             </motion.div>
             
             {/* Chat Feature Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              whileHover={{ y: -5, transition: { duration: 0.2 } }}
-              className="h-full"
-            >
+            <motion.div initial={{
+            opacity: 0,
+            y: 30
+          }} animate={{
+            opacity: 1,
+            y: 0
+          }} transition={{
+            delay: 0.4
+          }} whileHover={{
+            y: -5,
+            transition: {
+              duration: 0.2
+            }
+          }} className="h-full">
               <Card className="h-full bg-gradient-to-br from-gray-900 to-teal-900/50 border-t-2 border-teal-400 transition-all duration-300 shadow-xl hover:shadow-teal-500/20">
                 <CardHeader className="text-center pb-2">
                   <div className="mx-auto bg-teal-900/40 p-4 rounded-full w-16 h-16 flex items-center justify-center mb-4">
@@ -281,13 +271,20 @@ const Home = () => {
             </motion.div>
             
             {/* Pricing Feature Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              whileHover={{ y: -5, transition: { duration: 0.2 } }}
-              className="h-full"
-            >
+            <motion.div initial={{
+            opacity: 0,
+            y: 30
+          }} animate={{
+            opacity: 1,
+            y: 0
+          }} transition={{
+            delay: 0.5
+          }} whileHover={{
+            y: -5,
+            transition: {
+              duration: 0.2
+            }
+          }} className="h-full">
               <Card className="h-full bg-gradient-to-br from-gray-900 to-purple-900/50 border-t-2 border-purple-400 transition-all duration-300 shadow-xl hover:shadow-purple-500/20">
                 <CardHeader className="text-center pb-2">
                   <div className="mx-auto bg-purple-900/40 p-4 rounded-full w-16 h-16 flex items-center justify-center mb-4">
@@ -305,17 +302,13 @@ const Home = () => {
                     <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 p-3 rounded-lg text-left border border-gray-700">
                       <h4 className="text-gray-200 font-semibold">Free</h4>
                       <ul className="text-xs text-gray-400 mt-2 list-disc pl-4">
-                        {pricingFeatures.free.map((feature, index) => (
-                          <li key={index}>{feature}</li>
-                        ))}
+                        {pricingFeatures.free.map((feature, index) => <li key={index}>{feature}</li>)}
                       </ul>
                     </div>
                     <div className="bg-gradient-to-r from-purple-900/30 to-purple-800/30 p-3 rounded-lg text-left border border-purple-700/30">
                       <h4 className="text-purple-300 font-semibold">Pro</h4>
                       <ul className="text-xs text-gray-400 mt-2 list-disc pl-4">
-                        {pricingFeatures.pro.map((feature, index) => (
-                          <li key={index}>{feature}</li>
-                        ))}
+                        {pricingFeatures.pro.map((feature, index) => <li key={index}>{feature}</li>)}
                       </ul>
                     </div>
                   </div>
@@ -336,21 +329,27 @@ const Home = () => {
       {/* Demo Preview Section */}
       <section className="py-16 px-4 bg-gradient-to-b from-prism-darkgray/80 to-black">
         <div className="container mx-auto">
-          <motion.h2 
-            className="text-3xl font-bold text-center mb-12 text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-teal-300"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
+          <motion.h2 className="text-3xl font-bold text-center mb-12 text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-teal-300" initial={{
+          opacity: 0,
+          y: 20
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} transition={{
+          delay: 0.2
+        }}>
             See Prism Search in Action
           </motion.h2>
           
-          <motion.div 
-            className="bg-gradient-to-br from-gray-900 to-blue-900/20 rounded-xl shadow-2xl overflow-hidden border border-blue-900/50"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
+          <motion.div className="bg-gradient-to-br from-gray-900 to-blue-900/20 rounded-xl shadow-2xl overflow-hidden border border-blue-900/50" initial={{
+          opacity: 0,
+          y: 20
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} transition={{
+          delay: 0.3
+        }}>
             <div className="p-6">
               <h3 className="text-xl font-semibold mb-4 text-blue-100">Experience the Power of AI</h3>
               
@@ -396,11 +395,7 @@ const Home = () => {
               
               <div className="mt-8 text-center">
                 <Link to="/search">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="border-blue-500 text-blue-400 hover:bg-blue-900/30 transition-all hover:border-blue-400"
-                  >
+                  <Button variant="outline" size="sm" className="border-blue-500 hover:bg-blue-900/30 transition-all hover:border-blue-400 text-inherit">
                     Try your own search <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
                 </Link>
@@ -454,8 +449,6 @@ const Home = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Home;
