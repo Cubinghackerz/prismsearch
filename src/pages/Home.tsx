@@ -395,7 +395,7 @@ const Home = () => {
               
               <div className="mt-8 text-center">
                 <Link to="/search">
-                  <Button variant="outline" size="sm" className="border-blue-500 hover:bg-blue-900/30 transition-all hover:border-blue-400 text-inherit">
+                  <Button variant="outline" size="sm" className="border-blue-500 hover:bg-blue-900/30 transition-all hover:border-blue-400 text-cyan-400">
                     Try your own search <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
                 </Link>
