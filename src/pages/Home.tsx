@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Search, MessageCircle, DollarSign, ArrowRight, ChevronRight, FileSearch, Zap } from 'lucide-react';
@@ -37,27 +36,6 @@ const Home = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
-  // Color changing effect
-  const [colorIndex, setColorIndex] = useState(0);
-  const colors = [
-    'from-blue-400 to-teal-400',
-    'from-teal-400 to-purple-400',
-    'from-purple-400 to-pink-400',
-    'from-pink-400 to-orange-400',
-    'from-orange-400 to-blue-400',
-  ];
-  
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setColorIndex((prevIndex) => (prevIndex + 1) % colors.length);
-    }, 300);
-    
-    return () => clearInterval(interval);
-  }, []);
-  
-  // Current gradient
-  const currentGradient = colors[colorIndex];
 
   // Mock search results
   const mockSearchResults = [{
@@ -137,10 +115,7 @@ const Home = () => {
       {/* Hero Section */}
       <section className="relative py-20 px-4 overflow-hidden">
         <motion.div className="container mx-auto text-center" initial="hidden" animate="show" variants={container}>
-          <motion.h1 
-            className={`text-4xl md:text-6xl lg:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r ${currentGradient} mb-6`} 
-            variants={item}
-          >
+          <motion.h1 className="text-4xl md:text-6xl lg:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-teal-400 mb-6" variants={item}>
             Welcome to Prism Search!
           </motion.h1>
           
@@ -349,20 +324,15 @@ const Home = () => {
       {/* Demo Preview Section */}
       <section className="py-16 px-4 bg-gradient-to-b from-prism-darkgray/80 to-black">
         <div className="container mx-auto">
-          <motion.h2 
-            className={`text-3xl font-bold text-center mb-12 bg-clip-text text-transparent bg-gradient-to-r ${currentGradient}`}
-            initial={{
-              opacity: 0,
-              y: 20
-            }} 
-            animate={{
-              opacity: 1,
-              y: 0
-            }} 
-            transition={{
-              delay: 0.2
-            }}
-          >
+          <motion.h2 className="text-3xl font-bold text-center mb-12 text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-teal-300" initial={{
+          opacity: 0,
+          y: 20
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} transition={{
+          delay: 0.2
+        }}>
             See Prism Search in Action
           </motion.h2>
           
