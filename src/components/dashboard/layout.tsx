@@ -91,7 +91,7 @@ export function DashboardSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <Link to="/" className="flex items-center space-x-2">
+        <Link to="/dashboard" className="flex items-center space-x-2">
           <span className="text-2xl font-bold">Prism</span>
         </Link>
         <SidebarTrigger />
@@ -114,10 +114,10 @@ export function DashboardSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              isActive={isActive("/")}
+              isActive={isActive("/search")}
               tooltip="Search"
             >
-              <Link to="/">
+              <Link to="/search">
                 <Search className="h-4 w-4" />
                 <span>Search</span>
               </Link>
@@ -176,14 +176,14 @@ export function DashboardNavbar() {
     <header className="sticky top-0 z-30 flex h-16 items-center border-b bg-background px-4">
       <div className="flex items-center space-x-4">
         <SidebarTrigger />
-        <Link to="/" className="hidden md:flex">
+        <Link to="/dashboard" className="hidden md:flex">
           <span className="text-xl font-bold">Prism Search</span>
         </Link>
       </div>
       <div className="ml-auto flex items-center space-x-4">
         <nav className="hidden md:flex items-center space-x-2">
-          <Link to="/">
-            <Button variant="ghost" size="sm">Home</Button>
+          <Link to="/search">
+            <Button variant="ghost" size="sm">Search</Button>
           </Link>
           <Link to="/chat">
             <Button variant="ghost" size="sm">Chat</Button>

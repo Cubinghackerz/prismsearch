@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -73,7 +72,7 @@ const Dashboard = () => {
             </p>
           </CardContent>
           <CardFooter>
-            <Link to="/" className="w-full">
+            <Link to="/search" className="w-full">
               <Button className="w-full bg-prism-violet hover:bg-prism-teal transition-colors">
                 Start Searching <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
