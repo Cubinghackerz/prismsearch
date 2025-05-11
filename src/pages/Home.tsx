@@ -58,7 +58,7 @@ const Home = () => {
   // Pricing features
   const pricingFeatures = {
     free: ["1000 searches & 500 chat messages", "Basic chat assistance", "Standard response time"],
-    pro: ["Unlimited searches", "Advanced chat with file upload", "Priority response time", "Custom data integration"],
+    pro: ["Coming Soon - Unlimited searches", "Coming Soon - Advanced chat with file upload", "Coming Soon - Priority response time", "Coming Soon - Custom data integration"],
     enterprise: ["All Pro features", "Dedicated support team", "Custom model training", "SLA guarantees"]
   };
 
@@ -301,7 +301,7 @@ const Home = () => {
                       </ul>
                     </div>
                     <div className="bg-gradient-to-r from-purple-900/30 to-purple-800/30 p-3 rounded-lg text-left border border-purple-700/30">
-                      <h4 className="text-purple-300 font-semibold">Pro</h4>
+                      <h4 className="text-purple-300 font-semibold">Pro <span className="text-xs font-normal ml-1 text-purple-400/80">(Coming Soon)</span></h4>
                       <ul className="text-xs text-gray-400 mt-2 list-disc pl-4">
                         {pricingFeatures.pro.map((feature, index) => <li key={index}>{feature}</li>)}
                       </ul>
