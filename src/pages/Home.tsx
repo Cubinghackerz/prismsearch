@@ -151,7 +151,7 @@ const Home = () => {
       {/* Feature Cards with Mock Content */}
       <section className="py-16 px-4 bg-gradient-to-b from-prism-darkgray/50 to-prism-darkgray/80">
         <div className="container mx-auto">
-          <motion.h2 className="text-3xl font-bold text-center mb-12 text-blue-100" initial={{
+          <motion.h2 initial={{
           opacity: 0,
           y: 20
         }} animate={{
@@ -159,7 +159,7 @@ const Home = () => {
           y: 0
         }} transition={{
           delay: 0.2
-        }}>
+        }} className="font-bold text-center mb-12 text-blue-100 text-4xl">
             Explore Our Features
           </motion.h2>
           
