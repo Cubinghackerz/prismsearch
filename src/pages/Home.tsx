@@ -8,7 +8,6 @@ import Footer from '@/components/Footer';
 import ParticleBackground from '@/components/ParticleBackground';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, navigationMenuTriggerStyle } from '@/components/ui/navigation-menu';
-
 const container = {
   hidden: {
     opacity: 0
@@ -30,7 +29,6 @@ const item = {
     y: 0
   }
 };
-
 const Home = () => {
   // Scroll to top when component mounts
   useEffect(() => {
@@ -61,7 +59,6 @@ const Home = () => {
     pro: ["Coming Soon - Unlimited searches", "Coming Soon - Advanced chat with file upload", "Coming Soon - Priority response time", "Coming Soon - Custom data integration"],
     enterprise: ["All Pro features", "Dedicated support team", "Custom model training", "SLA guarantees"]
   };
-
   return <div className="min-h-screen flex flex-col bg-gradient-to-b from-prism-darkgray to-black text-white">
       <ParticleBackground />
       
@@ -324,7 +321,7 @@ const Home = () => {
       {/* Demo Preview Section */}
       <section className="py-16 px-4 bg-gradient-to-b from-prism-darkgray/80 to-black">
         <div className="container mx-auto">
-          <motion.h2 className="text-3xl font-bold text-center mb-12 text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-teal-300" initial={{
+          <motion.h2 initial={{
           opacity: 0,
           y: 20
         }} animate={{
@@ -332,7 +329,7 @@ const Home = () => {
           y: 0
         }} transition={{
           delay: 0.2
-        }}>
+        }} className="font-bold text-center mb-12 bg-clip-text bg-gradient-to-r from-blue-300 to-teal-300 text-blue-300 text-4xl">
             See Prism Search in Action
           </motion.h2>
           
