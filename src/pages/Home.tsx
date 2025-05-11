@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import ParticleBackground from '@/components/ParticleBackground';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, navigationMenuTriggerStyle } from '@/components/ui/navigation-menu';
+
 const container = {
   hidden: {
     opacity: 0
@@ -29,6 +30,7 @@ const item = {
     y: 0
   }
 };
+
 const Home = () => {
   // Scroll to top when component mounts
   useEffect(() => {
@@ -55,10 +57,11 @@ const Home = () => {
 
   // Pricing features
   const pricingFeatures = {
-    free: ["5 searches per day", "Basic chat assistance", "Standard response time"],
+    free: ["1000 searches & 500 chat messages", "Basic chat assistance", "Standard response time"],
     pro: ["Unlimited searches", "Advanced chat with file upload", "Priority response time", "Custom data integration"],
     enterprise: ["All Pro features", "Dedicated support team", "Custom model training", "SLA guarantees"]
   };
+
   return <div className="min-h-screen flex flex-col bg-gradient-to-b from-prism-darkgray to-black text-white">
       <ParticleBackground />
       
