@@ -1,7 +1,10 @@
+
 import React from 'react';
+
 interface FooterProps {
   color?: string;
 }
+
 const Footer = ({
   color = '#3b82f6'
 }: FooterProps) => {
@@ -13,4 +16,5 @@ const Footer = ({
       </p>
     </div>;
 };
+
 export default Footer;

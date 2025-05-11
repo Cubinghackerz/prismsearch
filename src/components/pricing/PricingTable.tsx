@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { Check, X, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from '@/components/ui/button';
+
 interface PricingFeature {
   name: string;
   basic: boolean | string;
@@ -11,6 +13,7 @@ interface PricingFeature {
   enterprise: boolean | string;
   tooltip?: string;
 }
+
 export interface PricingPlan {
   name: string;
   price: string;
@@ -25,9 +28,11 @@ export interface PricingPlan {
   buttonText: string;
   buttonAction: () => void;
 }
+
 interface PricingTableProps {
   plans: PricingPlan[];
 }
+
 export const PricingTable: React.FC<PricingTableProps> = ({
   plans
 }) => {

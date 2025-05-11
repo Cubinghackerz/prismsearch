@@ -7,8 +7,10 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Link } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 import { Info } from 'lucide-react';
+
 const Pricing: React.FC = () => {
   const formRef = useRef<HTMLDivElement>(null);
+  
   const scrollToForm = () => {
     if (formRef.current) {
       formRef.current.scrollIntoView({
@@ -16,9 +18,11 @@ const Pricing: React.FC = () => {
       });
     }
   };
+  
   const handleContactSales = () => {
     scrollToForm();
   };
+  
   const handleGetStarted = () => {
     toast({
       title: "Getting started with Free plan",
@@ -26,6 +30,7 @@ const Pricing: React.FC = () => {
     });
     // You could redirect to signup here or show a modal
   };
+  
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     toast({
@@ -33,6 +38,7 @@ const Pricing: React.FC = () => {
       description: "Thank you for your interest. Our team will contact you shortly."
     });
   };
+  
   const pricingPlans: PricingPlan[] = [{
     name: "Basic",
     price: "$0",
@@ -79,6 +85,7 @@ const Pricing: React.FC = () => {
     buttonText: "Contact Sales",
     buttonAction: handleContactSales
   }];
+
   return <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
@@ -273,4 +280,5 @@ const Pricing: React.FC = () => {
       <Footer />
     </div>;
 };
+
 export default Pricing;
