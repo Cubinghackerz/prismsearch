@@ -111,7 +111,7 @@ const Home = () => {
           <div className="flex items-center">
             <Avatar>
               
-              <AvatarFallback>U</AvatarFallback>
+              
             </Avatar>
           </div>
         </div>
