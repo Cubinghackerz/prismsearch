@@ -110,7 +110,7 @@ const Home = () => {
           {/* User Menu */}
           <div className="flex items-center">
             <Avatar>
-              <AvatarImage src="/placeholder.svg" alt="User" />
+              
               <AvatarFallback>U</AvatarFallback>
             </Avatar>
           </div>
