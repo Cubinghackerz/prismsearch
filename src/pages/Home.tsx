@@ -77,30 +77,22 @@ const Home = () => {
               <NavigationMenuList>
                 <NavigationMenuItem>
                   <Link to="/">
-                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                      Home
-                    </NavigationMenuLink>
+                    
                   </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
                   <Link to="/search">
-                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                      Search
-                    </NavigationMenuLink>
+                    
                   </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
                   <Link to="/chat">
-                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                      Chat
-                    </NavigationMenuLink>
+                    
                   </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
                   <Link to="/pricing">
-                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                      Pricing
-                    </NavigationMenuLink>
+                    
                   </Link>
                 </NavigationMenuItem>
               </NavigationMenuList>
