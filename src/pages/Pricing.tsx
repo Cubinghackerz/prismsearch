@@ -9,10 +9,8 @@ import { Link } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 import { Info } from 'lucide-react';
 import ParticleBackground from '../components/ParticleBackground';
-
 const Pricing: React.FC = () => {
   const formRef = useRef<HTMLDivElement>(null);
-  
   const scrollToForm = () => {
     if (formRef.current) {
       formRef.current.scrollIntoView({
@@ -20,11 +18,9 @@ const Pricing: React.FC = () => {
       });
     }
   };
-  
   const handleContactSales = () => {
     scrollToForm();
   };
-  
   const handleGetStarted = () => {
     toast({
       title: "Getting started with Free plan",
@@ -32,7 +28,6 @@ const Pricing: React.FC = () => {
     });
     // You could redirect to signup here or show a modal
   };
-  
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     toast({
@@ -40,7 +35,6 @@ const Pricing: React.FC = () => {
       description: "Thank you for your interest. Our team will contact you shortly."
     });
   };
-  
   const pricingPlans: PricingPlan[] = [{
     name: "Basic",
     price: "$0",
@@ -87,9 +81,7 @@ const Pricing: React.FC = () => {
     buttonText: "Contact Sales",
     buttonAction: handleContactSales
   }];
-
-  return (
-    <div className="min-h-screen flex flex-col bg-[#1A1F2C]">
+  return <div className="min-h-screen flex flex-col bg-[#1A1F2C]">
       <ParticleBackground color="#FF9E2C" />
       
       {/* Header */}
@@ -111,25 +103,32 @@ const Pricing: React.FC = () => {
         {/* Hero Section */}
         <section className="py-16 md:py-24 relative">
           <div className="container mx-auto px-4 text-center">
-            <motion.h1 
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 font-montserrat bg-clip-text text-transparent bg-gradient-to-r from-orange-300 via-orange-400 to-orange-600 animate-gradient-text"
-            >
+            <motion.h1 initial={{
+            opacity: 0,
+            y: -20
+          }} animate={{
+            opacity: 1,
+            y: 0
+          }} transition={{
+            duration: 0.5
+          }} className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 font-montserrat bg-clip-text text-transparent bg-gradient-to-r from-orange-300 via-orange-400 to-orange-600 animate-gradient-text">
               Simple, Transparent Pricing
             </motion.h1>
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="text-xl text-orange-200 max-w-3xl mx-auto mb-10 font-inter"
-            >
+            <motion.p initial={{
+            opacity: 0,
+            y: 20
+          }} animate={{
+            opacity: 1,
+            y: 0
+          }} transition={{
+            duration: 0.5,
+            delay: 0.2
+          }} className="text-xl text-orange-200 max-w-3xl mx-auto mb-10 font-inter">
               Choose the plan that's right for you and start leveraging the power of PrismSearch.
             </motion.p>
             
             <Alert className="bg-orange-900/30 border-orange-500/30 mb-10 max-w-3xl mx-auto">
-              <Info className="h-5 w-5 text-orange-300" />
+              <Info className="h-5 w-5 text-orange-300 bg-transparent" />
               <AlertTitle className="text-orange-100 font-montserrat">Availability Notice</AlertTitle>
               <AlertDescription className="text-orange-200 font-inter">
                 Currently, only the Free plan is available. Paid plans (Starter, Professional, and Enterprise) are coming soon.
@@ -225,42 +224,58 @@ const Pricing: React.FC = () => {
             </h2>
             
             <div className="max-w-3xl mx-auto grid gap-6">
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-                className="border border-orange-500/20 rounded-lg p-6 backdrop-blur-md bg-orange-900/10"
-              >
+              <motion.div initial={{
+              opacity: 0,
+              y: 20
+            }} animate={{
+              opacity: 1,
+              y: 0
+            }} transition={{
+              duration: 0.3,
+              delay: 0.1
+            }} className="border border-orange-500/20 rounded-lg p-6 backdrop-blur-md bg-orange-900/10">
                 <h3 className="text-lg font-semibold text-orange-100 mb-2 font-montserrat">Can I upgrade or downgrade at any time?</h3>
                 <p className="text-orange-200 font-inter">Yes, you can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle.</p>
               </motion.div>
               
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.2 }}
-                className="border border-orange-500/20 rounded-lg p-6 backdrop-blur-md bg-orange-900/10"
-              >
+              <motion.div initial={{
+              opacity: 0,
+              y: 20
+            }} animate={{
+              opacity: 1,
+              y: 0
+            }} transition={{
+              duration: 0.3,
+              delay: 0.2
+            }} className="border border-orange-500/20 rounded-lg p-6 backdrop-blur-md bg-orange-900/10">
                 <h3 className="text-lg font-semibold text-orange-100 mb-2 font-montserrat">How do the usage limits work?</h3>
                 <p className="text-orange-200 font-inter">Usage limits are calculated on a monthly basis. If you exceed your plan's limits, you'll have the option to upgrade to a higher tier or purchase additional capacity.</p>
               </motion.div>
               
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.3 }}
-                className="border border-orange-500/20 rounded-lg p-6 backdrop-blur-md bg-orange-900/10"
-              >
+              <motion.div initial={{
+              opacity: 0,
+              y: 20
+            }} animate={{
+              opacity: 1,
+              y: 0
+            }} transition={{
+              duration: 0.3,
+              delay: 0.3
+            }} className="border border-orange-500/20 rounded-lg p-6 backdrop-blur-md bg-orange-900/10">
                 <h3 className="text-lg font-semibold text-orange-100 mb-2 font-montserrat">When will paid plans be available?</h3>
                 <p className="text-orange-200 font-inter">We're currently in beta, and only the Free plan is available. Paid plans are expected to launch in Late 2025.</p>
               </motion.div>
               
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.4 }}
-                className="border border-orange-500/20 rounded-lg p-6 backdrop-blur-md bg-orange-900/10"
-              >
+              <motion.div initial={{
+              opacity: 0,
+              y: 20
+            }} animate={{
+              opacity: 1,
+              y: 0
+            }} transition={{
+              duration: 0.3,
+              delay: 0.4
+            }} className="border border-orange-500/20 rounded-lg p-6 backdrop-blur-md bg-orange-900/10">
                 <h3 className="text-lg font-semibold text-orange-100 mb-2 font-montserrat">Do you offer custom solutions?</h3>
                 <p className="text-orange-200 font-inter">Yes, our Enterprise plan offers custom solutions tailored to your organization's specific needs. Contact our sales team to discuss your requirements.</p>
               </motion.div>
@@ -312,8 +327,6 @@ const Pricing: React.FC = () => {
       </main>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Pricing;
