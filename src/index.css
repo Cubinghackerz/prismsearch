@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -92,6 +91,11 @@
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
+  }
+  
+  html {
+    @apply scroll-smooth;
   }
 }
 
@@ -106,7 +110,7 @@
   --prism-shadow: rgba(155, 135, 245, 0.1);
 }
 
-/* Color changing animation */
+/* Color changing animation - faster 300ms timing */
 .color-changing-text {
   background: linear-gradient(-45deg, #9b87f5, #7E69AB, #6E59A5, #9b87f5);
   background-size: 300% 300%;
@@ -114,7 +118,7 @@
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: gradient-animation 3s ease infinite;
+  animation: gradient-animation 1s ease infinite;
 }
 
 @keyframes gradient-animation {
@@ -201,7 +205,7 @@
 .search-gradient {
   background: linear-gradient(90deg, #9b87f5, #7E69AB, #6E59A5, #9b87f5);
   background-size: 300% 100%;
-  animation: gradient-shift 4s ease infinite;
+  animation: gradient-shift 3s ease infinite;
 }
 
 @keyframes gradient-shift {
@@ -233,12 +237,12 @@
 }
 
 .result-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1), 0 10px 15px -5px rgba(0, 0, 0, 0.05);
 }
 
 .search-bar-container {
-  transition: all 0.5s ease;
+  transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .search-bar-expanded {
@@ -248,11 +252,12 @@
 /* Glow animation for buttons and cards */
 .glow-button {
   box-shadow: 0 0 10px rgba(155, 135, 245, 0.3);
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .glow-button:hover {
-  box-shadow: 0 0 15px rgba(155, 135, 245, 0.5), 0 0 30px rgba(155, 135, 245, 0.2);
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.5), 0 0 30px rgba(155, 135, 245, 0.3);
+  transform: translateY(-2px);
 }
 
 .pulse-glow {
@@ -274,10 +279,11 @@
 /* Glass morphism */
 .glass-card {
   background: rgba(155, 135, 245, 0.05);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(155, 135, 245, 0.2);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .glass-card:hover {
@@ -287,6 +293,18 @@
 }
 
 @layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-purple-300 via-purple-400 to-purple-600 bg-clip-text text-transparent;
+  }
+  
+  .text-gradient-blue {
+    @apply bg-gradient-to-r from-blue-400 via-teal-400 to-blue-500 bg-clip-text text-transparent;
+  }
+
+  .blur-backdrop {
+    @apply backdrop-blur-md bg-[#1A1F2C]/70;
+  }
+  
   .bg-pos-0 {
     background-position: 0% 50%;
   }
@@ -295,7 +313,15 @@
     background-position: 100% 50%;
   }
   
-  /* Custom height classes for triangle loader aspect ratio */
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  
+  .hover-lift {
+    @apply transition-smooth hover:-translate-y-1;
+  }
+
+  /* Triangle loader aspect ratio related classes */
   .h-5.2 {
     height: calc(6px * 0.866);
   }

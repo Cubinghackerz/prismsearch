@@ -13,12 +13,12 @@
 
 .autocomplete-dropdown::-webkit-scrollbar-track {
   background: rgba(30, 30, 40, 0.3);
-  border-radius: 4px;
+  border-radius: 8px;
 }
 
 .autocomplete-dropdown::-webkit-scrollbar-thumb {
   background-color: rgba(155, 135, 245, 0.5);
-  border-radius: 4px;
+  border-radius: 8px;
   border: 2px solid rgba(30, 30, 40, 0.3);
 }
 
@@ -33,18 +33,18 @@
 .autocomplete-highlight {
   background-color: rgba(155, 135, 245, 0.3);
   padding: 0 2px;
-  border-radius: 2px;
+  border-radius: 4px;
   font-weight: 600;
 }
 
-/* Adding animation for color change effect */
+/* Adding animation for color change effect - faster 300ms timing */
 .color-changing-text {
   background: linear-gradient(-45deg, #9b87f5, #7E69AB, #6E59A5, #9b87f5);
   background-size: 300% 300%;
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: gradient-animation 3s ease infinite;
+  animation: gradient-animation 1s ease infinite;
 }
 
 @keyframes gradient-animation {
@@ -61,4 +61,20 @@
 
 .glow-button:hover {
   box-shadow: 0 0 15px rgba(155, 135, 245, 0.7), 0 0 30px rgba(155, 135, 245, 0.5);
+}
+
+/* Glass card effect */
+.glass-card {
+  background: rgba(155, 135, 245, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(155, 135, 245, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  background: rgba(155, 135, 245, 0.1);
+  border: 1px solid rgba(155, 135, 245, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(155, 135, 245, 0.15);
 }

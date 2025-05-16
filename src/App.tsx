@@ -24,7 +24,7 @@ const queryClient = new QueryClient({
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <div className="bg-[#1A1F2C] text-purple-100 min-h-screen">
+      <div className="bg-gradient-to-b from-[#1A1F2C] to-[#232938] text-purple-100 min-h-screen font-inter">
         <Toaster />
         <Sonner />
         <BrowserRouter>

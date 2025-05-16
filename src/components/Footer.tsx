@@ -6,15 +6,12 @@ interface FooterProps {
 }
 
 const Footer = ({
-  color = '#9b87f5'  // Changed default color to match the purple theme
+  color = '#9b87f5'  // Keep the default color matching the purple theme
 }: FooterProps) => {
   return (
-    <div className="py-4 text-center">
+    <div className="py-6 text-center border-t border-purple-500/20 backdrop-blur-md bg-purple-900/10">
       <p 
-        style={{
-          color
-        }} 
-        className="opacity-80 text-base"
+        className="text-purple-200 opacity-80 text-base font-inter animate-gradient-text bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-purple-400 to-purple-600"
       >
         © 2025 Prism Search. All rights reserved.
       </p>

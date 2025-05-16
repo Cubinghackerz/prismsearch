@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -15,6 +14,10 @@ export default {
 			center: true,
 			padding: '2rem',
 			screens: {
+				'sm': '640px',
+				'md': '768px',
+				'lg': '1024px',
+				'xl': '1280px',
 				'2xl': '1400px'
 			}
 		},
@@ -63,12 +66,18 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom brand colors
-				'prism-violet': '#6C63FF',
-				'prism-charcoal': '#333333',
+				// Custom brand colors - updated to match the homepage
+				'prism-violet': '#9b87f5',
+				'prism-light-violet': '#b8a9f8',
+				'prism-dark-violet': '#7E69AB',
+				'prism-deepest-violet': '#6E59A5',
+				'prism-charcoal': '#1A1F2C',
+				'prism-dark-gray': '#232938',
 				'prism-teal': '#20C997',
+				'prism-blue': '#33C3F0',
+				'prism-bright-blue': '#0FA0CE',
 				'prism-light': '#F1F1F1',
-				'prism-darkgray': '#222222',
+				'prism-danger': '#ea384c',
 			},
 			fontFamily: {
 				'montserrat': ['Montserrat', 'sans-serif'],
@@ -135,6 +144,9 @@ export default {
 				'gradient-slow': 'gradient-border 8s ease infinite',
 			},
 			borderRadius: {
+				'2xl': '1rem',
+				'3xl': '1.5rem',
+				'4xl': '2rem',
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
@@ -143,6 +155,8 @@ export default {
 				'size-200': '200% 200%',
 			},
 			boxShadow: {
+				'soft': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+				'glow': '0 0 15px rgba(155, 135, 245, 0.5), 0 0 30px rgba(155, 135, 245, 0.3)',
 				'pricing-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
 			}
 		}
