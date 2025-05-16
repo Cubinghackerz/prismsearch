@@ -128,7 +128,7 @@ const Pricing: React.FC = () => {
             </motion.p>
             
             <Alert className="bg-orange-900/30 border-orange-500/30 mb-10 max-w-3xl mx-auto">
-              <Info className="h-5 w-5 text-orange-300 bg-black/0" />
+              <Info className="h-5 w-5 text-orange-300 bg-[#1b1b1b]/0" />
               <AlertTitle className="text-orange-100 font-montserrat">Availability Notice</AlertTitle>
               <AlertDescription className="text-orange-200 font-inter">
                 Currently, only the Free plan is available. Paid plans (Starter, Professional, and Enterprise) are coming soon.
