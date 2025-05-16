@@ -72,7 +72,7 @@ const AISearchResponse = ({
     y: 0
   }} transition={{
     duration: 0.3
-  }} className="mb-6 p-4 backdrop-blur-sm rounded-xl border border-purple-500/20 bg-orange-900">
+  }} className="mb-6 p-4 backdrop-blur-sm rounded-xl border border-purple-500/20 bg-[#0f113a]">
       <div className="flex items-start gap-3">
         <div className="w-8 h-8 rounded-full flex items-center justify-center mt-1 bg-black">
           <Bot className="w-5 h-5 text-purple-400" />
