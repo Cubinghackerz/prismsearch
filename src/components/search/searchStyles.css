@@ -78,3 +78,45 @@
   border: 1px solid rgba(255, 158, 44, 0.3);
   box-shadow: 0 8px 32px 0 rgba(255, 158, 44, 0.15);
 }
+
+/* Fiery spark effect */
+.fiery-spark {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 20;
+}
+
+@keyframes spark {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.2);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-15px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.2);
+  }
+}
+
+.spark-animation {
+  animation: spark 1.5s ease-out infinite;
+}
+
+/* Ember glow effect for search button */
+.ember-glow {
+  box-shadow: 0 0 10px rgba(255, 158, 44, 0.7), 0 0 20px rgba(255, 69, 0, 0.4);
+  animation: ember-pulse 2s ease-in-out infinite;
+}
+
+@keyframes ember-pulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(255, 158, 44, 0.7), 0 0 20px rgba(255, 69, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(255, 158, 44, 0.9), 0 0 30px rgba(255, 69, 0, 0.6);
+  }
+}

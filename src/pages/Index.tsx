@@ -96,7 +96,7 @@ const Index = () => {
               </Button>
             </motion.div>}
           
-          <div className="flex-1 flex justify-center items-center">
+          <div className="flex-1 flex justify-center items-center flex-col">
             {/* Logo added */}
             <Link to="/" className="flex items-center gap-2">
               <img 
@@ -122,7 +122,7 @@ const Index = () => {
               opacity: 1
             }} transition={{
               delay: 0.2
-            }} className={`text-orange-200 max-w-lg mx-auto ${hasSearched ? 'hidden' : ''}`}>
+            }} className={`text-orange-200 max-w-lg mx-auto text-center ${hasSearched ? 'hidden' : ''}`}>
               Search across the web's top engines for comprehensive results in one place
             </motion.p>
           </div>
