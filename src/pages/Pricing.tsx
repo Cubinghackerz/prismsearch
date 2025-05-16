@@ -88,7 +88,7 @@ const Pricing: React.FC = () => {
       <header className="bg-[#1A1F2C] border-b border-orange-500/20 sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center">
-            <img src="/lovable-uploads/3c38b6c8-23f1-4e72-bd31-5fcf258572d9.png" alt="Prism Search Logo" className="h-8 w-auto" />
+            <img alt="Prism Search Logo" src="/lovable-uploads/8b2dbfd1-9fa9-4ed8-b7b9-f17ec2baca20.png" className="h-8 w-auto object-contain" />
             <span className="ml-2 text-xl font-bold text-white font-montserrat">PrismSearch</span>
           </Link>
           <nav className="hidden md:flex items-center space-x-6">
