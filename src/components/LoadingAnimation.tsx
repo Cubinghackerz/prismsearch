@@ -2,7 +2,7 @@
 import { cn } from "@/lib/utils";
 
 interface LoadingAnimationProps {
-  color?: "purple" | "blue";
+  color?: "purple" | "blue" | "orange";
   size?: "small" | "medium" | "large";
   className?: string;
 }
@@ -19,7 +19,10 @@ const LoadingAnimation = ({
   };
   
   // Color based on theme
-  const colorClass = color === "blue" ? "bg-blue-500" : "bg-purple-500";
+  const colorClass = 
+    color === "blue" ? "bg-blue-500" : 
+    color === "orange" ? "bg-orange-500" : 
+    "bg-purple-500";
   
   return (
     <div className={cn(
