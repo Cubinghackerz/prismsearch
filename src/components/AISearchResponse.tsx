@@ -7,9 +7,11 @@ import { Button } from './ui/button';
 import { Link } from 'react-router-dom';
 import LoadingAnimation from './LoadingAnimation';
 import ReactMarkdown from 'react-markdown';
+
 interface AISearchResponseProps {
   query: string;
 }
+
 const AISearchResponse = ({
   query
 }: AISearchResponseProps) => {
@@ -20,6 +22,7 @@ const AISearchResponse = ({
   const {
     toast
   } = useToast();
+
   useEffect(() => {
     const getAIResponse = async () => {
       if (!query) return;
@@ -64,6 +67,7 @@ const AISearchResponse = ({
 
   // Don't show the component if we had an error and aren't loading
   if (hasError && !isLoading && !aiResponse) return null;
+  
   return <motion.div initial={{
     opacity: 0,
     y: 20
@@ -72,21 +76,21 @@ const AISearchResponse = ({
     y: 0
   }} transition={{
     duration: 0.3
-  }} className="mb-6 p-4 backdrop-blur-sm rounded-xl border border-purple-500/20 bg-blue-950">
+  }} className="mb-6 p-4 backdrop-blur-sm rounded-xl border border-orange-500/20 bg-orange-950/30">
       <div className="flex items-start gap-3">
         <div className="w-8 h-8 rounded-full flex items-center justify-center mt-1 bg-black">
-          <Bot className="w-5 h-5 text-purple-400" />
+          <Bot className="w-5 h-5 text-orange-400" />
         </div>
         <div className="flex-1">
-          {isLoading ? <div className="flex flex-col items-start gap-2 text-purple-300/70">
+          {isLoading ? <div className="flex flex-col items-start gap-2 text-orange-300/70">
               <div className="flex items-center gap-3">
                 <div>Thinking</div>
                 <div className="ml-2">
-                  <LoadingAnimation color="purple" size="small" />
+                  <LoadingAnimation color="orange" size="small" />
                 </div>
               </div>
             </div> : <div>
-              <div className="text-purple-100 markdown-content">
+              <div className="text-orange-100 markdown-content">
                 {/* Fixed ReactMarkdown implementation - removed className prop */}
                 <ReactMarkdown>
                   {aiResponse}
@@ -95,7 +99,7 @@ const AISearchResponse = ({
               
               {/* Chat button - Using Link component from react-router-dom */}
               {showChatButton && <div className="mt-3">
-                  <Button variant="outline" size="sm" asChild className="border-purple-500/30 text-white bg-transparent">
+                  <Button variant="outline" size="sm" asChild className="border-orange-500/30 text-white bg-transparent hover:bg-orange-500/20 hover:border-orange-400/50">
                     <Link to="/chat">
                       <MessageSquare className="mr-2 h-4 w-4" />
                       Continue in Chat Mode

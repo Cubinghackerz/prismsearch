@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import ParticleBackground from '@/components/ParticleBackground';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, navigationMenuTriggerStyle } from '@/components/ui/navigation-menu';
+
 const container = {
   hidden: {
     opacity: 0
@@ -29,6 +30,7 @@ const item = {
     y: 0
   }
 };
+
 const Home = () => {
   // Scroll to top when component mounts
   useEffect(() => {
@@ -62,11 +64,16 @@ const Home = () => {
   return <div className="min-h-screen flex flex-col bg-gradient-to-b from-prism-darkgray to-black text-white">
       <ParticleBackground />
       
-      {/* Fixed Header */}
+      {/* Fixed Header with logo */}
       <header className="sticky top-0 z-30 w-full backdrop-blur-lg bg-prism-darkgray/70 border-b border-gray-800">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          {/* Logo */}
-          <Link to="/" className="flex items-center">
+          {/* Logo with prism image */}
+          <Link to="/" className="flex items-center gap-2">
+            <img 
+              src="/lovable-uploads/aeaad4a8-0dc2-4d4b-b2b3-cb248e0843db.png" 
+              alt="Prism Search Logo" 
+              className="h-9 w-9" 
+            />
             <span className="font-montserrat font-bold text-2xl text-prism-teal">Prism</span>
             <span className="font-montserrat font-medium text-2xl text-gray-300">Search</span>
           </Link>

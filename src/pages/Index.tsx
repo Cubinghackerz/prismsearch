@@ -96,25 +96,33 @@ const Index = () => {
               </Button>
             </motion.div>}
           
-          <div className="flex-1">
-            <motion.h1 className={`text-4xl font-bold bg-clip-text text-transparent 
-                bg-gradient-to-r from-orange-300 via-orange-500 to-orange-700 
-                animate-gradient-text mb-2 ${hasSearched ? 'text-2xl' : ''}`} animate={{
-            backgroundPosition: ['0% 50%', '100% 50%']
-          }} transition={{
-            duration: 3,
-            repeat: Infinity,
-            repeatType: 'reverse'
-          }}>
-              Prism Search
-            </motion.h1>
+          <div className="flex-1 flex justify-center items-center">
+            {/* Logo added */}
+            <Link to="/" className="flex items-center gap-2">
+              <img 
+                src="/lovable-uploads/aeaad4a8-0dc2-4d4b-b2b3-cb248e0843db.png" 
+                alt="Prism Search Logo" 
+                className={`transition-all duration-300 ${hasSearched ? 'h-8 w-8' : 'h-10 w-10'}`}
+              />
+              <motion.h1 className={`text-4xl font-bold bg-clip-text text-transparent 
+                  bg-gradient-to-r from-orange-300 via-orange-500 to-orange-700 
+                  animate-gradient-text mb-2 ${hasSearched ? 'text-2xl' : ''}`} animate={{
+              backgroundPosition: ['0% 50%', '100% 50%']
+            }} transition={{
+              duration: 3,
+              repeat: Infinity,
+              repeatType: 'reverse'
+            }}>
+                Prism Search
+              </motion.h1>
+            </Link>
             <motion.p initial={{
-            opacity: 0
-          }} animate={{
-            opacity: 1
-          }} transition={{
-            delay: 0.2
-          }} className={`text-orange-200 max-w-lg mx-auto ${hasSearched ? 'hidden' : ''}`}>
+              opacity: 0
+            }} animate={{
+              opacity: 1
+            }} transition={{
+              delay: 0.2
+            }} className={`text-orange-200 max-w-lg mx-auto ${hasSearched ? 'hidden' : ''}`}>
               Search across the web's top engines for comprehensive results in one place
             </motion.p>
           </div>
