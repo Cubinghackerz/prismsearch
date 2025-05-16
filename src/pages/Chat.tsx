@@ -8,6 +8,7 @@ import ParticleBackground from '../components/ParticleBackground';
 import Footer from '../components/Footer';
 import { ChatProvider } from '@/context/ChatContext';
 import { ResizablePanelGroup, ResizablePanel } from '@/components/ui/resizable';
+import '../components/search/searchStyles.css';
 
 const Chat = () => {
   return (

@@ -76,7 +76,7 @@
 .glass-card:hover {
   background: rgba(255, 158, 44, 0.1);
   border: 1px solid rgba(255, 158, 44, 0.3);
-  box-shadow: 0 8px 32px 0 rgba(255, 158, 44, 0.15);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
 }
 
 /* Fiery spark effect */
