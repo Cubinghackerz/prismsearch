@@ -107,7 +107,7 @@ const RegularSearchItem = ({
     scale: 1.05
   }} whileTap={{
     scale: 0.95
-  }} onClick={onClick} className="px-3 py-2 rounded-lg cursor-pointer transition-all flex items-center space-x-2 bg-slate-700">
+  }} onClick={onClick} className="px-3 py-2 rounded-lg cursor-pointer transition-all flex items-center space-x-2 bg-[#3e2c64]">
       <History className="h-3 w-3 text-purple-300" />
       <span className="text-white text-sm">{search.query}</span>
       {search.category && <span className="text-xs bg-purple-800/40 px-2 py-0.5 rounded text-purple-200">
