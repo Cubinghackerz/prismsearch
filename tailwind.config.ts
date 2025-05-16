@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -66,14 +67,16 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom brand colors - updated to match the homepage
-				'prism-violet': '#9b87f5',
-				'prism-light-violet': '#b8a9f8',
-				'prism-dark-violet': '#7E69AB',
-				'prism-deepest-violet': '#6E59A5',
+				// Custom brand colors - updated to match the new prism theme
+				'prism-orange': '#FF9E2C',
+				'prism-light-orange': '#FFC547',
+				'prism-dark-orange': '#E58B28',
+				'prism-deepest-orange': '#D47A1E',
+				'prism-teal': '#34D3EB',
+				'prism-light-teal': '#7AECFF',
+				'prism-dark-teal': '#20B5D0',
 				'prism-charcoal': '#1A1F2C',
 				'prism-dark-gray': '#232938',
-				'prism-teal': '#20C997',
 				'prism-blue': '#33C3F0',
 				'prism-bright-blue': '#0FA0CE',
 				'prism-light': '#F1F1F1',
@@ -156,7 +159,7 @@ export default {
 			},
 			boxShadow: {
 				'soft': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-				'glow': '0 0 15px rgba(155, 135, 245, 0.5), 0 0 30px rgba(155, 135, 245, 0.3)',
+				'glow': '0 0 15px rgba(255, 158, 44, 0.5), 0 0 30px rgba(255, 158, 44, 0.3)',
 				'pricing-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
 			}
 		}

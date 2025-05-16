@@ -12,10 +12,10 @@ import { ResizablePanelGroup, ResizablePanel } from '@/components/ui/resizable';
 const Chat = () => {
   return (
     <ChatProvider>
-      <div className="min-h-screen flex flex-col bg-gradient-to-b from-prism-darkgray to-black">
-        <ParticleBackground color="#9b87f5" />
+      <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#1A1F2C] to-black">
+        <ParticleBackground color="#FF9E2C" />
         
-        <header className="py-6 px-4 relative z-10 backdrop-blur-lg bg-prism-darkgray/70 border-b border-purple-500/20 sticky top-0">
+        <header className="py-6 px-4 relative z-10 backdrop-blur-lg bg-[#1A1F2C]/70 border-b border-orange-500/20 sticky top-0">
           <div className="container mx-auto">
             <motion.div 
               initial={{ opacity: 0, y: -20 }} 
@@ -28,20 +28,25 @@ const Chat = () => {
                   initial={{ opacity: 0, x: -20 }} 
                   animate={{ opacity: 1, x: 0 }} 
                 >
-                  <Button variant="ghost" className="text-purple-100 bg-gradient-to-r from-purple-600/30 to-purple-800/30 hover:from-purple-600/40 hover:to-purple-800/40 border border-purple-500/20 shadow-lg shadow-purple-500/10">
+                  <Button variant="ghost" className="text-orange-100 bg-gradient-to-r from-orange-600/30 to-orange-800/30 hover:from-orange-600/40 hover:to-orange-800/40 border border-orange-500/20 shadow-lg shadow-orange-500/10">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back to Home
                   </Button>
                 </motion.div>
               </Link>
               
-              <motion.h1 
-                animate={{ backgroundPosition: ['0% 50%', '100% 50%'] }} 
-                transition={{ duration: 1, repeat: Infinity, repeatType: 'reverse' }} 
-                className="font-montserrat font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-purple-500 to-purple-700 animate-gradient-text mb-2 text-4xl absolute left-1/2 transform -translate-x-1/2"
+              <motion.div
+                className="flex items-center gap-2 absolute left-1/2 transform -translate-x-1/2"
               >
-                Prism Chat
-              </motion.h1>
+                <img src="/lovable-uploads/0d99afe2-31cb-4bd0-9b5a-02c95aae7614.png" alt="Prism Logo" className="h-8 w-8" />
+                <motion.h1 
+                  animate={{ backgroundPosition: ['0% 50%', '100% 50%'] }} 
+                  transition={{ duration: 1, repeat: Infinity, repeatType: 'reverse' }} 
+                  className="font-montserrat font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-300 via-teal-300 to-orange-400 animate-gradient-text mb-2 text-4xl"
+                >
+                  Prism Chat
+                </motion.h1>
+              </motion.div>
               
               <div className="w-[120px]">{/* Placeholder to balance layout */}</div>
             </motion.div>
@@ -53,7 +58,7 @@ const Chat = () => {
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             transition={{ delay: 0.2 }} 
-            className="text-purple-200 max-w-lg mx-auto text-sm text-center mb-8"
+            className="text-orange-200 max-w-lg mx-auto text-sm text-center mb-8"
           >
             Chat with AI assistants powered by Gemini 2.5 Flash Preview, Mistral Medium and Llama-3-70B
           </motion.p>
@@ -62,7 +67,7 @@ const Chat = () => {
             initial={{ opacity: 0, y: 20 }} 
             animate={{ opacity: 1, y: 0 }} 
             transition={{ duration: 0.5 }} 
-            className="glass-card rounded-xl border border-purple-500/20 shadow-xl"
+            className="glass-card rounded-xl border border-orange-500/20 shadow-xl"
           >
             <ResizablePanelGroup direction="horizontal" className="min-h-[70vh]">
               <ResizablePanel defaultSize={100} minSize={75}>

@@ -25,7 +25,7 @@ const SearchEngineColumn = ({ title, results, bgColor, hoverBorderColor }: Searc
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="bg-purple-900/10 backdrop-blur-sm rounded-xl p-4 border border-purple-500/20 shadow-lg"
+      className="bg-orange-900/10 backdrop-blur-sm rounded-xl p-4 border border-orange-500/20 shadow-lg"
     >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -42,9 +42,9 @@ const SearchEngineColumn = ({ title, results, bgColor, hoverBorderColor }: Searc
               }}
             />
           </div>
-          <h3 className="text-lg font-semibold text-purple-100">{title}</h3>
+          <h3 className="text-lg font-semibold text-orange-100">{title}</h3>
         </div>
-        <div className="text-sm text-purple-300">
+        <div className="text-sm text-orange-300">
           {results.length} {results.length === 1 ? 'Result' : 'Results'}
         </div>
       </div>
@@ -61,7 +61,7 @@ const SearchEngineColumn = ({ title, results, bgColor, hoverBorderColor }: Searc
           ))}
         </div>
       ) : (
-        <div className="text-center py-8 text-purple-300">
+        <div className="text-center py-8 text-orange-300">
           No results from {title}
         </div>
       )}
