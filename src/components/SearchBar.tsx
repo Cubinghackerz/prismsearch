@@ -32,6 +32,7 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchBarRef = useRef<HTMLDivElement>(null);
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -79,30 +80,21 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
     }, 10);
   };
 
-  // Fiery sparks animation variants - Fixed the type error by using a literal value for repeatType
-  const sparkVariants = {
-    hidden: { opacity: 0, scale: 0 },
-    visible: {
-      opacity: [0, 1, 0],
-      scale: [0.2, 1, 0.2],
-      y: [-5, -25, -45],
-      x: [-5, 5, -5],
-      transition: {
-        duration: 1.5,
-        repeat: Infinity,
-        repeatType: "loop" as const, // Fixed: explicitly use "loop" as a literal type
-        ease: "easeOut"
-      }
-    }
+  // Create 10 sparks with different positions and timing
+  const sparks = Array.from({ length: 10 }, (_, i) => i);
+
+  // Generate random position based on search bar width
+  const getRandomPosition = (i: number) => {
+    // Use pre-calculated positions for initial render
+    const basePositions = [10, 22, 35, 47, 60, 72, 85, 92, 78, 65];
+    return basePositions[i % basePositions.length];
   };
-  
-  // Generate array of sparks
-  const sparks = Array.from({ length: 3 }, (_, i) => i);
 
   return (
     <div className={`search-bar-container w-full max-w-3xl mx-auto transition-all duration-500 ${expanded ? 'search-bar-expanded' : ''}`}>
       <div className="relative">
         <div 
+          ref={searchBarRef}
           className={`
             relative flex items-center w-full h-16 rounded-2xl 
             bg-[#1A1F2C]/90 backdrop-blur-lg
@@ -166,7 +158,7 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
                 absolute right-2 h-12 w-24 rounded-xl text-white font-medium
                 transition-all duration-300 
                 ${query.trim() && !isSearching 
-                  ? 'bg-gradient-to-r from-orange-500 to-orange-700 hover:from-orange-600 hover:to-orange-800 cursor-pointer shadow-lg shadow-orange-900/30 hover:shadow-orange-800/40 hover:scale-105 active:scale-95' 
+                  ? 'bg-gradient-to-r from-orange-500 to-orange-700 hover:from-orange-600 hover:to-orange-800 cursor-pointer shadow-lg shadow-orange-900/30 hover:shadow-orange-800/40 hover:scale-105 active:scale-95 ember-glow' 
                   : 'bg-gray-700/30 cursor-not-allowed opacity-50'}
               `}
               aria-label="Search button"
@@ -183,7 +175,7 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
               )}
             </button>
             
-            {/* Fiery sparks animation */}
+            {/* Fiery sparks animation - distributed across the search bar */}
             {isFocused && !isSearching && (
               <>
                 {sparks.map((i) => (
@@ -191,20 +183,32 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
                     key={`spark-${i}`}
                     className="absolute pointer-events-none fiery-spark"
                     style={{ 
-                      bottom: '8px', 
-                      right: `${40 + (i * 15)}px`,
+                      bottom: '0px',
+                      left: `${getRandomPosition(i)}%`,
                       zIndex: 5
                     }}
                     initial="hidden"
                     animate="visible"
-                    variants={sparkVariants}
-                    custom={i}
+                    variants={{
+                      hidden: { opacity: 0, scale: 0 },
+                      visible: { 
+                        opacity: [0, 1, 0],
+                        scale: [0.2, 1, 0.2],
+                        y: [-5, -25, -45],
+                        transition: {
+                          duration: 1.5,
+                          repeat: Infinity,
+                          repeatType: "loop" as const,
+                          delay: i * 0.3, // Different delay for each spark
+                          ease: "easeOut"
+                        }
+                      }
+                    }}
                   >
-                    <div className={`
-                      w-2 h-2 rounded-full 
+                    <div className="spark-animation w-2 h-2 rounded-full 
                       bg-gradient-to-t from-orange-500 via-orange-300 to-yellow-200
-                      shadow-[0_0_10px_rgba(255,158,44,0.7)]
-                    `} />
+                      shadow-[0_0_10px_rgba(255,158,44,0.7)]" 
+                    />
                   </motion.div>
                 ))}
               </>
