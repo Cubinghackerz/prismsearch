@@ -33,7 +33,7 @@ const PopularSearches = ({
   if (popularSearches.length === 0) {
     return null;
   }
-  return <div className="w-full bg-[#1A1F2C]/95 backdrop-blur-md rounded-xl border border-purple-500/30 p-5 shadow-lg mb-6">
+  return <div className="w-full backdrop-blur-md rounded-xl border border-purple-500/30 p-5 shadow-lg mb-6 bg-transparent">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
           <TrendingUp className="h-5 w-5 text-purple-400" />
