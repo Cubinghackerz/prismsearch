@@ -10,23 +10,34 @@ import Chat from "./pages/Chat";
 import Pricing from "./pages/Pricing";
 import Home from "./pages/Home";
 
-const queryClient = new QueryClient();
+// Create QueryClient with custom settings for better UI
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 30000,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/search" element={<Index />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/pricing" element={<Pricing />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <div className="bg-[#1A1F2C] text-purple-100 min-h-screen">
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/search" element={<Index />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/pricing" element={<Pricing />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </div>
     </TooltipProvider>
   </QueryClientProvider>
 );

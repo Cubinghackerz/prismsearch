@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, MessageSquare } from 'lucide-react';
@@ -67,7 +66,7 @@ const Index = () => {
   };
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#1A1F2C]">
       {/* Changed ParticleBackground to have purple particles */}
       <ParticleBackground color="#9b87f5" />
       <ScrollToTop />
@@ -92,10 +91,10 @@ const Index = () => {
                   setResults([]);
                   setQuery('');
                 }}
-                className="text-white bg-transparent"
+                className="text-purple-100 bg-purple-500/20 hover:bg-purple-500/30"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
+                New Search
               </Button>
             </motion.div>
           )}
@@ -103,7 +102,7 @@ const Index = () => {
           <div className="flex-1">
             <motion.h1 
               className={`text-4xl font-bold bg-clip-text text-transparent 
-                bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 
+                bg-gradient-to-r from-purple-300 via-purple-500 to-purple-700 
                 animate-gradient-text mb-2 ${hasSearched ? 'text-2xl' : ''}`}
               animate={{ backgroundPosition: ['0% 50%', '100% 50%'] }}
               transition={{ duration: 3, repeat: Infinity, repeatType: 'reverse' }}
@@ -114,14 +113,14 @@ const Index = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className={`text-gray-100 max-w-lg mx-auto ${hasSearched ? 'hidden' : ''}`}
+              className={`text-purple-200 max-w-lg mx-auto ${hasSearched ? 'hidden' : ''}`}
             >
               Search across the web's top engines for comprehensive results in one place
             </motion.p>
           </div>
 
           <Link to="/chat" className="absolute right-4 top-1/2 -translate-y-1/2">
-            <Button variant="ghost" className="text-white bg-transparent">
+            <Button variant="ghost" className="text-purple-100 bg-purple-500/20 hover:bg-purple-500/30">
               <MessageSquare className="mr-2 h-4 w-4" />
               Chat Mode
             </Button>
@@ -181,7 +180,7 @@ const Index = () => {
                       engine === 'DuckDuckGo' ? 'bg-purple-600/80' : 
                       engine === 'Brave' ? 'bg-purple-500/80' : 'bg-purple-500/80'} 
                     hover:border-purple-300/20 transition-all duration-300
-                    shadow-lg shadow-purple-800/10 hover:shadow-xl hover:shadow-purple-700/20`}
+                    shadow-lg shadow-purple-800/10 hover:shadow-xl hover:shadow-purple-700/20 glow-button`}
                   >
                     <img 
                       src={info.logo} 
@@ -195,7 +194,7 @@ const Index = () => {
                       }}
                     />
                   </div>
-                  <span className="text-sm font-medium text-gray-100 opacity-90 hover:opacity-100 transition-opacity">
+                  <span className="text-sm font-medium text-purple-100 opacity-90 hover:opacity-100 transition-opacity">
                     {engine}
                   </span>
                 </motion.a>
@@ -205,7 +204,7 @@ const Index = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7 }}
-              className="mt-12 text-purple-100/70"
+              className="mt-12 text-purple-100/70 color-changing-text"
             >
               Type your query above to search across all engines simultaneously
             </motion.p>
@@ -214,7 +213,7 @@ const Index = () => {
       </main>
       
       <footer>
-        <Footer color="#9b87f5" />
+        <Footer />
       </footer>
     </div>
   );

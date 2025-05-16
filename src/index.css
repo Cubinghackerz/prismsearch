@@ -95,6 +95,34 @@
   }
 }
 
+/* Prism UI Theme */
+.prism-theme {
+  --prism-bg: #1A1F2C;
+  --prism-text: #F1F5FF;
+  --prism-primary: #9b87f5;
+  --prism-secondary: #7E69AB;
+  --prism-accent: #6E59A5;
+  --prism-border: rgba(155, 135, 245, 0.2);
+  --prism-shadow: rgba(155, 135, 245, 0.1);
+}
+
+/* Color changing animation */
+.color-changing-text {
+  background: linear-gradient(-45deg, #9b87f5, #7E69AB, #6E59A5, #9b87f5);
+  background-size: 300% 300%;
+  color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-animation 3s ease infinite;
+}
+
+@keyframes gradient-animation {
+  0% { background-position: 0% 50% }
+  50% { background-position: 100% 50% }
+  100% { background-position: 0% 50% }
+}
+
 /* Custom styles for markdown content */
 .markdown-content .prose {
   @apply text-purple-100;
@@ -171,7 +199,7 @@
 }
 
 .search-gradient {
-  background: linear-gradient(90deg, #2563eb, #1d4ed8, #1e40af, #2563eb);
+  background: linear-gradient(90deg, #9b87f5, #7E69AB, #6E59A5, #9b87f5);
   background-size: 300% 100%;
   animation: gradient-shift 4s ease infinite;
 }
@@ -217,6 +245,47 @@
   transform: translateY(-20vh);
 }
 
+/* Glow animation for buttons and cards */
+.glow-button {
+  box-shadow: 0 0 10px rgba(155, 135, 245, 0.3);
+  transition: all 0.3s ease;
+}
+
+.glow-button:hover {
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.5), 0 0 30px rgba(155, 135, 245, 0.2);
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 5px rgba(155, 135, 245, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(155, 135, 245, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(155, 135, 245, 0.3);
+  }
+}
+
+/* Glass morphism */
+.glass-card {
+  background: rgba(155, 135, 245, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(155, 135, 245, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+}
+
+.glass-card:hover {
+  background: rgba(155, 135, 245, 0.1);
+  border: 1px solid rgba(155, 135, 245, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(155, 135, 245, 0.15);
+}
+
 @layer utilities {
   .bg-pos-0 {
     background-position: 0% 50%;
@@ -244,7 +313,7 @@
 .loader {
   width: 50px;
   height: calc(50px * 0.866);
-  background: #9b87f5; /* Default purple color */
+  background: #9b87f5; /* Updated to purple theme */
   clip-path: polygon(50% 0, 100% 100%, 0 100%);
   --c: at 50% 66%, #000 60deg, #0000 0;
   -webkit-mask:
@@ -259,7 +328,7 @@
 }
 
 .loader.bg-blue-500 {
-  background: #3b82f6; /* Blue color for the blue theme */
+  background: #9b87f5; /* Updated to purple theme */
 }
 
 @keyframes l9 {
@@ -271,4 +340,42 @@
   73.33% {-webkit-mask-size:0    0   ,100% 100%,100% 100%,auto}
   86.67% {-webkit-mask-size:0    0   ,0    0   ,100% 100%,auto}
   100%   {-webkit-mask-size:0    0   ,0    0   ,0    0   ,auto}
+}
+
+/* Autocomplete styles */
+.autocomplete-dropdown {
+  max-height: 250px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(155, 135, 245, 0.5) rgba(30, 30, 40, 0.3);
+}
+
+.autocomplete-dropdown::-webkit-scrollbar {
+  width: 8px;
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-track {
+  background: rgba(30, 30, 40, 0.3);
+  border-radius: 4px;
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-thumb {
+  background-color: rgba(155, 135, 245, 0.5);
+  border-radius: 4px;
+  border: 2px solid rgba(30, 30, 40, 0.3);
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(155, 135, 245, 0.7);
+}
+
+.autocomplete-item {
+  transition: background-color 0.2s ease;
+}
+
+.autocomplete-highlight {
+  background-color: rgba(155, 135, 245, 0.3);
+  padding: 0 2px;
+  border-radius: 2px;
+  font-weight: 600;
 }

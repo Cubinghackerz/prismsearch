@@ -9,6 +9,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface PricingCardProps {
   plan: PricingPlan;
@@ -18,29 +19,35 @@ export const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
   return (
-    <div className={cn(
-      "border rounded-lg overflow-hidden transition-all duration-200 hover:shadow-pricing-hover",
-      plan.popular ? "border-prism-violet" : "border-gray-200",
-      plan.popular ? "bg-blue-50" : "bg-white",
-    )}>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      whileHover={{ y: -5, transition: { duration: 0.2 } }}
+      className={cn(
+        "border rounded-lg overflow-hidden transition-all duration-200 backdrop-blur-md",
+        plan.popular ? "border-purple-500/40" : "border-purple-500/20",
+        plan.popular ? "bg-purple-900/20" : "bg-purple-900/10",
+      )}
+    >
       {plan.popular && (
-        <div className="bg-prism-violet text-white text-center text-sm font-medium py-1 font-montserrat">
+        <div className="bg-gradient-to-r from-purple-500 via-purple-600 to-purple-500 animate-gradient-slow text-white text-center text-sm font-medium py-1 font-montserrat">
           MOST POPULAR
         </div>
       )}
       
       <div className="p-6">
-        <h3 className="text-xl font-bold text-prism-charcoal font-montserrat">{plan.name}</h3>
+        <h3 className="text-xl font-bold text-purple-100 font-montserrat">{plan.name}</h3>
         <div className="mt-4 flex items-baseline">
-          <span className="text-3xl font-bold text-prism-charcoal font-montserrat">{plan.price}</span>
+          <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-purple-400 to-purple-600 font-montserrat">{plan.price}</span>
           {plan.period && (
-            <span className="ml-1 text-gray-500 font-inter">{plan.period}</span>
+            <span className="ml-1 text-purple-300 font-inter">{plan.period}</span>
           )}
         </div>
         
         <div className="mt-5">
-          <h4 className="text-sm font-medium text-gray-900 font-montserrat">Usage Limits</h4>
-          <div className="mt-2 text-sm text-gray-700 font-inter">
+          <h4 className="text-sm font-medium text-purple-200 font-montserrat">Usage Limits</h4>
+          <div className="mt-2 text-sm text-purple-300 font-inter">
             {Array.isArray(plan.usage) ? (
               plan.usage.map((item, i) => <div key={i} className="mb-1">{item}</div>)
             ) : (
@@ -50,18 +57,18 @@ export const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
         </div>
 
         <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-6">
-          <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-medium text-prism-violet">
+          <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-medium text-purple-400 hover:text-purple-300 transition-colors">
             <span>View details</span>
             {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </CollapsibleTrigger>
           <CollapsibleContent className="pt-4">
             <div className="space-y-5">
               <div>
-                <h4 className="text-sm font-medium text-gray-900 font-montserrat">Features</h4>
+                <h4 className="text-sm font-medium text-purple-200 font-montserrat">Features</h4>
                 <ul className="mt-2 space-y-2">
                   {plan.features.map((feature, i) => (
-                    <li key={i} className="text-sm text-gray-700 font-inter flex items-start">
-                      <span className="mr-2">•</span>
+                    <li key={i} className="text-sm text-purple-300 font-inter flex items-start">
+                      <span className="mr-2 text-purple-400">•</span>
                       <span>{feature}</span>
                     </li>
                   ))}
@@ -69,8 +76,8 @@ export const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
               </div>
 
               <div>
-                <h4 className="text-sm font-medium text-gray-900 font-montserrat">Support & SLA</h4>
-                <div className="mt-2 text-sm text-gray-700 font-inter">
+                <h4 className="text-sm font-medium text-purple-200 font-montserrat">Support & SLA</h4>
+                <div className="mt-2 text-sm text-purple-300 font-inter">
                   {plan.support}
                 </div>
               </div>
@@ -86,19 +93,19 @@ export const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
             className={cn(
               "w-full transition-colors",
               plan.available 
-                ? "bg-prism-violet hover:bg-prism-teal text-white" 
-                : "text-gray-400 border-gray-300"
+                ? "bg-purple-500 hover:bg-purple-600 text-white glow-button" 
+                : "text-purple-400 border-purple-500/30 hover:bg-purple-500/10"
             )}
           >
             {plan.buttonText}
           </Button>
           {!plan.available && (
-            <div className="text-xs text-gray-500 mt-2 text-center font-inter">
+            <div className="text-xs text-purple-400 mt-2 text-center font-inter">
               Currently unavailable
             </div>
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
