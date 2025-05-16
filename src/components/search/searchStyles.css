@@ -85,6 +85,7 @@
   border-radius: 50%;
   pointer-events: none;
   z-index: 20;
+  filter: drop-shadow(0 0 5px rgba(255, 158, 44, 0.8));
 }
 
 @keyframes spark {

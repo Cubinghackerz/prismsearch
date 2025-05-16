@@ -79,22 +79,21 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
     }, 10);
   };
 
-  // Fiery sparks animation variants
+  // Fiery sparks animation variants - Fixed the type error by using a literal value for repeatType
   const sparkVariants = {
     hidden: { opacity: 0, scale: 0 },
-    visible: (i: number) => ({
+    visible: {
       opacity: [0, 1, 0],
       scale: [0.2, 1, 0.2],
-      y: [0, -15 - (i * 5), -30 - (i * 5)],
-      x: [(i-1) * 10, (i-1) * 15, (i-1) * 5],
+      y: [-5, -25, -45],
+      x: [-5, 5, -5],
       transition: {
         duration: 1.5,
         repeat: Infinity,
-        repeatType: "loop",
-        delay: i * 0.2,
+        repeatType: "loop" as const, // Fixed: explicitly use "loop" as a literal type
         ease: "easeOut"
       }
-    })
+    }
   };
   
   // Generate array of sparks
@@ -190,15 +189,15 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
                 {sparks.map((i) => (
                   <motion.div
                     key={`spark-${i}`}
-                    className="absolute pointer-events-none"
+                    className="absolute pointer-events-none fiery-spark"
                     style={{ 
                       bottom: '8px', 
-                      right: i === 0 ? '28px' : i === 1 ? '15px' : '8px',
+                      right: `${40 + (i * 15)}px`,
                       zIndex: 5
                     }}
-                    variants={sparkVariants}
                     initial="hidden"
                     animate="visible"
+                    variants={sparkVariants}
                     custom={i}
                   >
                     <div className={`
