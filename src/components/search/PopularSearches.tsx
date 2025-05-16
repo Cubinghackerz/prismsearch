@@ -82,7 +82,7 @@ const TrendingSearchItem = ({
     scale: 1.03
   }} whileTap={{
     scale: 0.98
-  }} onClick={onClick} className="p-3 rounded-lg cursor-pointer transition-all bg-[4169e1] bg-indigo-950">
+  }} onClick={onClick} className="p-3 rounded-lg cursor-pointer transition-all bg-[4169e1] bg-stone-700">
       <div className="flex items-start justify-between">
         <span className="text-white font-medium truncate">{search.query}</span>
         <div className="flex items-center space-x-1 text-purple-300 text-xs bg-purple-700/50 px-2 py-0.5 rounded-full">
