@@ -67,7 +67,7 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom brand colors - updated to match the new prism theme
+				// Custom brand colors - updated to match the new orange theme
 				'prism-orange': '#FF9E2C',
 				'prism-light-orange': '#FFC547',
 				'prism-dark-orange': '#E58B28',

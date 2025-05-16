@@ -30,10 +30,10 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
     <div className="w-full max-w-[95vw] mx-auto mt-8 pb-12">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <LayoutGrid className="h-5 w-5 text-blue-600" />
-          <h2 className="text-xl font-semibold text-gray-100">Search Results</h2>
+          <LayoutGrid className="h-5 w-5 text-orange-500" />
+          <h2 className="text-xl font-semibold text-orange-100">Search Results</h2>
         </div>
-        <div className="text-sm text-gray-400">
+        <div className="text-sm text-orange-400">
           Found {results.length} results across all engines
         </div>
       </div>
@@ -42,15 +42,15 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
         <SearchEngineColumn 
           title="Google" 
           results={googleResults}
-          bgColor="bg-blue-500"
-          hoverBorderColor="hover:border-blue-300"
+          bgColor="bg-orange-500"
+          hoverBorderColor="hover:border-orange-300"
         />
 
         <SearchEngineColumn 
           title="Bing" 
           results={bingResults}
-          bgColor="bg-blue-700"
-          hoverBorderColor="hover:border-blue-400"
+          bgColor="bg-orange-700"
+          hoverBorderColor="hover:border-orange-400"
         />
 
         <SearchEngineColumn 
@@ -63,15 +63,15 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
         <SearchEngineColumn 
           title="Brave" 
           results={braveResults}
-          bgColor="bg-orange-500"
+          bgColor="bg-orange-600"
           hoverBorderColor="hover:border-orange-300"
         />
 
         <SearchEngineColumn 
           title="You.com" 
           results={youResults}
-          bgColor="bg-purple-500"
-          hoverBorderColor="hover:border-purple-300"
+          bgColor="bg-orange-500"
+          hoverBorderColor="hover:border-orange-300"
         />
       </div>
     </div>

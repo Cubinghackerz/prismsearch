@@ -99,20 +99,20 @@
   }
 }
 
-/* Prism UI Theme */
+/* Prism UI Theme - updated to orange */
 .prism-theme {
   --prism-bg: #1A1F2C;
   --prism-text: #F1F5FF;
-  --prism-primary: #9b87f5;
-  --prism-secondary: #7E69AB;
-  --prism-accent: #6E59A5;
-  --prism-border: rgba(155, 135, 245, 0.2);
-  --prism-shadow: rgba(155, 135, 245, 0.1);
+  --prism-primary: #FF9E2C;
+  --prism-secondary: #FFC547;
+  --prism-accent: #E58B28;
+  --prism-border: rgba(255, 158, 44, 0.2);
+  --prism-shadow: rgba(255, 158, 44, 0.1);
 }
 
 /* Color changing animation - faster 300ms timing */
 .color-changing-text {
-  background: linear-gradient(-45deg, #9b87f5, #7E69AB, #6E59A5, #9b87f5);
+  background: linear-gradient(-45deg, #FF9E2C, #FFC547, #E58B28, #FF9E2C);
   background-size: 300% 300%;
   color: transparent;
   background-clip: text;
@@ -129,7 +129,7 @@
 
 /* Custom styles for markdown content */
 .markdown-content .prose {
-  @apply text-purple-100;
+  @apply text-orange-100;
 }
 
 .markdown-content .prose h1,
@@ -138,7 +138,7 @@
 .markdown-content .prose h4,
 .markdown-content .prose h5,
 .markdown-content .prose h6 {
-  @apply text-purple-100 font-bold mb-2 mt-4;
+  @apply text-orange-100 font-bold mb-2 mt-4;
 }
 
 .markdown-content .prose h1 {
@@ -175,27 +175,27 @@
 }
 
 .markdown-content .prose code {
-  @apply bg-purple-900/40 px-1.5 py-0.5 rounded text-sm text-purple-100;
+  @apply bg-orange-900/40 px-1.5 py-0.5 rounded text-sm text-orange-100;
 }
 
 .markdown-content .prose pre {
-  @apply bg-purple-900/40 p-3 rounded-md my-3 overflow-x-auto;
+  @apply bg-orange-900/40 p-3 rounded-md my-3 overflow-x-auto;
 }
 
 .markdown-content .prose a {
-  @apply text-purple-300 hover:text-purple-200 underline;
+  @apply text-orange-300 hover:text-orange-200 underline;
 }
 
 .markdown-content .prose blockquote {
-  @apply border-l-4 border-purple-500/50 pl-4 italic my-3;
+  @apply border-l-4 border-orange-500/50 pl-4 italic my-3;
 }
 
 .markdown-content .prose strong {
-  @apply font-bold text-purple-200;
+  @apply font-bold text-orange-200;
 }
 
 .markdown-content .prose em {
-  @apply italic text-purple-200;
+  @apply italic text-orange-200;
 }
 
 .markdown-content .prose img {
@@ -203,7 +203,7 @@
 }
 
 .search-gradient {
-  background: linear-gradient(90deg, #9b87f5, #7E69AB, #6E59A5, #9b87f5);
+  background: linear-gradient(90deg, #FF9E2C, #FFC547, #E58B28, #FF9E2C);
   background-size: 300% 100%;
   animation: gradient-shift 3s ease infinite;
 }
@@ -251,12 +251,12 @@
 
 /* Glow animation for buttons and cards */
 .glow-button {
-  box-shadow: 0 0 10px rgba(155, 135, 245, 0.3);
+  box-shadow: 0 0 10px rgba(255, 158, 44, 0.3);
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .glow-button:hover {
-  box-shadow: 0 0 15px rgba(155, 135, 245, 0.5), 0 0 30px rgba(155, 135, 245, 0.3);
+  box-shadow: 0 0 15px rgba(255, 158, 44, 0.5), 0 0 30px rgba(255, 158, 44, 0.3);
   transform: translateY(-2px);
 }
 
@@ -266,30 +266,30 @@
 
 @keyframes pulse-glow {
   0% {
-    box-shadow: 0 0 5px rgba(155, 135, 245, 0.3);
+    box-shadow: 0 0 5px rgba(255, 158, 44, 0.3);
   }
   50% {
-    box-shadow: 0 0 20px rgba(155, 135, 245, 0.5);
+    box-shadow: 0 0 20px rgba(255, 158, 44, 0.5);
   }
   100% {
-    box-shadow: 0 0 5px rgba(155, 135, 245, 0.3);
+    box-shadow: 0 0 5px rgba(255, 158, 44, 0.3);
   }
 }
 
 /* Glass morphism */
 .glass-card {
-  background: rgba(155, 135, 245, 0.05);
+  background: rgba(255, 158, 44, 0.05);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(155, 135, 245, 0.2);
+  border: 1px solid rgba(255, 158, 44, 0.2);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .glass-card:hover {
-  background: rgba(155, 135, 245, 0.1);
-  border: 1px solid rgba(155, 135, 245, 0.3);
-  box-shadow: 0 8px 32px 0 rgba(155, 135, 245, 0.15);
+  background: rgba(255, 158, 44, 0.1);
+  border: 1px solid rgba(255, 158, 44, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(255, 158, 44, 0.15);
 }
 
 @layer utilities {

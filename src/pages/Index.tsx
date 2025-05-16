@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, MessageSquare } from 'lucide-react';
@@ -67,8 +68,8 @@ const Index = () => {
   
   return (
     <div className="min-h-screen flex flex-col bg-[#1A1F2C]">
-      {/* Changed ParticleBackground to have purple particles */}
-      <ParticleBackground color="#9b87f5" />
+      {/* Changed ParticleBackground to have orange particles */}
+      <ParticleBackground color="#FF9E2C" />
       <ScrollToTop />
       
       <header className="py-6 px-4 relative z-10">
@@ -91,7 +92,7 @@ const Index = () => {
                   setResults([]);
                   setQuery('');
                 }}
-                className="text-purple-100 bg-purple-500/20 hover:bg-purple-500/30"
+                className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 New Search
@@ -102,7 +103,7 @@ const Index = () => {
           <div className="flex-1">
             <motion.h1 
               className={`text-4xl font-bold bg-clip-text text-transparent 
-                bg-gradient-to-r from-purple-300 via-purple-500 to-purple-700 
+                bg-gradient-to-r from-orange-300 via-orange-500 to-orange-700 
                 animate-gradient-text mb-2 ${hasSearched ? 'text-2xl' : ''}`}
               animate={{ backgroundPosition: ['0% 50%', '100% 50%'] }}
               transition={{ duration: 3, repeat: Infinity, repeatType: 'reverse' }}
@@ -113,14 +114,14 @@ const Index = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className={`text-purple-200 max-w-lg mx-auto ${hasSearched ? 'hidden' : ''}`}
+              className={`text-orange-200 max-w-lg mx-auto ${hasSearched ? 'hidden' : ''}`}
             >
               Search across the web's top engines for comprehensive results in one place
             </motion.p>
           </div>
 
           <Link to="/chat" className="absolute right-4 top-1/2 -translate-y-1/2">
-            <Button variant="ghost" className="text-purple-100 bg-purple-500/20 hover:bg-purple-500/30">
+            <Button variant="ghost" className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30">
               <MessageSquare className="mr-2 h-4 w-4" />
               Chat Mode
             </Button>
@@ -143,8 +144,8 @@ const Index = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="mt-4 backdrop-blur-md bg-purple-500/5 p-6 rounded-xl border border-purple-500/20 
-              shadow-[0_8px_32px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_32px_rgba(155,135,245,0.15)] 
+            className="mt-4 backdrop-blur-md bg-orange-500/5 p-6 rounded-xl border border-orange-500/20 
+              shadow-[0_8px_32px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_32px_rgba(255,158,44,0.15)] 
               transition-all duration-300"
           >
             <AISearchResponse query={query} />
@@ -174,13 +175,13 @@ const Index = () => {
                   transition={{ type: "spring", stiffness: 400, damping: 10 }}
                 >
                   <div className={`w-14 h-14 rounded-full mx-auto mb-3 flex items-center justify-center 
-                    backdrop-blur-md border border-purple-200/10
-                    ${engine === 'Google' ? 'bg-purple-500/80' : 
-                      engine === 'Bing' ? 'bg-purple-700/80' : 
-                      engine === 'DuckDuckGo' ? 'bg-purple-600/80' : 
-                      engine === 'Brave' ? 'bg-purple-500/80' : 'bg-purple-500/80'} 
-                    hover:border-purple-300/20 transition-all duration-300
-                    shadow-lg shadow-purple-800/10 hover:shadow-xl hover:shadow-purple-700/20 glow-button`}
+                    backdrop-blur-md border border-orange-200/10
+                    ${engine === 'Google' ? 'bg-orange-500/80' : 
+                      engine === 'Bing' ? 'bg-orange-700/80' : 
+                      engine === 'DuckDuckGo' ? 'bg-orange-600/80' : 
+                      engine === 'Brave' ? 'bg-orange-500/80' : 'bg-orange-500/80'} 
+                    hover:border-orange-300/20 transition-all duration-300
+                    shadow-lg shadow-orange-800/10 hover:shadow-xl hover:shadow-orange-700/20 glow-button`}
                   >
                     <img 
                       src={info.logo} 
@@ -194,7 +195,7 @@ const Index = () => {
                       }}
                     />
                   </div>
-                  <span className="text-sm font-medium text-purple-100 opacity-90 hover:opacity-100 transition-opacity">
+                  <span className="text-sm font-medium text-orange-100 opacity-90 hover:opacity-100 transition-opacity">
                     {engine}
                   </span>
                 </motion.a>
@@ -204,7 +205,7 @@ const Index = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7 }}
-              className="mt-12 text-purple-100/70 color-changing-text"
+              className="mt-12 text-orange-100/70 color-changing-text"
             >
               Type your query above to search across all engines simultaneously
             </motion.p>

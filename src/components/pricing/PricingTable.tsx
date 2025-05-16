@@ -44,58 +44,58 @@ export const PricingTable: React.FC<PricingTableProps> = ({
       transition={{ duration: 0.5 }}
       className="hidden md:block w-full overflow-x-auto"
     >
-      <div className="min-w-full border border-purple-500/20 rounded-lg overflow-hidden backdrop-blur-md bg-purple-900/10">
-        <table className="min-w-full divide-y divide-purple-500/20">
+      <div className="min-w-full border border-orange-500/20 rounded-lg overflow-hidden backdrop-blur-md bg-orange-900/10">
+        <table className="min-w-full divide-y divide-orange-500/20">
           <thead>
-            <tr className="bg-purple-900/30">
-              <th className="px-6 py-5 text-left text-sm font-bold text-purple-100 font-montserrat">
+            <tr className="bg-orange-900/30">
+              <th className="px-6 py-5 text-left text-sm font-bold text-orange-100 font-montserrat">
                 Plan
               </th>
-              <th className="px-6 py-5 text-center text-sm font-bold text-purple-100 font-montserrat">Price (USD/mo)</th>
-              <th className="px-6 py-5 text-center text-sm font-bold text-purple-100 font-montserrat">
+              <th className="px-6 py-5 text-center text-sm font-bold text-orange-100 font-montserrat">Price (USD/mo)</th>
+              <th className="px-6 py-5 text-center text-sm font-bold text-orange-100 font-montserrat">
                 Usage Limits
               </th>
-              <th className="px-6 py-5 text-center text-sm font-bold text-purple-100 font-montserrat">
+              <th className="px-6 py-5 text-center text-sm font-bold text-orange-100 font-montserrat">
                 Features
               </th>
-              <th className="px-6 py-5 text-center text-sm font-bold text-purple-100 font-montserrat">
+              <th className="px-6 py-5 text-center text-sm font-bold text-orange-100 font-montserrat">
                 Support & SLA
               </th>
               <th className="px-6 py-5 text-center"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-purple-500/20">
+          <tbody className="divide-y divide-orange-500/20">
             {plans.map((plan, index) => (
               <tr key={plan.name} className={cn(
-                "transition-all hover:bg-purple-500/10", 
-                plan.popular && "bg-purple-900/20 hover:bg-purple-900/30"
+                "transition-all hover:bg-orange-500/10", 
+                plan.popular && "bg-orange-900/20 hover:bg-orange-900/30"
               )}>
                 <td className="px-6 py-4">
                   <div className="flex flex-col">
-                    <span className="text-lg font-semibold text-purple-100 font-montserrat">{plan.name}</span>
+                    <span className="text-lg font-semibold text-orange-100 font-montserrat">{plan.name}</span>
                     {plan.popular && 
-                      <span className="text-xs text-purple-400 font-montserrat mt-1">MOST POPULAR</span>
+                      <span className="text-xs text-orange-400 font-montserrat mt-1">MOST POPULAR</span>
                     }
                   </div>
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <div className="font-semibold text-xl text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-purple-400 to-purple-600 font-montserrat">{plan.price}</div>
-                  <div className="text-sm text-purple-300 font-inter">
+                  <div className="font-semibold text-xl text-transparent bg-clip-text bg-gradient-to-r from-orange-300 via-orange-400 to-orange-600 font-montserrat">{plan.price}</div>
+                  <div className="text-sm text-orange-300 font-inter">
                     {plan.period}
                   </div>
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <div className="text-sm text-purple-200 font-inter">
+                  <div className="text-sm text-orange-200 font-inter">
                     {Array.isArray(plan.usage) ? plan.usage.map((item, i) => <div key={i}>{item}</div>) : plan.usage}
                   </div>
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <div className="text-sm text-purple-200 font-inter">
+                  <div className="text-sm text-orange-200 font-inter">
                     {plan.features.map((feature, i) => <div key={i} className="mb-1">{feature}</div>)}
                   </div>
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <div className="text-sm text-purple-200 font-inter">{plan.support}</div>
+                  <div className="text-sm text-orange-200 font-inter">{plan.support}</div>
                 </td>
                 <td className="px-6 py-4 text-center">
                   <Button 
@@ -105,14 +105,14 @@ export const PricingTable: React.FC<PricingTableProps> = ({
                     className={cn(
                       "transition-colors w-full", 
                       plan.available 
-                        ? "bg-purple-500 hover:bg-purple-600 text-white glow-button" 
-                        : "text-purple-400 border-purple-500/30 hover:bg-purple-500/10"
+                        ? "bg-orange-500 hover:bg-orange-600 text-white glow-button" 
+                        : "text-orange-400 border-orange-500/30 hover:bg-orange-500/10"
                     )}
                   >
                     {plan.buttonText}
                   </Button>
                   {!plan.available && (
-                    <div className="text-xs text-purple-400 mt-2 font-inter">
+                    <div className="text-xs text-orange-400 mt-2 font-inter">
                       Currently unavailable
                     </div>
                   )}
