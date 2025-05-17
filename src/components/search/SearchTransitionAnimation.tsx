@@ -12,6 +12,7 @@ interface SearchTransitionAnimationProps {
 const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimationProps) => {
   const [stage, setStage] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [showExplosion, setShowExplosion] = useState(false);
   const orbRef = useRef<HTMLDivElement>(null);
   
   // Text animation
@@ -23,6 +24,13 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
     const progressInterval = setInterval(() => {
       setProgress(prev => {
         const newValue = prev + 2; // Increment by 2% each time
+        
+        // When we reach 100%, trigger explosion
+        if (newValue >= 100 && !showExplosion) {
+          setShowExplosion(true);
+          setTimeout(() => setStage(3), 800); // Set final stage after explosion animation
+        }
+        
         return newValue > 100 ? 100 : newValue;
       });
     }, 50); // Update every 50ms for smooth animation
@@ -30,8 +38,7 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
     const stageTimers = [
       setTimeout(() => setStage(1), 500),  // Start expanding
       setTimeout(() => setStage(2), 1500), // Show particles
-      setTimeout(() => setStage(3), 2500), // Fade out and complete
-      setTimeout(() => onComplete(), 3000) // Trigger completion callback
+      setTimeout(() => onComplete(), 3800) // Trigger completion callback (slightly longer to see explosion)
     ];
     
     // Add perspective effect if mouse moves
@@ -55,7 +62,7 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
       clearInterval(progressInterval);
       window.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [onComplete]);
+  }, [onComplete, showExplosion]);
 
   return (
     <motion.div 
@@ -135,93 +142,191 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
           />
         </motion.div>
         
-        {/* Enhanced dynamic particles with different sizes and movements */}
-        {stage >= 1 && (
+        {/* Orbiting particles with different sizes */}
+        {stage >= 1 && !showExplosion && (
           <div className="absolute inset-0 z-0">
-            {/* Small fast particles */}
-            {Array.from({ length: 12 }).map((_, i) => (
-              <motion.div
-                key={`particle-small-${i}`}
-                className="absolute left-1/2 top-1/2 fiery-spark"
-                initial={{ 
-                  x: 0, 
-                  y: 0, 
-                  opacity: 0.8,
-                  scale: 0.2
-                }}
-                animate={{ 
-                  x: (Math.random() - 0.5) * 300,
-                  y: (Math.random() - 0.5) * 300,
-                  opacity: 0,
-                  scale: Math.random() * 0.3 + 0.3
-                }}
-                transition={{
-                  duration: 1.5 + Math.random(),
-                  ease: "easeOut",
-                  delay: Math.random() * 0.3
-                }}
-              >
-                <div className="h-2 w-2 rounded-full bg-gradient-to-b from-orange-200 to-orange-400 glow-particle spark-small"></div>
-              </motion.div>
-            ))}
+            {/* Small orbiting particles */}
+            {Array.from({ length: 12 }).map((_, i) => {
+              const radius = 90 + (i % 3) * 30; // Varying orbit radius
+              const speed = 6 + (i % 4); // Varying speeds
+              const delay = i * 0.1; // Staggered start
+              const size = 3 + (i % 3) * 2; // Varying sizes
+              
+              return (
+                <motion.div
+                  key={`orbit-small-${i}`}
+                  className="absolute left-1/2 top-1/2 fiery-spark"
+                  initial={{ 
+                    x: 0, 
+                    y: 0, 
+                    opacity: 0,
+                    scale: 0.2
+                  }}
+                  animate={{ 
+                    opacity: 0.8,
+                    scale: 1,
+                  }}
+                  transition={{
+                    duration: 1,
+                    delay: delay,
+                  }}
+                >
+                  <motion.div 
+                    className="h-2 w-2 rounded-full bg-gradient-to-b from-orange-200 to-orange-400 glow-particle spark-small"
+                    style={{ width: size, height: size }}
+                    animate={{
+                      x: Array.from({ length: 20 }).map(() => radius * Math.cos(Math.random() * Math.PI * 2)),
+                      y: Array.from({ length: 20 }).map(() => radius * Math.sin(Math.random() * Math.PI * 2)),
+                    }}
+                    transition={{
+                      duration: speed,
+                      repeat: Infinity,
+                      repeatType: "loop",
+                      ease: "linear",
+                      times: Array.from({ length: 20 }).map((_, i) => i / 19),
+                      delay: delay
+                    }}
+                  />
+                </motion.div>
+              );
+            })}
             
-            {/* Medium particles */}
-            {Array.from({ length: 8 }).map((_, i) => (
-              <motion.div
-                key={`particle-medium-${i}`}
-                className="absolute left-1/2 top-1/2 fiery-spark"
-                initial={{ 
-                  x: 0, 
-                  y: 0, 
-                  opacity: 0.9,
-                  scale: 0.3,
-                  rotate: 0
-                }}
-                animate={{ 
-                  x: (Math.random() - 0.5) * 350,
-                  y: (Math.random() - 0.5) * 350,
-                  opacity: 0,
-                  scale: Math.random() * 0.4 + 0.4,
-                  rotate: Math.random() * 180
-                }}
-                transition={{
-                  duration: 2 + Math.random(),
-                  ease: "easeOut",
-                  delay: Math.random() * 0.5
-                }}
-              >
-                <div className="h-4 w-4 rounded-full bg-gradient-to-b from-orange-300 to-orange-500 glow-particle spark-medium"></div>
-              </motion.div>
-            ))}
+            {/* Medium orbiting particles */}
+            {Array.from({ length: 8 }).map((_, i) => {
+              const radius = 120 + (i % 4) * 25; // Varying orbit radius
+              const speed = 8 + (i % 5); // Varying speeds  
+              const delay = i * 0.15; // Staggered start
+              const size = 5 + (i % 3) * 2; // Varying sizes
+              
+              return (
+                <motion.div
+                  key={`orbit-medium-${i}`}
+                  className="absolute left-1/2 top-1/2 fiery-spark"
+                  initial={{ 
+                    x: 0, 
+                    y: 0,
+                    opacity: 0,
+                    scale: 0.2
+                  }}
+                  animate={{ 
+                    opacity: 0.9,
+                    scale: 1,
+                  }}
+                  transition={{
+                    duration: 1,
+                    delay: delay,
+                  }}
+                >
+                  <motion.div 
+                    className="h-4 w-4 rounded-full bg-gradient-to-b from-orange-300 to-orange-500 glow-particle spark-medium"
+                    style={{ width: size, height: size }}
+                    animate={{
+                      x: Array.from({ length: 20 }).map(() => radius * Math.cos(Math.random() * Math.PI * 2)),
+                      y: Array.from({ length: 20 }).map(() => radius * Math.sin(Math.random() * Math.PI * 2)),
+                    }}
+                    transition={{
+                      duration: speed,
+                      repeat: Infinity,
+                      repeatType: "loop",
+                      ease: "linear",
+                      times: Array.from({ length: 20 }).map((_, i) => i / 19),
+                      delay: delay
+                    }}
+                  />
+                </motion.div>
+              );
+            })}
             
-            {/* Large particles with alternative animation */}
-            {Array.from({ length: 6 }).map((_, i) => (
-              <motion.div
-                key={`particle-large-${i}`}
-                className="absolute left-1/2 top-1/2 fiery-spark"
-                initial={{ 
-                  x: 0, 
-                  y: 0, 
-                  opacity: 1,
-                  scale: 0.4,
-                  rotate: 0
-                }}
-                animate={{ 
-                  x: (Math.random() - 0.5) * 400,
-                  y: (Math.random() - 0.5) * 400,
-                  opacity: 0,
-                  scale: Math.random() * 0.5 + 0.6,
-                  rotate: Math.random() * 360
-                }}
-                transition={{
-                  duration: 2.5 + Math.random(),
-                  ease: "easeOut",
-                  delay: Math.random() * 0.7
-                }}
-              >
-                <div className="h-6 w-6 rounded-full bg-gradient-to-b from-orange-400 to-orange-600 glow-particle spark-large"></div>
-              </motion.div>
-            ))}
+            {/* Large orbiting particles */}
+            {Array.from({ length: 6 }).map((_, i) => {
+              const radius = 150 + (i % 3) * 30; // Varying orbit radius
+              const speed = 10 + (i % 3); // Varying speeds
+              const delay = i * 0.2; // Staggered start
+              const size = 7 + (i % 3) * 2; // Varying sizes
+              
+              return (
+                <motion.div
+                  key={`orbit-large-${i}`}
+                  className="absolute left-1/2 top-1/2 fiery-spark"
+                  initial={{ 
+                    x: 0, 
+                    y: 0, 
+                    opacity: 0,
+                    scale: 0.2
+                  }}
+                  animate={{ 
+                    opacity: 1,
+                    scale: 1,
+                  }}
+                  transition={{
+                    duration: 1,
+                    delay: delay,
+                  }}
+                >
+                  <motion.div 
+                    className="h-6 w-6 rounded-full bg-gradient-to-b from-orange-400 to-orange-600 glow-particle spark-large"
+                    style={{ width: size, height: size }}
+                    animate={{
+                      x: Array.from({ length: 20 }).map(() => radius * Math.cos(Math.random() * Math.PI * 2)),
+                      y: Array.from({ length: 20 }).map(() => radius * Math.sin(Math.random() * Math.PI * 2)),
+                    }}
+                    transition={{
+                      duration: speed,
+                      repeat: Infinity,
+                      repeatType: "loop",
+                      ease: "linear",
+                      times: Array.from({ length: 20 }).map((_, i) => i / 19),
+                      delay: delay
+                    }}
+                  />
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+        
+        {/* Explosion effect particles */}
+        {showExplosion && (
+          <div className="absolute inset-0 z-30">
+            {Array.from({ length: 30 }).map((_, i) => {
+              const angle = (Math.PI * 2 * i) / 30;
+              const distance = 300 + Math.random() * 200;
+              const size = 3 + Math.random() * 5;
+              const delay = Math.random() * 0.2;
+              
+              return (
+                <motion.div
+                  key={`explosion-${i}`}
+                  className="absolute left-1/2 top-1/2 fiery-spark"
+                  initial={{ 
+                    x: 0, 
+                    y: 0,
+                    opacity: 1,
+                    scale: 1
+                  }}
+                  animate={{ 
+                    x: Math.cos(angle) * distance,
+                    y: Math.sin(angle) * distance,
+                    opacity: 0,
+                    scale: 0
+                  }}
+                  transition={{
+                    duration: 1.2,
+                    ease: "easeOut",
+                    delay: delay
+                  }}
+                >
+                  <div 
+                    className="rounded-full bg-gradient-to-b from-orange-300 to-orange-500 glow-particle explosion-particle"
+                    style={{ 
+                      width: size, 
+                      height: size,
+                      boxShadow: "0 0 15px rgba(255, 158, 44, 0.8)"
+                    }}
+                  />
+                </motion.div>
+              );
+            })}
           </div>
         )}
         
@@ -286,14 +391,20 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
             />
             
             {/* Progress circle */}
-            <circle 
-              className="progress-circle circular-loader" 
+            <motion.circle 
+              className="progress-circle" 
               cx="50" 
               cy="50" 
               r="45" 
               strokeWidth="5"
               strokeDasharray="283"
-              strokeDashoffset="283"
+              animate={{
+                strokeDashoffset: 283 - (283 * progress) / 100
+              }}
+              transition={{
+                duration: 0.1,
+                ease: "linear"
+              }}
               transform="rotate(-90 50 50)"
             />
           </svg>
