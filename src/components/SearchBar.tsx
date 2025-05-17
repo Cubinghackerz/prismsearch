@@ -30,6 +30,7 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
   });
   
   const [isFocused, setIsFocused] = useState(false);
+  const [sparkTrigger, setSparkTrigger] = useState(0); // Used to trigger new spark animations
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchBarRef = useRef<HTMLDivElement>(null);
@@ -53,6 +54,25 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
       document.removeEventListener('mousedown', handleClickOutsideListener);
     };
   }, [handleClickOutside]);
+
+  // Periodic spark effect when focused
+  useEffect(() => {
+    let sparkInterval: NodeJS.Timeout;
+    
+    if (isFocused) {
+      // Initial spark emission
+      setSparkTrigger(prev => prev + 1);
+      
+      // Continuous spark emission at random intervals
+      sparkInterval = setInterval(() => {
+        setSparkTrigger(prev => prev + 1);
+      }, Math.random() * 1000 + 800); // Random interval between 800ms and 1800ms
+    }
+    
+    return () => {
+      if (sparkInterval) clearInterval(sparkInterval);
+    };
+  }, [isFocused]);
 
   const handleSearch = () => {
     if (query.trim()) {
@@ -80,14 +100,19 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
     }, 10);
   };
 
-  // Create 10 sparks with different positions and timing
-  const sparks = Array.from({ length: 10 }, (_, i) => i);
+  // Create more sparks with varying positions and timing
+  const sparks = Array.from({ length: 20 }, (_, i) => i);
 
-  // Generate random position based on search bar width
-  const getRandomPosition = (i: number) => {
-    // Use pre-calculated positions for initial render
-    const basePositions = [10, 22, 35, 47, 60, 72, 85, 92, 78, 65];
-    return basePositions[i % basePositions.length];
+  // Generate random position based on search bar width and height
+  const getRandomPosition = () => {
+    return {
+      x: Math.random() * 100, // Random position along width (0-100%)
+      y: Math.random() < 0.5 ? 0 : 100, // Either top or bottom of the search bar
+      side: Math.random() < 0.5 ? 'left' : 'right', // Which side spark comes from
+      delay: Math.random() * 0.5, // Random delay for staggered effect
+      duration: 0.8 + Math.random() * 1.2, // Random duration between 0.8s and 2s
+      size: 0.5 + Math.random() * 0.8 // Random size factor between 0.5 and 1.3
+    };
   };
 
   return (
@@ -106,7 +131,7 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
             hover:scale-[1.01] hover:bg-[#1A1F2C]/95
           `}
         >
-          <div className="relative flex items-center h-full w-full rounded-2xl group">
+          <div className="relative flex items-center h-full w-full rounded-2xl group overflow-hidden">
             <div className="grid place-items-center h-full w-12 text-orange-300/80 transition-all duration-300 group-hover:text-orange-200">
               <Search className={`h-5 w-5 transition-all duration-300 
                 ${isFocused ? 'scale-110 text-orange-300' : ''}
@@ -175,42 +200,45 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
               )}
             </button>
             
-            {/* Fiery sparks animation - distributed across the search bar */}
+            {/* Dynamic spark animation - trigger-based for continuous effects */}
             {isFocused && !isSearching && (
               <>
-                {sparks.map((i) => (
-                  <motion.div
-                    key={`spark-${i}`}
-                    className="absolute pointer-events-none fiery-spark"
-                    style={{ 
-                      bottom: '0px',
-                      left: `${getRandomPosition(i)}%`,
-                      zIndex: 5
-                    }}
-                    initial="hidden"
-                    animate="visible"
-                    variants={{
-                      hidden: { opacity: 0, scale: 0 },
-                      visible: { 
+                {sparks.map((_, i) => {
+                  const sparkProps = getRandomPosition();
+                  return (
+                    <motion.div
+                      key={`spark-${i}-${sparkTrigger}`}
+                      className="absolute pointer-events-none fiery-spark"
+                      style={{ 
+                        [sparkProps.y === 0 ? 'top' : 'bottom']: '0px',
+                        [sparkProps.side]: `${sparkProps.x}%`,
+                        zIndex: 5
+                      }}
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ 
                         opacity: [0, 1, 0],
-                        scale: [0.2, 1, 0.2],
-                        y: [-5, -25, -45],
-                        transition: {
-                          duration: 1.5,
-                          repeat: Infinity,
-                          repeatType: "loop" as const,
-                          delay: i * 0.3, // Different delay for each spark
-                          ease: "easeOut"
-                        }
-                      }
-                    }}
-                  >
-                    <div className="spark-animation w-2 h-2 rounded-full 
-                      bg-gradient-to-t from-orange-500 via-orange-300 to-yellow-200
-                      shadow-[0_0_10px_rgba(255,158,44,0.7)]" 
-                    />
-                  </motion.div>
-                ))}
+                        scale: [0.2 * sparkProps.size, 1 * sparkProps.size, 0.2 * sparkProps.size],
+                        y: sparkProps.y === 0 
+                          ? ['0px', '-30px', '-60px'] 
+                          : ['0px', '30px', '60px'],
+                        x: sparkProps.side === 'left' 
+                          ? ['0px', '20px', '40px'] 
+                          : ['0px', '-20px', '-40px']
+                      }}
+                      transition={{
+                        duration: sparkProps.duration,
+                        delay: sparkProps.delay,
+                        ease: "easeOut",
+                      }}
+                    >
+                      <div 
+                        className={`w-2 h-2 rounded-full 
+                          bg-gradient-to-t from-orange-500 via-orange-300 to-yellow-200
+                          shadow-[0_0_10px_rgba(255,158,44,0.7)]`}
+                      />
+                    </motion.div>
+                  );
+                })}
               </>
             )}
           </div>

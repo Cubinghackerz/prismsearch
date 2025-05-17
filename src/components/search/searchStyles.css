@@ -82,29 +82,29 @@
 /* Fiery spark effect */
 .fiery-spark {
   position: absolute;
-  border-radius: 50%;
   pointer-events: none;
   z-index: 20;
   filter: drop-shadow(0 0 5px rgba(255, 158, 44, 0.8));
 }
 
-@keyframes spark {
+/* Updated spark animation for dynamic movement */
+@keyframes spark-float {
   0% {
     opacity: 0;
-    transform: translateY(0) scale(0.2);
+    transform: translateY(0) translateX(0) scale(0.2);
   }
-  50% {
+  20% {
     opacity: 1;
-    transform: translateY(-15px) scale(1);
+    transform: translateY(-10px) translateX(5px) scale(0.8);
+  }
+  80% {
+    opacity: 0.8;
+    transform: translateY(-30px) translateX(10px) scale(1);
   }
   100% {
     opacity: 0;
-    transform: translateY(-30px) scale(0.2);
+    transform: translateY(-50px) translateX(15px) scale(0.2);
   }
-}
-
-.spark-animation {
-  animation: spark 1.5s ease-out infinite;
 }
 
 /* Ember glow effect for search button */
