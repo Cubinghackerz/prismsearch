@@ -112,13 +112,14 @@
   transform-origin: bottom left;
 }
 
-/* Enhanced typographic scale */
+/* Enhanced typographic scale with improved spacing */
 h1, .h1 {
   font-size: 2.5rem;
   line-height: 1.2;
   font-weight: 700;
   letter-spacing: -0.02em;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  font-family: 'Montserrat', sans-serif;
 }
 
 h2, .h2 {
@@ -126,7 +127,8 @@ h2, .h2 {
   line-height: 1.3;
   font-weight: 600;
   letter-spacing: -0.015em;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1.25rem;
+  font-family: 'Montserrat', sans-serif;
 }
 
 h3, .h3 {
@@ -134,52 +136,57 @@ h3, .h3 {
   line-height: 1.4;
   font-weight: 600;
   letter-spacing: -0.01em;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  font-family: 'Montserrat', sans-serif;
 }
 
 h4, .h4 {
   font-size: 1.25rem;
   line-height: 1.5;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-family: 'Montserrat', sans-serif;
 }
 
 p, .body {
   font-size: 1rem;
   line-height: 1.6;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  font-family: 'Inter', sans-serif;
 }
 
 .small {
   font-size: 0.875rem;
-  line-height: 1.4;
+  line-height: 1.5;
+  font-family: 'Inter', sans-serif;
 }
 
 .micro {
   font-size: 0.75rem;
-  line-height: 1.3;
+  line-height: 1.4;
   letter-spacing: 0.02em;
+  font-family: 'Inter', sans-serif;
 }
 
-/* Enhanced spacing system */
+/* Improved spacing system */
 .space-xs {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.625rem;
 }
 
 .space-sm {
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .space-md {
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .space-lg {
-  margin-bottom: 2.5rem;
+  margin-bottom: 3rem;
 }
 
 .space-xl {
-  margin-bottom: 4rem;
+  margin-bottom: 5rem;
 }
 
 /* Enhanced interactive elements */
@@ -207,10 +214,82 @@ p, .body {
   transform-origin: left;
 }
 
-/* Focus states */
+/* Focus states with improved accessibility */
 :focus-visible {
   outline: 2px solid rgba(255, 158, 44, 0.5);
-  outline-offset: 2px;
+  outline-offset: 3px;
   border-radius: 2px;
+  box-shadow: 0 0 0 4px rgba(255, 158, 44, 0.15);
 }
 
+/* Container layout improvements */
+.container {
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1280px;
+  }
+}
+
+/* Added these utility classes for consistent section spacing */
+.section {
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding-top: 6rem;
+    padding-bottom: 6rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .section {
+    padding-top: 8rem;
+    padding-bottom: 8rem;
+  }
+}
+
+/* Added consistent flex layout classes */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-col-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
