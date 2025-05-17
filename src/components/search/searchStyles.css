@@ -37,14 +37,15 @@
   font-weight: 600;
 }
 
-/* Adding animation for color change effect - faster 300ms timing */
+/* Enhanced color-changing text with smoother gradient transition */
 .color-changing-text {
-  background: linear-gradient(-45deg, #FF9E2C, #FFC547, #34D3EB, #FF9E2C);
+  background: linear-gradient(-45deg, #FF9E2C, #FFC547, #FF7D3C, #FF9E2C);
   background-size: 300% 300%;
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: gradient-animation 1s ease infinite;
+  animation: gradient-animation 3s ease infinite;
+  text-shadow: 0 2px 10px rgba(255, 158, 44, 0.2);
 }
 
 @keyframes gradient-animation {
@@ -53,33 +54,46 @@
   100% { background-position: 0% 50% }
 }
 
-/* Glowing button effect */
+/* Enhanced glowing button effect with pulsation */
 .glow-button {
   box-shadow: 0 0 10px rgba(255, 158, 44, 0.5), 0 0 20px rgba(255, 158, 44, 0.3);
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  overflow: hidden;
 }
 
 .glow-button:hover {
   box-shadow: 0 0 15px rgba(255, 158, 44, 0.7), 0 0 30px rgba(255, 158, 44, 0.5);
+  transform: translateY(-2px);
 }
 
-/* Glass card effect */
+.glow-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 0 8px rgba(255, 158, 44, 0.6);
+}
+
+/* Improved glass card effect with more depth and refined border */
 .glass-card {
   background: rgba(255, 158, 44, 0.05);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 158, 44, 0.2);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.15),
+    0 2px 8px rgba(255, 158, 44, 0.08);
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .glass-card:hover {
   background: rgba(255, 158, 44, 0.1);
   border: 1px solid rgba(255, 158, 44, 0.3);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+  box-shadow: 
+    0 12px 36px rgba(0, 0, 0, 0.18),
+    0 4px 12px rgba(255, 158, 44, 0.12);
+  transform: translateY(-4px);
 }
 
-/* Fiery spark effect */
+/* Fiery spark effect with enhanced appearance */
 .fiery-spark {
   position: absolute;
   pointer-events: none;
@@ -87,7 +101,7 @@
   filter: drop-shadow(0 0 5px rgba(255, 158, 44, 0.8));
 }
 
-/* Updated spark animation for dynamic movement */
+/* Updated spark animation for more dynamic movement */
 @keyframes spark-float {
   0% {
     opacity: 0;
@@ -107,22 +121,38 @@
   }
 }
 
-/* Ember glow effect for search button */
+/* Improved ember glow effect for search button */
 .ember-glow {
-  box-shadow: 0 0 10px rgba(255, 158, 44, 0.7), 0 0 20px rgba(255, 69, 0, 0.4);
-  animation: ember-pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 15px rgba(255, 158, 44, 0.7), 0 0 25px rgba(255, 69, 0, 0.4);
+  animation: ember-pulse 2.5s ease-in-out infinite;
+  position: relative;
+}
+
+.ember-glow::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, rgba(255,158,44,0.5), rgba(255,69,0,0.2));
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.ember-glow:hover::before {
+  opacity: 1;
 }
 
 @keyframes ember-pulse {
   0%, 100% {
-    box-shadow: 0 0 10px rgba(255, 158, 44, 0.7), 0 0 20px rgba(255, 69, 0, 0.4);
+    box-shadow: 0 0 15px rgba(255, 158, 44, 0.7), 0 0 25px rgba(255, 69, 0, 0.4);
   }
   50% {
-    box-shadow: 0 0 15px rgba(255, 158, 44, 0.9), 0 0 30px rgba(255, 69, 0, 0.6);
+    box-shadow: 0 0 25px rgba(255, 158, 44, 0.9), 0 0 35px rgba(255, 69, 0, 0.6);
   }
 }
 
-/* Search transition animation */
+/* Improved search transition animation components */
 .transition-orb {
   width: 160px;
   height: 160px;
@@ -138,6 +168,107 @@
     inset 0 0 30px rgba(255, 255, 255, 0.1);
 }
 
+/* Enhanced glow particle */
 .glow-particle {
   box-shadow: 0 0 15px rgba(255, 158, 44, 0.7);
+  background: radial-gradient(circle at center, rgba(255, 245, 230, 1), rgba(255, 158, 44, 0.8));
+}
+
+/* New styles for enhanced typography */
+.heading-xl {
+  font-size: 2.5rem;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.heading-lg {
+  font-size: 2rem;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+/* Card style enhancements */
+.result-card-enhanced {
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.result-card-enhanced::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(45deg, rgba(255,158,44,0.6), rgba(255,69,0,0.3));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.result-card-enhanced:hover::after {
+  opacity: 1;
+}
+
+/* Button hover effects */
+.button-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.button-ripple span {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transform: scale(0);
+  animation: ripple 0.6s linear;
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Enhanced hover effect for search input */
+.search-input-enhanced:focus-within {
+  transform: scale(1.01);
+  box-shadow: 
+    0 0 0 2px rgba(255, 158, 44, 0.3),
+    0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Enhanced progress indicator */
+.progress-indicator {
+  height: 4px;
+  background: linear-gradient(90deg, rgba(255,158,44,0.3), rgba(255,98,0,0.5));
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-indicator::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: progress-shine 1.5s infinite;
+}
+
+@keyframes progress-shine {
+  0% {
+    left: -50%;
+  }
+  100% {
+    left: 150%;
+  }
 }
