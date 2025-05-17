@@ -79,7 +79,7 @@
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
 }
 
-/* Enhanced particle effects with varying sizes and colors */
+/* Fiery spark effect */
 .fiery-spark {
   position: absolute;
   pointer-events: none;
@@ -87,33 +87,7 @@
   filter: drop-shadow(0 0 5px rgba(255, 158, 44, 0.8));
 }
 
-.spark-small {
-  width: 3px;
-  height: 3px;
-}
-
-.spark-medium {
-  width: 5px;
-  height: 5px;
-}
-
-.spark-large {
-  width: 8px;
-  height: 8px;
-}
-
-/* Explosion particle effect */
-.explosion-particle {
-  filter: drop-shadow(0 0 8px rgba(255, 158, 44, 0.9));
-  animation: particle-pulse 0.8s ease-out infinite alternate;
-}
-
-@keyframes particle-pulse {
-  from { opacity: 0.6; }
-  to { opacity: 1; }
-}
-
-/* Updated spark animations for dynamic movement */
+/* Updated spark animation for dynamic movement */
 @keyframes spark-float {
   0% {
     opacity: 0;
@@ -130,99 +104,6 @@
   100% {
     opacity: 0;
     transform: translateY(-50px) translateX(15px) scale(0.2);
-  }
-}
-
-@keyframes spark-float-alt {
-  0% {
-    opacity: 0;
-    transform: translateY(0) translateX(0) rotate(0deg) scale(0.2);
-  }
-  20% {
-    opacity: 1;
-    transform: translateY(-15px) translateX(-8px) rotate(45deg) scale(0.7);
-  }
-  80% {
-    opacity: 0.8;
-    transform: translateY(-40px) translateX(-15px) rotate(90deg) scale(0.9);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-60px) translateX(-20px) rotate(120deg) scale(0.1);
-  }
-}
-
-/* Orbiting animation for particles */
-@keyframes orbit {
-  0% {
-    transform: rotate(0deg) translateX(70px) rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg) translateX(70px) rotate(-360deg);
-  }
-}
-
-@keyframes orbit-alt {
-  0% {
-    transform: rotate(0deg) translateX(100px) rotate(0deg);
-  }
-  100% {
-    transform: rotate(-360deg) translateX(100px) rotate(360deg);
-  }
-}
-
-/* 3D depth effect styles */
-.depth-shadow {
-  box-shadow: 
-    0 10px 30px rgba(0, 0, 0, 0.4),
-    0 15px 45px rgba(255, 158, 44, 0.1);
-  transform-style: preserve-3d;
-}
-
-.depth-layer {
-  position: absolute;
-  transform: translateZ(0px);
-  transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.depth-1 { transform: translateZ(10px); }
-.depth-2 { transform: translateZ(20px); }
-.depth-3 { transform: translateZ(30px); }
-
-/* Circular progress indicator */
-.circular-progress {
-  position: relative;
-  transform: rotate(-90deg);
-}
-
-.progress-circle-bg {
-  fill: none;
-  stroke: rgba(255, 158, 44, 0.2);
-}
-
-.progress-circle {
-  fill: none;
-  stroke: rgba(255, 158, 44, 0.8);
-  stroke-linecap: round;
-  stroke-dashoffset: 0;
-  transition: stroke-dashoffset 0.5s ease;
-}
-
-/* Text animation enhancements */
-.text-reveal {
-  display: inline-block;
-  overflow: hidden;
-}
-
-.text-reveal span {
-  display: inline-block;
-  transform: translateY(100%);
-  animation: text-slide-up 0.8s forwards cubic-bezier(0.075, 0.82, 0.165, 1);
-}
-
-@keyframes text-slide-up {
-  to {
-    transform: translateY(0);
   }
 }
 
@@ -255,60 +136,8 @@
     0 0 30px rgba(255, 158, 44, 0.4),
     0 0 60px rgba(255, 158, 44, 0.2),
     inset 0 0 30px rgba(255, 255, 255, 0.1);
-  transform-style: preserve-3d;
-  perspective: 1000px;
 }
 
 .glow-particle {
   box-shadow: 0 0 15px rgba(255, 158, 44, 0.7);
-}
-
-/* 3D floating effect */
-.floating {
-  animation: floating 3s ease-in-out infinite;
-  transform-style: preserve-3d;
-}
-
-@keyframes floating {
-  0%, 100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-10px) rotate(2deg);
-  }
-}
-
-/* Text Character Animation */
-.animated-character {
-  display: inline-block;
-  opacity: 0;
-  transform: translateY(10px);
-  animation: character-appear 0.4s forwards;
-}
-
-@keyframes character-appear {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Circular loader animation */
-.circular-loader {
-  stroke-dasharray: 283;
-  animation: circle-loader 2.5s ease-in-out forwards;
-}
-
-@keyframes circle-loader {
-  0% {
-    stroke-dashoffset: 283;
-  }
-  100% {
-    stroke-dashoffset: 0;
-  }
-}
-
-/* Perspective container */
-.perspective-1000 {
-  perspective: 1000px;
 }
