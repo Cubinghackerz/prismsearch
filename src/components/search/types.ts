@@ -6,6 +6,7 @@ export interface SearchResult {
   snippet: string;
   source: string;
   relevance?: number; // Added relevance property for search ranking
+  engine?: string;    // Added engine property for search engine identification
 }
 
 export interface PopularSearch {
