@@ -7,6 +7,8 @@ export interface SearchResult {
   source: string;
   relevance?: number; // Added relevance property for search ranking
   engine?: string;    // Added engine property for search engine identification
+  category?: string;  // Added category property for filtering
+  date?: string;      // Added date property for sorting by recency
 }
 
 export interface PopularSearch {

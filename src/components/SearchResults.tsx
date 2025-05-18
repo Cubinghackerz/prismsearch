@@ -28,7 +28,7 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
   // Get all unique sources/engines
   const engines = Array.from(new Set(results.map(result => result.source)));
   
-  // Get unique categories for filtering
+  // Get unique categories for filtering - handle cases where category may be undefined
   const categories = Array.from(new Set(results.map(result => result.category || 'Uncategorized')));
 
   // Toggle engine collapse
@@ -48,17 +48,17 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
     );
   };
 
-  // Filter results based on selected filters
+  // Filter results based on selected filters - safely handle undefined category
   const filteredResults = selectedFilters.length > 0
     ? results.filter(result => selectedFilters.includes(result.category || 'Uncategorized'))
     : results;
 
-  // Sort results
+  // Sort results - safely handle undefined date
   const sortedResults = [...filteredResults].sort((a, b) => {
-    if (sortBy === 'recent') {
-      return new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime();
+    if (sortBy === 'recent' && a.date && b.date) {
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
     }
-    return 0; // Default to API-provided relevance
+    return (b.relevance || 0) - (a.relevance || 0); // Default to API-provided relevance
   });
 
   // Group results by engine
