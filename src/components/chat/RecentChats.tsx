@@ -24,7 +24,7 @@ const RecentChats = () => {
     const fetchChatHistory = async () => {
       setIsLoading(true);
       try {
-        // Check if there are any messages in the database for each chat_id
+        // Get distinct chat_ids and the most recent message as preview
         const { data, error } = await supabase
           .from('chat_messages')
           .select('chat_id, created_at, content')
@@ -66,16 +66,11 @@ const RecentChats = () => {
 
     fetchChatHistory();
     
-    // Set up a listener for database changes to update the history in real-time
+    // Set up a listener for new messages to update the history
     const channel = supabase
       .channel('chat_updates')
       .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'chat_messages',
-          // No filter on chat_id so we catch all changes including deletions
-        }, 
+        { event: '*', schema: 'public', table: 'chat_messages' }, 
         () => {
           fetchChatHistory();
         }
@@ -94,15 +89,11 @@ const RecentChats = () => {
   const handleDeleteChat = async (chatId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     
-    try {
-      // Use the deleteChat function from context
-      await deleteChat(chatId);
-      
-      // Remove from local state immediately for better UX
-      setChatHistory(prev => prev.filter(chat => chat.id !== chatId));
-    } catch (error) {
-      console.error('Error deleting chat:', error);
-    }
+    // Use the deleteChat function from context
+    await deleteChat(chatId);
+    
+    // Remove from local state immediately for better UX
+    setChatHistory(prev => prev.filter(chat => chat.id !== chatId));
   };
 
   const formatDate = (dateString: string) => {

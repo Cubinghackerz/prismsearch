@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useChat, ChatModel } from '@/context/ChatContext';
 import { useToast } from '@/hooks/use-toast';
 import ModelSelector from './ModelSelector';
@@ -22,14 +22,6 @@ const ChatInterface = () => {
   
   const { toast } = useToast();
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  
-  // Handle chat existance checking
-  useEffect(() => {
-    if (chatId && messages.length === 0) {
-      // This might be a deleted chat that was loaded from URL or localStorage
-      // The loadChatById function now handles this case
-    }
-  }, [chatId, messages]);
   
   const handleSubmit = async (content: string, parentMessageId: string | null = null) => {
     if (!content.trim() || isLoading) return;
@@ -71,7 +63,7 @@ const ChatInterface = () => {
             />
           </div>
 
-          {chatId && messages.length > 0 ? (
+          {chatId ? (
             <>
               <MessageList 
                 messages={messages}
