@@ -16,7 +16,8 @@ const ChatInterface = () => {
     isTyping,
     startNewChat,
     selectModel,
-    selectedModel
+    selectedModel,
+    chatId
   } = useChat();
   
   const { toast } = useToast();
@@ -62,19 +63,38 @@ const ChatInterface = () => {
             />
           </div>
 
-          <MessageList 
-            messages={messages}
-            isTyping={isTyping}
-            onReplyClick={handleReplyClick}
-          />
+          {chatId ? (
+            <>
+              <MessageList 
+                messages={messages}
+                isTyping={isTyping}
+                onReplyClick={handleReplyClick}
+              />
 
-          <MessageInput 
-            onSendMessage={handleSubmit}
-            isLoading={isLoading}
-            messages={messages}
-            replyingTo={replyingTo}
-            setReplyingTo={setReplyingTo}
-          />
+              <MessageInput 
+                onSendMessage={handleSubmit}
+                isLoading={isLoading}
+                messages={messages}
+                replyingTo={replyingTo}
+                setReplyingTo={setReplyingTo}
+              />
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center p-5">
+              <div className="text-center max-w-md mx-auto p-6 rounded-lg bg-orange-950/20 border border-orange-500/20">
+                <h3 className="text-xl font-semibold text-orange-100 mb-3">Welcome to Prism Chat</h3>
+                <p className="text-orange-200 mb-4">
+                  Choose a recent chat from the sidebar or start a new conversation to begin.
+                </p>
+                <button 
+                  onClick={startNewChat}
+                  className="px-4 py-2 bg-orange-600/60 hover:bg-orange-600/80 text-white rounded-md transition-colors"
+                >
+                  Start New Chat
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

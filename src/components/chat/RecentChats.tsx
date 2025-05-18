@@ -17,7 +17,7 @@ const RecentChats = () => {
   const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
   const [isExpanded, setIsExpanded] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const { startNewChat, loadChatById } = useChat();
+  const { startNewChat, loadChatById, deleteChat, chatId } = useChat();
 
   // Fetch chat history from Supabase
   useEffect(() => {
@@ -86,24 +86,14 @@ const RecentChats = () => {
     loadChatById(chatId);
   };
 
-  const deleteChatHistory = async (chatId: string, e: React.MouseEvent) => {
+  const handleDeleteChat = async (chatId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    try {
-      const { error } = await supabase
-        .from('chat_messages')
-        .delete()
-        .eq('chat_id', chatId);
-        
-      if (error) {
-        console.error('Error deleting chat:', error);
-        return;
-      }
-      
-      // Remove from local state
-      setChatHistory(prev => prev.filter(chat => chat.id !== chatId));
-    } catch (e) {
-      console.error('Error deleting chat:', e);
-    }
+    
+    // Use the deleteChat function from context
+    await deleteChat(chatId);
+    
+    // Remove from local state immediately for better UX
+    setChatHistory(prev => prev.filter(chat => chat.id !== chatId));
   };
 
   const formatDate = (dateString: string) => {
@@ -160,7 +150,7 @@ const RecentChats = () => {
                 {chatHistory.map((chat) => (
                   <div 
                     key={chat.id}
-                    className="p-3 border-t border-orange-500/10 hover:bg-orange-500/10 cursor-pointer flex justify-between items-start transition-colors"
+                    className={`p-3 border-t border-orange-500/10 hover:bg-orange-500/10 cursor-pointer flex justify-between items-start transition-colors ${chatId === chat.id ? 'bg-orange-500/20' : ''}`}
                     onClick={() => handleChatSelect(chat.id)}
                   >
                     <div className="flex-1">
@@ -171,7 +161,7 @@ const RecentChats = () => {
                       variant="ghost"
                       size="icon"
                       className="h-6 w-6 text-orange-300/40 hover:text-orange-300/80 hover:bg-orange-500/20"
-                      onClick={(e) => deleteChatHistory(chat.id, e)}
+                      onClick={(e) => handleDeleteChat(chat.id, e)}
                     >
                       <Trash2 size={14} />
                     </Button>

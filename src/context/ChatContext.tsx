@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,6 +30,7 @@ interface ChatContextType {
   startNewChat: () => void;
   selectModel: (model: ChatModel) => void;
   loadChatById: (chatId: string) => Promise<void>;
+  deleteChat: (chatId: string) => Promise<void>; // New function to delete a chat
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -274,6 +274,47 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Delete a chat and its messages
+  const deleteChat = async (id: string) => {
+    try {
+      // Delete all messages for this chat from Supabase
+      const { error } = await supabase
+        .from('chat_messages')
+        .delete()
+        .eq('chat_id', id);
+        
+      if (error) {
+        console.error('Error deleting chat messages:', error);
+        toast({
+          variant: "destructive",
+          title: "Failed to delete chat",
+          description: "There was an error deleting the chat history.",
+          duration: 3000,
+        });
+        return;
+      }
+
+      // If we're deleting the currently active chat, start a new chat
+      if (chatId === id) {
+        startNewChat();
+      }
+
+      toast({
+        title: "Chat Deleted",
+        description: "The chat history has been deleted.",
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error('Failed to delete chat:', error);
+      toast({
+        variant: "destructive",
+        title: "Failed to delete chat",
+        description: "There was an error deleting the chat history.",
+        duration: 3000,
+      });
+    }
+  };
+
   // Send a message to the AI
   const sendMessage = async (content: string, parentMessageId?: string) => {
     if (!content.trim()) return;
@@ -355,6 +396,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       startNewChat,
       selectModel,
       loadChatById,
+      deleteChat, // Add the new function to the context
     }}>
       {children}
     </ChatContext.Provider>
