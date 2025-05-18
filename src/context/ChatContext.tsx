@@ -30,7 +30,7 @@ interface ChatContextType {
   startNewChat: () => void;
   selectModel: (model: ChatModel) => void;
   loadChatById: (chatId: string) => Promise<void>;
-  deleteChat: (chatId: string) => Promise<void>; // New function to delete a chat
+  deleteChat: (chatId: string) => Promise<void>;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -155,8 +155,35 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   
   // Load a specific chat by ID
   const loadChatById = async (id: string) => {
-    setChatId(id);
     try {
+      // First check if the chat exists by querying for messages
+      const { data: checkData, error: checkError } = await supabase
+        .from('chat_messages')
+        .select('id')
+        .eq('chat_id', id)
+        .limit(1);
+      
+      if (checkError) {
+        console.error('Error checking chat existence:', checkError);
+        toast({
+          variant: "destructive",
+          title: "Failed to load chat",
+          description: "There was an error checking if the chat exists.",
+          duration: 3000,
+        });
+        return;
+      }
+      
+      // If no messages found for this chat_id, it means the chat was deleted
+      if (!checkData || checkData.length === 0) {
+        console.log('Chat not found, starting new chat');
+        startNewChat();
+        return;
+      }
+      
+      // Chat exists, load its messages
+      setChatId(id);
+      
       const { data, error } = await supabase
         .from('chat_messages')
         .select('*')
@@ -291,7 +318,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           description: "There was an error deleting the chat history.",
           duration: 3000,
         });
-        return;
+        throw error; // Re-throw to be caught by the caller
       }
 
       // If we're deleting the currently active chat, start a new chat
@@ -312,6 +339,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         description: "There was an error deleting the chat history.",
         duration: 3000,
       });
+      throw error; // Re-throw to be caught by the caller
     }
   };
 
@@ -396,7 +424,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       startNewChat,
       selectModel,
       loadChatById,
-      deleteChat, // Add the new function to the context
+      deleteChat,
     }}>
       {children}
     </ChatContext.Provider>
