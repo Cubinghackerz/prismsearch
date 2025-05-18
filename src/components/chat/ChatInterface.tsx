@@ -39,10 +39,10 @@ const ChatInterface = () => {
     <div className="flex flex-col h-full bg-orange-950/20 backdrop-blur-md rounded-xl border border-orange-500/30 shadow-lg">
       <div className="flex flex-1 overflow-hidden">
         {/* Left sidebar with recent chats */}
-        <div className="w-72 p-3 border-r border-orange-500/20 bg-orange-900/5 hidden md:block overflow-y-auto">
+        <div className="w-64 p-2 border-r border-orange-500/20 bg-orange-900/5 hidden md:block overflow-y-auto">
           <RecentChats />
           
-          <div className="mt-4">
+          <div className="mt-3">
             <ModelSelector 
               selectedModel={selectedModel}
               onModelChange={handleModelChange}
@@ -54,7 +54,7 @@ const ChatInterface = () => {
         {/* Main chat area */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Mobile-only model selector */}
-          <div className="md:hidden">
+          <div className="md:hidden border-b border-orange-500/20 bg-orange-900/5">
             <ModelSelector 
               selectedModel={selectedModel}
               onModelChange={handleModelChange}

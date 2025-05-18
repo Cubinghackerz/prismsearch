@@ -17,38 +17,36 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
   onNewChat 
 }) => {
   return (
-    <div className="p-4 border-b border-blue-900/40">
-      <Alert className="mb-4 bg-blue-500/10 border-blue-500/50 text-blue-300">
-        <p className="text-sm">
-          Chat mode is experimental and may be unstable. We appreciate your patience as we improve it.
+    <div className="p-3 border-b border-orange-500/40">
+      <Alert className="mb-3 py-2 bg-orange-500/10 border-orange-500/30 text-orange-200 text-xs">
+        <p>
+          Select your preferred AI model below
         </p>
       </Alert>
       
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium text-blue-300">Select AI Model:</label>
+        <label className="text-xs font-medium text-orange-300">Select AI Model:</label>
         <RadioGroup 
           defaultValue={selectedModel} 
           value={selectedModel} 
           onValueChange={onModelChange} 
-          className="grid grid-cols-1 md:grid-cols-3 gap-3"
+          className="grid grid-cols-1 gap-2"
         >
           <div className="relative flex items-center">
             <RadioGroupItem value="mistral" id="mistral" className="peer sr-only" />
             <label 
               htmlFor="mistral" 
-              className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${
+              className={`flex flex-col w-full p-2 border rounded-lg cursor-pointer transition-all duration-200 ${
                 selectedModel === 'mistral' 
-                  ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-400/50' 
-                  : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'
+                  ? 'bg-orange-600/30 border-orange-400 ring-1 ring-orange-400/50' 
+                  : 'bg-orange-900/20 border-orange-500/30 hover:bg-orange-800/20'
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-lg font-semibold text-blue-200">Mistral Medium</span>
-                <span className="px-2 py-1 text-xs bg-green-500/30 text-green-300 rounded-full">Recommended</span>
+                <span className="text-sm font-semibold text-orange-200">Mistral Medium</span>
+                <span className="px-1.5 py-0.5 text-[10px] bg-green-500/30 text-green-300 rounded-full">Recommended</span>
               </div>
-              <div className="flex items-center mt-1">
-                <span className="text-sm text-blue-300/70">Efficient AI assistant</span>
-              </div>
+              <span className="mt-1 text-xs text-orange-300/70">Efficient AI assistant</span>
             </label>
           </div>
 
@@ -56,17 +54,17 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
             <RadioGroupItem value="groq" id="groq" className="peer sr-only" />
             <label 
               htmlFor="groq" 
-              className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${
+              className={`flex flex-col w-full p-2 border rounded-lg cursor-pointer transition-all duration-200 ${
                 selectedModel === 'groq' 
-                  ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-400/50' 
-                  : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'
+                  ? 'bg-orange-600/30 border-orange-400 ring-1 ring-orange-400/50' 
+                  : 'bg-orange-900/20 border-orange-500/30 hover:bg-orange-800/20'
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-lg font-semibold text-blue-200">Llama-3-70B (Groq)</span>
-                <span className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">Fast</span>
+                <span className="text-sm font-semibold text-orange-200">Llama-3-70B</span>
+                <span className="px-1.5 py-0.5 bg-orange-500/20 text-orange-300 rounded-full text-[10px]">Fast</span>
               </div>
-              <span className="mt-1 text-sm text-blue-300/70">High-performance model</span>
+              <span className="mt-1 text-xs text-orange-300/70">High-performance model</span>
             </label>
           </div>
 
@@ -74,30 +72,30 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
             <RadioGroupItem value="gemini" id="gemini" className="peer sr-only" />
             <label 
               htmlFor="gemini" 
-              className={`flex flex-col w-full p-4 border rounded-lg cursor-pointer transition-all duration-200 ${
+              className={`flex flex-col w-full p-2 border rounded-lg cursor-pointer transition-all duration-200 ${
                 selectedModel === 'gemini' 
-                  ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-400/50' 
-                  : 'bg-blue-900/20 border-blue-500/30 hover:bg-blue-800/20'
+                  ? 'bg-orange-600/30 border-orange-400 ring-1 ring-orange-400/50' 
+                  : 'bg-orange-900/20 border-orange-500/30 hover:bg-orange-800/20'
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-lg font-semibold text-blue-200">Gemini 2.5 Flash Preview</span>
-                <span className="px-2 py-1 text-xs bg-yellow-500/30 text-yellow-300 rounded-full">Fast and Accurate</span>
+                <span className="text-sm font-semibold text-orange-200">Gemini 2.5</span>
+                <span className="px-1.5 py-0.5 text-[10px] bg-yellow-500/30 text-yellow-300 rounded-full">Accurate</span>
               </div>
-              <span className="mt-1 text-sm text-blue-300/70">Google's latest AI model in the works</span>
+              <span className="mt-1 text-xs text-orange-300/70">Google's latest AI model</span>
             </label>
           </div>
         </RadioGroup>
       </div>
 
-      <div className="mt-4 flex justify-end">
+      <div className="mt-3 flex justify-end">
         <Button 
           variant="outline" 
           size="sm" 
           onClick={onNewChat} 
-          className="border-blue-500/50 text-blue-200 hover:border-blue-400/60 transition-all duration-300 bg-transparent"
+          className="border-orange-500/50 text-orange-200 hover:border-orange-400/60 transition-all duration-300 bg-transparent text-xs h-8"
         >
-          <RefreshCw className="mr-2 h-4 w-4" /> New Chat
+          <RefreshCw className="mr-1.5 h-3 w-3" /> New Chat
         </Button>
       </div>
     </div>
