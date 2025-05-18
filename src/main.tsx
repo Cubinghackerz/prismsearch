@@ -5,10 +5,10 @@ import App from './App.tsx'
 import './index.css'
 import './components/search/searchStyles.css'
 
-// Add Google Fonts for Montserrat and Inter
+// Add Google Fonts for Montserrat, Inter and Playfair Display
 const fontLinks = document.createElement('link');
 fontLinks.rel = 'stylesheet';
-fontLinks.href = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap';
+fontLinks.href = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap';
 document.head.appendChild(fontLinks);
 
 // Add meta tag for improved font rendering

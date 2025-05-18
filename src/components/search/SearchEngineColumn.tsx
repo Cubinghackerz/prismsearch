@@ -25,11 +25,15 @@ const SearchEngineColumn = ({ title, results, bgColor, hoverBorderColor }: Searc
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="bg-orange-900/10 backdrop-blur-sm rounded-xl p-4 border border-orange-500/20 shadow-lg"
+      className="bg-orange-900/10 backdrop-blur-sm rounded-xl p-4 border border-orange-500/20 shadow-lg hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300"
     >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <div className={`w-8 h-8 ${bgColor} rounded-full flex items-center justify-center`}>
+          <motion.div 
+            className={`w-8 h-8 ${bgColor} rounded-full flex items-center justify-center shadow-lg shadow-orange-900/20`}
+            whileHover={{ scale: 1.1 }}
+            transition={{ type: "spring", stiffness: 400, damping: 10 }}
+          >
             <img
               src={engineLogos[title] || ''}
               alt={`${title} logo`}
@@ -41,10 +45,10 @@ const SearchEngineColumn = ({ title, results, bgColor, hoverBorderColor }: Searc
                 target.parentElement!.innerHTML += `<span class="text-white font-bold">${title[0]}</span>`;
               }}
             />
-          </div>
-          <h3 className="text-lg font-semibold text-orange-100">{title}</h3>
+          </motion.div>
+          <h3 className="text-lg font-semibold text-orange-100 font-playfair">{title}</h3>
         </div>
-        <div className="text-sm text-orange-300">
+        <div className="text-sm text-orange-300 bg-orange-500/10 px-2 py-0.5 rounded-full">
           {results.length} {results.length === 1 ? 'Result' : 'Results'}
         </div>
       </div>
@@ -61,9 +65,14 @@ const SearchEngineColumn = ({ title, results, bgColor, hoverBorderColor }: Searc
           ))}
         </div>
       ) : (
-        <div className="text-center py-8 text-orange-300">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="text-center py-8 text-orange-300 bg-orange-500/5 rounded-lg border border-orange-500/10"
+        >
           No results from {title}
-        </div>
+        </motion.div>
       )}
     </motion.div>
   );

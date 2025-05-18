@@ -60,21 +60,23 @@ const AutocompleteDropdown = ({
       transition={{ duration: 0.15 }}
       className="absolute left-0 right-0 mt-2 z-50 bg-[#1A1F2C]/95 backdrop-blur-lg 
                 rounded-xl border border-orange-500/30 shadow-xl 
-                shadow-orange-900/20 py-2 autocomplete-dropdown"
+                shadow-orange-900/30 py-2 autocomplete-dropdown"
       role="listbox"
       aria-activedescendant={highlightedIndex >= 0 ? `suggestion-${highlightedIndex}` : undefined}
     >
       <ul className="divide-y divide-orange-500/10">
         {suggestions.map((suggestion, index) => (
-          <li
+          <motion.li
             id={`suggestion-${index}`}
             key={index}
             onClick={() => onSelectSuggestion(suggestion.text)}
-            className={`px-4 py-2 cursor-pointer text-gray-200 hover:bg-orange-500/20
-                      transition-colors duration-150 flex items-center autocomplete-item
-                      ${highlightedIndex === index ? 'bg-orange-500/30' : ''}`}
+            className={`px-4 py-2 cursor-pointer text-gray-200 hover:bg-orange-500/30
+                      transition-all duration-300 flex items-center autocomplete-item
+                      ${highlightedIndex === index ? 'bg-orange-500/30 border-l-2 border-orange-400' : ''}`}
             role="option"
             aria-selected={highlightedIndex === index}
+            whileHover={{ x: 5 }}
+            transition={{ type: "spring", stiffness: 300, damping: 10 }}
           >
             <div className="flex-1 flex items-center">
               {/* Show relevance score indicator if available */}
@@ -82,7 +84,7 @@ const AutocompleteDropdown = ({
                 <div 
                   className="w-1 h-6 mr-2 rounded-full" 
                   style={{ 
-                    backgroundColor: `rgba(255, 158, 44, ${Math.min(0.3 + suggestion.score * 0.7, 1)})`
+                    backgroundColor: `rgba(255, 158, 44, ${Math.min(0.4 + suggestion.score * 0.6, 1)})`
                   }}
                 />
               )}
@@ -104,18 +106,24 @@ const AutocompleteDropdown = ({
               {highlightMatch(suggestion.text, inputValue)}
             </div>
             
-            {/* Show popularity gauge */}
+            {/* Show popularity gauge with animation */}
             {suggestion.score && (
               <div className="ml-2 flex items-center">
-                <div className="w-8 h-1.5 bg-orange-900/30 rounded-full overflow-hidden">
-                  <div 
+                <motion.div 
+                  className="w-8 h-1.5 bg-orange-900/30 rounded-full overflow-hidden"
+                  whileHover={{ width: '12px', height: '12px' }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <motion.div 
                     className="h-full rounded-full bg-gradient-to-r from-orange-300 to-orange-500"
-                    style={{ width: `${Math.min(100, suggestion.score * 100)}%` }}
-                  ></div>
-                </div>
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min(100, suggestion.score * 100)}%` }}
+                    transition={{ duration: 0.5, delay: index * 0.05 }}
+                  ></motion.div>
+                </motion.div>
               </div>
             )}
-          </li>
+          </motion.li>
         ))}
       </ul>
     </motion.div>

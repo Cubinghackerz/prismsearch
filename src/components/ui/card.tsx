@@ -10,9 +10,11 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-xl border border-orange-500/20 bg-orange-500/5 text-card-foreground shadow-xl backdrop-blur-md transition-all duration-300 hover:shadow-orange-500/10 group relative overflow-hidden",
-      // Added subtle gradient overlay that appears on hover
-      "before:absolute before:inset-0 before:bg-gradient-to-br before:from-orange-400/5 before:to-transparent before:opacity-0 before:transition-opacity hover:before:opacity-100 before:pointer-events-none",
+      "rounded-xl border border-orange-500/20 bg-orange-500/5 text-card-foreground shadow-xl backdrop-blur-md transition-all duration-300 hover:shadow-orange-500/15 group relative overflow-hidden",
+      // Enhanced gradient overlay with improved subtlety
+      "before:absolute before:inset-0 before:bg-gradient-to-br before:from-orange-400/5 before:to-transparent before:opacity-0 before:transition-opacity before:duration-500 hover:before:opacity-100 before:pointer-events-none",
+      // Added floating animation on hover
+      "hover:translate-y-[-3px]",
       className
     )}
     {...props}
@@ -39,9 +41,9 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "text-2xl font-semibold leading-tight tracking-tight font-montserrat bg-clip-text text-transparent bg-gradient-to-r from-orange-300 via-orange-400 to-teal-400",
+      "text-2xl font-semibold leading-tight tracking-tight font-playfair bg-clip-text text-transparent bg-gradient-to-r from-orange-300 via-orange-400 to-teal-400",
       // Enhanced underline effect with improved spacing and transition
-      "relative after:absolute after:bottom-0 after:left-0 after:w-16 after:h-[2px] after:bg-gradient-to-r after:from-orange-300 after:to-transparent after:opacity-0 after:translate-y-1 group-hover:after:opacity-60 group-hover:after:translate-y-0 after:transition-all after:duration-300",
+      "relative after:absolute after:bottom-0 after:left-0 after:w-16 after:h-[2px] after:bg-gradient-to-r after:from-orange-300 after:to-transparent after:opacity-0 after:translate-y-1 group-hover:after:opacity-60 group-hover:after:translate-y-0 after:transition-all after:duration-500",
       className
     )}
     {...props}
@@ -55,7 +57,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-orange-200/80 font-inter leading-relaxed", className)}
+    className={cn("text-sm text-orange-200/80 font-inter leading-relaxed tracking-wide", className)}
     {...props}
   />
 ))

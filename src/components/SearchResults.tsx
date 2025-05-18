@@ -1,6 +1,6 @@
 
 import { motion } from 'framer-motion';
-import { LayoutGrid } from 'lucide-react';
+import { LayoutGrid, Database } from 'lucide-react';
 import { SearchResult } from './search/types';
 import SearchEngineColumn from './search/SearchEngineColumn';
 import LoadingSkeleton from './search/LoadingSkeleton';
@@ -28,15 +28,25 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
 
   return (
     <div className="w-full max-w-[95vw] mx-auto mt-8 pb-12">
-      <div className="flex items-center justify-between mb-6">
+      <motion.div 
+        className="flex items-center justify-between mb-6"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <div className="flex items-center gap-2">
           <LayoutGrid className="h-5 w-5 text-orange-500" />
-          <h2 className="text-xl font-semibold text-orange-100">Search Results</h2>
+          <h2 className="text-xl font-semibold text-orange-100 font-playfair bg-clip-text text-transparent bg-gradient-to-r from-orange-300 to-orange-500">Search Results</h2>
         </div>
-        <div className="text-sm text-orange-400">
-          Found {results.length} results across all engines
-        </div>
-      </div>
+        <motion.div 
+          className="text-sm bg-orange-500/10 px-3 py-1 rounded-full text-orange-400 border border-orange-500/10 flex items-center gap-2"
+          whileHover={{ scale: 1.05 }}
+          transition={{ type: "spring", stiffness: 400, damping: 10 }}
+        >
+          <Database className="h-3 w-3" />
+          <span>Found {results.length} results across all engines</span>
+        </motion.div>
+      </motion.div>
       
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <SearchEngineColumn 

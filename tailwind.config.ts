@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -67,7 +66,7 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom brand colors - updated to match the new orange theme
+				// Custom brand colors - updated to match the refined orange theme
 				'prism-orange': '#FF9E2C',
 				'prism-light-orange': '#FFC547',
 				'prism-dark-orange': '#E58B28',
@@ -85,6 +84,7 @@ export default {
 			fontFamily: {
 				'montserrat': ['Montserrat', 'sans-serif'],
 				'inter': ['Inter', 'sans-serif'],
+				'playfair': ['Playfair Display', 'serif'],
 			},
 			keyframes: {
 				"accordion-down": {
@@ -132,6 +132,18 @@ export default {
 					"0%": { backgroundPosition: "0% 50%" },
 					"50%": { backgroundPosition: "100% 50%" },
 					"100%": { backgroundPosition: "0% 50%" }
+				},
+				"float": {
+					"0%, 100%": { transform: "translateY(0)" },
+					"50%": { transform: "translateY(-10px)" }
+				},
+				"pulse-glow": {
+					"0%, 100%": { boxShadow: "0 0 15px rgba(255,158,44,0.5)" },
+					"50%": { boxShadow: "0 0 25px rgba(255,158,44,0.8)" }
+				},
+				"shimmer": {
+					"0%": { backgroundPosition: "-200% 0" },
+					"100%": { backgroundPosition: "200% 0" }
 				}
 			},
 			animation: {
@@ -145,6 +157,9 @@ export default {
 				'gradient-text': 'gradient-shift 3s ease infinite',
 				'gradient-border': 'gradient-border 4s ease infinite',
 				'gradient-slow': 'gradient-border 8s ease infinite',
+				"float": "float 5s ease-in-out infinite",
+				"pulse-glow": "pulse-glow 2s ease-in-out infinite",
+				"shimmer": "shimmer 3s linear infinite",
 			},
 			borderRadius: {
 				'2xl': '1rem',
