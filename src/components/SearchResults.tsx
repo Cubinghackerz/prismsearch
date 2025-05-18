@@ -36,10 +36,10 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
       >
         <div className="flex items-center gap-2">
           <LayoutGrid className="h-5 w-5 text-orange-500" />
-          <h2 className="text-xl font-semibold text-orange-100 font-playfair bg-clip-text text-transparent bg-gradient-to-r from-orange-300 to-orange-500">Search Results</h2>
+          <h2 className="text-xl font-semibold text-orange-100 font-inter">Search Results</h2>
         </div>
         <motion.div 
-          className="text-sm bg-orange-500/10 px-3 py-1 rounded-full text-orange-400 border border-orange-500/10 flex items-center gap-2"
+          className="text-sm bg-orange-500/10 px-3 py-1 rounded-full text-orange-300 border border-orange-500/10 flex items-center gap-2"
           whileHover={{ scale: 1.05 }}
           transition={{ type: "spring", stiffness: 400, damping: 10 }}
         >
@@ -48,7 +48,7 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
         </motion.div>
       </motion.div>
       
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <SearchEngineColumn 
           title="Google" 
           results={googleResults}

@@ -1,3 +1,223 @@
+/* Autocomplete styles with improved readability */
+.autocomplete-dropdown {
+  max-height: 250px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 158, 44, 0.5) rgba(30, 30, 40, 0.3);
+  border: 1px solid rgba(255, 158, 44, 0.3);
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2), 0 0 15px rgba(255, 158, 44, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.autocomplete-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-track {
+  background: rgba(30, 30, 40, 0.3);
+  border-radius: 8px;
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 158, 44, 0.6);
+  border-radius: 8px;
+  border: 2px solid rgba(30, 30, 40, 0.3);
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 158, 44, 0.8);
+}
+
+.autocomplete-item {
+  transition: all 0.3s ease;
+  border-left: 3px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.autocomplete-item:hover {
+  border-left-color: rgba(255, 158, 44, 0.8);
+  background-color: rgba(255, 158, 44, 0.15);
+}
+
+.autocomplete-item:active {
+  transform: translateY(1px);
+}
+
+.autocomplete-highlight {
+  background-color: rgba(255, 158, 44, 0.3);
+  padding: 0 3px;
+  border-radius: 4px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Color changing text effect with improved readability */
+.color-changing-text {
+  color: #FF9E2C;
+  animation: text-color-change 3s ease infinite;
+}
+
+@keyframes text-color-change {
+  0% { color: #FF9E2C; }
+  50% { color: #FFC547; }
+  100% { color: #FF9E2C; }
+}
+
+/* Enhanced Glowing button effect with improved visibility */
+.glow-button {
+  box-shadow: 
+    0 0 10px rgba(255, 158, 44, 0.6), 
+    0 0 20px rgba(255, 158, 44, 0.4),
+    inset 0 0 8px rgba(255, 255, 255, 0.25);
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: relative;
+  z-index: 1;
+}
+
+.glow-button:hover {
+  box-shadow: 
+    0 0 15px rgba(255, 158, 44, 0.8), 
+    0 0 30px rgba(255, 158, 44, 0.6),
+    inset 0 0 12px rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.glow-button:active {
+  transform: translateY(1px);
+  box-shadow: 
+    0 0 10px rgba(255, 158, 44, 0.5), 
+    0 0 20px rgba(255, 158, 44, 0.3),
+    inset 0 0 6px rgba(255, 255, 255, 0.2);
+}
+
+/* Enhanced Glass card effect with better readability */
+.glass-card {
+  background: rgba(255, 158, 44, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 158, 44, 0.25);
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  background: rgba(255, 158, 44, 0.1);
+  border: 1px solid rgba(255, 158, 44, 0.35);
+  box-shadow: 
+    0 15px 35px rgba(0, 0, 0, 0.2),
+    0 5px 12px rgba(255, 158, 44, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform: translateY(-3px);
+}
+
+/* Simplified spark effect */
+.fiery-spark {
+  position: absolute;
+  pointer-events: none;
+  z-index: 20;
+  filter: drop-shadow(0 0 4px rgba(255, 158, 44, 0.9));
+  opacity: 0;
+}
+
+/* Text reveal animation */
+@keyframes text-reveal {
+  0% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.text-reveal {
+  animation: text-reveal 0.5s forwards;
+  opacity: 0;
+}
+
+.text-reveal-1 {
+  animation-delay: 0.1s;
+}
+
+.text-reveal-2 {
+  animation-delay: 0.2s;
+}
+
+.text-reveal-3 {
+  animation-delay: 0.3s;
+}
+
+/* Enhanced button states */
+.btn-state-layer {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-color: currentColor;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.btn-hover:hover .btn-state-layer {
+  opacity: 0.08;
+}
+
+.btn-pressed:active .btn-state-layer {
+  opacity: 0.12;
+}
+
+/* Focus ring effect */
+.focus-ring {
+  position: relative;
+}
+
+.focus-ring:focus-visible::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  border: 2px solid rgba(255, 158, 44, 0.6);
+  animation: pulse-ring 1.5s infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+/* Refined checkbox animation */
+@keyframes checkbox-check {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.checkbox-anim:checked {
+  animation: checkbox-check 0.2s forwards;
+}
+
 /* Autocomplete styles */
 .autocomplete-dropdown {
   max-height: 250px;

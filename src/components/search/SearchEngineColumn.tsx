@@ -46,9 +46,9 @@ const SearchEngineColumn = ({ title, results, bgColor, hoverBorderColor }: Searc
               }}
             />
           </motion.div>
-          <h3 className="text-lg font-semibold text-orange-100 font-playfair">{title}</h3>
+          <h3 className="text-lg font-semibold text-orange-100 font-inter">{title}</h3>
         </div>
-        <div className="text-sm text-orange-300 bg-orange-500/10 px-2 py-0.5 rounded-full">
+        <div className="text-sm text-orange-300 bg-orange-500/15 px-2 py-0.5 rounded-full">
           {results.length} {results.length === 1 ? 'Result' : 'Results'}
         </div>
       </div>
@@ -69,7 +69,7 @@ const SearchEngineColumn = ({ title, results, bgColor, hoverBorderColor }: Searc
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="text-center py-8 text-orange-300 bg-orange-500/5 rounded-lg border border-orange-500/10"
+          className="text-center py-6 text-orange-300/90 bg-orange-500/5 rounded-lg border border-orange-500/10"
         >
           No results from {title}
         </motion.div>

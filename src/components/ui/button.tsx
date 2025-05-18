@@ -10,13 +10,14 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white shadow-lg shadow-orange-600/20 hover:shadow-orange-600/30 border border-orange-500/40 hover:border-orange-500/60 active:translate-y-0.5 active:shadow-sm after:absolute after:inset-0 after:bg-white/0 hover:after:bg-white/10 after:transition-colors",
-        destructive: "bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white shadow-lg shadow-red-600/20 hover:shadow-red-600/30 border border-red-500/40 hover:border-red-500/60 active:translate-y-0.5 active:shadow-sm",
+        default: "bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-600/20 hover:shadow-orange-600/30 border border-orange-500/40 hover:border-orange-600/60 active:translate-y-0.5 active:shadow-sm",
+        destructive: "bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/20 hover:shadow-red-600/30 border border-red-500/40 hover:border-red-600/60 active:translate-y-0.5 active:shadow-sm",
         outline: "border-2 border-orange-500/40 bg-transparent hover:bg-orange-500/15 text-orange-100 hover:border-orange-500/60 active:bg-orange-500/25 active:translate-y-0.5",
-        secondary: "bg-gradient-to-r from-teal-600 to-teal-800 hover:from-teal-500 hover:to-teal-700 text-white shadow-lg shadow-teal-600/20 hover:shadow-teal-600/30 border border-teal-500/40 hover:border-teal-500/60 active:translate-y-0.5 active:shadow-sm",
+        secondary: "bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-600/20 hover:shadow-teal-600/30 border border-teal-500/40 hover:border-teal-600/60 active:translate-y-0.5 active:shadow-sm",
         ghost: "hover:bg-orange-500/15 text-orange-100 hover:text-orange-50 active:bg-orange-500/25 active:translate-y-0.5",
         link: "text-orange-400 underline-offset-4 hover:underline hover:text-orange-300 after:content-[''] after:block after:w-full after:scale-x-0 after:h-0.5 after:bg-orange-300/60 after:transition-transform hover:after:scale-x-100 hover:after:transition-transform hover:after:duration-500",
-        gradient: "bg-gradient-to-r from-orange-400 via-orange-500 to-teal-400 hover:from-orange-500 hover:via-orange-600 hover:to-teal-500 text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 border-none active:translate-y-0.5 active:shadow-sm before:absolute before:inset-0 before:bg-white/0 hover:before:bg-white/15 before:transition-colors animate-shimmer bg-[length:200%_100%]",
+        // Simplified gradient for better readability
+        gradient: "bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 border-none active:translate-y-0.5 active:shadow-sm",
       },
       size: {
         default: "h-10 px-4 py-2",
