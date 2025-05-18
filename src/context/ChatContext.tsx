@@ -84,6 +84,42 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     
     loadUsageData();
   }, [toast]);
+
+  // Load chat messages from Supabase on initial load
+  useEffect(() => {
+    const loadMessages = async (currentChatId: string) => {
+      try {
+        const { data, error } = await supabase
+          .from('chat_messages')
+          .select('*')
+          .eq('chat_id', currentChatId)
+          .order('created_at', { ascending: true });
+
+        if (error) {
+          console.error('Error loading messages:', error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          const loadedMessages: ChatMessage[] = data.map(msg => ({
+            id: msg.id,
+            content: msg.content,
+            isUser: msg.is_user,
+            timestamp: new Date(msg.created_at),
+            parentMessageId: msg.parent_message_id || undefined,
+          }));
+          
+          setMessages(loadedMessages);
+        }
+      } catch (error) {
+        console.error('Failed to load messages:', error);
+      }
+    };
+
+    if (chatId) {
+      loadMessages(chatId);
+    }
+  }, [chatId]);
   
   // Start a new chat
   const startNewChat = () => {
@@ -135,9 +171,38 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  // Save message to Supabase
+  const saveMessageToSupabase = async (message: ChatMessage, currentChatId: string) => {
+    try {
+      const { error } = await supabase
+        .from('chat_messages')
+        .insert({
+          id: message.id,
+          chat_id: currentChatId,
+          content: message.content,
+          is_user: message.isUser,
+          parent_message_id: message.parentMessageId,
+          created_at: message.timestamp.toISOString(),
+          model: selectedModel,
+        });
+
+      if (error) {
+        console.error('Error saving message to Supabase:', error);
+      }
+    } catch (error) {
+      console.error('Failed to save message:', error);
+    }
+  };
+
   // Send a message to the AI
   const sendMessage = async (content: string, parentMessageId?: string) => {
     if (!content.trim()) return;
+    
+    // Initialize chat if needed
+    const currentChatId = chatId || uuidv4();
+    if (!chatId) {
+      setChatId(currentChatId);
+    }
     
     // Create a new message
     const userMessage: ChatMessage = {
@@ -152,13 +217,10 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     setIsTyping(true);
 
+    // Save user message to Supabase
+    await saveMessageToSupabase(userMessage, currentChatId);
+
     try {
-      // Initialize chat if needed
-      const currentChatId = chatId || uuidv4();
-      if (!chatId) {
-        setChatId(currentChatId);
-      }
-      
       // Call the AI function
       const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
         body: { 
@@ -186,6 +248,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         };
         
         setMessages(prev => [...prev, aiMessage]);
+        
+        // Save AI message to Supabase
+        await saveMessageToSupabase(aiMessage, currentChatId);
       } else {
         handleChatError("Received an empty response from the AI. Please try again.");
       }
@@ -197,14 +262,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       setIsTyping(false);
     }
   };
-
-  // Clear messages when component unmounts to make chats temporary
-  useEffect(() => {
-    return () => {
-      setMessages([]);
-      setChatId(null);
-    };
-  }, []);
 
   return (
     <ChatContext.Provider value={{

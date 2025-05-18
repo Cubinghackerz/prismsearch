@@ -1,6 +1,6 @@
 
 import { useState, KeyboardEvent, useRef, useEffect } from 'react';
-import { Search, X, Sparkles } from 'lucide-react';
+import { Search, X, Sparkles, History, Zap } from 'lucide-react';
 import LoadingAnimation from './LoadingAnimation';
 import AutocompleteDropdown from './search/AutocompleteDropdown';
 import { useAutocomplete } from '@/hooks/useAutocomplete';
@@ -31,9 +31,33 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
   
   const [isFocused, setIsFocused] = useState(false);
   const [sparkTrigger, setSparkTrigger] = useState(0); // Used to trigger new spark animations
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchBarRef = useRef<HTMLDivElement>(null);
+
+  // Load recent searches from localStorage
+  useEffect(() => {
+    const savedSearches = localStorage.getItem('prism_recent_searches');
+    if (savedSearches) {
+      try {
+        setRecentSearches(JSON.parse(savedSearches).slice(0, 5));
+      } catch (e) {
+        console.error('Error parsing recent searches', e);
+      }
+    }
+  }, []);
+
+  // Save recent search
+  const saveRecentSearch = (searchTerm: string) => {
+    const updatedSearches = [
+      searchTerm,
+      ...recentSearches.filter(s => s !== searchTerm)
+    ].slice(0, 5);
+    
+    setRecentSearches(updatedSearches);
+    localStorage.setItem('prism_recent_searches', JSON.stringify(updatedSearches));
+  };
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -76,6 +100,7 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
 
   const handleSearch = () => {
     if (query.trim()) {
+      saveRecentSearch(query.trim());
       onSearch(query);
     }
   };
@@ -96,7 +121,16 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
     
     // Then trigger the search with a slight delay to ensure state updates have completed
     setTimeout(() => {
+      saveRecentSearch(suggestion);
       onSearch(suggestion);
+    }, 10);
+  };
+
+  const handleRecentSearchClick = (term: string) => {
+    setInputValue(term);
+    setTimeout(() => {
+      onSearch(term);
+      saveRecentSearch(term);
     }, 10);
   };
 
@@ -145,6 +179,7 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
               onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
                 handleKeyDown(e);
                 if (e.key === 'Enter' && query.trim() && !isOpen) {
+                  saveRecentSearch(query.trim());
                   onSearch(query);
                 }
               }}
@@ -164,6 +199,21 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
               aria-controls="search-suggestions"
               aria-expanded={isOpen}
             />
+            
+            {/* Recent searches button */}
+            {!query && recentSearches.length > 0 && !isSearching && (
+              <button
+                onClick={() => setIsFocused(true)}
+                className="absolute right-28 h-8 flex items-center gap-1 px-2 py-1 text-sm text-orange-300/70 
+                  hover:text-orange-200 transition-all duration-300 rounded-full 
+                  hover:bg-orange-500/10 border border-transparent hover:border-orange-500/20"
+                aria-label="Show recent searches"
+              >
+                <History className="h-3 w-3" />
+                <span className="hidden sm:inline">Recent</span>
+              </button>
+            )}
+            
             {query && !isSearching && (
               <button
                 onClick={handleClear}
@@ -176,6 +226,7 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
                 <X className="h-4 w-4" />
               </button>
             )}
+            
             <button 
               onClick={handleSearch}
               disabled={isSearching || !query.trim()} 
@@ -247,6 +298,32 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
         {/* Dropdown suggestions container */}
         <div ref={dropdownRef} className="relative w-full">
           <AnimatePresence>
+            {isFocused && !query && recentSearches.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute w-full mt-2 z-50 bg-[#1A1F2C]/95 backdrop-blur-lg rounded-xl border border-orange-500/30 py-2 shadow-lg shadow-orange-900/20"
+              >
+                <div className="px-3 py-1 text-sm text-orange-200/70 flex items-center">
+                  <History className="h-4 w-4 mr-2" />
+                  <span>Recent Searches</span>
+                </div>
+                <div className="mt-1">
+                  {recentSearches.map((term, index) => (
+                    <div
+                      key={`recent-${index}`}
+                      className="px-4 py-2 text-orange-100 hover:bg-orange-500/10 cursor-pointer flex items-center"
+                      onClick={() => handleRecentSearchClick(term)}
+                    >
+                      <Zap className="h-3 w-3 mr-2 text-orange-400/70" />
+                      {term}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+            
             <AutocompleteDropdown
               suggestions={suggestions}
               isOpen={isOpen && isFocused}
