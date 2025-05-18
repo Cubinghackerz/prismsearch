@@ -1,34 +1,56 @@
 
-import React from 'react';
 import { motion } from 'framer-motion';
 import { Bot } from 'lucide-react';
-import LoadingAnimation from '../LoadingAnimation';
 
-const TypingIndicator: React.FC = () => {
+const TypingIndicator = () => {
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="flex gap-3"
-    >
+    <div className="flex items-start gap-3">
       <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center shrink-0">
         <Bot className="w-4 h-4 text-orange-400" />
       </div>
-      <motion.div
-        initial={{ scale: 0.95 }}
-        animate={{ scale: 1 }}
+      
+      <motion.div 
+        className="p-3 px-4 rounded-lg rounded-tl-none bg-orange-800/30 text-orange-100 shadow-md shadow-orange-900/10 max-w-[200px]"
+        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.2 }}
-        className="max-w-[80%] md:max-w-[75%] lg:max-w-[65%] rounded-lg p-4 bg-orange-800/40 text-orange-100 rounded-tl-none"
       >
-        <div className="flex items-center gap-1.5">
-          <span className="text-orange-300">Thinking</span>
-          <div className="ml-2">
-            <LoadingAnimation color="orange" size="small" />
-          </div>
+        <div className="flex items-center gap-1">
+          <motion.div
+            className="w-2 h-2 rounded-full bg-orange-300"
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{
+              duration: 1.2,
+              repeat: Infinity,
+              repeatType: 'loop',
+              times: [0, 0.5, 1]
+            }}
+          />
+          <motion.div
+            className="w-2 h-2 rounded-full bg-orange-300"
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{
+              duration: 1.2,
+              repeat: Infinity,
+              repeatType: 'loop',
+              delay: 0.2,
+              times: [0, 0.5, 1]
+            }}
+          />
+          <motion.div
+            className="w-2 h-2 rounded-full bg-orange-300"
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{
+              duration: 1.2,
+              repeat: Infinity,
+              repeatType: 'loop',
+              delay: 0.4,
+              times: [0, 0.5, 1]
+            }}
+          />
         </div>
       </motion.div>
-    </motion.div>
+    </div>
   );
 };
 

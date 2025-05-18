@@ -30,6 +30,7 @@ interface ChatContextType {
   sendMessage: (content: string, parentMessageId?: string) => Promise<void>;
   startNewChat: () => void;
   selectModel: (model: ChatModel) => void;
+  loadChatById: (chatId: string) => Promise<void>;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -85,7 +86,38 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     loadUsageData();
   }, [toast]);
 
-  // Load chat messages from Supabase on initial load
+  // Load most recent chat if no chat is active
+  useEffect(() => {
+    const loadMostRecentChat = async () => {
+      if (chatId) return; // Skip if we already have a chat loaded
+      
+      try {
+        const { data, error } = await supabase
+          .from('chat_messages')
+          .select('chat_id, created_at')
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (error) {
+          console.error('Error loading most recent chat:', error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          await loadChatById(data[0].chat_id);
+        } else {
+          // No chats found, start a new one
+          startNewChat();
+        }
+      } catch (error) {
+        console.error('Failed to load most recent chat:', error);
+      }
+    };
+
+    loadMostRecentChat();
+  }, []);
+
+  // Load chat messages from Supabase when chatId changes
   useEffect(() => {
     const loadMessages = async (currentChatId: string) => {
       try {
@@ -120,6 +152,54 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       loadMessages(chatId);
     }
   }, [chatId]);
+  
+  // Load a specific chat by ID
+  const loadChatById = async (id: string) => {
+    setChatId(id);
+    try {
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('chat_id', id)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error loading chat:', error);
+        toast({
+          variant: "destructive",
+          title: "Failed to load chat",
+          description: "There was an error loading the chat history.",
+          duration: 3000,
+        });
+        return;
+      }
+
+      if (data) {
+        const loadedMessages: ChatMessage[] = data.map(msg => ({
+          id: msg.id,
+          content: msg.content,
+          isUser: msg.is_user,
+          timestamp: new Date(msg.created_at),
+          parentMessageId: msg.parent_message_id || undefined,
+        }));
+        
+        setMessages(loadedMessages);
+        
+        // Also update the selected model to match the one used in this chat
+        if (data.length > 0 && data[0].model) {
+          setSelectedModel(data[0].model as ChatModel);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load chat:', error);
+      toast({
+        variant: "destructive",
+        title: "Failed to load chat",
+        description: "There was an error loading the chat history.",
+        duration: 3000,
+      });
+    }
+  };
   
   // Start a new chat
   const startNewChat = () => {
@@ -274,6 +354,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       sendMessage,
       startNewChat,
       selectModel,
+      loadChatById,
     }}>
       {children}
     </ChatContext.Provider>

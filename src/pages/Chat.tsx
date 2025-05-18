@@ -16,7 +16,7 @@ const Chat = () => {
       <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#1A1F2C] to-black">
         <ParticleBackground color="#FF9E2C" />
         
-        <header className="py-6 px-4 relative z-10 backdrop-blur-lg bg-[#1A1F2C]/70 border-b border-orange-500/20 sticky top-0">
+        <header className="py-4 px-4 relative z-10 backdrop-blur-lg bg-[#1A1F2C]/70 border-b border-orange-500/20 sticky top-0">
           <div className="container mx-auto">
             <motion.div 
               initial={{ opacity: 0, y: -20 }} 
@@ -43,7 +43,7 @@ const Chat = () => {
                 <motion.h1 
                   animate={{ backgroundPosition: ['0% 50%', '100% 50%'] }} 
                   transition={{ duration: 1, repeat: Infinity, repeatType: 'reverse' }} 
-                  className="font-montserrat font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-300 via-teal-300 to-orange-400 animate-gradient-text mb-2 text-4xl"
+                  className="font-montserrat font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-300 via-teal-300 to-orange-400 animate-gradient-text mb-0 text-3xl"
                 >
                   Prism Chat
                 </motion.h1>
@@ -54,12 +54,12 @@ const Chat = () => {
           </div>
         </header>
         
-        <main className="flex-1 px-4 container mx-auto max-w-[90vw] md:max-w-[90vw] lg:max-w-[90vw] relative py-8">
+        <main className="flex-1 px-3 container mx-auto max-w-[95vw] md:max-w-[90vw] lg:max-w-[90vw] relative py-5">
           <motion.p 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             transition={{ delay: 0.2 }} 
-            className="text-orange-200 max-w-lg mx-auto text-sm text-center mb-8"
+            className="text-orange-200 max-w-lg mx-auto text-sm text-center mb-5"
           >
             Chat with AI assistants powered by Gemini 2.5 Flash Preview, Mistral Medium and Llama-3-70B
           </motion.p>
@@ -68,9 +68,9 @@ const Chat = () => {
             initial={{ opacity: 0, y: 20 }} 
             animate={{ opacity: 1, y: 0 }} 
             transition={{ duration: 0.5 }} 
-            className="glass-card rounded-xl border border-orange-500/20 shadow-xl"
+            className="glass-card rounded-xl border border-orange-500/20 shadow-xl overflow-hidden"
           >
-            <ResizablePanelGroup direction="horizontal" className="min-h-[70vh]">
+            <ResizablePanelGroup direction="horizontal" className="min-h-[75vh]">
               <ResizablePanel defaultSize={100} minSize={75}>
                 <div className="h-full">
                   <ChatInterface />

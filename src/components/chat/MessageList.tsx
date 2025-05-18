@@ -74,20 +74,20 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, onReplyCl
     
     return (
       <div 
-        className="ml-11 mb-1 mt-1 flex items-center text-xs text-blue-300/50"
+        className="ml-11 mb-1 mt-1 flex items-center text-xs text-orange-300/50"
         style={{ marginLeft: `${2.75 + threadDepth * 0.5}rem` }}
       >
-        <div className="h-5 border-l-2 border-blue-500/30 mr-2"></div>
-        <Link2 className="h-3 w-3 mr-1 text-blue-400/40" />
+        <div className="h-5 border-l-2 border-orange-500/30 mr-2"></div>
+        <Link2 className="h-3 w-3 mr-1 text-orange-400/40" />
         <span>In reply to: "{parentMessage.content.substring(0, 30)}..."</span>
       </div>
     );
   };
   
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4 md:p-6 bg-gradient-to-b from-blue-950/10 to-blue-900/5">
+    <div className="flex-1 overflow-y-auto p-4 space-y-4 md:p-6 bg-gradient-to-b from-orange-950/10 to-orange-900/5">
       {messages.length === 0 ? (
-        <div className="h-full flex items-center justify-center text-blue-300/60">
+        <div className="h-full flex items-center justify-center text-orange-300/60">
           <p>Send a message to start chatting</p>
         </div>
       ) : messages.map((message, index) => (
@@ -106,8 +106,8 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, onReplyCl
             }}
           >
             {!message.isUser && (
-              <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
-                <Bot className="w-4 h-4 text-blue-400" />
+              <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center shrink-0">
+                <Bot className="w-4 h-4 text-orange-400" />
               </div>
             )}
             
@@ -118,10 +118,10 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, onReplyCl
               className={`
                 max-w-[80%] md:max-w-[75%] lg:max-w-[65%] rounded-lg p-3 relative 
                 ${message.isUser
-                  ? 'bg-blue-600/20 text-blue-100 rounded-tr-none shadow-md shadow-blue-900/10'
-                  : 'bg-blue-800/40 text-blue-100 rounded-tl-none shadow-md shadow-blue-900/10'
+                  ? 'bg-orange-600/20 text-orange-100 rounded-tr-none shadow-md shadow-orange-900/10'
+                  : 'bg-orange-800/30 text-orange-100 rounded-tl-none shadow-md shadow-orange-900/10'
                 }
-                ${hasReplies(message) ? 'border-l-2 border-blue-500/30' : ''}
+                ${hasReplies(message) ? 'border-l-2 border-orange-500/30' : ''}
               `}
             >
               <div className="flex justify-between items-start">
@@ -135,14 +135,14 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, onReplyCl
               </div>
               
               {/* Message timestamp */}
-              <div className="text-xs text-blue-300/50 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="text-xs text-orange-300/50 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </div>
             </motion.div>
             
             {message.isUser && (
-              <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
-                <User className="w-4 h-4 text-blue-400" />
+              <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center shrink-0">
+                <User className="w-4 h-4 text-orange-400" />
               </div>
             )}
           </motion.div>
