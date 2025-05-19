@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -27,7 +26,7 @@ const Chat = () => {
       <ParticleBackground color="#FF9E2C" />
       <ScrollToTop />
       
-      <header className="py-3 px-4 relative z-10">
+      <header className="py-4 px-4 relative z-10">
         <motion.div 
           initial={{ opacity: 0, y: -20 }} 
           animate={{ opacity: 1, y: 0 }} 
@@ -95,13 +94,15 @@ const Chat = () => {
         </motion.div>
       </header>
 
-      <main className="flex-1 container mx-auto max-w-[98vw] px-4 pt-4 pb-8">
+      <main className="flex-1 container mx-auto max-w-[98vw] px-4 pt-6">
         <ChatProvider>
           <ChatInterface />
         </ChatProvider>
       </main>
       
-      <Footer />
+      <footer>
+        <Footer />
+      </footer>
 
       <BookmarksDrawer 
         isOpen={isBookmarksOpen} 
