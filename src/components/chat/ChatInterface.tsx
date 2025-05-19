@@ -43,7 +43,7 @@ const ChatInterface = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-orange-950/20 backdrop-blur-md rounded-xl border border-orange-500/30 shadow-lg">
+    <div className="flex flex-col h-[calc(100vh-12rem)] bg-orange-950/20 backdrop-blur-md rounded-xl border border-orange-500/30 shadow-lg">
       <div className="flex flex-1 overflow-hidden">
         {/* Left sidebar with recent chats - desktop */}
         <AnimatePresence>
