@@ -155,7 +155,7 @@ const RecentChats = () => {
               </div> : <div className="p-4 text-center text-orange-300/70">Coming Soon</div>}
             
             <div className="p-2 border-t border-orange-500/10">
-              <Button variant="ghost" onClick={() => startNewChat()} className="w-full text-orange-300 hover:text-orange-200 hover:bg-orange-500/20 transition-all duration-300 bg-transparent text-xs">Start New Chat (Chat are temporary</Button>
+              <Button variant="ghost" onClick={() => startNewChat()} className="w-full text-orange-300 hover:text-orange-200 hover:bg-orange-500/20 transition-all duration-300 bg-transparent text-xs">Start New Chat (Chat are temporary)</Button>
             </div>
           </motion.div>}
       </AnimatePresence>
