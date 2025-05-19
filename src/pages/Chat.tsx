@@ -9,7 +9,6 @@ import ParticleBackground from '../components/ParticleBackground';
 import Footer from '../components/Footer';
 import BookmarksDrawer from '../components/BookmarksDrawer';
 import ScrollToTop from '../components/ScrollToTop';
-import { ChatProvider } from '../context/ChatContext';
 
 const Chat = () => {
   const [isBookmarksOpen, setIsBookmarksOpen] = useState(false);
@@ -94,9 +93,7 @@ const Chat = () => {
       </header>
 
       <main className="flex-1 container mx-auto max-w-[98vw] px-4">
-        <ChatProvider>
-          <ChatInterface />
-        </ChatProvider>
+        <ChatInterface />
       </main>
       
       <footer>
