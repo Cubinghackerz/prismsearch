@@ -176,7 +176,7 @@ const Index = () => {
           <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
             <Button variant="ghost" onClick={handleViewBookmarks} className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30 relative">
               <BookmarkPlus className="mr-2 h-4 w-4" />
-              {bookmarksCount > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center text-xs text-center font-normal my-[3px] px-0 py-[20px] mx-0">
+              {bookmarksCount > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center text-xs text-center font-normal my-[3px] px-0 py-px mx-[2px]">
                   {bookmarksCount}
                 </span>}
               <span className="hidden sm:inline">Bookmarks</span>
