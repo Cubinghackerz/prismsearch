@@ -34,24 +34,40 @@ const Chat = () => {
           transition={{ duration: 0.5 }} 
           className="text-center relative flex justify-between items-center max-w-7xl mx-auto"
         >
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }} 
-            animate={{ opacity: 1, x: 0 }} 
-            className="absolute left-4 top-1/2 -translate-y-1/2"
-          >
-            <Link to="/">
-              <Button 
-                variant="ghost" 
-                className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30"
-                size="sm"
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Home
-              </Button>
-            </Link>
-          </motion.div>
+          <div className="flex items-center gap-3">
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }} 
+              animate={{ opacity: 1, x: 0 }}
+            >
+              <Link to="/">
+                <Button 
+                  variant="ghost" 
+                  className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30"
+                  size="sm"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Home
+                </Button>
+              </Link>
+            </motion.div>
+            
+            <Button 
+              variant="ghost" 
+              onClick={() => setIsBookmarksOpen(true)}
+              className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30 relative"
+              size="sm"
+            >
+              <BookmarkPlus className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Bookmarks</span>
+              {bookmarksCount > 0 && (
+                <span className="absolute -top-2 -right-2 w-5 h-5 bg-orange-500 rounded-full text-xs flex items-center justify-center text-white">
+                  {bookmarksCount}
+                </span>
+              )}
+            </Button>
+          </div>
           
-          <div className="flex-1 flex justify-center items-center">
+          <div className="flex justify-center items-center">
             <Link to="/" className="flex items-center gap-2">
               <img 
                 src="/lovable-uploads/aeaad4a8-0dc2-4d4b-b2b3-cb248e0843db.png" 
@@ -76,21 +92,8 @@ const Chat = () => {
             </Link>
           </div>
 
-          <div className="absolute right-4 top-1/2 -translate-y-1/2">
-            <Button 
-              variant="ghost" 
-              onClick={() => setIsBookmarksOpen(true)}
-              className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30 relative"
-              size="sm"
-            >
-              <BookmarkPlus className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Bookmarks</span>
-              {bookmarksCount > 0 && (
-                <span className="absolute -top-2 -right-2 w-5 h-5 bg-orange-500 rounded-full text-xs flex items-center justify-center text-white">
-                  {bookmarksCount}
-                </span>
-              )}
-            </Button>
+          <div className="w-[120px]">
+            {/* Empty div for flex balance */}
           </div>
         </motion.div>
       </header>
