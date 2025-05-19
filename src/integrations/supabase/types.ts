@@ -18,7 +18,7 @@ export type Database = {
           is_user: boolean
           model: string
           parent_message_id: string | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           chat_id: string
@@ -28,7 +28,7 @@ export type Database = {
           is_user: boolean
           model: string
           parent_message_id?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Update: {
           chat_id?: string
@@ -38,7 +38,7 @@ export type Database = {
           is_user?: boolean
           model?: string
           parent_message_id?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {

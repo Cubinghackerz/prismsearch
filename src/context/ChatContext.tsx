@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,7 +31,7 @@ interface ChatContextType {
   startNewChat: () => void;
   selectModel: (model: ChatModel) => void;
   loadChatById: (chatId: string) => Promise<void>;
-  deleteChat: (chatId: string) => Promise<void>; // New function to delete a chat
+  deleteChat: (chatId: string) => Promise<void>;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -142,6 +143,10 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           }));
           
           setMessages(loadedMessages);
+        } else {
+          // No messages found for this chat ID, might be a deleted chat
+          console.log('No messages found for this chat ID:', currentChatId);
+          setMessages([]);
         }
       } catch (error) {
         console.error('Failed to load messages:', error);
@@ -155,8 +160,39 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   
   // Load a specific chat by ID
   const loadChatById = async (id: string) => {
-    setChatId(id);
     try {
+      // First check if this chat exists and has messages
+      const { data: chatExists, error: checkError } = await supabase
+        .from('chat_messages')
+        .select('id')
+        .eq('chat_id', id)
+        .limit(1);
+
+      if (checkError) {
+        console.error('Error checking chat existence:', checkError);
+        toast({
+          variant: "destructive",
+          title: "Failed to load chat",
+          description: "There was an error checking if this chat exists.",
+          duration: 3000,
+        });
+        return;
+      }
+
+      if (!chatExists || chatExists.length === 0) {
+        // Chat doesn't exist, probably deleted
+        toast({
+          variant: "destructive",
+          title: "Chat not found",
+          description: "This chat may have been deleted or doesn't exist.",
+          duration: 3000,
+        });
+        startNewChat();
+        return;
+      }
+
+      setChatId(id);
+      
       const { data, error } = await supabase
         .from('chat_messages')
         .select('*')
@@ -304,6 +340,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         description: "The chat history has been deleted.",
         duration: 2000,
       });
+      
+      // Return success to allow components to update their UI
+      return true;
     } catch (error) {
       console.error('Failed to delete chat:', error);
       toast({
@@ -312,6 +351,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         description: "There was an error deleting the chat history.",
         duration: 3000,
       });
+      return false;
     }
   };
 
@@ -396,7 +436,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       startNewChat,
       selectModel,
       loadChatById,
-      deleteChat, // Add the new function to the context
+      deleteChat,
     }}>
       {children}
     </ChatContext.Provider>
