@@ -8,7 +8,9 @@ interface SearchEngineColumnProps {
   results: SearchResult[];
   bgColor: string;
   hoverBorderColor: string;
-  showTitle?: boolean; // Added showTitle property
+  showTitle?: boolean;
+  viewMode?: 'grid' | 'list';
+  onBookmark?: (result: SearchResult) => void;
 }
 
 // Define logo URLs for each search engine with updated images
@@ -20,13 +22,25 @@ const engineLogos: Record<string, string> = {
   'You.com': '/lovable-uploads/3f6bf968-0fd9-4357-bc92-b18c07666134.png'
 };
 
-const SearchEngineColumn = ({ title, results, bgColor, hoverBorderColor, showTitle = true }: SearchEngineColumnProps) => {
+const SearchEngineColumn = ({ 
+  title, 
+  results, 
+  bgColor, 
+  hoverBorderColor, 
+  showTitle = true,
+  viewMode = 'grid',
+  onBookmark
+}: SearchEngineColumnProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="bg-orange-900/10 backdrop-blur-sm rounded-xl p-4 border border-orange-500/20 shadow-lg hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300"
+      className={`
+        bg-orange-900/10 backdrop-blur-sm rounded-xl p-4 border border-orange-500/20 
+        shadow-lg hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300
+        ${viewMode === 'list' ? 'w-full' : ''}
+      `}
     >
       {showTitle && (
         <div className="flex items-center justify-between mb-4">
@@ -57,13 +71,15 @@ const SearchEngineColumn = ({ title, results, bgColor, hoverBorderColor, showTit
       )}
 
       {results.length > 0 ? (
-        <div className="space-y-4">
+        <div className={viewMode === 'grid' ? "space-y-4" : "space-y-3"}>
           {results.map((result, index) => (
             <SearchResultCard
               key={result.id}
               result={result}
               index={index}
               hoverBorderColor={hoverBorderColor}
+              viewMode={viewMode}
+              onBookmark={onBookmark}
             />
           ))}
         </div>

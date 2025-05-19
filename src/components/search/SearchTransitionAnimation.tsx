@@ -10,6 +10,13 @@ interface SearchTransitionAnimationProps {
 
 const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimationProps) => {
   const [stage, setStage] = useState(0);
+  const [searchTips] = useState([
+    "Prism is searching across multiple engines...",
+    "Comparing results for relevance...",
+    "Finding the best matches for you...",
+    "Analyzing content across the web..."
+  ]);
+  const [currentTip, setCurrentTip] = useState(0);
   
   // Enhanced animation progression with better timing
   useEffect(() => {
@@ -20,10 +27,16 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
       setTimeout(() => onComplete(), 2600) // Trigger completion callback
     ];
     
+    // Rotate through search tips
+    const tipInterval = setInterval(() => {
+      setCurrentTip(prev => (prev + 1) % searchTips.length);
+    }, 1200);
+    
     return () => {
       stageTimers.forEach(timer => clearTimeout(timer));
+      clearInterval(tipInterval);
     };
-  }, [onComplete]);
+  }, [onComplete, searchTips]);
 
   // Function to create random spark animations
   const renderSparks = () => {
@@ -71,6 +84,15 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
       );
     });
   };
+
+  // Engine logos that will appear during the animation
+  const engineLogos = [
+    { name: 'Google', delay: 0.2 },
+    { name: 'Bing', delay: 0.4 },
+    { name: 'DuckDuckGo', delay: 0.6 },
+    { name: 'Brave', delay: 0.8 },
+    { name: 'You.com', delay: 1.0 }
+  ];
 
   return (
     <motion.div 
@@ -193,11 +215,11 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.5 }}
           >
-            Searching across all engines for
+            {searchTips[currentTip]}
           </motion.p>
           
           <motion.h2 
-            className="text-xl md:text-2xl font-bold color-changing-text"
+            className="text-xl md:text-2xl font-bold bg-gradient-to-r from-orange-200 via-orange-100 to-teal-100 bg-clip-text text-transparent"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.6 }}
@@ -224,23 +246,30 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
           />
         </motion.div>
         
-        {/* Added subtle search engine logos */}
+        {/* Search engine logos that will appear during the animation */}
         {stage >= 1 && (
           <motion.div 
-            className="absolute bottom-[-80px] flex space-x-6"
+            className="mt-12 flex space-x-6"
             initial={{ opacity: 0 }}
-            animate={{ opacity: stage >= 3 ? 0 : 0.6 }}
-            transition={{ delay: 0.8, duration: 0.5 }}
+            animate={{ opacity: stage >= 3 ? 0 : 1 }}
           >
-            {['G', 'B', 'D', 'Y'].map((letter, i) => (
+            {engineLogos.map((engine, i) => (
               <motion.div 
-                key={letter}
-                className="w-7 h-7 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-200/70 text-xs font-bold"
+                key={engine.name}
+                className="flex flex-col items-center"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.5 + (i * 0.1), duration: 0.4 }}
+                transition={{ delay: engine.delay, duration: 0.4 }}
               >
-                {letter}
+                <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center">
+                  <span className="text-sm font-bold text-orange-200/70">{engine.name[0]}</span>
+                </div>
+                <motion.div 
+                  className="h-8 w-[1px] mt-1 bg-orange-500/20"
+                  initial={{ height: 0 }}
+                  animate={{ height: 8 }}
+                  transition={{ delay: engine.delay + 0.2, duration: 0.3 }}
+                />
               </motion.div>
             ))}
           </motion.div>

@@ -1,15 +1,18 @@
 
 import { motion } from 'framer-motion';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, BookmarkPlus, Calendar, Tag } from 'lucide-react';
 import { SearchResult } from './types';
+import { formatDistanceToNow } from 'date-fns';
 
 interface SearchResultCardProps {
   result: SearchResult;
   index: number;
   hoverBorderColor: string;
+  viewMode?: 'grid' | 'list';
+  onBookmark?: (result: SearchResult) => void;
 }
 
-const SearchResultCard = ({ result, index, hoverBorderColor }: SearchResultCardProps) => {
+const SearchResultCard = ({ result, index, hoverBorderColor, viewMode = 'grid', onBookmark }: SearchResultCardProps) => {
   // Extract domain from URL for display
   const getDomainFromURL = (url: string) => {
     try {
@@ -20,6 +23,19 @@ const SearchResultCard = ({ result, index, hoverBorderColor }: SearchResultCardP
     }
   };
 
+  // Format date if available
+  const getFormattedDate = (dateString?: string) => {
+    if (!dateString) return null;
+    try {
+      const date = new Date(dateString);
+      return formatDistanceToNow(date, { addSuffix: true });
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const formattedDate = getFormattedDate(result.date);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -27,35 +43,54 @@ const SearchResultCard = ({ result, index, hoverBorderColor }: SearchResultCardP
       transition={{ duration: 0.4, delay: index * 0.1, ease: "easeOut" }}
       className={`result-card p-4 rounded-lg border border-orange-500/20
                 bg-orange-500/5 hover:bg-orange-500/10 transition-all duration-300
-                shadow-md hover:shadow-lg hover:shadow-orange-500/10 relative overflow-hidden group`}
+                shadow-md hover:shadow-lg hover:shadow-orange-500/10 relative overflow-hidden group
+                ${viewMode === 'list' ? 'flex gap-4' : 'flex flex-col'}`}
       whileHover={{
         y: -3,
         transition: { duration: 0.2, ease: "easeOut" }
       }}
     >
-      {/* Simplified border effect for better readability */}
-      <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-orange-300/10 via-orange-500/10 to-teal-400/10 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out pointer-events-none"></div>
+      {/* Improved gradient overlay for better visual effect */}
+      <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-orange-300/5 via-orange-500/10 to-teal-400/5 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out pointer-events-none"></div>
       
-      <div className="flex flex-col h-full">
+      <div className={viewMode === 'list' ? "min-w-0 flex-1" : "flex flex-col h-full"}>
         {/* URL source with improved visual indicator */}
         <div className="flex items-center mb-2 text-xs text-orange-300/80">
           <span className="inline-block w-2 h-2 rounded-full bg-orange-500 mr-2 opacity-70"></span>
           {getDomainFromURL(result.url)}
+          
+          {/* Show date if available */}
+          {formattedDate && (
+            <div className="ml-3 flex items-center text-orange-300/70">
+              <Calendar className="h-3 w-3 mr-1" />
+              <span>{formattedDate}</span>
+            </div>
+          )}
         </div>
         
         {/* Title with improved readability */}
-        <h3 className="text-base font-medium text-orange-100 mb-2 transition-colors line-clamp-2 font-inter">
+        <h3 className={`font-medium text-orange-100 mb-2 transition-colors line-clamp-2 font-inter
+                      ${viewMode === 'list' ? 'text-lg' : 'text-base'}`}>
           <a href={result.url} target="_blank" rel="noopener noreferrer" className="focus:outline-1 focus:outline-orange-500/50 rounded-sm">
             {result.title}
           </a>
         </h3>
         
         {/* Snippet with improved readability */}
-        <p className="text-sm text-orange-200/90 line-clamp-3 mb-4 font-inter leading-relaxed">
+        <p className={`text-sm text-orange-200/90 font-inter leading-relaxed
+                     ${viewMode === 'list' ? 'line-clamp-2 mb-3' : 'line-clamp-3 mb-4'}`}>
           {result.snippet}
         </p>
+
+        {/* Category tag if available */}
+        {result.category && (
+          <div className="flex items-center text-xs text-orange-300/70 mb-3">
+            <Tag className="h-3 w-3 mr-1" />
+            <span>{result.category}</span>
+          </div>
+        )}
         
-        <div className="mt-auto pt-2 flex justify-between items-center">
+        <div className={`${viewMode === 'list' ? '' : 'mt-auto'} pt-2 flex justify-between items-center`}>
           {/* Enhanced button with better hover effects */}
           <a
             href={result.url}
@@ -69,12 +104,28 @@ const SearchResultCard = ({ result, index, hoverBorderColor }: SearchResultCardP
             View result <ExternalLink className="h-3 w-3 ml-1" />
           </a>
           
-          {/* Search engine indicator with improved styling */}
-          {result.engine && (
-            <span className="text-xs bg-orange-500/15 px-2 py-0.5 rounded-full text-orange-300/90 border border-orange-500/10">
-              {result.engine}
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {/* Bookmark button */}
+            {onBookmark && (
+              <button
+                onClick={() => onBookmark(result)}
+                className="text-xs flex items-center gap-1 text-orange-300/80 hover:text-orange-200 
+                        bg-orange-500/10 hover:bg-orange-500/20 px-2 py-1.5 rounded-md 
+                        transition-colors border border-orange-500/20"
+                aria-label="Bookmark this result"
+              >
+                <BookmarkPlus className="h-3 w-3" />
+                <span className="hidden sm:inline">Save</span>
+              </button>
+            )}
+            
+            {/* Search engine indicator with improved styling */}
+            {result.engine && (
+              <span className="text-xs bg-orange-500/15 px-2 py-0.5 rounded-full text-orange-300/90 border border-orange-500/10">
+                {result.engine}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </motion.div>

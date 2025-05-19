@@ -1,10 +1,11 @@
 
 import { useState, KeyboardEvent, useRef, useEffect } from 'react';
-import { Search, X, Sparkles, History, Zap } from 'lucide-react';
+import { Search, X, Sparkles, History, Zap, BookmarkPlus } from 'lucide-react';
 import LoadingAnimation from './LoadingAnimation';
 import AutocompleteDropdown from './search/AutocompleteDropdown';
 import { useAutocomplete } from '@/hooks/useAutocomplete';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useToast } from '@/hooks/use-toast';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -32,9 +33,11 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [sparkTrigger, setSparkTrigger] = useState(0); // Used to trigger new spark animations
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [showSearchOptions, setShowSearchOptions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchBarRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   // Load recent searches from localStorage
   useEffect(() => {
@@ -69,6 +72,7 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
         !inputRef.current.contains(e.target as Node)
       ) {
         handleClickOutside();
+        setShowSearchOptions(false);
       }
     };
     
@@ -102,6 +106,7 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
     if (query.trim()) {
       saveRecentSearch(query.trim());
       onSearch(query);
+      setShowSearchOptions(false);
     }
   };
 
@@ -132,6 +137,48 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
       onSearch(term);
       saveRecentSearch(term);
     }, 10);
+  };
+
+  const handleClearSearchHistory = () => {
+    localStorage.removeItem('prism_recent_searches');
+    setRecentSearches([]);
+    toast({
+      title: "Search history cleared",
+      description: "Your recent searches have been removed.",
+      variant: "default",
+    });
+  };
+
+  // Handle bookmarks
+  const handleViewBookmarks = () => {
+    const bookmarks = localStorage.getItem('prism_bookmarks');
+    if (bookmarks) {
+      try {
+        const bookmarkList = JSON.parse(bookmarks);
+        if (bookmarkList.length === 0) {
+          toast({
+            title: "No bookmarks yet",
+            description: "Save search results to view them here.",
+            variant: "default",
+          });
+        } else {
+          toast({
+            title: `${bookmarkList.length} bookmarks saved`,
+            description: "You can access bookmarks from the search options.",
+            variant: "default",
+          });
+          // If we had a bookmarks page, we would navigate to it here
+        }
+      } catch (e) {
+        console.error('Error parsing bookmarks', e);
+      }
+    } else {
+      toast({
+        title: "No bookmarks yet",
+        description: "Save search results to view them here.",
+        variant: "default",
+      });
+    }
   };
 
   // Create more sparks with varying positions and timing
@@ -183,7 +230,11 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
                   onSearch(query);
                 }
               }}
-              onFocus={() => setIsFocused(true)}
+              onFocus={() => {
+                setIsFocused(true);
+                // Show search options after a short delay when focusing
+                setTimeout(() => setShowSearchOptions(true), 500);
+              }}
               onBlur={() => setIsFocused(false)}
               className="peer h-full w-full outline-none text-lg text-white/90 px-2 bg-transparent 
                 placeholder:text-orange-200/30 
@@ -200,17 +251,22 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
               aria-expanded={isOpen}
             />
             
-            {/* Recent searches button */}
-            {!query && recentSearches.length > 0 && !isSearching && (
+            {/* Search options button */}
+            {!isSearching && (
               <button
-                onClick={() => setIsFocused(true)}
-                className="absolute right-28 h-8 flex items-center gap-1 px-2 py-1 text-sm text-orange-300/70 
+                onClick={() => setShowSearchOptions(prev => !prev)}
+                className="absolute right-28 h-8 flex items-center gap-1 px-3 py-1 text-sm text-orange-300/70 
                   hover:text-orange-200 transition-all duration-300 rounded-full 
                   hover:bg-orange-500/10 border border-transparent hover:border-orange-500/20"
-                aria-label="Show recent searches"
+                aria-label="Search options"
               >
-                <History className="h-3 w-3" />
-                <span className="hidden sm:inline">Recent</span>
+                <div className="relative">
+                  <History className="h-4 w-4" />
+                  {recentSearches.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-orange-500 rounded-full"></span>
+                  )}
+                </div>
+                <span className="hidden sm:inline">Options</span>
               </button>
             )}
             
@@ -298,39 +354,85 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
         {/* Dropdown suggestions container */}
         <div ref={dropdownRef} className="relative w-full">
           <AnimatePresence>
-            {isFocused && !query && recentSearches.length > 0 && (
+            {/* Search options dropdown */}
+            {showSearchOptions && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute w-full mt-2 z-50 bg-[#1A1F2C]/95 backdrop-blur-lg rounded-xl border border-orange-500/30 py-2 shadow-lg shadow-orange-900/20"
+                transition={{ duration: 0.2 }}
+                className="absolute w-full mt-2 z-50 bg-[#1A1F2C]/95 backdrop-blur-lg rounded-xl border border-orange-500/30 py-2 shadow-lg shadow-orange-900/20 overflow-hidden"
               >
-                <div className="px-3 py-1 text-sm text-orange-200/70 flex items-center">
-                  <History className="h-4 w-4 mr-2" />
-                  <span>Recent Searches</span>
+                <div className="px-3 py-2 border-b border-orange-500/20">
+                  <h3 className="text-sm font-medium text-orange-100">Search Options</h3>
                 </div>
-                <div className="mt-1">
-                  {recentSearches.map((term, index) => (
-                    <div
-                      key={`recent-${index}`}
-                      className="px-4 py-2 text-orange-100 hover:bg-orange-500/10 cursor-pointer flex items-center"
-                      onClick={() => handleRecentSearchClick(term)}
-                    >
-                      <Zap className="h-3 w-3 mr-2 text-orange-400/70" />
-                      {term}
+                
+                <div className="py-2">
+                  {/* Recent searches section */}
+                  <div className="px-3 py-1.5 text-xs text-orange-300/80 font-medium flex items-center justify-between">
+                    <div className="flex items-center">
+                      <History className="h-3.5 w-3.5 mr-1.5" />
+                      Recent Searches
                     </div>
-                  ))}
+                    {recentSearches.length > 0 && (
+                      <button 
+                        onClick={handleClearSearchHistory}
+                        className="text-xs text-orange-300/60 hover:text-orange-200 px-1.5 py-0.5 rounded hover:bg-orange-500/10"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  
+                  {recentSearches.length > 0 ? (
+                    <div className="mt-1 max-h-40 overflow-y-auto">
+                      {recentSearches.map((term, index) => (
+                        <div
+                          key={`recent-${index}`}
+                          className="px-4 py-2 text-orange-100 hover:bg-orange-500/10 cursor-pointer flex items-center"
+                          onClick={() => handleRecentSearchClick(term)}
+                        >
+                          <Zap className="h-3 w-3 mr-2 text-orange-400/70" />
+                          {term}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="px-4 py-3 text-sm text-orange-300/60 italic">
+                      No recent searches
+                    </div>
+                  )}
+                  
+                  {/* Bookmarks section */}
+                  <div className="mt-2 border-t border-orange-500/20 pt-2">
+                    <div className="px-3 py-1.5 text-xs text-orange-300/80 font-medium flex items-center">
+                      <BookmarkPlus className="h-3.5 w-3.5 mr-1.5" />
+                      Bookmarks
+                    </div>
+                    
+                    <button
+                      onClick={handleViewBookmarks}
+                      className="w-full px-4 py-2 text-left text-orange-100 hover:bg-orange-500/10 cursor-pointer flex items-center"
+                    >
+                      <span>View saved results</span>
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             )}
             
-            <AutocompleteDropdown
-              suggestions={suggestions}
-              isOpen={isOpen && isFocused}
-              highlightedIndex={highlightedIndex}
-              onSelectSuggestion={handleSuggestionClick}
-              inputValue={query}
-            />
+            {/* Regular autocomplete dropdown */}
+            {!showSearchOptions && (
+              <AutocompleteDropdown
+                suggestions={suggestions}
+                isOpen={isOpen && isFocused}
+                highlightedIndex={highlightedIndex}
+                onSelectSuggestion={handleSuggestionClick}
+                inputValue={query}
+                recentSearches={recentSearches}
+                onSelectRecentSearch={handleRecentSearchClick}
+              />
+            )}
           </AnimatePresence>
         </div>
         

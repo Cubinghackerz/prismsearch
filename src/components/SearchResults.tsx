@@ -1,10 +1,11 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutGrid, Database, Filter, ChevronDown, ChevronUp, RefreshCcw } from 'lucide-react';
+import { LayoutGrid, Database, Filter, ChevronDown, ChevronUp, RefreshCcw, List, BookmarkPlus } from 'lucide-react';
 import { useState } from 'react';
 import { SearchResult } from './search/types';
 import SearchEngineColumn from './search/SearchEngineColumn';
 import LoadingSkeleton from './search/LoadingSkeleton';
+import { useToast } from '@/hooks/use-toast';
 
 interface SearchResultsProps {
   results: SearchResult[];
@@ -16,6 +17,8 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
   const [collapsedEngines, setCollapsedEngines] = useState<Record<string, boolean>>({});
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<'relevance' | 'recent'>('relevance');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const { toast } = useToast();
   
   if (isLoading) {
     return <LoadingSkeleton query={query} />;
@@ -68,6 +71,34 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
   const braveResults = sortedResults.filter(result => result.source === 'Brave');
   const youResults = sortedResults.filter(result => result.source === 'You.com');
 
+  // Handle bookmark functionality
+  const handleBookmark = (result: SearchResult) => {
+    // Get existing bookmarks from localStorage
+    const existingBookmarks = localStorage.getItem('prism_bookmarks');
+    let bookmarks = existingBookmarks ? JSON.parse(existingBookmarks) : [];
+    
+    // Check if this result is already bookmarked
+    const isAlreadyBookmarked = bookmarks.some((bookmark: SearchResult) => bookmark.url === result.url);
+    
+    if (!isAlreadyBookmarked) {
+      // Add the bookmark
+      bookmarks.push(result);
+      localStorage.setItem('prism_bookmarks', JSON.stringify(bookmarks));
+      
+      toast({
+        title: "Bookmark added",
+        description: `${result.title} has been saved to your bookmarks.`,
+        variant: "default",
+      });
+    } else {
+      toast({
+        title: "Already bookmarked",
+        description: "This page is already in your bookmarks.",
+        variant: "default",
+      });
+    }
+  };
+
   return (
     <div className="w-full max-w-[95vw] mx-auto mt-8 pb-12">
       <motion.div 
@@ -91,7 +122,7 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
         </motion.div>
       </motion.div>
       
-      {/* Filters and controls */}
+      {/* Filters and controls with improved UI */}
       <motion.div 
         className="bg-orange-900/10 backdrop-blur-md rounded-lg p-3 mb-4 border border-orange-500/20"
         initial={{ opacity: 0, y: 10 }}
@@ -122,6 +153,26 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
           </div>
           
           <div className="flex items-center gap-3">
+            {/* Added view mode toggle */}
+            <div className="flex items-center bg-orange-900/30 rounded-md overflow-hidden border border-orange-500/20">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`text-xs px-3 py-1.5 flex items-center gap-1
+                  ${viewMode === 'grid' ? 'bg-orange-500/30 text-orange-100' : 'text-orange-300 hover:bg-orange-500/10'}`}
+              >
+                <LayoutGrid className="h-3 w-3" />
+                <span className="hidden sm:inline">Grid</span>
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`text-xs px-3 py-1.5 flex items-center gap-1
+                  ${viewMode === 'list' ? 'bg-orange-500/30 text-orange-100' : 'text-orange-300 hover:bg-orange-500/10'}`}
+              >
+                <List className="h-3 w-3" />
+                <span className="hidden sm:inline">List</span>
+              </button>
+            </div>
+            
             <div className="flex items-center gap-2">
               <span className="text-sm text-orange-200">Sort by:</span>
               <select
@@ -135,7 +186,7 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
             </div>
             
             <button 
-              className="text-xs flex items-center gap-1 text-orange-300 hover:text-orange-200"
+              className="text-xs flex items-center gap-1 text-orange-300 hover:text-orange-200 bg-orange-900/30 px-2 py-1 rounded-md border border-orange-500/20 hover:bg-orange-500/20 transition-colors"
               onClick={() => window.location.reload()}
             >
               <RefreshCcw className="h-3 w-3" />
@@ -145,7 +196,11 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
         </div>
       </motion.div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      {/* Updated grid/list view layout */}
+      <div className={viewMode === 'grid' ? 
+        "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4" :
+        "flex flex-col gap-4"
+      }>
         {engines.map(engine => {
           let engineResults;
           let bgColor;
@@ -196,7 +251,7 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
                 height: isCollapsed ? 'auto' : '100%'
               }}
               transition={{ duration: 0.3 }}
-              className="flex flex-col"
+              className={viewMode === 'list' ? 'w-full' : 'flex flex-col'}
             >
               <div 
                 className={`flex justify-between items-center px-3 py-2 rounded-t-lg ${bgColor} cursor-pointer`}
@@ -228,6 +283,8 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
                       bgColor={bgColor}
                       hoverBorderColor={hoverBorderColor}
                       showTitle={false}
+                      viewMode={viewMode}
+                      onBookmark={handleBookmark}
                     />
                   </motion.div>
                 )}

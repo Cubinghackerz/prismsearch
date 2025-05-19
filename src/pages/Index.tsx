@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, MessageSquare } from 'lucide-react';
+import { ArrowLeft, MessageSquare, BookmarkPlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
 import SearchResults from '../components/SearchResults';
@@ -47,7 +47,21 @@ const Index = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const [showTransitionAnimation, setShowTransitionAnimation] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [bookmarksCount, setBookmarksCount] = useState<number>(0);
   const { toast } = useToast();
+
+  // Load bookmarks count
+  useState(() => {
+    const storedBookmarks = localStorage.getItem('prism_bookmarks');
+    if (storedBookmarks) {
+      try {
+        const bookmarks = JSON.parse(storedBookmarks);
+        setBookmarksCount(bookmarks.length);
+      } catch (e) {
+        console.error('Error loading bookmarks:', e);
+      }
+    }
+  });
 
   const handleSearch = async (searchQuery: string) => {
     try {
@@ -82,6 +96,36 @@ const Index = () => {
     setShowTransitionAnimation(false);
     setShowResults(true);
     setIsSearching(false);
+  };
+
+  const handleViewBookmarks = () => {
+    const bookmarks = localStorage.getItem('prism_bookmarks');
+    if (bookmarks) {
+      try {
+        const parsedBookmarks = JSON.parse(bookmarks);
+        if (parsedBookmarks.length > 0) {
+          toast({
+            title: `${parsedBookmarks.length} saved bookmarks`,
+            description: "Access your saved search results here.",
+            variant: "default"
+          });
+        } else {
+          toast({
+            title: "No bookmarks saved",
+            description: "Save search results by clicking the bookmark icon.",
+            variant: "default"
+          });
+        }
+      } catch (e) {
+        console.error('Error parsing bookmarks:', e);
+      }
+    } else {
+      toast({
+        title: "No bookmarks saved",
+        description: "Save search results by clicking the bookmark icon.",
+        variant: "default"
+      });
+    }
   };
 
   return (
@@ -153,12 +197,28 @@ const Index = () => {
             </motion.p>
           </div>
 
-          <Link to="/chat" className="absolute right-4 top-1/2 -translate-y-1/2">
-            <Button variant="ghost" className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30">
-              <MessageSquare className="mr-2 h-4 w-4" />
-              Chat Mode
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              onClick={handleViewBookmarks} 
+              className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30"
+            >
+              <BookmarkPlus className="mr-2 h-4 w-4" />
+              {bookmarksCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full text-xs flex items-center justify-center">
+                  {bookmarksCount}
+                </span>
+              )}
+              <span className="hidden sm:inline">Bookmarks</span>
             </Button>
-          </Link>
+            
+            <Link to="/chat">
+              <Button variant="ghost" className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30">
+                <MessageSquare className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Chat Mode</span>
+              </Button>
+            </Link>
+          </div>
         </motion.div>
       </header>
       
