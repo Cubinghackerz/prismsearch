@@ -15,6 +15,7 @@ import ParticleBackground from '../components/ParticleBackground';
 import ScrollToTop from '../components/ScrollToTop';
 import Footer from '../components/Footer';
 import PopularSearches from '../components/search/PopularSearches';
+import BookmarksDrawer from '../components/BookmarksDrawer';
 
 // Search engine information with logo URLs
 const engineInfo = {
@@ -47,6 +48,7 @@ const Index = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const [showTransitionAnimation, setShowTransitionAnimation] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [isBookmarksOpen, setIsBookmarksOpen] = useState(false);
   const [bookmarksCount, setBookmarksCount] = useState<number>(0);
   const { toast } = useToast();
 
@@ -99,32 +101,20 @@ const Index = () => {
   };
 
   const handleViewBookmarks = () => {
-    const bookmarks = localStorage.getItem('prism_bookmarks');
-    if (bookmarks) {
+    setIsBookmarksOpen(true);
+  };
+
+  // Update bookmarks count when drawer closes
+  const handleCloseBookmarks = () => {
+    setIsBookmarksOpen(false);
+    const storedBookmarks = localStorage.getItem('prism_bookmarks');
+    if (storedBookmarks) {
       try {
-        const parsedBookmarks = JSON.parse(bookmarks);
-        if (parsedBookmarks.length > 0) {
-          toast({
-            title: `${parsedBookmarks.length} saved bookmarks`,
-            description: "Access your saved search results here.",
-            variant: "default"
-          });
-        } else {
-          toast({
-            title: "No bookmarks saved",
-            description: "Save search results by clicking the bookmark icon.",
-            variant: "default"
-          });
-        }
+        const bookmarks = JSON.parse(storedBookmarks);
+        setBookmarksCount(bookmarks.length);
       } catch (e) {
-        console.error('Error parsing bookmarks:', e);
+        console.error('Error loading bookmarks:', e);
       }
-    } else {
-      toast({
-        title: "No bookmarks saved",
-        description: "Save search results by clicking the bookmark icon.",
-        variant: "default"
-      });
     }
   };
 
@@ -200,12 +190,12 @@ const Index = () => {
           <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
             <Button 
               variant="ghost" 
-              onClick={handleViewBookmarks} 
-              className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30"
+              onClick={handleViewBookmarks}
+              className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30 relative"
             >
               <BookmarkPlus className="mr-2 h-4 w-4" />
               {bookmarksCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full text-xs flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full text-xs flex items-center justify-center">
                   {bookmarksCount}
                 </span>
               )}
@@ -330,6 +320,12 @@ const Index = () => {
       <footer>
         <Footer />
       </footer>
+
+      {/* Bookmarks Drawer */}
+      <BookmarksDrawer 
+        isOpen={isBookmarksOpen} 
+        onClose={handleCloseBookmarks} 
+      />
     </div>
   );
 };

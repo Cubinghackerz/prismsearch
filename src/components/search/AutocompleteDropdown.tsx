@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { TrendingUp, Star, Users, History, BookmarkPlus } from 'lucide-react';
+import { TrendingUp, Star, Users, BookmarkPlus } from 'lucide-react';
 import { AutocompleteOption } from '@/hooks/useAutocomplete';
 
 interface AutocompleteDropdownProps {
@@ -8,8 +8,6 @@ interface AutocompleteDropdownProps {
   highlightedIndex: number;
   onSelectSuggestion: (suggestion: string) => void;
   inputValue: string;
-  recentSearches?: string[];
-  onSelectRecentSearch?: (search: string) => void;
 }
 
 const AutocompleteDropdown = ({
@@ -17,11 +15,9 @@ const AutocompleteDropdown = ({
   isOpen,
   highlightedIndex,
   onSelectSuggestion,
-  inputValue,
-  recentSearches = [],
-  onSelectRecentSearch
+  inputValue
 }: AutocompleteDropdownProps) => {
-  if (!isOpen || (suggestions.length === 0 && recentSearches.length === 0)) {
+  if (!isOpen || suggestions.length === 0) {
     return null;
   }
 
@@ -73,31 +69,6 @@ const AutocompleteDropdown = ({
       aria-activedescendant={highlightedIndex >= 0 ? `suggestion-${highlightedIndex}` : undefined}
     >
       <ul className="divide-y divide-orange-500/10">
-        {/* Recent searches section */}
-        {recentSearches.length > 0 && (
-          <li className="pb-2">
-            <div className="px-3 py-1.5 text-xs text-orange-300/80 font-medium flex items-center">
-              <History className="h-3.5 w-3.5 mr-1.5" />
-              Recent Searches
-            </div>
-            <ul>
-              {recentSearches.slice(0, 3).map((search, idx) => (
-                <motion.li
-                  key={`recent-${idx}`}
-                  onClick={() => onSelectRecentSearch?.(search)}
-                  className="px-4 py-2 cursor-pointer text-gray-200 hover:bg-orange-500/20
-                          transition-all duration-200 flex items-center"
-                  whileHover={{ x: 5 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 10 }}
-                >
-                  <div className="w-1 h-5 bg-orange-500/30 rounded-full mr-2" />
-                  <span className="text-orange-100">{search}</span>
-                </motion.li>
-              ))}
-            </ul>
-          </li>
-        )}
-
         {/* Trending suggestions */}
         {trendingSuggestions.length > 0 && (
           <li className="pt-2 pb-1">

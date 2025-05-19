@@ -1,88 +1,110 @@
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ArrowLeft, BookmarkPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import ChatInterface from '@/components/chat/ChatInterface';
+import ChatInterface from '../components/chat/ChatInterface';
 import ParticleBackground from '../components/ParticleBackground';
 import Footer from '../components/Footer';
-import { ChatProvider } from '@/context/ChatContext';
-import { ResizablePanelGroup, ResizablePanel } from '@/components/ui/resizable';
-import '../components/search/searchStyles.css';
+import BookmarksDrawer from '../components/BookmarksDrawer';
+import ScrollToTop from '../components/ScrollToTop';
 
 const Chat = () => {
+  const [isBookmarksOpen, setIsBookmarksOpen] = useState(false);
+  const [bookmarksCount, setBookmarksCount] = useState<number>(() => {
+    try {
+      const bookmarks = JSON.parse(localStorage.getItem('prism_bookmarks') || '[]');
+      return bookmarks.length;
+    } catch {
+      return 0;
+    }
+  });
+
   return (
-    <ChatProvider>
-      <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#1A1F2C] to-black">
-        <ParticleBackground color="#FF9E2C" />
-        
-        <header className="py-4 px-4 relative z-10 backdrop-blur-lg bg-[#1A1F2C]/70 border-b border-orange-500/20 sticky top-0">
-          <div className="container mx-auto">
-            <motion.div 
-              initial={{ opacity: 0, y: -20 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              transition={{ duration: 0.5 }} 
-              className="text-center relative flex justify-between items-center"
-            >
-              <Link to="/">
-                <motion.div 
-                  initial={{ opacity: 0, x: -20 }} 
-                  animate={{ opacity: 1, x: 0 }} 
-                >
-                  <Button variant="ghost" className="text-orange-100 bg-gradient-to-r from-orange-600/30 to-orange-800/30 hover:from-orange-600/40 hover:to-orange-800/40 border border-orange-500/20 shadow-lg shadow-orange-500/10">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Home
-                  </Button>
-                </motion.div>
-              </Link>
-              
-              <motion.div
-                className="flex items-center gap-2 absolute left-1/2 transform -translate-x-1/2"
-              >
-                <img src="/lovable-uploads/0d99afe2-31cb-4bd0-9b5a-02c95aae7614.png" alt="Prism Logo" className="h-8 w-8" />
-                <motion.h1 
-                  animate={{ backgroundPosition: ['0% 50%', '100% 50%'] }} 
-                  transition={{ duration: 1, repeat: Infinity, repeatType: 'reverse' }} 
-                  className="font-montserrat font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-300 via-teal-300 to-orange-400 animate-gradient-text mb-0 text-3xl"
-                >
-                  Prism Chat
-                </motion.h1>
-              </motion.div>
-              
-              <div className="w-[120px]">{/* Placeholder to balance layout */}</div>
-            </motion.div>
-          </div>
-        </header>
-        
-        <main className="flex-1 px-3 container mx-auto max-w-[95vw] md:max-w-[90vw] lg:max-w-[90vw] relative py-5">
-          <motion.p 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            transition={{ delay: 0.2 }} 
-            className="text-orange-200 max-w-lg mx-auto text-sm text-center mb-5"
-          >
-            Chat with AI assistants powered by Gemini 2.5 Flash Preview, Mistral Medium and Llama-3-70B
-          </motion.p>
-          
+    <div className="min-h-screen flex flex-col bg-[#1A1F2C]">
+      <ParticleBackground color="#FF9E2C" />
+      <ScrollToTop />
+      
+      <header className="py-6 px-4 relative z-10">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          transition={{ duration: 0.5 }} 
+          className="text-center relative flex justify-between items-center max-w-7xl mx-auto"
+        >
           <motion.div 
-            initial={{ opacity: 0, y: 20 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.5 }} 
-            className="glass-card rounded-xl border border-orange-500/20 shadow-xl overflow-hidden"
+            initial={{ opacity: 0, x: -20 }} 
+            animate={{ opacity: 1, x: 0 }} 
+            className="absolute left-4 top-1/2 -translate-y-1/2"
           >
-            <ResizablePanelGroup direction="horizontal" className="min-h-[75vh]">
-              <ResizablePanel defaultSize={100} minSize={75}>
-                <div className="h-full">
-                  <ChatInterface />
-                </div>
-              </ResizablePanel>
-            </ResizablePanelGroup>
+            <Link to="/">
+              <Button 
+                variant="ghost" 
+                className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Search
+              </Button>
+            </Link>
           </motion.div>
-        </main>
-        
+          
+          <div className="flex-1 flex justify-center items-center">
+            <Link to="/" className="flex items-center gap-2">
+              <img 
+                src="/lovable-uploads/aeaad4a8-0dc2-4d4b-b2b3-cb248e0843db.png" 
+                alt="Prism Search Logo" 
+                className="h-8 w-8"
+              />
+              <motion.h1 
+                className="text-2xl font-bold bg-clip-text text-transparent 
+                  bg-gradient-to-r from-orange-300 via-orange-500 to-orange-700 
+                  animate-gradient-text"
+                animate={{
+                  backgroundPosition: ['0% 50%', '100% 50%']
+                }} 
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  repeatType: 'reverse'
+                }}
+              >
+                Prism Chat
+              </motion.h1>
+            </Link>
+          </div>
+
+          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+            <Button 
+              variant="ghost" 
+              onClick={() => setIsBookmarksOpen(true)}
+              className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30 relative"
+            >
+              <BookmarkPlus className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Bookmarks</span>
+              {bookmarksCount > 0 && (
+                <span className="absolute -top-2 -right-2 w-5 h-5 bg-orange-500 rounded-full text-xs flex items-center justify-center text-white">
+                  {bookmarksCount}
+                </span>
+              )}
+            </Button>
+          </div>
+        </motion.div>
+      </header>
+
+      <main className="flex-1 container mx-auto max-w-[98vw] px-4">
+        <ChatInterface />
+      </main>
+      
+      <footer>
         <Footer />
-      </div>
-    </ChatProvider>
+      </footer>
+
+      <BookmarksDrawer 
+        isOpen={isBookmarksOpen} 
+        onClose={() => setIsBookmarksOpen(false)} 
+      />
+    </div>
   );
 };
 

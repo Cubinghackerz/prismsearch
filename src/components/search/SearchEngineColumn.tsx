@@ -2,6 +2,7 @@
 import { motion } from 'framer-motion';
 import { SearchResult } from './types';
 import SearchResultCard from './SearchResultCard';
+import { BookmarkPlus } from 'lucide-react';
 
 interface SearchEngineColumnProps {
   title: string;
@@ -64,8 +65,10 @@ const SearchEngineColumn = ({
             </motion.div>
             <h3 className="text-lg font-semibold text-orange-100 font-inter">{title}</h3>
           </div>
-          <div className="text-sm text-orange-300 bg-orange-500/15 px-2 py-0.5 rounded-full">
-            {results.length} {results.length === 1 ? 'Result' : 'Results'}
+          <div className="flex items-center gap-2">
+            <div className="text-sm text-orange-300 bg-orange-500/15 px-2 py-0.5 rounded-full">
+              {results.length} {results.length === 1 ? 'Result' : 'Results'}
+            </div>
           </div>
         </div>
       )}

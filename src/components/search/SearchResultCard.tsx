@@ -1,8 +1,9 @@
 
 import { motion } from 'framer-motion';
-import { ExternalLink, BookmarkPlus, Calendar, Tag } from 'lucide-react';
+import { ExternalLink, BookmarkPlus, Calendar, Tag, BookmarkCheck } from 'lucide-react';
 import { SearchResult } from './types';
 import { formatDistanceToNow } from 'date-fns';
+import { useState, useEffect } from 'react';
 
 interface SearchResultCardProps {
   result: SearchResult;
@@ -13,6 +14,17 @@ interface SearchResultCardProps {
 }
 
 const SearchResultCard = ({ result, index, hoverBorderColor, viewMode = 'grid', onBookmark }: SearchResultCardProps) => {
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  
+  // Check if the result is already bookmarked on mount
+  useEffect(() => {
+    const existingBookmarks = localStorage.getItem('prism_bookmarks');
+    if (existingBookmarks) {
+      const bookmarks = JSON.parse(existingBookmarks);
+      setIsBookmarked(bookmarks.some((bookmark: SearchResult) => bookmark.url === result.url));
+    }
+  }, [result.url]);
+
   // Extract domain from URL for display
   const getDomainFromURL = (url: string) => {
     try {
@@ -35,6 +47,15 @@ const SearchResultCard = ({ result, index, hoverBorderColor, viewMode = 'grid', 
   };
 
   const formattedDate = getFormattedDate(result.date);
+  
+  // Handle bookmark toggle with visual feedback
+  const handleBookmark = () => {
+    if (onBookmark) {
+      onBookmark(result);
+      // Toggle the bookmark state for visual feedback
+      setIsBookmarked(!isBookmarked);
+    }
+  };
 
   return (
     <motion.div
@@ -105,18 +126,30 @@ const SearchResultCard = ({ result, index, hoverBorderColor, viewMode = 'grid', 
           </a>
           
           <div className="flex items-center gap-2">
-            {/* Bookmark button */}
+            {/* Bookmark button - Updated with visual feedback */}
             {onBookmark && (
-              <button
-                onClick={() => onBookmark(result)}
-                className="text-xs flex items-center gap-1 text-orange-300/80 hover:text-orange-200 
-                        bg-orange-500/10 hover:bg-orange-500/20 px-2 py-1.5 rounded-md 
-                        transition-colors border border-orange-500/20"
-                aria-label="Bookmark this result"
+              <motion.button
+                onClick={handleBookmark}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                className={`text-xs flex items-center gap-1 px-2 py-1.5 rounded-md 
+                        transition-all duration-300 border ${isBookmarked 
+                          ? 'bg-orange-500/30 text-orange-100 border-orange-500/40' 
+                          : 'bg-orange-500/10 text-orange-300/80 hover:text-orange-200 hover:bg-orange-500/20 border-orange-500/20'}`}
+                aria-label={isBookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
               >
-                <BookmarkPlus className="h-3 w-3" />
-                <span className="hidden sm:inline">Save</span>
-              </button>
+                {isBookmarked ? (
+                  <>
+                    <BookmarkCheck className="h-3 w-3" />
+                    <span className="hidden sm:inline">Saved</span>
+                  </>
+                ) : (
+                  <>
+                    <BookmarkPlus className="h-3 w-3" />
+                    <span className="hidden sm:inline">Save</span>
+                  </>
+                )}
+              </motion.button>
             )}
             
             {/* Search engine indicator with improved styling */}
