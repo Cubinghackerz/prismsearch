@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -46,7 +45,7 @@ const Chat = () => {
                 size="sm"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Search
+                Back to Home
               </Button>
             </Link>
           </motion.div>
