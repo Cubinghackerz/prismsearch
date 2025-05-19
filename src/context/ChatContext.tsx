@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -311,7 +310,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Delete a chat and its messages
-  const deleteChat = async (id: string) => {
+  const deleteChat = async (id: string): Promise<void> => {
     try {
       // Delete all messages for this chat from Supabase
       const { error } = await supabase
@@ -340,9 +339,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         description: "The chat history has been deleted.",
         duration: 2000,
       });
-      
-      // Return success to allow components to update their UI
-      return true;
     } catch (error) {
       console.error('Failed to delete chat:', error);
       toast({
@@ -351,7 +347,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         description: "There was an error deleting the chat history.",
         duration: 3000,
       });
-      return false;
     }
   };
 

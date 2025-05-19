@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useChat } from '@/context/ChatContext';
 import { format } from 'date-fns';
@@ -33,7 +32,7 @@ const RecentChats = () => {
 
       if (error) {
         console.error('Error fetching chat history:', error);
-        setLoading(false);
+        setIsLoading(false);
         return;
       }
 
@@ -94,12 +93,10 @@ const RecentChats = () => {
     
     try {
       // Use the deleteChat function from context
-      const success = await deleteChat(chatId);
+      await deleteChat(chatId);
       
-      if (success) {
-        // Remove from local state immediately for better UX
-        setChatHistory(prev => prev.filter(chat => chat.id !== chatId));
-      }
+      // Remove from local state immediately for better UX
+      setChatHistory(prev => prev.filter(chat => chat.id !== chatId));
     } finally {
       setIsDeleting(null);
     }
