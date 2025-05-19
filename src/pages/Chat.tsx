@@ -27,7 +27,7 @@ const Chat = () => {
       <ParticleBackground color="#FF9E2C" />
       <ScrollToTop />
       
-      <header className="py-6 px-4 relative z-10">
+      <header className="py-4 px-4 relative z-10">
         <motion.div 
           initial={{ opacity: 0, y: -20 }} 
           animate={{ opacity: 1, y: 0 }} 
@@ -43,6 +43,7 @@ const Chat = () => {
               <Button 
                 variant="ghost" 
                 className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30"
+                size="sm"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Search
@@ -80,6 +81,7 @@ const Chat = () => {
               variant="ghost" 
               onClick={() => setIsBookmarksOpen(true)}
               className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30 relative"
+              size="sm"
             >
               <BookmarkPlus className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">Bookmarks</span>
@@ -93,7 +95,7 @@ const Chat = () => {
         </motion.div>
       </header>
 
-      <main className="flex-1 container mx-auto max-w-[98vw] px-4">
+      <main className="flex-1 container mx-auto max-w-[98vw] px-4 pt-6">
         <ChatProvider>
           <ChatInterface />
         </ChatProvider>
