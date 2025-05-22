@@ -42,11 +42,15 @@ export async function generateTextWithAzureOpenAI(
     console.log(`Calling Azure OpenAI edge function with model: ${model}`);
     console.log(`Messages: ${JSON.stringify(messages.slice(-1))}`);
     
+    // Get the Supabase URL from the environment
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+    
     // Call the Supabase Edge Function that handles Azure OpenAI communication
-    const response = await fetch('/api/azure-openai', {
+    const response = await fetch(`${supabaseUrl}/functions/v1/azure-openai`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || ''}`,
       },
       body: JSON.stringify({ 
         messages,
