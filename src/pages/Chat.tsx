@@ -1,7 +1,8 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { ArrowLeft, BookmarkPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ChatInterface from '../components/chat/ChatInterface';
 import ParticleBackground from '../components/ParticleBackground';
@@ -9,64 +10,69 @@ import Footer from '../components/Footer';
 import BookmarksDrawer from '../components/BookmarksDrawer';
 import ScrollToTop from '../components/ScrollToTop';
 import { ChatProvider } from '../context/ChatContext';
-import MainNavigation from '../components/MainNavigation';
 
 const Chat = () => {
   const [isBookmarksOpen, setIsBookmarksOpen] = useState(false);
-  const [bookmarksCount, setBookmarksCount] = useState<number>(0);
-
-  // Load bookmarks count from localStorage
-  useEffect(() => {
+  const [bookmarksCount, setBookmarksCount] = useState<number>(() => {
     try {
       const bookmarks = JSON.parse(localStorage.getItem('prism_bookmarks') || '[]');
-      setBookmarksCount(bookmarks.length);
+      return bookmarks.length;
     } catch {
-      setBookmarksCount(0);
+      return 0;
     }
-
-    // Set up listener for storage changes
-    const handleStorageChange = () => {
-      try {
-        const bookmarks = JSON.parse(localStorage.getItem('prism_bookmarks') || '[]');
-        setBookmarksCount(bookmarks.length);
-      } catch {
-        setBookmarksCount(0);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
+  });
 
   return (
     <div className="min-h-screen flex flex-col bg-[#1A1F2C]">
       <ParticleBackground color="#FF9E2C" />
       <ScrollToTop />
       
-      <header className="py-4 px-4 relative z-10">
+      <header className="py-3 px-4 relative z-10">
         <motion.div 
           initial={{ opacity: 0, y: -20 }} 
           animate={{ opacity: 1, y: 0 }} 
           transition={{ duration: 0.5 }} 
-          className="relative flex justify-between items-center max-w-7xl mx-auto"
+          className="text-center relative flex justify-between items-center max-w-7xl mx-auto"
         >
-          <div className="flex items-center">
-            <MainNavigation 
-              onOpenBookmarks={() => setIsBookmarksOpen(true)} 
-              bookmarksCount={bookmarksCount}
-              variant="full"
-            />
+          <div className="flex items-center gap-3">
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }} 
+              animate={{ opacity: 1, x: 0 }}
+            >
+              <Link to="/">
+                <Button 
+                  variant="ghost" 
+                  className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30"
+                  size="sm"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Home
+                </Button>
+              </Link>
+            </motion.div>
+            
+            <Button 
+              variant="ghost" 
+              onClick={() => setIsBookmarksOpen(true)}
+              className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30 relative"
+              size="sm"
+            >
+              <BookmarkPlus className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Bookmarks</span>
+              {bookmarksCount > 0 && (
+                <span className="absolute -top-2 -right-2 w-5 h-5 bg-orange-500 rounded-full text-xs flex items-center justify-center text-white">
+                  {bookmarksCount}
+                </span>
+              )}
+            </Button>
           </div>
           
           <div className="flex justify-center items-center">
-            <Link to="/" className="flex items-center gap-2" aria-label="Go to home page">
+            <Link to="/" className="flex items-center gap-2">
               <img 
                 src="/lovable-uploads/aeaad4a8-0dc2-4d4b-b2b3-cb248e0843db.png" 
                 alt="Prism Search Logo" 
                 className="h-8 w-8"
-                loading="eager"
               />
               <motion.h1 
                 className="text-2xl font-bold bg-clip-text text-transparent 
