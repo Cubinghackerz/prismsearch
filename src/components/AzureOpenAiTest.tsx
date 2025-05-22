@@ -3,9 +3,10 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Message } from '@/services/azureOpenAiService';
 
 export default function AzureOpenAiTest() {
   const [prompt, setPrompt] = useState('I am going to Paris, what should I see?');
@@ -29,7 +30,7 @@ export default function AzureOpenAiTest() {
     setResponse('');
     
     try {
-      const messages = [
+      const messages: Message[] = [
         { role: 'system', content: 'You are a helpful assistant.' },
         { role: 'user', content: prompt }
       ];
