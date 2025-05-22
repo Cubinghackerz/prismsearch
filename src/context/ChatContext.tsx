@@ -54,6 +54,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  // Set mistral as default model and ensure Azure models aren't used
   const [selectedModel, setSelectedModel] = useState<ChatModel>('mistral');
   const [modelUsage, setModelUsage] = useState<ModelUsage>({
     mistral: DAILY_LIMITS.mistral,
@@ -229,9 +230,20 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         
         setMessages(loadedMessages);
         
-        // Also update the selected model to match the one used in this chat
+        // Update the selected model to match the one used in this chat
+        // But if it's an Azure model, use mistral instead since Azure is temporarily disabled
         if (data.length > 0 && data[0].model) {
-          setSelectedModel(data[0].model as ChatModel);
+          const chatModel = data[0].model as ChatModel;
+          if (chatModel === 'azure-gpt4-nano' || chatModel === 'azure-o4-mini') {
+            setSelectedModel('mistral');
+            toast({
+              title: "Azure models temporarily disabled",
+              description: "This chat was using an Azure model which is currently disabled. Using Mistral instead.",
+              duration: 5000,
+            });
+          } else {
+            setSelectedModel(chatModel);
+          }
         }
       }
     } catch (error) {
@@ -390,46 +402,24 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     try {
       let aiResponse: string;
 
-      // Use Azure OpenAI models if selected
-      if (selectedModel === 'azure-gpt4-nano' || selectedModel === 'azure-o4-mini') {
-        // Convert chat history to the format expected by Azure OpenAI
-        const azureMessages: Message[] = [
-          { role: 'system', content: 'You are a helpful assistant that provides concise and accurate information.' },
-        ];
-        
-        // Add the conversation history (last 10 messages for context)
-        const recentMessages = messages.slice(-10);
-        recentMessages.forEach(msg => {
-          azureMessages.push({
-            role: msg.isUser ? 'user' : 'assistant',
-            content: msg.content
-          });
-        });
-
-        // Add the current message
-        azureMessages.push({ role: 'user', content });
-
-        // Call Azure OpenAI
-        aiResponse = await generateTextWithAzureOpenAI(azureMessages);
-      } else {
-        // Use existing AI function for other models
-        const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
-          body: { 
-            query: content,
-            chatId: currentChatId,
-            chatHistory: messages,
-            model: selectedModel
-          }
-        });
-
-        if (error) {
-          console.error("Supabase function error:", error);
-          handleChatError("Sorry, I encountered an error while trying to respond. Please try again.");
-          return;
+      // Azure OpenAI models are temporarily disabled
+      // Use existing AI function for all models
+      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
+        body: { 
+          query: content,
+          chatId: currentChatId,
+          chatHistory: messages,
+          model: selectedModel
         }
-        
-        aiResponse = data.response;
+      });
+
+      if (error) {
+        console.error("Supabase function error:", error);
+        handleChatError("Sorry, I encountered an error while trying to respond. Please try again.");
+        return;
       }
+      
+      aiResponse = data.response;
       
       // Add AI response to messages
       if (aiResponse) {
