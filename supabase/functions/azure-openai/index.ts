@@ -48,9 +48,13 @@ async function generateText(messages: any[], model = 'gpt-4.1-nano') {
     const client = createAzureOpenAIClient(model);
     const modelConfig = AZURE_OPENAI_CONFIG.models[model] || AZURE_OPENAI_CONFIG.models['gpt-4.1-nano'];
     
+    console.log(`Making request to Azure OpenAI (${model}): ${modelConfig.deploymentName}`);
+    
     const response = await client.chat.completions.create({
       model: modelConfig.modelName,
       messages: messages,
+      temperature: 0.7,
+      max_tokens: 800,
     });
     
     if (!response || !response.choices || response.choices.length === 0) {
@@ -72,7 +76,18 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, model = 'gpt-4.1-nano' } = await req.json();
+    // Parse the request body
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (e) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const { messages, model = 'gpt-4.1-nano' } = requestBody;
     
     if (!Array.isArray(messages)) {
       return new Response(
@@ -87,16 +102,20 @@ serve(async (req) => {
       { role: 'user', content: 'I am going to Paris, what should I see?' }
     ];
     
-    console.log(`Sending request to Azure OpenAI (${model}):`, messagesToSend);
+    console.log(`Sending request to Azure OpenAI (${model})`, {
+      messageCount: messagesToSend.length,
+      firstUserMessage: messagesToSend.find(m => m.role === 'user')?.content?.substring(0, 50) + '...',
+    });
     
     const generatedText = await generateText(messagesToSend, model);
+    console.log('Successfully generated response:', generatedText.substring(0, 50) + '...');
     
     return new Response(
       JSON.stringify({ response: generatedText }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in Azure OpenAI edge function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

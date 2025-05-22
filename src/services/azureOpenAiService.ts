@@ -39,6 +39,9 @@ export async function generateTextWithAzureOpenAI(
   model: 'gpt-4.1-nano' | 'o4-mini' = 'gpt-4.1-nano'
 ): Promise<string> {
   try {
+    console.log(`Calling Azure OpenAI edge function with model: ${model}`);
+    console.log(`Messages: ${JSON.stringify(messages.slice(-1))}`);
+    
     // Call the Supabase Edge Function that handles Azure OpenAI communication
     const response = await fetch('/api/azure-openai', {
       method: 'POST',
@@ -52,12 +55,33 @@ export async function generateTextWithAzureOpenAI(
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`Azure OpenAI API Error: ${errorData.error || response.statusText}`);
+      let errorMessage = `Azure OpenAI API Error: ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = `Azure OpenAI API Error: ${errorData.error || response.statusText}`;
+      } catch (e) {
+        console.warn('Could not parse error response as JSON:', e);
+      }
+      throw new Error(errorMessage);
     }
 
-    const data = await response.json();
-    return data.response || '';
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error(`Invalid response content type: ${contentType}`);
+    }
+
+    const responseText = await response.text();
+    if (!responseText) {
+      throw new Error('Empty response from API');
+    }
+
+    try {
+      const data = JSON.parse(responseText);
+      return data.response || '';
+    } catch (e) {
+      console.error('Failed to parse JSON response:', responseText);
+      throw new Error(`Failed to parse API response: ${e.message}`);
+    }
   } catch (error) {
     console.error('Azure OpenAI API Error:', error);
     throw new Error(`Failed to generate text: ${error.message || 'Unknown error'}`);
