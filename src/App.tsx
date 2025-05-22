@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import Chat from "./pages/Chat";
 import Pricing from "./pages/Pricing";
 import Home from "./pages/Home";
+import AzureOpenAiTest from "./components/AzureOpenAiTest";
 
 // Create QueryClient with custom settings for better UI
 const queryClient = new QueryClient({
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/search" element={<Index />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/azure-test" element={<AzureOpenAiTest />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

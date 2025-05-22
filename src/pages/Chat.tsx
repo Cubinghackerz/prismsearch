@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, BookmarkPlus } from 'lucide-react';
+import { ArrowLeft, BookmarkPlus, Cpu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ChatInterface from '../components/chat/ChatInterface';
 import ParticleBackground from '../components/ParticleBackground';
@@ -92,8 +92,17 @@ const Chat = () => {
             </Link>
           </div>
 
-          <div className="w-[120px]">
-            {/* Empty div for flex balance */}
+          <div className="w-[120px] flex justify-end">
+            <Link to="/azure-test">
+              <Button 
+                variant="ghost" 
+                className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30"
+                size="sm"
+              >
+                <Cpu className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Azure AI</span>
+              </Button>
+            </Link>
           </div>
         </motion.div>
       </header>
