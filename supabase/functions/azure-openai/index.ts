@@ -10,34 +10,46 @@ const corsHeaders = {
 // Azure OpenAI configuration
 const AZURE_OPENAI_CONFIG = {
   endpoint: 'https://prismsearchai.cognitiveservices.azure.com/',
-  modelName: 'gpt-4.1-nano',
-  deploymentName: 'gpt-4.1-nano',
-  apiVersion: '2024-04-01-preview',
+  models: {
+    'gpt-4.1-nano': {
+      modelName: 'gpt-4.1-nano',
+      deploymentName: 'gpt-4.1-nano',
+      apiVersion: '2024-04-01-preview',
+    },
+    'o4-mini': {
+      modelName: 'o4-mini',
+      deploymentName: 'o4-mini',
+      apiVersion: '2024-04-01-preview',
+    }
+  }
 };
 
 // Create Azure OpenAI client
-function createAzureOpenAIClient() {
+function createAzureOpenAIClient(model = 'gpt-4.1-nano') {
   const apiKey = Deno.env.get('AZURE_OPENAI_API_KEY');
   
   if (!apiKey) {
     throw new Error('AZURE_OPENAI_API_KEY environment variable is not set');
   }
 
+  const modelConfig = AZURE_OPENAI_CONFIG.models[model] || AZURE_OPENAI_CONFIG.models['gpt-4.1-nano'];
+
   return new OpenAI({
     apiKey,
-    baseURL: `${AZURE_OPENAI_CONFIG.endpoint}openai/deployments/${AZURE_OPENAI_CONFIG.deploymentName}`,
-    defaultQuery: { 'api-version': AZURE_OPENAI_CONFIG.apiVersion },
+    baseURL: `${AZURE_OPENAI_CONFIG.endpoint}openai/deployments/${modelConfig.deploymentName}`,
+    defaultQuery: { 'api-version': modelConfig.apiVersion },
     defaultHeaders: { 'api-key': apiKey },
   });
 }
 
 // Generate text using Azure OpenAI
-async function generateText(messages: any[]) {
+async function generateText(messages: any[], model = 'gpt-4.1-nano') {
   try {
-    const client = createAzureOpenAIClient();
+    const client = createAzureOpenAIClient(model);
+    const modelConfig = AZURE_OPENAI_CONFIG.models[model] || AZURE_OPENAI_CONFIG.models['gpt-4.1-nano'];
     
     const response = await client.chat.completions.create({
-      model: AZURE_OPENAI_CONFIG.modelName,
+      model: modelConfig.modelName,
       messages: messages,
     });
     
@@ -60,7 +72,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages } = await req.json();
+    const { messages, model = 'gpt-4.1-nano' } = await req.json();
     
     if (!Array.isArray(messages)) {
       return new Response(
@@ -75,9 +87,9 @@ serve(async (req) => {
       { role: 'user', content: 'I am going to Paris, what should I see?' }
     ];
     
-    console.log('Sending request to Azure OpenAI:', messagesToSend);
+    console.log(`Sending request to Azure OpenAI (${model}):`, messagesToSend);
     
-    const generatedText = await generateText(messagesToSend);
+    const generatedText = await generateText(messagesToSend, model);
     
     return new Response(
       JSON.stringify({ response: generatedText }),
