@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import Chat from "./pages/Chat";
 import Pricing from "./pages/Pricing";
 import Home from "./pages/Home";
+import { useEffect } from "react";
 
 // Create QueryClient with custom settings for better UI
 const queryClient = new QueryClient({
@@ -21,6 +22,31 @@ const queryClient = new QueryClient({
   },
 });
 
+// Keyboard navigation helper component
+const KeyboardNavigationHelper = () => {
+  useEffect(() => {
+    // Add keyboard handler
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Add keyboard shortcuts
+      if (e.key === '/' && e.target !== document.querySelector('input')) {
+        e.preventDefault();
+        const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+        if (searchInput) searchInput.focus();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+  
+  return (
+    // Skip to content link - hidden but appears on tab focus
+    <a href="#main-content" className="skip-to-content">
+      Skip to content
+    </a>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -28,6 +54,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <KeyboardNavigationHelper />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/search" element={<Index />} />

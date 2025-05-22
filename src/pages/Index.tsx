@@ -1,7 +1,6 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, MessageSquare, BookmarkPlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
 import SearchResults from '../components/SearchResults';
@@ -10,12 +9,12 @@ import { SearchResult } from '../components/search/types';
 import AISearchResponse from '../components/AISearchResponse';
 import { searchAcrossEngines } from '../services/searchService';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
 import ParticleBackground from '../components/ParticleBackground';
 import ScrollToTop from '../components/ScrollToTop';
 import Footer from '../components/Footer';
 import PopularSearches from '../components/search/PopularSearches';
 import BookmarksDrawer from '../components/BookmarksDrawer';
+import MainNavigation from '../components/MainNavigation';
 
 // Search engine information with logo URLs
 const engineInfo = {
@@ -53,17 +52,27 @@ const Index = () => {
   const { toast } = useToast();
 
   // Load bookmarks count
-  useState(() => {
-    const storedBookmarks = localStorage.getItem('prism_bookmarks');
-    if (storedBookmarks) {
+  useEffect(() => {
+    const loadBookmarks = () => {
       try {
-        const bookmarks = JSON.parse(storedBookmarks);
-        setBookmarksCount(bookmarks.length);
+        const storedBookmarks = localStorage.getItem('prism_bookmarks');
+        if (storedBookmarks) {
+          const bookmarks = JSON.parse(storedBookmarks);
+          setBookmarksCount(bookmarks.length);
+        }
       } catch (e) {
         console.error('Error loading bookmarks:', e);
       }
-    }
-  });
+    };
+
+    loadBookmarks();
+    
+    // Listen for storage events to update bookmark count
+    window.addEventListener('storage', loadBookmarks);
+    return () => {
+      window.removeEventListener('storage', loadBookmarks);
+    };
+  }, []);
 
   const handleSearch = async (searchQuery: string) => {
     try {
@@ -100,27 +109,8 @@ const Index = () => {
     setIsSearching(false);
   };
 
-  const handleViewBookmarks = () => {
-    setIsBookmarksOpen(true);
-  };
-
-  // Update bookmarks count when drawer closes
-  const handleCloseBookmarks = () => {
-    setIsBookmarksOpen(false);
-    const storedBookmarks = localStorage.getItem('prism_bookmarks');
-    if (storedBookmarks) {
-      try {
-        const bookmarks = JSON.parse(storedBookmarks);
-        setBookmarksCount(bookmarks.length);
-      } catch (e) {
-        console.error('Error loading bookmarks:', e);
-      }
-    }
-  };
-
   return (
     <div className="min-h-screen flex flex-col bg-[#1A1F2C]">
-      {/* Changed ParticleBackground to have orange particles */}
       <ParticleBackground color="#FF9E2C" />
       <ScrollToTop />
       
@@ -132,39 +122,35 @@ const Index = () => {
           className="text-center relative flex justify-between items-center max-w-7xl mx-auto"
         >
           {hasSearched && (
-            <motion.div 
+            <motion.button 
               initial={{ opacity: 0, x: -20 }} 
-              animate={{ opacity: 1, x: 0 }} 
-              className="absolute left-4 top-1/2 -translate-y-1/2"
+              animate={{ opacity: 1, x: 0 }}
+              onClick={() => {
+                setHasSearched(false);
+                setResults([]);
+                setQuery('');
+                setShowResults(false);
+              }}
+              className="text-sm px-3 py-1.5 text-orange-100 bg-orange-500/20 rounded-md 
+                hover:bg-orange-500/30 transition-colors flex items-center gap-1"
+              aria-label="Start a new search"
             >
-              <Button 
-                variant="ghost" 
-                onClick={() => {
-                  setHasSearched(false);
-                  setResults([]);
-                  setQuery('');
-                  setShowResults(false);
-                }}
-                className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30"
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                New Search
-              </Button>
-            </motion.div>
+              New Search
+            </motion.button>
           )}
           
-          <div className="flex-1 flex justify-center items-center flex-col">
-            {/* Logo added */}
-            <Link to="/" className="flex items-center gap-2">
+          <div className={`flex-1 flex justify-center items-center flex-col ${hasSearched ? 'md:ml-16' : ''}`}>
+            <Link to="/" className="flex items-center gap-2" aria-label="Go to home page">
               <img 
                 src="/lovable-uploads/aeaad4a8-0dc2-4d4b-b2b3-cb248e0843db.png" 
                 alt="Prism Search Logo" 
                 className={`transition-all duration-300 ${hasSearched ? 'h-8 w-8' : 'h-10 w-10'}`}
+                loading="eager"
               />
               <motion.h1 
-                className={`text-4xl font-bold bg-clip-text text-transparent 
+                className={`font-bold bg-clip-text text-transparent 
                   bg-gradient-to-r from-orange-300 via-orange-500 to-orange-700 
-                  animate-gradient-text mb-2 ${hasSearched ? 'text-2xl' : ''}`} 
+                  animate-gradient-text ${hasSearched ? 'text-2xl' : 'text-4xl'}`} 
                 animate={{
                   backgroundPosition: ['0% 50%', '100% 50%']
                 }} 
@@ -187,27 +173,12 @@ const Index = () => {
             </motion.p>
           </div>
 
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              onClick={handleViewBookmarks}
-              className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30 relative"
-            >
-              <BookmarkPlus className="mr-2 h-4 w-4" />
-              {bookmarksCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full text-xs flex items-center justify-center">
-                  {bookmarksCount}
-                </span>
-              )}
-              <span className="hidden sm:inline">Bookmarks</span>
-            </Button>
-            
-            <Link to="/chat">
-              <Button variant="ghost" className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30">
-                <MessageSquare className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">Chat Mode</span>
-              </Button>
-            </Link>
+          <div className="flex items-center gap-2">
+            <MainNavigation 
+              onOpenBookmarks={() => setIsBookmarksOpen(true)} 
+              bookmarksCount={bookmarksCount}
+              variant={hasSearched ? 'compact' : 'full'}
+            />
           </div>
         </motion.div>
       </header>
@@ -256,10 +227,9 @@ const Index = () => {
             transition={{ delay: 0.5, duration: 0.5 }}
             className="mt-6 text-center"
           >
-            {/* Add Popular Searches component */}
             <PopularSearches onSelectSearch={handleSearch} />
             
-            <div className="flex justify-center space-x-6 mt-8">
+            <div className="flex flex-wrap justify-center gap-6 mt-8">
               {Object.entries(engineInfo).map(([engine, info]) => (
                 <motion.a
                   key={engine}
@@ -271,21 +241,11 @@ const Index = () => {
                   transition={{ type: "spring", stiffness: 400, damping: 10 }}
                 >
                   <div
-                    className={`w-14 h-14 rounded-full mx-auto mb-3 flex items-center justify-center 
+                    className="w-14 h-14 rounded-full mx-auto mb-3 flex items-center justify-center 
                       backdrop-blur-md border border-orange-200/10
-                      ${
-                        engine === 'Google'
-                          ? 'bg-orange-500/80'
-                          : engine === 'Bing'
-                          ? 'bg-orange-700/80'
-                          : engine === 'DuckDuckGo'
-                          ? 'bg-orange-600/80'
-                          : engine === 'Brave'
-                          ? 'bg-orange-500/80'
-                          : 'bg-orange-500/80'
-                      } 
+                      bg-orange-500/80
                       hover:border-orange-300/20 transition-all duration-300
-                      shadow-lg shadow-orange-800/10 hover:shadow-xl hover:shadow-orange-700/20 glow-button`}
+                      shadow-lg shadow-orange-800/10 hover:shadow-xl hover:shadow-orange-700/20 glow-button"
                   >
                     <img
                       src={info.logo}
@@ -297,6 +257,7 @@ const Index = () => {
                         target.parentElement!.innerHTML += `<span class="text-xl font-bold text-white">${engine[0]}</span>`;
                       }}
                       className="w-8 h-8 object-contain"
+                      loading="lazy"
                     />
                   </div>
                   <span className="text-sm font-medium text-orange-100 opacity-90 hover:opacity-100 transition-opacity">
@@ -321,10 +282,9 @@ const Index = () => {
         <Footer />
       </footer>
 
-      {/* Bookmarks Drawer */}
       <BookmarksDrawer 
         isOpen={isBookmarksOpen} 
-        onClose={handleCloseBookmarks} 
+        onClose={() => setIsBookmarksOpen(false)} 
       />
     </div>
   );

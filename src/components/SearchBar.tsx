@@ -1,11 +1,10 @@
 
 import { useState, KeyboardEvent, useRef, useEffect } from 'react';
-import { Search, X, Sparkles, BookmarkPlus } from 'lucide-react';
+import { Search, X, Sparkles } from 'lucide-react';
 import LoadingAnimation from './LoadingAnimation';
 import AutocompleteDropdown from './search/AutocompleteDropdown';
 import { useAutocomplete } from '@/hooks/useAutocomplete';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useToast } from '@/hooks/use-toast';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -32,11 +31,9 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
   
   const [isFocused, setIsFocused] = useState(false);
   const [sparkTrigger, setSparkTrigger] = useState(0); // Used to trigger new spark animations
-  const [showSearchOptions, setShowSearchOptions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchBarRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -48,7 +45,6 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
         !inputRef.current.contains(e.target as Node)
       ) {
         handleClickOutside();
-        setShowSearchOptions(false);
       }
     };
     
@@ -81,7 +77,6 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
   const handleSearch = () => {
     if (query.trim()) {
       onSearch(query);
-      setShowSearchOptions(false);
     }
   };
 
@@ -103,38 +98,6 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
     setTimeout(() => {
       onSearch(suggestion);
     }, 10);
-  };
-
-  // Handle bookmarks
-  const handleViewBookmarks = () => {
-    const bookmarks = localStorage.getItem('prism_bookmarks');
-    if (bookmarks) {
-      try {
-        const bookmarkList = JSON.parse(bookmarks);
-        if (bookmarkList.length === 0) {
-          toast({
-            title: "No bookmarks yet",
-            description: "Save search results to view them here.",
-            variant: "default",
-          });
-        } else {
-          toast({
-            title: `${bookmarkList.length} bookmarks saved`,
-            description: "You can access bookmarks from the search options.",
-            variant: "default",
-          });
-          // If we had a bookmarks page, we would navigate to it here
-        }
-      } catch (e) {
-        console.error('Error parsing bookmarks', e);
-      }
-    } else {
-      toast({
-        title: "No bookmarks yet",
-        description: "Save search results to view them here.",
-        variant: "default",
-      });
-    }
   };
 
   // Create more sparks with varying positions and timing
@@ -185,17 +148,13 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
                   onSearch(query);
                 }
               }}
-              onFocus={() => {
-                setIsFocused(true);
-                // Show search options after a short delay when focusing
-                setTimeout(() => setShowSearchOptions(true), 500);
-              }}
+              onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               className="peer h-full w-full outline-none text-lg text-white/90 px-2 bg-transparent 
-                placeholder:text-orange-200/30 
+                placeholder:text-orange-200/40
                 transition-all duration-300 
                 placeholder:transition-opacity placeholder:duration-300
-                focus:placeholder:opacity-50
+                focus:placeholder:opacity-60
                 focus:text-white"
               type="text"
               placeholder="Search across the web..."
@@ -204,29 +163,16 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
               aria-autocomplete="list"
               aria-controls="search-suggestions"
               aria-expanded={isOpen}
+              accessKey="/"
             />
-            
-            {/* Search options button - Only show bookmarks option */}
-            {!isSearching && (
-              <button
-                onClick={handleViewBookmarks}
-                className="absolute right-28 h-8 flex items-center gap-1 px-3 py-1 text-sm text-orange-300/70 
-                  hover:text-orange-200 transition-all duration-300 rounded-full 
-                  hover:bg-orange-500/10 border border-transparent hover:border-orange-500/20"
-                aria-label="Search options"
-              >
-                <BookmarkPlus className="h-4 w-4" />
-                <span className="hidden sm:inline">Bookmarks</span>
-              </button>
-            )}
             
             {query && !isSearching && (
               <button
                 onClick={handleClear}
-                className="absolute right-28 h-8 w-8 flex items-center justify-center text-orange-300/70 
+                className="h-8 w-8 flex items-center justify-center text-orange-300/70 
                   hover:text-orange-200 transition-all duration-300 rounded-full 
                   hover:bg-orange-500/10 hover:scale-110
-                  active:scale-95"
+                  active:scale-95 mx-1"
                 aria-label="Clear search"
               >
                 <X className="h-4 w-4" />
@@ -237,7 +183,7 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
               onClick={handleSearch}
               disabled={isSearching || !query.trim()} 
               className={`
-                absolute right-2 h-12 w-24 rounded-xl text-white font-medium
+                h-12 w-24 rounded-xl text-white font-medium mx-2
                 transition-all duration-300 
                 ${query.trim() && !isSearching 
                   ? 'bg-gradient-to-r from-orange-500 to-orange-700 hover:from-orange-600 hover:to-orange-800 cursor-pointer shadow-lg shadow-orange-900/30 hover:shadow-orange-800/40 hover:scale-105 active:scale-95 ember-glow' 
@@ -257,7 +203,7 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
               )}
             </button>
             
-            {/* Dynamic spark animation - trigger-based for continuous effects */}
+            {/* Dynamic spark animation */}
             {isFocused && !isSearching && (
               <>
                 {sparks.map((_, i) => {
@@ -289,9 +235,9 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
                       }}
                     >
                       <div 
-                        className={`w-2 h-2 rounded-full 
+                        className="w-2 h-2 rounded-full 
                           bg-gradient-to-t from-orange-500 via-orange-300 to-yellow-200
-                          shadow-[0_0_10px_rgba(255,158,44,0.7)]`}
+                          shadow-[0_0_10px_rgba(255,158,44,0.7)]"
                       />
                     </motion.div>
                   );
