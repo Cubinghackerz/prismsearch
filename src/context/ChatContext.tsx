@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { Message, generateTextWithAzureOpenAI } from '@/services/azureOpenAiService';
 
-export type ChatModel = 'mistral' | 'groq' | 'gemini' | 'azure-gpt4-nano' | 'azure-o4-mini';
+export type ChatModel = 'mistral' | 'groq' | 'gemini' | 'azure-gpt4-nano' | 'azure-o4-mini' | 'groq-qwen-qwq' | 'groq-llama4-scout';
 
 export interface ChatMessage {
   id: string;
@@ -20,6 +20,8 @@ interface ModelUsage {
   gemini: number | null; // null means unlimited
   'azure-gpt4-nano': number | null;
   'azure-o4-mini': number | null;
+  'groq-qwen-qwq': number | null;
+  'groq-llama4-scout': number | null;
 }
 
 interface ChatContextType {
@@ -44,6 +46,8 @@ const DAILY_LIMITS = {
   gemini: null, // Unlimited
   'azure-gpt4-nano': null, // Unlimited
   'azure-o4-mini': null, // Unlimited
+  'groq-qwen-qwq': null, // Unlimited
+  'groq-llama4-scout': null, // Unlimited
 };
 
 const USAGE_KEY = 'prism_search_ai_usage';
@@ -62,6 +66,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     gemini: DAILY_LIMITS.gemini,
     'azure-gpt4-nano': DAILY_LIMITS['azure-gpt4-nano'],
     'azure-o4-mini': DAILY_LIMITS['azure-o4-mini'],
+    'groq-qwen-qwq': DAILY_LIMITS['groq-qwen-qwq'],
+    'groq-llama4-scout': DAILY_LIMITS['groq-llama4-scout'],
   });
   const { toast } = useToast();
 
@@ -80,6 +86,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           gemini: DAILY_LIMITS.gemini,
           'azure-gpt4-nano': DAILY_LIMITS['azure-gpt4-nano'],
           'azure-o4-mini': DAILY_LIMITS['azure-o4-mini'],
+          'groq-qwen-qwq': DAILY_LIMITS['groq-qwen-qwq'],
+          'groq-llama4-scout': DAILY_LIMITS['groq-llama4-scout'],
         };
         localStorage.setItem(USAGE_KEY, JSON.stringify(resetUsage));
         setModelUsage(resetUsage);
@@ -287,6 +295,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       gemini: "Gemini 2.5 Flash",
       'azure-gpt4-nano': "GPT-4.1 Nano (Azure)",
       'azure-o4-mini': "O4 Mini (Azure)",
+      'groq-qwen-qwq': "Qwen-QwQ (Groq)",
+      'groq-llama4-scout': "Llama 4 Scout (Groq)",
     };
     return displayNames[model] || model;
   };

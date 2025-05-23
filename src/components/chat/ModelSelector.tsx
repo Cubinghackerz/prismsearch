@@ -46,6 +46,22 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
         />
 
         <ModelOption 
+          value="groq-qwen-qwq" 
+          name="Qwen-QwQ" 
+          description="Specialized AI model on Groq" 
+          badge={{ text: "New", color: "yellow" }} 
+          isSelected={selectedModel === 'groq-qwen-qwq'}
+        />
+
+        <ModelOption 
+          value="groq-llama4-scout" 
+          name="Llama 4 Scout" 
+          description="Latest Llama model on Groq" 
+          badge={{ text: "New", color: "yellow" }} 
+          isSelected={selectedModel === 'groq-llama4-scout'}
+        />
+
+        <ModelOption 
           value="gemini" 
           name="Gemini 2.5" 
           description="Google's latest AI model" 
