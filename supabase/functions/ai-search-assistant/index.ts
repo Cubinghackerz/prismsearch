@@ -1,3 +1,4 @@
+
 // Import required Deno modules
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -141,7 +142,7 @@ async function processGroqQwenRequest(query: string, chatHistory?: any[]) {
       'Authorization': `Bearer ${GROQ_API_KEY}`,
     },
     body: JSON.stringify({
-      model: 'qwen2.5-72b-instruct',
+      model: 'qwen-qwq-32b',
       messages: messages,
       temperature: 0.7,
       max_tokens: 2048,
@@ -174,7 +175,7 @@ async function processGroqLlama4ScoutRequest(query: string, chatHistory?: any[])
       'Authorization': `Bearer ${GROQ_API_KEY}`,
     },
     body: JSON.stringify({
-      model: 'llama-3.1-70b-versatile',
+      model: 'llama-3.3-70b-specdec',
       messages: messages,
       temperature: 0.7,
       max_tokens: 2048,
