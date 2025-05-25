@@ -1,3 +1,4 @@
+
 import { getAzureOpenAI } from '../lib/azure-openai';
 import type { ChatMessage as AzureChatMessage } from '../types/azure-openai';
 
@@ -141,6 +142,3 @@ export async function exampleNewAzureOpenAIUsage(): Promise<string> {
     return `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
   }
 }
-
-// Re-export types for backwards compatibility
-export type { LegacyMessage };
