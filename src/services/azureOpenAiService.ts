@@ -1,4 +1,3 @@
-
 import { getAzureOpenAI } from '../lib/azure-openai';
 import type { ChatMessage as AzureChatMessage } from '../types/azure-openai';
 

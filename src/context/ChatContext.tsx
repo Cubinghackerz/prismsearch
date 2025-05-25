@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
-import { generateTextWithAzureOpenAI, Message } from '@/services/azureOpenAiService';
+import { generateTextWithAzureOpenAI, LegacyMessage } from '@/services/azureOpenAiService';
 
 export type ChatModel = 'mistral' | 'groq' | 'gemini' | 'azure-o4-mini' | 'groq-qwen-qwq' | 'groq-llama4-scout';
 
@@ -399,7 +399,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
       // Handle Azure OpenAI models
       if (selectedModel === 'azure-o4-mini') {
-        const azureMessages: Message[] = [
+        const azureMessages: LegacyMessage[] = [
           { role: 'system', content: 'You are a helpful search assistant for PrismSearch.' },
           ...messages.map(msg => ({
             role: msg.isUser ? 'user' as const : 'assistant' as const,
