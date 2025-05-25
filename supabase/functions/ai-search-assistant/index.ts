@@ -1,4 +1,3 @@
-
 // Import required Deno modules
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -11,6 +10,8 @@ async function processRequest(model: string, query: string, chatId?: string, cha
   switch (model) {
     case 'mistral':
       return processMistralRequest(query, chatHistory);
+    case 'mistral-medium-3':
+      return processMistralMedium3Request(query, chatHistory);
     case 'groq':
       return processGroqRequest(query, chatHistory);
     case 'gemini':
@@ -51,6 +52,39 @@ async function processMistralRequest(query: string, chatHistory?: any[]) {
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`Mistral API error: ${error}`);
+  }
+  
+  const data = await response.json();
+  return data.choices[0].message.content;
+}
+
+// Process request with Mistral Medium 3 API
+async function processMistralMedium3Request(query: string, chatHistory?: any[]) {
+  const MISTRAL_MEDIUM_3_API_KEY = Deno.env.get('MISTRAL_MEDIUM_3_API_KEY');
+  
+  if (!MISTRAL_MEDIUM_3_API_KEY) {
+    throw new Error('Mistral Medium 3 API key is not set');
+  }
+  
+  const messages = formatChatHistory(chatHistory, query);
+  
+  const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${MISTRAL_MEDIUM_3_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: 'mistral-medium-3',
+      messages: messages,
+      max_tokens: 2048,
+      temperature: 0.7,
+    }),
+  });
+  
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Mistral Medium 3 API error: ${error}`);
   }
   
   const data = await response.json();

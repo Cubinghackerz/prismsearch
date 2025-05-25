@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { Message, generateTextWithAzureOpenAI } from '@/services/azureOpenAiService';
 
-export type ChatModel = 'mistral' | 'groq' | 'gemini' | 'azure-gpt4-nano' | 'azure-o4-mini' | 'groq-qwen-qwq' | 'groq-llama4-scout';
+export type ChatModel = 'mistral' | 'groq' | 'gemini' | 'azure-gpt4-nano' | 'azure-o4-mini' | 'groq-qwen-qwq' | 'groq-llama4-scout' | 'mistral-medium-3';
 
 export interface ChatMessage {
   id: string;
@@ -22,6 +22,7 @@ interface ModelUsage {
   'azure-o4-mini': number | null;
   'groq-qwen-qwq': number | null;
   'groq-llama4-scout': number | null;
+  'mistral-medium-3': number | null;
 }
 
 interface ChatContextType {
@@ -48,6 +49,7 @@ const DAILY_LIMITS = {
   'azure-o4-mini': null, // Unlimited
   'groq-qwen-qwq': null, // Unlimited
   'groq-llama4-scout': null, // Unlimited
+  'mistral-medium-3': null, // Unlimited
 };
 
 const USAGE_KEY = 'prism_search_ai_usage';
@@ -68,6 +70,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     'azure-o4-mini': DAILY_LIMITS['azure-o4-mini'],
     'groq-qwen-qwq': DAILY_LIMITS['groq-qwen-qwq'],
     'groq-llama4-scout': DAILY_LIMITS['groq-llama4-scout'],
+    'mistral-medium-3': DAILY_LIMITS['mistral-medium-3'],
   });
   const { toast } = useToast();
 
@@ -88,6 +91,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           'azure-o4-mini': DAILY_LIMITS['azure-o4-mini'],
           'groq-qwen-qwq': DAILY_LIMITS['groq-qwen-qwq'],
           'groq-llama4-scout': DAILY_LIMITS['groq-llama4-scout'],
+          'mistral-medium-3': DAILY_LIMITS['mistral-medium-3'],
         };
         localStorage.setItem(USAGE_KEY, JSON.stringify(resetUsage));
         setModelUsage(resetUsage);
@@ -297,6 +301,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       'azure-o4-mini': "O4 Mini (Azure)",
       'groq-qwen-qwq': "Qwen-QwQ (Groq)",
       'groq-llama4-scout': "Llama 4 Scout (Groq)",
+      'mistral-medium-3': "Mistral Medium 3",
     };
     return displayNames[model] || model;
   };
