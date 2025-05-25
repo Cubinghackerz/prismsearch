@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -334,7 +335,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           chat_id: currentChatId,
           content: message.content,
           is_user: message.isUser,
-          parent_message_id: message.parentMessageId,
+          parent_message_id: message.parentMessageId || null,
           created_at: message.timestamp.toISOString(),
           model: selectedModel,
         });
