@@ -1,8 +1,10 @@
 
-import OpenAI from 'openai';
+import { getAzureOpenAI } from '../lib/azure-openai';
+import type { ChatMessage as AzureChatMessage } from '../types/azure-openai';
 
 /**
  * Interface for the messages sent to the Azure OpenAI API
+ * @deprecated Use ChatMessage from types/azure-openai.ts instead
  */
 export interface Message {
   role: 'system' | 'user' | 'assistant';
@@ -10,37 +12,20 @@ export interface Message {
 }
 
 /**
- * Configuration for Azure OpenAI
- */
-const AZURE_OPENAI_CONFIG = {
-  endpoint: 'https://punar-maz8m55t-eastus2.cognitiveservices.azure.com/',
-  models: {
-    'o4-mini': {
-      modelName: 'o4-mini',
-      deploymentName: 'o4-mini',
-      apiVersion: '2025-01-01-preview',
-    }
-  }
-};
-
-/**
- * Sends a request to Azure OpenAI for text generation via the Supabase Edge Function
- * @param messages Array of message objects to send to the API
- * @param model Optional model to use. Defaults to o4-mini
- * @returns The generated response text
+ * Legacy function for backwards compatibility
+ * @deprecated Use getAzureOpenAI from lib/azure-openai.ts instead
  */
 export async function generateTextWithAzureOpenAI(
   messages: Message[], 
   model: 'o4-mini' = 'o4-mini'
 ): Promise<string> {
   try {
-    console.log(`Calling Azure OpenAI edge function with model: ${model}`);
-    console.log(`Messages: ${JSON.stringify(messages.slice(-1))}`);
+    console.log(`Legacy function called - consider migrating to new Azure OpenAI service`);
     
-    // Get the Supabase URL from the environment
+    // Get the API key from environment or Supabase
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
     
-    // Call the Supabase Edge Function that handles Azure OpenAI communication
+    // Call the Supabase Edge Function for backwards compatibility
     const response = await fetch(`${supabaseUrl}/functions/v1/azure-openai`, {
       method: 'POST',
       headers: {
@@ -54,44 +39,20 @@ export async function generateTextWithAzureOpenAI(
     });
 
     if (!response.ok) {
-      let errorMessage = `Azure OpenAI API Error: ${response.statusText}`;
-      try {
-        const errorData = await response.json();
-        errorMessage = `Azure OpenAI API Error: ${errorData.error || response.statusText}`;
-      } catch (e) {
-        console.warn('Could not parse error response as JSON:', e);
-      }
-      throw new Error(errorMessage);
+      throw new Error(`Azure OpenAI API Error: ${response.statusText}`);
     }
 
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      throw new Error(`Invalid response content type: ${contentType}`);
-    }
-
-    const responseText = await response.text();
-    if (!responseText) {
-      throw new Error('Empty response from API');
-    }
-
-    try {
-      const data = JSON.parse(responseText);
-      return data.response || '';
-    } catch (e) {
-      console.error('Failed to parse JSON response:', responseText);
-      throw new Error(`Failed to parse API response: ${e.message}`);
-    }
+    const data = await response.json();
+    return data.response || '';
   } catch (error) {
     console.error('Azure OpenAI API Error:', error);
-    throw new Error(`Failed to generate text: ${error.message || 'Unknown error'}`);
+    throw new Error(`Failed to generate text: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
 /**
- * Sends a streaming request to Azure OpenAI
- * @param messages Array of message objects to send to the API
- * @param onChunk Callback function to handle streaming chunks
- * @param model Optional model to use. Defaults to o4-mini
+ * Legacy streaming function for backwards compatibility
+ * @deprecated Use the new AzureOpenAIService class instead
  */
 export async function generateStreamingTextWithAzureOpenAI(
   messages: Message[],
@@ -99,7 +60,7 @@ export async function generateStreamingTextWithAzureOpenAI(
   model: 'o4-mini' = 'o4-mini'
 ): Promise<void> {
   try {
-    console.log(`Calling Azure OpenAI streaming with model: ${model}`);
+    console.log(`Legacy streaming function called - consider migrating to new service`);
     
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
     
@@ -149,7 +110,6 @@ export async function generateStreamingTextWithAzureOpenAI(
               onChunk(content);
             }
           } catch (e) {
-            // Skip invalid JSON chunks
             continue;
           }
         }
@@ -157,25 +117,31 @@ export async function generateStreamingTextWithAzureOpenAI(
     }
   } catch (error) {
     console.error('Azure OpenAI Streaming Error:', error);
-    throw new Error(`Failed to generate streaming text: ${error.message || 'Unknown error'}`);
+    throw new Error(`Failed to generate streaming text: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
 /**
- * Example usage of the Azure OpenAI service
+ * Example usage of the new Azure OpenAI service
  */
-export async function exampleAzureOpenAIUsage(): Promise<string> {
-  const messages: Message[] = [
+export async function exampleNewAzureOpenAIUsage(): Promise<string> {
+  const apiKey = 'your-api-key'; // Get from secure source
+  const azureService = getAzureOpenAI(apiKey);
+  
+  const messages: AzureChatMessage[] = [
     { role: 'system', content: 'You are a helpful search assistant for PrismSearch.' },
     { role: 'user', content: 'I am going to Paris, what should I see?' }
   ];
   
   try {
-    const response = await generateTextWithAzureOpenAI(messages);
-    console.log('Azure OpenAI Response:', response);
-    return response;
+    const response = await azureService.chat(messages);
+    console.log('New Azure OpenAI Response:', response.response);
+    return response.response;
   } catch (error) {
-    console.error('Error in example usage:', error);
-    return `Error: ${error.message}`;
+    console.error('Error in new service usage:', error);
+    return `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
   }
 }
+
+// Re-export types for backwards compatibility
+export type { Message };
