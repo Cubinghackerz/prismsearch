@@ -2,9 +2,9 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
-import { generateTextWithAzureOpenAI, LegacyMessage } from '@/services/azureOpenAiService';
+import { Message, generateTextWithAzureOpenAI } from '@/services/azureOpenAiService';
 
-export type ChatModel = 'mistral' | 'groq' | 'gemini' | 'azure-o4-mini' | 'groq-qwen-qwq' | 'groq-llama4-scout';
+export type ChatModel = 'mistral' | 'groq' | 'gemini' | 'azure-gpt4-nano' | 'azure-o4-mini' | 'groq-qwen-qwq' | 'groq-llama4-scout';
 
 export interface ChatMessage {
   id: string;
@@ -17,7 +17,8 @@ export interface ChatMessage {
 interface ModelUsage {
   mistral: number | null;
   groq: number | null;
-  gemini: number | null;
+  gemini: number | null; // null means unlimited
+  'azure-gpt4-nano': number | null;
   'azure-o4-mini': number | null;
   'groq-qwen-qwq': number | null;
   'groq-llama4-scout': number | null;
@@ -43,6 +44,7 @@ const DAILY_LIMITS = {
   mistral: null, // Unlimited
   groq: null, // Unlimited
   gemini: null, // Unlimited
+  'azure-gpt4-nano': null, // Unlimited
   'azure-o4-mini': null, // Unlimited
   'groq-qwen-qwq': null, // Unlimited
   'groq-llama4-scout': null, // Unlimited
@@ -56,56 +58,18 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  // Set mistral as default model and ensure Azure models aren't used
   const [selectedModel, setSelectedModel] = useState<ChatModel>('mistral');
   const [modelUsage, setModelUsage] = useState<ModelUsage>({
     mistral: DAILY_LIMITS.mistral,
     groq: DAILY_LIMITS.groq,
     gemini: DAILY_LIMITS.gemini,
+    'azure-gpt4-nano': DAILY_LIMITS['azure-gpt4-nano'],
     'azure-o4-mini': DAILY_LIMITS['azure-o4-mini'],
     'groq-qwen-qwq': DAILY_LIMITS['groq-qwen-qwq'],
     'groq-llama4-scout': DAILY_LIMITS['groq-llama4-scout'],
   });
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { toast } = useToast();
-
-  // Get current user session
-  useEffect(() => {
-    const getCurrentUser = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error('Error getting session:', error);
-          return;
-        }
-        
-        if (session?.user) {
-          setCurrentUserId(session.user.id);
-        } else {
-          // For demo purposes, create a temporary user ID if no auth
-          const tempUserId = localStorage.getItem('temp_user_id') || uuidv4();
-          localStorage.setItem('temp_user_id', tempUserId);
-          setCurrentUserId(tempUserId);
-        }
-      } catch (error) {
-        console.error('Failed to get current user:', error);
-        // Fallback to temporary user ID
-        const tempUserId = localStorage.getItem('temp_user_id') || uuidv4();
-        localStorage.setItem('temp_user_id', tempUserId);
-        setCurrentUserId(tempUserId);
-      }
-    };
-
-    getCurrentUser();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user) {
-        setCurrentUserId(session.user.id);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   // Load and initialize usage data
   useEffect(() => {
@@ -113,12 +77,14 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       const today = new Date().toDateString();
       const lastUsageDate = localStorage.getItem(LAST_USAGE_DATE_KEY);
       
+      // Reset usage if it's a new day
       if (lastUsageDate !== today) {
         localStorage.setItem(LAST_USAGE_DATE_KEY, today);
         const resetUsage: ModelUsage = {
           mistral: DAILY_LIMITS.mistral,
           groq: DAILY_LIMITS.groq,
           gemini: DAILY_LIMITS.gemini,
+          'azure-gpt4-nano': DAILY_LIMITS['azure-gpt4-nano'],
           'azure-o4-mini': DAILY_LIMITS['azure-o4-mini'],
           'groq-qwen-qwq': DAILY_LIMITS['groq-qwen-qwq'],
           'groq-llama4-scout': DAILY_LIMITS['groq-llama4-scout'],
@@ -128,6 +94,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       
+      // Load existing usage data
       const savedUsage = localStorage.getItem(USAGE_KEY);
       if (savedUsage) {
         setModelUsage(JSON.parse(savedUsage));
@@ -140,13 +107,12 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   // Load most recent chat if no chat is active
   useEffect(() => {
     const loadMostRecentChat = async () => {
-      if (chatId || !currentUserId) return;
+      if (chatId) return; // Skip if we already have a chat loaded
       
       try {
         const { data, error } = await supabase
           .from('chat_messages')
           .select('chat_id, created_at')
-          .eq('user_id', currentUserId)
           .order('created_at', { ascending: false })
           .limit(1);
 
@@ -158,6 +124,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         if (data && data.length > 0) {
           await loadChatById(data[0].chat_id);
         } else {
+          // No chats found, start a new one
           startNewChat();
         }
       } catch (error) {
@@ -166,19 +133,16 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     };
 
     loadMostRecentChat();
-  }, [currentUserId]);
+  }, []);
 
   // Load chat messages from Supabase when chatId changes
   useEffect(() => {
     const loadMessages = async (currentChatId: string) => {
-      if (!currentUserId) return;
-      
       try {
         const { data, error } = await supabase
           .from('chat_messages')
           .select('*')
           .eq('chat_id', currentChatId)
-          .eq('user_id', currentUserId)
           .order('created_at', { ascending: true });
 
         if (error) {
@@ -197,6 +161,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           
           setMessages(loadedMessages);
         } else {
+          // No messages found for this chat ID, might be a deleted chat
           console.log('No messages found for this chat ID:', currentChatId);
           setMessages([]);
         }
@@ -205,21 +170,19 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
-    if (chatId && currentUserId) {
+    if (chatId) {
       loadMessages(chatId);
     }
-  }, [chatId, currentUserId]);
+  }, [chatId]);
   
   // Load a specific chat by ID
   const loadChatById = async (id: string) => {
-    if (!currentUserId) return;
-    
     try {
+      // First check if this chat exists and has messages
       const { data: chatExists, error: checkError } = await supabase
         .from('chat_messages')
         .select('id')
         .eq('chat_id', id)
-        .eq('user_id', currentUserId)
         .limit(1);
 
       if (checkError) {
@@ -234,6 +197,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (!chatExists || chatExists.length === 0) {
+        // Chat doesn't exist, probably deleted
         toast({
           variant: "destructive",
           title: "Chat not found",
@@ -250,7 +214,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         .from('chat_messages')
         .select('*')
         .eq('chat_id', id)
-        .eq('user_id', currentUserId)
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -275,9 +238,20 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         
         setMessages(loadedMessages);
         
+        // Update the selected model to match the one used in this chat
+        // But if it's an Azure model, use mistral instead since Azure is temporarily disabled
         if (data.length > 0 && data[0].model) {
           const chatModel = data[0].model as ChatModel;
-          setSelectedModel(chatModel);
+          if (chatModel === 'azure-gpt4-nano' || chatModel === 'azure-o4-mini') {
+            setSelectedModel('mistral');
+            toast({
+              title: "Azure models temporarily disabled",
+              description: "This chat was using an Azure model which is currently disabled. Using Mistral instead.",
+              duration: 5000,
+            });
+          } else {
+            setSelectedModel(chatModel);
+          }
         }
       }
     } catch (error) {
@@ -319,6 +293,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       mistral: "Mistral Medium",
       groq: "Llama-3-70B (Groq)",
       gemini: "Gemini 2.5 Flash",
+      'azure-gpt4-nano': "GPT-4.1 Nano (Azure)",
       'azure-o4-mini': "O4 Mini (Azure)",
       'groq-qwen-qwq': "Qwen-QwQ (Groq)",
       'groq-llama4-scout': "Llama 4 Scout (Groq)",
@@ -346,18 +321,12 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
   // Save message to Supabase
   const saveMessageToSupabase = async (message: ChatMessage, currentChatId: string) => {
-    if (!currentUserId) {
-      console.error('Cannot save message: no user ID available');
-      return;
-    }
-    
     try {
       const { error } = await supabase
         .from('chat_messages')
         .insert({
           id: message.id,
           chat_id: currentChatId,
-          user_id: currentUserId,
           content: message.content,
           is_user: message.isUser,
           parent_message_id: message.parentMessageId,
@@ -375,14 +344,12 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
   // Delete a chat and its messages
   const deleteChat = async (id: string): Promise<void> => {
-    if (!currentUserId) return;
-    
     try {
+      // Delete all messages for this chat from Supabase
       const { error } = await supabase
         .from('chat_messages')
         .delete()
-        .eq('chat_id', id)
-        .eq('user_id', currentUserId);
+        .eq('chat_id', id);
         
       if (error) {
         console.error('Error deleting chat messages:', error);
@@ -395,6 +362,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      // If we're deleting the currently active chat, start a new chat
       if (chatId === id) {
         startNewChat();
       }
@@ -417,13 +385,15 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
   // Send a message to the AI
   const sendMessage = async (content: string, parentMessageId?: string) => {
-    if (!content.trim() || !currentUserId) return;
+    if (!content.trim()) return;
     
+    // Initialize chat if needed
     const currentChatId = chatId || uuidv4();
     if (!chatId) {
       setChatId(currentChatId);
     }
     
+    // Create a new message
     const userMessage: ChatMessage = {
       id: uuidv4(),
       content,
@@ -436,51 +406,44 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     setIsTyping(true);
 
+    // Save user message to Supabase
     await saveMessageToSupabase(userMessage, currentChatId);
 
     try {
       let aiResponse: string;
 
-      if (selectedModel === 'azure-o4-mini') {
-        const azureMessages: LegacyMessage[] = [
-          { role: 'system', content: 'You are a helpful search assistant for PrismSearch.' },
-          ...messages.map(msg => ({
-            role: msg.isUser ? 'user' as const : 'assistant' as const,
-            content: msg.content
-          })),
-          { role: 'user', content }
-        ];
-
-        aiResponse = await generateTextWithAzureOpenAI(azureMessages, 'o4-mini');
-      } else {
-        const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
-          body: { 
-            query: content,
-            chatId: currentChatId,
-            chatHistory: messages,
-            model: selectedModel
-          }
-        });
-
-        if (error) {
-          console.error("Supabase function error:", error);
-          handleChatError("Sorry, I encountered an error while trying to respond. Please try again.");
-          return;
+      // Azure OpenAI models are temporarily disabled
+      // Use existing AI function for all models
+      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
+        body: { 
+          query: content,
+          chatId: currentChatId,
+          chatHistory: messages,
+          model: selectedModel
         }
-        
-        aiResponse = data.response;
+      });
+
+      if (error) {
+        console.error("Supabase function error:", error);
+        handleChatError("Sorry, I encountered an error while trying to respond. Please try again.");
+        return;
       }
       
+      aiResponse = data.response;
+      
+      // Add AI response to messages
       if (aiResponse) {
         const aiMessage: ChatMessage = {
           id: uuidv4(),
           content: aiResponse,
           isUser: false,
           timestamp: new Date(),
-          parentMessageId: userMessage.id,
+          parentMessageId: userMessage.id, // This makes it a direct reply to the user's message
         };
         
         setMessages(prev => [...prev, aiMessage]);
+        
+        // Save AI message to Supabase
         await saveMessageToSupabase(aiMessage, currentChatId);
       } else {
         handleChatError("Received an empty response from the AI. Please try again.");

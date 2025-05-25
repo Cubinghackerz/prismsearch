@@ -9,25 +9,30 @@ const corsHeaders = {
 
 // Azure OpenAI configuration
 const AZURE_OPENAI_CONFIG = {
-  endpoint: 'https://punar-maz8m55t-eastus2.cognitiveservices.azure.com/',
+  endpoint: 'https://prismsearchai.cognitiveservices.azure.com/',
   models: {
+    'gpt-4.1-nano': {
+      modelName: 'gpt-4.1-nano',
+      deploymentName: 'gpt-4.1-nano',
+      apiVersion: '2024-04-01-preview',
+    },
     'o4-mini': {
       modelName: 'o4-mini',
       deploymentName: 'o4-mini',
-      apiVersion: '2025-01-01-preview',
+      apiVersion: '2024-04-01-preview',
     }
   }
 };
 
 // Create Azure OpenAI client
-function createAzureOpenAIClient(model = 'o4-mini') {
+function createAzureOpenAIClient(model = 'gpt-4.1-nano') {
   const apiKey = Deno.env.get('AZURE_OPENAI_API_KEY');
   
   if (!apiKey) {
     throw new Error('AZURE_OPENAI_API_KEY environment variable is not set');
   }
 
-  const modelConfig = AZURE_OPENAI_CONFIG.models[model] || AZURE_OPENAI_CONFIG.models['o4-mini'];
+  const modelConfig = AZURE_OPENAI_CONFIG.models[model] || AZURE_OPENAI_CONFIG.models['gpt-4.1-nano'];
 
   return new OpenAI({
     apiKey,
@@ -38,10 +43,10 @@ function createAzureOpenAIClient(model = 'o4-mini') {
 }
 
 // Generate text using Azure OpenAI
-async function generateText(messages: any[], model = 'o4-mini') {
+async function generateText(messages: any[], model = 'gpt-4.1-nano') {
   try {
     const client = createAzureOpenAIClient(model);
-    const modelConfig = AZURE_OPENAI_CONFIG.models[model] || AZURE_OPENAI_CONFIG.models['o4-mini'];
+    const modelConfig = AZURE_OPENAI_CONFIG.models[model] || AZURE_OPENAI_CONFIG.models['gpt-4.1-nano'];
     
     console.log(`Making request to Azure OpenAI (${model}): ${modelConfig.deploymentName}`);
     
@@ -49,7 +54,7 @@ async function generateText(messages: any[], model = 'o4-mini') {
       model: modelConfig.modelName,
       messages: messages,
       temperature: 0.7,
-      max_tokens: 1500,
+      max_tokens: 800,
     });
     
     if (!response || !response.choices || response.choices.length === 0) {
@@ -82,7 +87,7 @@ serve(async (req) => {
       );
     }
     
-    const { messages, model = 'o4-mini' } = requestBody;
+    const { messages, model = 'gpt-4.1-nano' } = requestBody;
     
     if (!Array.isArray(messages)) {
       return new Response(
@@ -91,13 +96,11 @@ serve(async (req) => {
       );
     }
     
-    // Add system prompt if not present
-    const messagesToSend = messages.length > 0 && messages[0].role === 'system' 
-      ? messages 
-      : [
-          { role: 'system', content: 'You are a helpful search assistant for PrismSearch.' },
-          ...messages
-        ];
+    // Default example if no messages provided
+    const messagesToSend = messages.length > 0 ? messages : [
+      { role: 'system', content: 'You are a helpful assistant.' },
+      { role: 'user', content: 'I am going to Paris, what should I see?' }
+    ];
     
     console.log(`Sending request to Azure OpenAI (${model})`, {
       messageCount: messagesToSend.length,

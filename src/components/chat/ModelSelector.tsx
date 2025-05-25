@@ -69,13 +69,23 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
           isSelected={selectedModel === 'gemini'}
         />
         
+        {/* Azure OpenAI models temporarily disabled
+        <ModelOption 
+          value="azure-gpt4-nano" 
+          name="GPT-4.1 Nano" 
+          description="Azure OpenAI - Efficient" 
+          badge={{ text: "Azure", color: "orange" }} 
+          isSelected={selectedModel === 'azure-gpt4-nano'}
+        />
+        
         <ModelOption 
           value="azure-o4-mini" 
           name="O4 Mini" 
-          description="Azure OpenAI - Latest Model" 
+          description="Azure OpenAI - Compact" 
           badge={{ text: "Azure", color: "orange" }} 
           isSelected={selectedModel === 'azure-o4-mini'}
         />
+        */}
       </RadioGroup>
 
       <div className="mt-3 flex justify-end">
