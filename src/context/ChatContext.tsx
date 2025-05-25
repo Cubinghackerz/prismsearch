@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
-import { Message, generateTextWithAzureOpenAI } from '@/services/azureOpenAiService';
+import { generateTextWithAzureOpenAI, Message } from '@/services/azureOpenAiService';
 
 export type ChatModel = 'mistral' | 'groq' | 'gemini' | 'azure-o4-mini' | 'groq-qwen-qwq' | 'groq-llama4-scout';
 
@@ -56,7 +56,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  // Set mistral as default model and ensure Azure models aren't used
+  // Set mistral as default model
   const [selectedModel, setSelectedModel] = useState<ChatModel>('mistral');
   const [modelUsage, setModelUsage] = useState<ModelUsage>({
     mistral: DAILY_LIMITS.mistral,
@@ -235,19 +235,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         setMessages(loadedMessages);
         
         // Update the selected model to match the one used in this chat
-        // But if it's an Azure model, use mistral instead since Azure is temporarily disabled
         if (data.length > 0 && data[0].model) {
           const chatModel = data[0].model as ChatModel;
-          if (chatModel === 'azure-gpt4-nano' || chatModel === 'azure-o4-mini') {
-            setSelectedModel('mistral');
-            toast({
-              title: "Azure models temporarily disabled",
-              description: "This chat was using an Azure model which is currently disabled. Using Mistral instead.",
-              duration: 5000,
-            });
-          } else {
-            setSelectedModel(chatModel);
-          }
+          setSelectedModel(chatModel);
         }
       }
     } catch (error) {
@@ -409,7 +399,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
       // Handle Azure OpenAI models
       if (selectedModel === 'azure-o4-mini') {
-        const messages: Message[] = [
+        const azureMessages: Message[] = [
           { role: 'system', content: 'You are a helpful search assistant for PrismSearch.' },
           ...messages.map(msg => ({
             role: msg.isUser ? 'user' as const : 'assistant' as const,
@@ -418,7 +408,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           { role: 'user', content }
         ];
 
-        aiResponse = await generateTextWithAzureOpenAI(messages, 'o4-mini');
+        aiResponse = await generateTextWithAzureOpenAI(azureMessages, 'o4-mini');
       } else {
         // Use existing AI function for other models
         const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
