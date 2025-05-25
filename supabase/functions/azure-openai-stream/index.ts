@@ -14,7 +14,7 @@ const AZURE_OPENAI_CONFIG = {
     'o4-mini': {
       modelName: 'o4-mini',
       deploymentName: 'o4-mini',
-      apiVersion: '2025-04-16',
+      apiVersion: '2025-01-01-preview',
     }
   }
 };

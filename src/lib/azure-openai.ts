@@ -121,7 +121,7 @@ const AZURE_CONFIG: AzureOpenAIConfig = {
   endpoint: 'https://punar-maz8m55t-eastus2.cognitiveservices.azure.com/',
   apiKey: '', // Will be loaded from Supabase secrets
   deploymentName: 'o4-mini',
-  apiVersion: '2025-04-16',
+  apiVersion: '2025-01-01-preview',
 };
 
 // Singleton instance
