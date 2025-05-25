@@ -11,7 +11,7 @@ async function processRequest(model: string, query: string, chatId?: string, cha
     case 'mistral':
       return processMistralRequest(query, chatHistory);
     case 'mistral-medium-3':
-      return processMistralMedium3Request(query, chatHistory);
+      return processMistralLargeRequest(query, chatHistory);
     case 'groq':
       return processGroqRequest(query, chatHistory);
     case 'gemini':
@@ -58,12 +58,12 @@ async function processMistralRequest(query: string, chatHistory?: any[]) {
   return data.choices[0].message.content;
 }
 
-// Process request with Mistral Medium 3 API
-async function processMistralMedium3Request(query: string, chatHistory?: any[]) {
-  const MISTRAL_MEDIUM_3_API_KEY = Deno.env.get('MISTRAL_MEDIUM_3_API_KEY');
+// Process request with Mistral Large API (using existing Mistral API key)
+async function processMistralLargeRequest(query: string, chatHistory?: any[]) {
+  const MISTRAL_API_KEY = Deno.env.get('MISTRAL_API_KEY');
   
-  if (!MISTRAL_MEDIUM_3_API_KEY) {
-    throw new Error('Mistral Medium 3 API key is not set');
+  if (!MISTRAL_API_KEY) {
+    throw new Error('Mistral API key is not set');
   }
   
   const messages = formatChatHistory(chatHistory, query);
@@ -72,10 +72,10 @@ async function processMistralMedium3Request(query: string, chatHistory?: any[]) 
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${MISTRAL_MEDIUM_3_API_KEY}`,
+      'Authorization': `Bearer ${MISTRAL_API_KEY}`,
     },
     body: JSON.stringify({
-      model: 'mistral-medium-3',
+      model: 'mistral-large-latest',
       messages: messages,
       max_tokens: 2048,
       temperature: 0.7,
@@ -84,7 +84,7 @@ async function processMistralMedium3Request(query: string, chatHistory?: any[]) 
   
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Mistral Medium 3 API error: ${error}`);
+    throw new Error(`Mistral Large API error: ${error}`);
   }
   
   const data = await response.json();
@@ -124,12 +124,12 @@ async function processGroqRequest(query: string, chatHistory?: any[]) {
   return data.choices[0].message.content;
 }
 
-// Process request with Groq API (Qwen-QwQ)
+// Process request with Groq API (Qwen-QwQ using Groq API key)
 async function processGroqQwenRequest(query: string, chatHistory?: any[]) {
-  const GROQ_QWEN_API_KEY = Deno.env.get('GROQ_QWEN_API_KEY');
+  const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY');
   
-  if (!GROQ_QWEN_API_KEY) {
-    throw new Error('Groq Qwen API key is not set');
+  if (!GROQ_API_KEY) {
+    throw new Error('Groq API key is not set');
   }
   
   const messages = formatChatHistory(chatHistory, query);
@@ -138,10 +138,10 @@ async function processGroqQwenRequest(query: string, chatHistory?: any[]) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${GROQ_QWEN_API_KEY}`,
+      'Authorization': `Bearer ${GROQ_API_KEY}`,
     },
     body: JSON.stringify({
-      model: 'qwen-88b',
+      model: 'qwen2.5-72b-instruct',
       messages: messages,
       temperature: 0.7,
       max_tokens: 2048,
@@ -157,12 +157,12 @@ async function processGroqQwenRequest(query: string, chatHistory?: any[]) {
   return data.choices[0].message.content;
 }
 
-// Process request with Groq API (Llama 4 Scout)
+// Process request with Groq API (Llama 4 Scout using Groq API key)
 async function processGroqLlama4ScoutRequest(query: string, chatHistory?: any[]) {
-  const GROQ_QWEN_API_KEY = Deno.env.get('GROQ_QWEN_API_KEY');
+  const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY');
   
-  if (!GROQ_QWEN_API_KEY) {
-    throw new Error('Groq Llama4 API key is not set');
+  if (!GROQ_API_KEY) {
+    throw new Error('Groq API key is not set');
   }
   
   const messages = formatChatHistory(chatHistory, query);
@@ -171,10 +171,10 @@ async function processGroqLlama4ScoutRequest(query: string, chatHistory?: any[])
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${GROQ_QWEN_API_KEY}`,
+      'Authorization': `Bearer ${GROQ_API_KEY}`,
     },
     body: JSON.stringify({
-      model: 'llama4-8b',
+      model: 'llama-3.1-70b-versatile',
       messages: messages,
       temperature: 0.7,
       max_tokens: 2048,
@@ -183,7 +183,7 @@ async function processGroqLlama4ScoutRequest(query: string, chatHistory?: any[])
   
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Groq Llama4 API error: ${error}`);
+    throw new Error(`Groq Llama API error: ${error}`);
   }
   
   const data = await response.json();
