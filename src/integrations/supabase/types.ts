@@ -9,47 +9,7 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      chat_messages: {
-        Row: {
-          chat_id: string
-          content: string
-          created_at: string
-          id: string
-          is_user: boolean
-          model: string
-          parent_message_id: string | null
-          user_id: string
-        }
-        Insert: {
-          chat_id: string
-          content: string
-          created_at?: string
-          id?: string
-          is_user: boolean
-          model: string
-          parent_message_id?: string | null
-          user_id?: string
-        }
-        Update: {
-          chat_id?: string
-          content?: string
-          created_at?: string
-          id?: string
-          is_user?: boolean
-          model?: string
-          parent_message_id?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "chat_messages_parent_message_id_fkey"
-            columns: ["parent_message_id"]
-            isOneToOne: false
-            referencedRelation: "chat_messages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never

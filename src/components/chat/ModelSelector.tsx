@@ -39,8 +39,8 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
 
         <ModelOption 
           value="mistral-medium-3" 
-          name="Mistral Medium 3" 
-          description="Latest Mistral model" 
+          name="Mistral Large (24.11)" 
+          description="Latest flagship Mistral model" 
           badge={{ text: "New", color: "yellow" }} 
           isSelected={selectedModel === 'mistral-medium-3'}
         />

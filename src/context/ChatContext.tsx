@@ -301,7 +301,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       'azure-o4-mini': "O4 Mini (Azure)",
       'groq-qwen-qwq': "Qwen-QwQ (Groq)",
       'groq-llama4-scout': "Llama 4 Scout (Groq)",
-      'mistral-medium-3': "Mistral Medium 3",
+      'mistral-medium-3': "Mistral Large (24.11)",
     };
     return displayNames[model] || model;
   };
