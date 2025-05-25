@@ -6,7 +6,7 @@ import type { ChatMessage as AzureChatMessage } from '../types/azure-openai';
  * Interface for the messages sent to the Azure OpenAI API
  * @deprecated Use ChatMessage from types/azure-openai.ts instead
  */
-export interface Message {
+export interface LegacyMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
 }
@@ -16,7 +16,7 @@ export interface Message {
  * @deprecated Use getAzureOpenAI from lib/azure-openai.ts instead
  */
 export async function generateTextWithAzureOpenAI(
-  messages: Message[], 
+  messages: LegacyMessage[], 
   model: 'o4-mini' = 'o4-mini'
 ): Promise<string> {
   try {
@@ -55,7 +55,7 @@ export async function generateTextWithAzureOpenAI(
  * @deprecated Use the new AzureOpenAIService class instead
  */
 export async function generateStreamingTextWithAzureOpenAI(
-  messages: Message[],
+  messages: LegacyMessage[],
   onChunk: (chunk: string) => void,
   model: 'o4-mini' = 'o4-mini'
 ): Promise<void> {
@@ -144,4 +144,4 @@ export async function exampleNewAzureOpenAIUsage(): Promise<string> {
 }
 
 // Re-export types for backwards compatibility
-export type { Message };
+export type { LegacyMessage };

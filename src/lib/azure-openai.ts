@@ -42,8 +42,8 @@ class AzureOpenAIService {
         messages,
         max_tokens: options?.maxTokens || 1500,
         temperature: options?.temperature || 0.7,
-        stream: options?.stream || false,
-      });
+        stream: false, // Explicitly set to false for non-streaming
+      }) as OpenAI.Chat.Completions.ChatCompletion; // Type assertion for non-streaming
 
       if (!response || !response.choices || response.choices.length === 0) {
         throw new Error('Invalid response from Azure OpenAI');
@@ -86,7 +86,7 @@ class AzureOpenAIService {
         max_tokens: options?.maxTokens || 1500,
         temperature: options?.temperature || 0.7,
         stream: true,
-      });
+      }) as AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>; // Type assertion for streaming
 
       for await (const chunk of stream) {
         const content = chunk.choices[0]?.delta?.content;
