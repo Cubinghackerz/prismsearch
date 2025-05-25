@@ -10,9 +10,11 @@ import Footer from '../components/Footer';
 import BookmarksDrawer from '../components/BookmarksDrawer';
 import ScrollToTop from '../components/ScrollToTop';
 import { ChatProvider } from '../context/ChatContext';
+import AzureOpenAiTest from '../components/AzureOpenAiTest';
 
 const Chat = () => {
   const [isBookmarksOpen, setIsBookmarksOpen] = useState(false);
+  const [showAzureTest, setShowAzureTest] = useState(false);
   const [bookmarksCount, setBookmarksCount] = useState<number>(() => {
     try {
       const bookmarks = JSON.parse(localStorage.getItem('prism_bookmarks') || '[]');
@@ -93,15 +95,26 @@ const Chat = () => {
           </div>
 
           <div className="w-[120px] flex justify-end">
-            {/* Azure test button removed */}
+            <Button 
+              variant="ghost" 
+              onClick={() => setShowAzureTest(!showAzureTest)}
+              className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30"
+              size="sm"
+            >
+              {showAzureTest ? 'Hide Test' : 'Azure Test'}
+            </Button>
           </div>
         </motion.div>
       </header>
 
       <main className="flex-1 container mx-auto max-w-[98vw] px-4 pt-3 pb-6">
-        <ChatProvider>
-          <ChatInterface />
-        </ChatProvider>
+        {showAzureTest ? (
+          <AzureOpenAiTest />
+        ) : (
+          <ChatProvider>
+            <ChatInterface />
+          </ChatProvider>
+        )}
       </main>
       
       <footer className="mt-2">

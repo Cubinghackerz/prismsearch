@@ -13,17 +13,12 @@ export interface Message {
  * Configuration for Azure OpenAI
  */
 const AZURE_OPENAI_CONFIG = {
-  endpoint: 'https://prismsearchai.cognitiveservices.azure.com/',
+  endpoint: 'https://punar-maz8m55t-eastus2.cognitiveservices.azure.com/',
   models: {
-    'gpt-4.1-nano': {
-      modelName: 'gpt-4.1-nano',
-      deploymentName: 'gpt-4.1-nano',
-      apiVersion: '2024-04-01-preview',
-    },
     'o4-mini': {
       modelName: 'o4-mini',
       deploymentName: 'o4-mini',
-      apiVersion: '2024-04-01-preview',
+      apiVersion: '2025-01-01-preview',
     }
   }
 };
@@ -31,12 +26,12 @@ const AZURE_OPENAI_CONFIG = {
 /**
  * Sends a request to Azure OpenAI for text generation via the Supabase Edge Function
  * @param messages Array of message objects to send to the API
- * @param model Optional model to use. Defaults to gpt-4.1-nano
+ * @param model Optional model to use. Defaults to o4-mini
  * @returns The generated response text
  */
 export async function generateTextWithAzureOpenAI(
   messages: Message[], 
-  model: 'gpt-4.1-nano' | 'o4-mini' = 'gpt-4.1-nano'
+  model: 'o4-mini' = 'o4-mini'
 ): Promise<string> {
   try {
     console.log(`Calling Azure OpenAI edge function with model: ${model}`);
@@ -93,11 +88,85 @@ export async function generateTextWithAzureOpenAI(
 }
 
 /**
+ * Sends a streaming request to Azure OpenAI
+ * @param messages Array of message objects to send to the API
+ * @param onChunk Callback function to handle streaming chunks
+ * @param model Optional model to use. Defaults to o4-mini
+ */
+export async function generateStreamingTextWithAzureOpenAI(
+  messages: Message[],
+  onChunk: (chunk: string) => void,
+  model: 'o4-mini' = 'o4-mini'
+): Promise<void> {
+  try {
+    console.log(`Calling Azure OpenAI streaming with model: ${model}`);
+    
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+    
+    const response = await fetch(`${supabaseUrl}/functions/v1/azure-openai-stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || ''}`,
+      },
+      body: JSON.stringify({ 
+        messages,
+        model,
+        stream: true
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Azure OpenAI Streaming Error: ${response.statusText}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('No response body reader available');
+    }
+
+    const decoder = new TextDecoder();
+    
+    while (true) {
+      const { done, value } = await reader.read();
+      
+      if (done) break;
+      
+      const chunk = decoder.decode(value);
+      const lines = chunk.split('\n');
+      
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6);
+          if (data === '[DONE]') {
+            return;
+          }
+          
+          try {
+            const parsed = JSON.parse(data);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              onChunk(content);
+            }
+          } catch (e) {
+            // Skip invalid JSON chunks
+            continue;
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Azure OpenAI Streaming Error:', error);
+    throw new Error(`Failed to generate streaming text: ${error.message || 'Unknown error'}`);
+  }
+}
+
+/**
  * Example usage of the Azure OpenAI service
  */
 export async function exampleAzureOpenAIUsage(): Promise<string> {
   const messages: Message[] = [
-    { role: 'system', content: 'You are a helpful assistant.' },
+    { role: 'system', content: 'You are a helpful search assistant for PrismSearch.' },
     { role: 'user', content: 'I am going to Paris, what should I see?' }
   ];
   

@@ -37,30 +37,22 @@ function createAzureOpenAIClient(model = 'o4-mini') {
   });
 }
 
-// Generate text using Azure OpenAI
-async function generateText(messages: any[], model = 'o4-mini') {
-  try {
-    const client = createAzureOpenAIClient(model);
-    const modelConfig = AZURE_OPENAI_CONFIG.models[model] || AZURE_OPENAI_CONFIG.models['o4-mini'];
-    
-    console.log(`Making request to Azure OpenAI (${model}): ${modelConfig.deploymentName}`);
-    
-    const response = await client.chat.completions.create({
-      model: modelConfig.modelName,
-      messages: messages,
-      temperature: 0.7,
-      max_tokens: 1500,
-    });
-    
-    if (!response || !response.choices || response.choices.length === 0) {
-      throw new Error('Invalid response from Azure OpenAI');
-    }
-    
-    return response.choices[0].message.content || '';
-  } catch (error) {
-    console.error('Azure OpenAI API Error:', error);
-    throw new Error(`Failed to generate text: ${error.message || 'Unknown error'}`);
-  }
+// Generate streaming text using Azure OpenAI
+async function generateStreamingText(messages: any[], model = 'o4-mini') {
+  const client = createAzureOpenAIClient(model);
+  const modelConfig = AZURE_OPENAI_CONFIG.models[model] || AZURE_OPENAI_CONFIG.models['o4-mini'];
+  
+  console.log(`Making streaming request to Azure OpenAI (${model}): ${modelConfig.deploymentName}`);
+  
+  const stream = await client.chat.completions.create({
+    model: modelConfig.modelName,
+    messages: messages,
+    temperature: 0.7,
+    max_tokens: 1500,
+    stream: true,
+  });
+  
+  return stream;
 }
 
 // Serve the edge function
@@ -99,20 +91,42 @@ serve(async (req) => {
           ...messages
         ];
     
-    console.log(`Sending request to Azure OpenAI (${model})`, {
-      messageCount: messagesToSend.length,
-      firstUserMessage: messagesToSend.find(m => m.role === 'user')?.content?.substring(0, 50) + '...',
+    console.log(`Sending streaming request to Azure OpenAI (${model})`);
+    
+    const stream = await generateStreamingText(messagesToSend, model);
+    
+    // Create a ReadableStream for Server-Sent Events
+    const readable = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of stream) {
+            const content = chunk.choices[0]?.delta?.content;
+            if (content) {
+              const data = JSON.stringify({ choices: [{ delta: { content } }] });
+              controller.enqueue(new TextEncoder().encode(`data: ${data}\n\n`));
+            }
+          }
+          
+          // Send completion signal
+          controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
+          controller.close();
+        } catch (error) {
+          console.error('Streaming error:', error);
+          controller.error(error);
+        }
+      },
     });
     
-    const generatedText = await generateText(messagesToSend, model);
-    console.log('Successfully generated response:', generatedText.substring(0, 50) + '...');
-    
-    return new Response(
-      JSON.stringify({ response: generatedText }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(readable, {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    });
   } catch (error) {
-    console.error('Error in Azure OpenAI edge function:', error);
+    console.error('Error in Azure OpenAI streaming function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

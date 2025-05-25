@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { Message, generateTextWithAzureOpenAI } from '@/services/azureOpenAiService';
 
-export type ChatModel = 'mistral' | 'groq' | 'gemini' | 'azure-gpt4-nano' | 'azure-o4-mini' | 'groq-qwen-qwq' | 'groq-llama4-scout';
+export type ChatModel = 'mistral' | 'groq' | 'gemini' | 'azure-o4-mini' | 'groq-qwen-qwq' | 'groq-llama4-scout';
 
 export interface ChatMessage {
   id: string;
@@ -17,8 +17,7 @@ export interface ChatMessage {
 interface ModelUsage {
   mistral: number | null;
   groq: number | null;
-  gemini: number | null; // null means unlimited
-  'azure-gpt4-nano': number | null;
+  gemini: number | null;
   'azure-o4-mini': number | null;
   'groq-qwen-qwq': number | null;
   'groq-llama4-scout': number | null;
@@ -44,7 +43,6 @@ const DAILY_LIMITS = {
   mistral: null, // Unlimited
   groq: null, // Unlimited
   gemini: null, // Unlimited
-  'azure-gpt4-nano': null, // Unlimited
   'azure-o4-mini': null, // Unlimited
   'groq-qwen-qwq': null, // Unlimited
   'groq-llama4-scout': null, // Unlimited
@@ -64,7 +62,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     mistral: DAILY_LIMITS.mistral,
     groq: DAILY_LIMITS.groq,
     gemini: DAILY_LIMITS.gemini,
-    'azure-gpt4-nano': DAILY_LIMITS['azure-gpt4-nano'],
     'azure-o4-mini': DAILY_LIMITS['azure-o4-mini'],
     'groq-qwen-qwq': DAILY_LIMITS['groq-qwen-qwq'],
     'groq-llama4-scout': DAILY_LIMITS['groq-llama4-scout'],
@@ -84,7 +81,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           mistral: DAILY_LIMITS.mistral,
           groq: DAILY_LIMITS.groq,
           gemini: DAILY_LIMITS.gemini,
-          'azure-gpt4-nano': DAILY_LIMITS['azure-gpt4-nano'],
           'azure-o4-mini': DAILY_LIMITS['azure-o4-mini'],
           'groq-qwen-qwq': DAILY_LIMITS['groq-qwen-qwq'],
           'groq-llama4-scout': DAILY_LIMITS['groq-llama4-scout'],
@@ -293,7 +289,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       mistral: "Mistral Medium",
       groq: "Llama-3-70B (Groq)",
       gemini: "Gemini 2.5 Flash",
-      'azure-gpt4-nano': "GPT-4.1 Nano (Azure)",
       'azure-o4-mini': "O4 Mini (Azure)",
       'groq-qwen-qwq': "Qwen-QwQ (Groq)",
       'groq-llama4-scout': "Llama 4 Scout (Groq)",
@@ -412,24 +407,37 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     try {
       let aiResponse: string;
 
-      // Azure OpenAI models are temporarily disabled
-      // Use existing AI function for all models
-      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
-        body: { 
-          query: content,
-          chatId: currentChatId,
-          chatHistory: messages,
-          model: selectedModel
-        }
-      });
+      // Handle Azure OpenAI models
+      if (selectedModel === 'azure-o4-mini') {
+        const messages: Message[] = [
+          { role: 'system', content: 'You are a helpful search assistant for PrismSearch.' },
+          ...messages.map(msg => ({
+            role: msg.isUser ? 'user' as const : 'assistant' as const,
+            content: msg.content
+          })),
+          { role: 'user', content }
+        ];
 
-      if (error) {
-        console.error("Supabase function error:", error);
-        handleChatError("Sorry, I encountered an error while trying to respond. Please try again.");
-        return;
+        aiResponse = await generateTextWithAzureOpenAI(messages, 'o4-mini');
+      } else {
+        // Use existing AI function for other models
+        const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
+          body: { 
+            query: content,
+            chatId: currentChatId,
+            chatHistory: messages,
+            model: selectedModel
+          }
+        });
+
+        if (error) {
+          console.error("Supabase function error:", error);
+          handleChatError("Sorry, I encountered an error while trying to respond. Please try again.");
+          return;
+        }
+        
+        aiResponse = data.response;
       }
-      
-      aiResponse = data.response;
       
       // Add AI response to messages
       if (aiResponse) {
@@ -438,7 +446,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           content: aiResponse,
           isUser: false,
           timestamp: new Date(),
-          parentMessageId: userMessage.id, // This makes it a direct reply to the user's message
+          parentMessageId: userMessage.id,
         };
         
         setMessages(prev => [...prev, aiMessage]);
