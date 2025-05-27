@@ -37,6 +37,7 @@ interface ChatContextType {
   selectModel: (model: ChatModel) => void;
   loadChatById: (chatId: string) => Promise<void>;
   deleteChat: (chatId: string) => Promise<void>;
+  getTempChats: () => { id: string; created_at: string; preview: string; }[];
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -426,7 +427,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       loadChatById,
       deleteChat,
       getTempChats
-    } as any}>
+    }}>
       {children}
     </ChatContext.Provider>
   );
