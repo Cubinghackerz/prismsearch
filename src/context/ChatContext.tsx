@@ -1,9 +1,11 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { Message, generateTextWithAzureOpenAI } from '@/services/azureOpenAiService';
 
-export type ChatModel = 'mistral' | 'groq' | 'gemini' | 'azure-gpt4-nano' | 'azure-o4-mini' | 'groq-qwen-qwq' | 'groq-llama4-scout' | 'mistral-medium-3' | 'o4-mini';
+export type ChatModel = 'mistral' | 'groq' | 'gemini' | 'azure-gpt4-nano' | 'azure-o4-mini' | 'groq-qwen-qwq' | 'groq-llama4-scout' | 'mistral-medium-3';
 
 export interface ChatMessage {
   id: string;
@@ -22,7 +24,6 @@ interface ModelUsage {
   'groq-qwen-qwq': number | null;
   'groq-llama4-scout': number | null;
   'mistral-medium-3': number | null;
-  'o4-mini': number | null;
 }
 
 interface ChatContextType {
@@ -37,7 +38,6 @@ interface ChatContextType {
   selectModel: (model: ChatModel) => void;
   loadChatById: (chatId: string) => Promise<void>;
   deleteChat: (chatId: string) => Promise<void>;
-  getTempChats: () => { id: string; created_at: string; preview: string; }[];
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -51,28 +51,17 @@ const DAILY_LIMITS = {
   'groq-qwen-qwq': null, // Unlimited
   'groq-llama4-scout': null, // Unlimited
   'mistral-medium-3': null, // Unlimited
-  'o4-mini': null, // Unlimited
 };
 
 const USAGE_KEY = 'prism_search_ai_usage';
 const LAST_USAGE_DATE_KEY = 'prism_search_last_usage_date';
-
-// In-memory storage for temporary chats
-interface TempChat {
-  id: string;
-  messages: ChatMessage[];
-  model: ChatModel;
-  createdAt: Date;
-}
-
-let tempChats: TempChat[] = [];
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  // Set mistral as default model
+  // Set mistral as default model and ensure Azure models aren't used
   const [selectedModel, setSelectedModel] = useState<ChatModel>('mistral');
   const [modelUsage, setModelUsage] = useState<ModelUsage>({
     mistral: DAILY_LIMITS.mistral,
@@ -83,7 +72,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     'groq-qwen-qwq': DAILY_LIMITS['groq-qwen-qwq'],
     'groq-llama4-scout': DAILY_LIMITS['groq-llama4-scout'],
     'mistral-medium-3': DAILY_LIMITS['mistral-medium-3'],
-    'o4-mini': DAILY_LIMITS['o4-mini'],
   });
   const { toast } = useToast();
 
@@ -105,7 +93,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           'groq-qwen-qwq': DAILY_LIMITS['groq-qwen-qwq'],
           'groq-llama4-scout': DAILY_LIMITS['groq-llama4-scout'],
           'mistral-medium-3': DAILY_LIMITS['mistral-medium-3'],
-          'o4-mini': DAILY_LIMITS['o4-mini'],
         };
         localStorage.setItem(USAGE_KEY, JSON.stringify(resetUsage));
         setModelUsage(resetUsage);
@@ -122,19 +109,100 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     loadUsageData();
   }, [toast]);
 
-  // Initialize with a new chat
+  // Load most recent chat if no chat is active
   useEffect(() => {
-    if (!chatId) {
-      startNewChat();
-    }
+    const loadMostRecentChat = async () => {
+      if (chatId) return; // Skip if we already have a chat loaded
+      
+      try {
+        const { data, error } = await supabase
+          .from('chat_messages')
+          .select('chat_id, created_at')
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (error) {
+          console.error('Error loading most recent chat:', error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          await loadChatById(data[0].chat_id);
+        } else {
+          // No chats found, start a new one
+          startNewChat();
+        }
+      } catch (error) {
+        console.error('Failed to load most recent chat:', error);
+      }
+    };
+
+    loadMostRecentChat();
   }, []);
+
+  // Load chat messages from Supabase when chatId changes
+  useEffect(() => {
+    const loadMessages = async (currentChatId: string) => {
+      try {
+        const { data, error } = await supabase
+          .from('chat_messages')
+          .select('*')
+          .eq('chat_id', currentChatId)
+          .order('created_at', { ascending: true });
+
+        if (error) {
+          console.error('Error loading messages:', error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          const loadedMessages: ChatMessage[] = data.map(msg => ({
+            id: msg.id,
+            content: msg.content,
+            isUser: msg.is_user,
+            timestamp: new Date(msg.created_at),
+            parentMessageId: msg.parent_message_id || undefined,
+          }));
+          
+          setMessages(loadedMessages);
+        } else {
+          // No messages found for this chat ID, might be a deleted chat
+          console.log('No messages found for this chat ID:', currentChatId);
+          setMessages([]);
+        }
+      } catch (error) {
+        console.error('Failed to load messages:', error);
+      }
+    };
+
+    if (chatId) {
+      loadMessages(chatId);
+    }
+  }, [chatId]);
   
-  // Load a specific chat by ID from memory
+  // Load a specific chat by ID
   const loadChatById = async (id: string) => {
     try {
-      const chat = tempChats.find(c => c.id === id);
-      
-      if (!chat) {
+      // First check if this chat exists and has messages
+      const { data: chatExists, error: checkError } = await supabase
+        .from('chat_messages')
+        .select('id')
+        .eq('chat_id', id)
+        .limit(1);
+
+      if (checkError) {
+        console.error('Error checking chat existence:', checkError);
+        toast({
+          variant: "destructive",
+          title: "Failed to load chat",
+          description: "There was an error checking if this chat exists.",
+          duration: 3000,
+        });
+        return;
+      }
+
+      if (!chatExists || chatExists.length === 0) {
+        // Chat doesn't exist, probably deleted
         toast({
           variant: "destructive",
           title: "Chat not found",
@@ -146,8 +214,51 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       }
 
       setChatId(id);
-      setMessages(chat.messages);
-      setSelectedModel(chat.model);
+      
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('chat_id', id)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error loading chat:', error);
+        toast({
+          variant: "destructive",
+          title: "Failed to load chat",
+          description: "There was an error loading the chat history.",
+          duration: 3000,
+        });
+        return;
+      }
+
+      if (data) {
+        const loadedMessages: ChatMessage[] = data.map(msg => ({
+          id: msg.id,
+          content: msg.content,
+          isUser: msg.is_user,
+          timestamp: new Date(msg.created_at),
+          parentMessageId: msg.parent_message_id || undefined,
+        }));
+        
+        setMessages(loadedMessages);
+        
+        // Update the selected model to match the one used in this chat
+        // But if it's an Azure model, use mistral instead since Azure is temporarily disabled
+        if (data.length > 0 && data[0].model) {
+          const chatModel = data[0].model as ChatModel;
+          if (chatModel === 'azure-gpt4-nano' || chatModel === 'azure-o4-mini') {
+            setSelectedModel('mistral');
+            toast({
+              title: "Azure models temporarily disabled",
+              description: "This chat was using an Azure model which is currently disabled. Using Mistral instead.",
+              duration: 5000,
+            });
+          } else {
+            setSelectedModel(chatModel);
+          }
+        }
+      }
     } catch (error) {
       console.error('Failed to load chat:', error);
       toast({
@@ -164,21 +275,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     const newChatId = uuidv4();
     setChatId(newChatId);
     setMessages([]);
-    
-    // Create new temp chat
-    const newChat: TempChat = {
-      id: newChatId,
-      messages: [],
-      model: selectedModel,
-      createdAt: new Date()
-    };
-    tempChats.unshift(newChat);
-    
-    // Keep only last 20 chats to prevent memory issues
-    if (tempChats.length > 20) {
-      tempChats = tempChats.slice(0, 20);
-    }
-    
     toast({
       title: "New Chat Started",
       description: "You've started a new conversation.",
@@ -189,15 +285,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   // Select a model
   const selectModel = (model: ChatModel) => {
     setSelectedModel(model);
-    
-    // Update current chat's model
-    if (chatId) {
-      const chat = tempChats.find(c => c.id === chatId);
-      if (chat) {
-        chat.model = model;
-      }
-    }
-    
     toast({
       title: `Model Changed: ${getModelDisplayName(model)}`,
       description: "Your messages will now be processed by this AI model.",
@@ -216,7 +303,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       'groq-qwen-qwq': "Qwen-QwQ (Groq)",
       'groq-llama4-scout': "Llama 4 Scout (Groq)",
       'mistral-medium-3': "Mistral Large (24.11)",
-      'o4-mini': "O4 Mini",
     };
     return displayNames[model] || model;
   };
@@ -230,17 +316,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       timestamp: new Date(),
     };
     
-    const newMessages = [...messages, errorResponse];
-    setMessages(newMessages);
-    
-    // Update temp chat
-    if (chatId) {
-      const chat = tempChats.find(c => c.id === chatId);
-      if (chat) {
-        chat.messages = newMessages;
-      }
-    }
-    
+    setMessages(prev => [...prev, errorResponse]);
     toast({
       variant: "destructive",
       title: "Chat Error",
@@ -249,11 +325,48 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  // Delete a chat from memory
+  // Save message to Supabase
+  const saveMessageToSupabase = async (message: ChatMessage, currentChatId: string) => {
+    try {
+      const { error } = await supabase
+        .from('chat_messages')
+        .insert({
+          id: message.id,
+          chat_id: currentChatId,
+          content: message.content,
+          is_user: message.isUser,
+          parent_message_id: message.parentMessageId || null,
+          created_at: message.timestamp.toISOString(),
+          model: selectedModel,
+        });
+
+      if (error) {
+        console.error('Error saving message to Supabase:', error);
+      }
+    } catch (error) {
+      console.error('Failed to save message:', error);
+    }
+  };
+
+  // Delete a chat and its messages
   const deleteChat = async (id: string): Promise<void> => {
     try {
-      // Remove from temp chats
-      tempChats = tempChats.filter(chat => chat.id !== id);
+      // Delete all messages for this chat from Supabase
+      const { error } = await supabase
+        .from('chat_messages')
+        .delete()
+        .eq('chat_id', id);
+        
+      if (error) {
+        console.error('Error deleting chat messages:', error);
+        toast({
+          variant: "destructive",
+          title: "Failed to delete chat",
+          description: "There was an error deleting the chat history.",
+          duration: 3000,
+        });
+        return;
+      }
 
       // If we're deleting the currently active chat, start a new chat
       if (chatId === id) {
@@ -295,80 +408,34 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       parentMessageId,
     };
     
-    const newMessages = [...messages, userMessage];
-    setMessages(newMessages);
+    setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
     setIsTyping(true);
 
-    // Update temp chat
-    if (currentChatId) {
-      let chat = tempChats.find(c => c.id === currentChatId);
-      if (!chat) {
-        chat = {
-          id: currentChatId,
-          messages: newMessages,
-          model: selectedModel,
-          createdAt: new Date()
-        };
-        tempChats.unshift(chat);
-      } else {
-        chat.messages = newMessages;
-      }
-    }
+    // Save user message to Supabase
+    await saveMessageToSupabase(userMessage, currentChatId);
 
     try {
       let aiResponse: string;
 
-      // Handle the new o4-mini model using Azure OpenAI
-      if (selectedModel === 'o4-mini') {
-        // Format messages for Azure OpenAI
-        const azureMessages: Message[] = [
-          { role: 'system', content: 'You are Prism, a helpful AI assistant. You provide clear, concise and accurate answers.' }
-        ];
-        
-        // Add chat history
-        if (messages && messages.length > 0) {
-          const recentHistory = messages.slice(-10);
-          for (const msg of recentHistory) {
-            if (msg.content && msg.content.trim()) {
-              const role = msg.isUser ? 'user' : 'assistant';
-              azureMessages.push({
-                role: role as 'user' | 'assistant',
-                content: msg.content
-              });
-            }
-          }
+      // Azure OpenAI models are temporarily disabled
+      // Use existing AI function for all models
+      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
+        body: { 
+          query: content,
+          chatId: currentChatId,
+          chatHistory: messages,
+          model: selectedModel
         }
-        
-        // Add the current query
-        azureMessages.push({
-          role: 'user',
-          content: content
-        });
-        
-        aiResponse = await generateTextWithAzureOpenAI(azureMessages, 'o4-mini');
-      } else {
-        // Use existing AI function for all other models
-        const response = await fetch('/api/ai-chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            query: content,
-            chatId: currentChatId,
-            chatHistory: messages,
-            model: selectedModel
-          })
-        });
+      });
 
-        if (!response.ok) {
-          throw new Error('Failed to get AI response');
-        }
-        
-        const data = await response.json();
-        aiResponse = data.response;
+      if (error) {
+        console.error("Supabase function error:", error);
+        handleChatError("Sorry, I encountered an error while trying to respond. Please try again.");
+        return;
       }
+      
+      aiResponse = data.response;
       
       // Add AI response to messages
       if (aiResponse) {
@@ -380,16 +447,10 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           parentMessageId: userMessage.id, // This makes it a direct reply to the user's message
         };
         
-        const finalMessages = [...newMessages, aiMessage];
-        setMessages(finalMessages);
+        setMessages(prev => [...prev, aiMessage]);
         
-        // Update temp chat with AI response
-        if (currentChatId) {
-          const chat = tempChats.find(c => c.id === currentChatId);
-          if (chat) {
-            chat.messages = finalMessages;
-          }
-        }
+        // Save AI message to Supabase
+        await saveMessageToSupabase(aiMessage, currentChatId);
       } else {
         handleChatError("Received an empty response from the AI. Please try again.");
       }
@@ -400,17 +461,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
       setIsTyping(false);
     }
-  };
-
-  // Get temp chats for recent chats component
-  const getTempChats = () => {
-    return tempChats.map(chat => ({
-      id: chat.id,
-      created_at: chat.createdAt.toISOString(),
-      preview: chat.messages.length > 0 
-        ? chat.messages[0].content.substring(0, 50) + (chat.messages[0].content.length > 50 ? '...' : '')
-        : 'New Chat'
-    }));
   };
 
   return (
@@ -426,7 +476,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       selectModel,
       loadChatById,
       deleteChat,
-      getTempChats
     }}>
       {children}
     </ChatContext.Provider>
