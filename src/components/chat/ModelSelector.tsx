@@ -1,4 +1,3 @@
-
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ChatModel } from '@/context/ChatContext';
 import { Button } from '@/components/ui/button';
@@ -76,8 +75,16 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
           badge={{ text: "Accurate", color: "yellow" }} 
           isSelected={selectedModel === 'gemini'}
         />
+
+        <ModelOption 
+          value="o4-mini" 
+          name="O4 Mini" 
+          description="Azure OpenAI - Compact & Efficient" 
+          badge={{ text: "Azure", color: "orange" }} 
+          isSelected={selectedModel === 'o4-mini'}
+        />
         
-        {/* Azure OpenAI models temporarily disabled
+        {/* Other Azure OpenAI models temporarily disabled
         <ModelOption 
           value="azure-gpt4-nano" 
           name="GPT-4.1 Nano" 

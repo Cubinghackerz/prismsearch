@@ -1,11 +1,10 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { Message, generateTextWithAzureOpenAI } from '@/services/azureOpenAiService';
 
-export type ChatModel = 'mistral' | 'groq' | 'gemini' | 'azure-gpt4-nano' | 'azure-o4-mini' | 'groq-qwen-qwq' | 'groq-llama4-scout' | 'mistral-medium-3';
+export type ChatModel = 'mistral' | 'groq' | 'gemini' | 'azure-gpt4-nano' | 'azure-o4-mini' | 'groq-qwen-qwq' | 'groq-llama4-scout' | 'mistral-medium-3' | 'o4-mini';
 
 export interface ChatMessage {
   id: string;
@@ -24,6 +23,7 @@ interface ModelUsage {
   'groq-qwen-qwq': number | null;
   'groq-llama4-scout': number | null;
   'mistral-medium-3': number | null;
+  'o4-mini': number | null;
 }
 
 interface ChatContextType {
@@ -51,6 +51,7 @@ const DAILY_LIMITS = {
   'groq-qwen-qwq': null, // Unlimited
   'groq-llama4-scout': null, // Unlimited
   'mistral-medium-3': null, // Unlimited
+  'o4-mini': null, // Unlimited
 };
 
 const USAGE_KEY = 'prism_search_ai_usage';
@@ -61,7 +62,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  // Set mistral as default model and ensure Azure models aren't used
+  // Set mistral as default model
   const [selectedModel, setSelectedModel] = useState<ChatModel>('mistral');
   const [modelUsage, setModelUsage] = useState<ModelUsage>({
     mistral: DAILY_LIMITS.mistral,
@@ -72,6 +73,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     'groq-qwen-qwq': DAILY_LIMITS['groq-qwen-qwq'],
     'groq-llama4-scout': DAILY_LIMITS['groq-llama4-scout'],
     'mistral-medium-3': DAILY_LIMITS['mistral-medium-3'],
+    'o4-mini': DAILY_LIMITS['o4-mini'],
   });
   const { toast } = useToast();
 
@@ -93,6 +95,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           'groq-qwen-qwq': DAILY_LIMITS['groq-qwen-qwq'],
           'groq-llama4-scout': DAILY_LIMITS['groq-llama4-scout'],
           'mistral-medium-3': DAILY_LIMITS['mistral-medium-3'],
+          'o4-mini': DAILY_LIMITS['o4-mini'],
         };
         localStorage.setItem(USAGE_KEY, JSON.stringify(resetUsage));
         setModelUsage(resetUsage);
@@ -303,6 +306,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       'groq-qwen-qwq': "Qwen-QwQ (Groq)",
       'groq-llama4-scout': "Llama 4 Scout (Groq)",
       'mistral-medium-3': "Mistral Large (24.11)",
+      'o4-mini': "O4 Mini",
     };
     return displayNames[model] || model;
   };
@@ -418,24 +422,53 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     try {
       let aiResponse: string;
 
-      // Azure OpenAI models are temporarily disabled
-      // Use existing AI function for all models
-      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
-        body: { 
-          query: content,
-          chatId: currentChatId,
-          chatHistory: messages,
-          model: selectedModel
+      // Handle the new o4-mini model using Azure OpenAI
+      if (selectedModel === 'o4-mini') {
+        // Format messages for Azure OpenAI
+        const azureMessages: Message[] = [
+          { role: 'system', content: 'You are Prism, a helpful AI assistant. You provide clear, concise and accurate answers.' }
+        ];
+        
+        // Add chat history
+        if (messages && messages.length > 0) {
+          const recentHistory = messages.slice(-10);
+          for (const msg of recentHistory) {
+            if (msg.content && msg.content.trim()) {
+              const role = msg.isUser ? 'user' : 'assistant';
+              azureMessages.push({
+                role: role as 'user' | 'assistant',
+                content: msg.content
+              });
+            }
+          }
         }
-      });
+        
+        // Add the current query
+        azureMessages.push({
+          role: 'user',
+          content: content
+        });
+        
+        aiResponse = await generateTextWithAzureOpenAI(azureMessages, 'o4-mini');
+      } else {
+        // Use existing AI function for all other models
+        const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
+          body: { 
+            query: content,
+            chatId: currentChatId,
+            chatHistory: messages,
+            model: selectedModel
+          }
+        });
 
-      if (error) {
-        console.error("Supabase function error:", error);
-        handleChatError("Sorry, I encountered an error while trying to respond. Please try again.");
-        return;
+        if (error) {
+          console.error("Supabase function error:", error);
+          handleChatError("Sorry, I encountered an error while trying to respond. Please try again.");
+          return;
+        }
+        
+        aiResponse = data.response;
       }
-      
-      aiResponse = data.response;
       
       // Add AI response to messages
       if (aiResponse) {
