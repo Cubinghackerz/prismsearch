@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -110,165 +111,21 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     loadUsageData();
   }, [toast]);
 
-  // Load most recent chat if no chat is active
+  // Start a new chat automatically if none exists
   useEffect(() => {
-    const loadMostRecentChat = async () => {
-      if (chatId) return; // Skip if we already have a chat loaded
-      
-      try {
-        const { data, error } = await supabase
-          .from('chat_messages' as any)
-          .select('chat_id, created_at')
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (error) {
-          console.error('Error loading most recent chat:', error);
-          return;
-        }
-
-        if (data && data.length > 0) {
-          await loadChatById((data[0] as any).chat_id);
-        } else {
-          // No chats found, start a new one
-          startNewChat();
-        }
-      } catch (error) {
-        console.error('Failed to load most recent chat:', error);
-      }
-    };
-
-    loadMostRecentChat();
+    if (!chatId) {
+      startNewChat();
+    }
   }, []);
-
-  // Load chat messages from Supabase when chatId changes
-  useEffect(() => {
-    const loadMessages = async (currentChatId: string) => {
-      try {
-        const { data, error } = await supabase
-          .from('chat_messages' as any)
-          .select('*')
-          .eq('chat_id', currentChatId)
-          .order('created_at', { ascending: true });
-
-        if (error) {
-          console.error('Error loading messages:', error);
-          return;
-        }
-
-        if (data && data.length > 0) {
-          const loadedMessages: ChatMessage[] = (data as any[]).map(msg => ({
-            id: msg.id,
-            content: msg.content,
-            isUser: msg.is_user,
-            timestamp: new Date(msg.created_at),
-            parentMessageId: msg.parent_message_id || undefined,
-          }));
-          
-          setMessages(loadedMessages);
-        } else {
-          // No messages found for this chat ID, might be a deleted chat
-          console.log('No messages found for this chat ID:', currentChatId);
-          setMessages([]);
-        }
-      } catch (error) {
-        console.error('Failed to load messages:', error);
-      }
-    };
-
-    if (chatId) {
-      loadMessages(chatId);
-    }
-  }, [chatId]);
   
-  // Load a specific chat by ID
+  // Load a specific chat by ID (simplified since no persistence)
   const loadChatById = async (id: string) => {
-    try {
-      // First check if this chat exists and has messages
-      const { data: chatExists, error: checkError } = await supabase
-        .from('chat_messages' as any)
-        .select('id')
-        .eq('chat_id', id)
-        .limit(1);
-
-      if (checkError) {
-        console.error('Error checking chat existence:', checkError);
-        toast({
-          variant: "destructive",
-          title: "Failed to load chat",
-          description: "There was an error checking if this chat exists.",
-          duration: 3000,
-        });
-        return;
-      }
-
-      if (!chatExists || chatExists.length === 0) {
-        // Chat doesn't exist, probably deleted
-        toast({
-          variant: "destructive",
-          title: "Chat not found",
-          description: "This chat may have been deleted or doesn't exist.",
-          duration: 3000,
-        });
-        startNewChat();
-        return;
-      }
-
-      setChatId(id);
-      
-      const { data, error } = await supabase
-        .from('chat_messages' as any)
-        .select('*')
-        .eq('chat_id', id)
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error('Error loading chat:', error);
-        toast({
-          variant: "destructive",
-          title: "Failed to load chat",
-          description: "There was an error loading the chat history.",
-          duration: 3000,
-        });
-        return;
-      }
-
-      if (data) {
-        const loadedMessages: ChatMessage[] = (data as any[]).map(msg => ({
-          id: msg.id,
-          content: msg.content,
-          isUser: msg.is_user,
-          timestamp: new Date(msg.created_at),
-          parentMessageId: msg.parent_message_id || undefined,
-        }));
-        
-        setMessages(loadedMessages);
-        
-        // Update the selected model to match the one used in this chat
-        // But if it's an Azure model, use mistral instead since Azure is temporarily disabled
-        if (data.length > 0 && (data[0] as any).model) {
-          const chatModel = (data[0] as any).model as ChatModel;
-          if (chatModel === 'azure-gpt4-nano' || chatModel === 'azure-o4-mini') {
-            setSelectedModel('mistral');
-            toast({
-              title: "Azure models temporarily disabled",
-              description: "This chat was using an Azure model which is currently disabled. Using Mistral instead.",
-              duration: 5000,
-            });
-          } else {
-            setSelectedModel(chatModel);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load chat:', error);
-      toast({
-        variant: "destructive",
-        title: "Failed to load chat",
-        description: "There was an error loading the chat history.",
-        duration: 3000,
-      });
-    }
+    toast({
+      title: "Chat Loading",
+      description: "Since messages are temporary, starting a new chat instead.",
+      duration: 2000,
+    });
+    startNewChat();
   };
   
   // Start a new chat
@@ -279,7 +136,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     setDeepResearchMode(false); // Reset deep research mode for new chats
     toast({
       title: "New Chat Started",
-      description: "You've started a new conversation.",
+      description: "You've started a new conversation. Messages are temporary.",
       duration: 2000,
     });
   };
@@ -331,68 +188,14 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  // Save message to Supabase
-  const saveMessageToSupabase = async (message: ChatMessage, currentChatId: string) => {
-    try {
-      const { error } = await supabase
-        .from('chat_messages' as any)
-        .insert({
-          id: message.id,
-          chat_id: currentChatId,
-          content: message.content,
-          is_user: message.isUser,
-          parent_message_id: message.parentMessageId || null,
-          created_at: message.timestamp.toISOString(),
-          model: selectedModel,
-        });
-
-      if (error) {
-        console.error('Error saving message to Supabase:', error);
-      }
-    } catch (error) {
-      console.error('Failed to save message:', error);
-    }
-  };
-
-  // Delete a chat and its messages
+  // Delete a chat (simplified since no persistence)
   const deleteChat = async (id: string): Promise<void> => {
-    try {
-      // Delete all messages for this chat from Supabase
-      const { error } = await supabase
-        .from('chat_messages' as any)
-        .delete()
-        .eq('chat_id', id);
-        
-      if (error) {
-        console.error('Error deleting chat messages:', error);
-        toast({
-          variant: "destructive",
-          title: "Failed to delete chat",
-          description: "There was an error deleting the chat history.",
-          duration: 3000,
-        });
-        return;
-      }
-
-      // If we're deleting the currently active chat, start a new chat
-      if (chatId === id) {
-        startNewChat();
-      }
-
-      toast({
-        title: "Chat Deleted",
-        description: "The chat history has been deleted.",
-        duration: 2000,
-      });
-    } catch (error) {
-      console.error('Failed to delete chat:', error);
-      toast({
-        variant: "destructive",
-        title: "Failed to delete chat",
-        description: "There was an error deleting the chat history.",
-        duration: 3000,
-      });
-    }
+    startNewChat();
+    toast({
+      title: "Chat Cleared",
+      description: "Started a new temporary chat.",
+      duration: 2000,
+    });
   };
 
   // Send a message to the AI
@@ -418,16 +221,19 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     setIsTyping(true);
 
-    // Save user message to Supabase
-    await saveMessageToSupabase(userMessage, currentChatId);
-
     try {
       let aiResponse: string;
+
+      // Automatically append deep research instruction when deep research mode is enabled
+      let queryToSend = content;
+      if (selectedModel === 'gemini' && deepResearchMode) {
+        queryToSend = content + " Conduct Deep Research for at least 30 seconds.";
+      }
 
       // Use the edge function for all models, including deep research mode
       const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
         body: { 
-          query: content,
+          query: queryToSend,
           chatId: currentChatId,
           chatHistory: messages,
           model: selectedModel,
@@ -454,9 +260,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         };
         
         setMessages(prev => [...prev, aiMessage]);
-        
-        // Save AI message to Supabase
-        await saveMessageToSupabase(aiMessage, currentChatId);
         
         // Show success toast for deep research
         if (selectedModel === 'gemini' && deepResearchMode) {
