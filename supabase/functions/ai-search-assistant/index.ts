@@ -1,16 +1,12 @@
+
 // Import required Deno modules
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
 // Process request with the specified AI model
-async function processRequest(model: string, query: string, chatId?: string, chatHistory?: any[], deepResearch?: boolean) {
-  console.log(`Processing ${model} request for chat ${chatId}${deepResearch ? ' (Deep Research Mode)' : ''}`);
-  
-  // If deep research mode is enabled and model is gemini, use deep research
-  if (deepResearch && model === 'gemini') {
-    return processGeminiDeepResearch(query, chatHistory);
-  }
+async function processRequest(model: string, query: string, chatId?: string, chatHistory?: any[]) {
+  console.log(`Processing ${model} request for chat ${chatId}`);
   
   switch (model) {
     case 'mistral':
@@ -27,139 +23,6 @@ async function processRequest(model: string, query: string, chatId?: string, cha
       return processGroqLlama4ScoutRequest(query, chatHistory);
     default:
       return processMistralRequest(query, chatHistory); // Default to Mistral
-  }
-}
-
-// Deep Research with Gemini
-async function processGeminiDeepResearch(query: string, chatHistory?: any[]) {
-  const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-  
-  if (!GEMINI_API_KEY) {
-    throw new Error('Gemini API key is not set');
-  }
-
-  console.log('Starting deep research for topic:', query);
-  
-  try {
-    // Step 1: Determine research plan
-    console.log('Step 1: Determining research plan...');
-    const tasks = await determineResearchPlan(query, GEMINI_API_KEY);
-    console.log(`Generated ${tasks.length} research tasks`);
-    
-    // Step 2: Conduct research tasks
-    console.log('Step 2: Conducting research tasks...');
-    const taskResults = await conductResearchTasks(tasks, GEMINI_API_KEY);
-    console.log('Completed all research tasks');
-    
-    // Step 3: Compile final report
-    console.log('Step 3: Compiling final report...');
-    const finalReport = await compileReport(query, taskResults, GEMINI_API_KEY);
-    console.log('Deep research completed successfully');
-    
-    return finalReport;
-  } catch (error) {
-    console.error('Error in deep research:', error);
-    throw error;
-  }
-}
-
-async function sendGeminiPrompt(promptText: string, apiKey: string): Promise<string> {
-  try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: promptText
-          }]
-        }]
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.status}`);
-    }
-
-    const data = await response.json();
-    
-    if (!data.candidates || data.candidates.length === 0) {
-      throw new Error('No response candidates received from Gemini');
-    }
-
-    return data.candidates[0].content.parts[0].text;
-  } catch (error) {
-    console.error('Error in sendGeminiPrompt:', error);
-    throw error;
-  }
-}
-
-async function determineResearchPlan(topic: string, apiKey: string): Promise<any[]> {
-  const systemInstruction = "You are a research-optimized AI agent. Given a broad research topic, break it into an ordered list of specific subtasks. Return a JSON array of objects with 'id' and 'description'.";
-  const userInstruction = `Research Topic: ${topic}\n\nCreate at least 4 subtasks covering literature review, data gathering, analysis, and synthesis. Output exactly as a JSON array.`;
-  
-  const prompt = `${systemInstruction}\n\n${userInstruction}`;
-  
-  try {
-    const response = await sendGeminiPrompt(prompt, apiKey);
-    
-    // Extract JSON from response (handle potential markdown formatting)
-    const jsonMatch = response.match(/\[[\s\S]*\]/);
-    const jsonString = jsonMatch ? jsonMatch[0] : response;
-    
-    return JSON.parse(jsonString);
-  } catch (error) {
-    console.error('Error parsing research plan:', error);
-    throw new Error('Failed to generate research plan. Please try again.');
-  }
-}
-
-async function conductResearchTasks(tasks: any[], apiKey: string): Promise<any[]> {
-  const results: any[] = [];
-  
-  for (const task of tasks) {
-    const systemInstruction = "You are a research assistant. For the following subtask, provide detailed analysis, gather relevant points, and summarize key findings. Use evidence-based reasoning.";
-    const userInstruction = `Subtask ID: ${task.id}\nDescription: ${task.description}\n\nExecute this subtask and provide a comprehensive response.`;
-    
-    const prompt = `${systemInstruction}\n\n${userInstruction}`;
-    
-    try {
-      const content = await sendGeminiPrompt(prompt, apiKey);
-      results.push({
-        taskId: task.id,
-        content: content.trim()
-      });
-    } catch (error) {
-      console.error(`Error conducting task ${task.id}:`, error);
-      results.push({
-        taskId: task.id,
-        content: `Error conducting this research task: ${error instanceof Error ? error.message : 'Unknown error'}`
-      });
-    }
-  }
-  
-  return results;
-}
-
-async function compileReport(topic: string, taskResults: any[], apiKey: string): Promise<string> {
-  const systemInstruction = "You are an expert research compiler. Given multiple subtask responses, synthesize them into a structured report with an Introduction, Methodology, Findings by subsection, and Conclusion/Recommendations.";
-  
-  const findingsText = taskResults.map(result => 
-    `Task ${result.taskId} Findings: ${result.content}`
-  ).join('\n\n');
-  
-  const userInstruction = `Research Topic: ${topic}\n\nHere are the subtasks' findings:\n\n${findingsText}\n\nPlease produce a coherent final report.`;
-  
-  const prompt = `${systemInstruction}\n\n${userInstruction}`;
-  
-  try {
-    const report = await sendGeminiPrompt(prompt, apiKey);
-    return report.trim();
-  } catch (error) {
-    console.error('Error compiling report:', error);
-    throw new Error('Failed to compile research report. Please try again.');
   }
 }
 
@@ -460,7 +323,7 @@ serve(async (req) => {
   
   try {
     // Parse request body
-    const { query, chatId, chatHistory, model = 'mistral', deepResearch = false } = await req.json();
+    const { query, chatId, chatHistory, model = 'mistral' } = await req.json();
     
     if (!query) {
       return new Response(
@@ -470,7 +333,7 @@ serve(async (req) => {
     }
     
     // Process the request with the specified model
-    const response = await processRequest(model, query, chatId, chatHistory, deepResearch);
+    const response = await processRequest(model, query, chatId, chatHistory);
     
     // Return the generated response
     return new Response(

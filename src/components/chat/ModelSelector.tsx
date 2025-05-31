@@ -1,28 +1,22 @@
+
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ChatModel } from '@/context/ChatContext';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Search } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { Alert } from '@/components/ui/alert';
 import { motion } from 'framer-motion';
-import { Switch } from '@/components/ui/switch';
 
 interface ModelSelectorProps {
   selectedModel: ChatModel;
   onModelChange: (value: string) => void;
   onNewChat: () => void;
-  deepResearchMode?: boolean;
-  onDeepResearchToggle?: (enabled: boolean) => void;
 }
 
 const ModelSelector: React.FC<ModelSelectorProps> = ({ 
   selectedModel, 
   onModelChange, 
-  onNewChat,
-  deepResearchMode = false,
-  onDeepResearchToggle
+  onNewChat 
 }) => {
-  const isGeminiSelected = selectedModel === 'gemini';
-
   return (
     <div className="p-3 border-b border-orange-500/40 bg-orange-900/5">
       <Alert className="mb-3 py-2 bg-orange-500/10 border-orange-500/30 text-orange-200 text-xs">
@@ -77,36 +71,30 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
 
         <ModelOption 
           value="gemini" 
-          name="Gemini 2.5 Flash" 
-          description="Google's latest AI model with research capabilities" 
-          badge={{ text: "Research", color: "yellow" }} 
+          name="Gemini 2.5" 
+          description="Google's latest AI model" 
+          badge={{ text: "Accurate", color: "yellow" }} 
           isSelected={selectedModel === 'gemini'}
         />
+        
+        {/* Azure OpenAI models temporarily disabled
+        <ModelOption 
+          value="azure-gpt4-nano" 
+          name="GPT-4.1 Nano" 
+          description="Azure OpenAI - Efficient" 
+          badge={{ text: "Azure", color: "orange" }} 
+          isSelected={selectedModel === 'azure-gpt4-nano'}
+        />
+        
+        <ModelOption 
+          value="azure-o4-mini" 
+          name="O4 Mini" 
+          description="Azure OpenAI - Compact" 
+          badge={{ text: "Azure", color: "orange" }} 
+          isSelected={selectedModel === 'azure-o4-mini'}
+        />
+        */}
       </RadioGroup>
-
-      {/* Deep Research Toggle - only show when Gemini is selected */}
-      {isGeminiSelected && onDeepResearchToggle && (
-        <motion.div 
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          className="mt-3 p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Search className="h-4 w-4 text-orange-300" />
-              <div>
-                <p className="text-sm font-medium text-orange-200">Deep Research Mode</p>
-                <p className="text-xs text-orange-300/70">Breaks down topics into structured research subtasks</p>
-              </div>
-            </div>
-            <Switch
-              checked={deepResearchMode}
-              onCheckedChange={onDeepResearchToggle}
-              className="data-[state=checked]:bg-orange-500"
-            />
-          </div>
-        </motion.div>
-      )}
 
       <div className="mt-3 flex justify-end">
         <Button 
