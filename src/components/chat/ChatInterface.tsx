@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useChat, ChatModel } from '@/context/ChatContext';
 import { useToast } from '@/hooks/use-toast';
@@ -101,8 +100,8 @@ const ChatInterface = () => {
             <>
               <MessageList 
                 messages={messages}
-                isTyping={isTyping}
-                onReplyClick={handleReplyClick}
+                typingIndicator={isTyping}
+                onReply={handleReplyClick}
               />
 
               <MessageInput 
