@@ -1,9 +1,9 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { Message, generateTextWithAzureOpenAI } from '@/services/azureOpenAiService';
+import { DeepResearchAgent } from '@/services/deepResearchAgent';
 
 export type ChatModel = 'mistral' | 'groq' | 'gemini' | 'azure-gpt4-nano' | 'azure-o4-mini' | 'groq-qwen-qwq' | 'groq-llama4-scout' | 'mistral-medium-3';
 
@@ -31,11 +31,13 @@ interface ChatContextType {
   messages: ChatMessage[];
   modelUsage: ModelUsage;
   selectedModel: ChatModel;
+  deepResearchMode: boolean;
   isLoading: boolean;
   isTyping: boolean;
   sendMessage: (content: string, parentMessageId?: string) => Promise<void>;
   startNewChat: () => void;
   selectModel: (model: ChatModel) => void;
+  setDeepResearchMode: (enabled: boolean) => void;
   loadChatById: (chatId: string) => Promise<void>;
   deleteChat: (chatId: string) => Promise<void>;
 }
@@ -61,6 +63,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [deepResearchMode, setDeepResearchMode] = useState(false);
   // Set mistral as default model and ensure Azure models aren't used
   const [selectedModel, setSelectedModel] = useState<ChatModel>('mistral');
   const [modelUsage, setModelUsage] = useState<ModelUsage>({
@@ -275,6 +278,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     const newChatId = uuidv4();
     setChatId(newChatId);
     setMessages([]);
+    setDeepResearchMode(false); // Reset deep research mode for new chats
     toast({
       title: "New Chat Started",
       description: "You've started a new conversation.",
@@ -285,6 +289,10 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   // Select a model
   const selectModel = (model: ChatModel) => {
     setSelectedModel(model);
+    // Reset deep research mode when switching models
+    if (model !== 'gemini') {
+      setDeepResearchMode(false);
+    }
     toast({
       title: `Model Changed: ${getModelDisplayName(model)}`,
       description: "Your messages will now be processed by this AI model.",
@@ -418,24 +426,49 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     try {
       let aiResponse: string;
 
-      // Azure OpenAI models are temporarily disabled
-      // Use existing AI function for all models
-      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
-        body: { 
-          query: content,
-          chatId: currentChatId,
-          chatHistory: messages,
-          model: selectedModel
+      // Check if we should use deep research mode
+      if (selectedModel === 'gemini' && deepResearchMode) {
+        // Use environment variable for Google API key
+        const googleApiKey = import.meta.env.VITE_GOOGLE_API_KEY;
+        
+        if (!googleApiKey) {
+          handleChatError("Google API key not configured. Please contact your administrator.");
+          return;
         }
-      });
 
-      if (error) {
-        console.error("Supabase function error:", error);
-        handleChatError("Sorry, I encountered an error while trying to respond. Please try again.");
-        return;
+        try {
+          const researchAgent = new DeepResearchAgent(googleApiKey, 'gemini-2.5-flash');
+          aiResponse = await researchAgent.runDeepResearch(content);
+          
+          toast({
+            title: "Deep Research Complete",
+            description: "Comprehensive research report generated successfully.",
+            duration: 3000,
+          });
+        } catch (error) {
+          console.error("Deep research error:", error);
+          handleChatError("Failed to complete deep research. Please try again or disable deep research mode.");
+          return;
+        }
+      } else {
+        // Use existing AI function for all other models
+        const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
+          body: { 
+            query: content,
+            chatId: currentChatId,
+            chatHistory: messages,
+            model: selectedModel
+          }
+        });
+
+        if (error) {
+          console.error("Supabase function error:", error);
+          handleChatError("Sorry, I encountered an error while trying to respond. Please try again.");
+          return;
+        }
+        
+        aiResponse = data.response;
       }
-      
-      aiResponse = data.response;
       
       // Add AI response to messages
       if (aiResponse) {
@@ -469,11 +502,13 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       messages,
       modelUsage,
       selectedModel,
+      deepResearchMode,
       isLoading,
       isTyping,
       sendMessage,
       startNewChat,
       selectModel,
+      setDeepResearchMode,
       loadChatById,
       deleteChat,
     }}>

@@ -18,6 +18,8 @@ const ChatInterface = () => {
     startNewChat,
     selectModel,
     selectedModel,
+    deepResearchMode,
+    setDeepResearchMode,
     chatId
   } = useChat();
   
@@ -60,6 +62,8 @@ const ChatInterface = () => {
                 selectedModel={selectedModel}
                 onModelChange={handleModelChange}
                 onNewChat={startNewChat}
+                deepResearchMode={deepResearchMode}
+                onDeepResearchToggle={setDeepResearchMode}
               />
             </div>
           </motion.div>
@@ -73,6 +77,8 @@ const ChatInterface = () => {
               selectedModel={selectedModel}
               onModelChange={handleModelChange}
               onNewChat={startNewChat}
+              deepResearchMode={deepResearchMode}
+              onDeepResearchToggle={setDeepResearchMode}
             />
             <div className="px-3 pb-2">
               <button 
