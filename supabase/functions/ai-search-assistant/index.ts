@@ -15,13 +15,58 @@ interface TaskResult {
 class DeepResearchAgent {
   private apiKey: string;
   private modelId: string;
+  private model: string;
 
-  constructor() {
-    this.apiKey = Deno.env.get('GEMINI_API_KEY') || '';
-    this.modelId = 'gemini-2.0-flash-exp';
+  constructor(model: string) {
+    this.model = model;
+    
+    // Set API key and model ID based on the selected model
+    switch (model) {
+      case 'gemini':
+        this.apiKey = Deno.env.get('GEMINI_API_KEY') || '';
+        this.modelId = 'gemini-2.0-flash-exp';
+        break;
+      case 'mistral':
+      case 'mistral-medium-3':
+        this.apiKey = Deno.env.get('MISTRAL_API_KEY') || '';
+        this.modelId = model === 'mistral-medium-3' ? 'mistral-large-2411' : 'mistral-medium-latest';
+        break;
+      case 'groq':
+      case 'groq-qwen-qwq':
+      case 'groq-llama4-scout':
+        this.apiKey = Deno.env.get('GROQ_API_KEY') || '';
+        if (model === 'groq-qwen-qwq') {
+          this.modelId = 'qwen2.5-72b-instruct';
+        } else if (model === 'groq-llama4-scout') {
+          this.modelId = 'llama-3.3-70b-versatile';
+        } else {
+          this.modelId = 'llama-3.1-70b-versatile';
+        }
+        break;
+      default:
+        // Default to Gemini
+        this.apiKey = Deno.env.get('GEMINI_API_KEY') || '';
+        this.modelId = 'gemini-2.0-flash-exp';
+    }
   }
 
   private async sendPrompt(promptText: string): Promise<string> {
+    switch (this.model) {
+      case 'gemini':
+        return this.sendGeminiPrompt(promptText);
+      case 'mistral':
+      case 'mistral-medium-3':
+        return this.sendMistralPrompt(promptText);
+      case 'groq':
+      case 'groq-qwen-qwq':
+      case 'groq-llama4-scout':
+        return this.sendGroqPrompt(promptText);
+      default:
+        return this.sendGeminiPrompt(promptText);
+    }
+  }
+
+  private async sendGeminiPrompt(promptText: string): Promise<string> {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${this.modelId}:generateContent?key=${this.apiKey}`, {
       method: 'POST',
       headers: {
@@ -43,14 +88,72 @@ class DeepResearchAgent {
     });
 
     if (!response.ok) {
-      throw new Error(`API request failed: ${response.status}`);
+      throw new Error(`Gemini API request failed: ${response.status}`);
     }
 
     const data = await response.json();
     const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!content) {
-      throw new Error('No content received from API');
+      throw new Error('No content received from Gemini API');
+    }
+
+    return content.trim();
+  }
+
+  private async sendMistralPrompt(promptText: string): Promise<string> {
+    const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: this.modelId,
+        messages: [{ role: 'user', content: promptText }],
+        temperature: 0.7,
+        max_tokens: 8192,
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Mistral API request failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+    
+    if (!content) {
+      throw new Error('No content received from Mistral API');
+    }
+
+    return content.trim();
+  }
+
+  private async sendGroqPrompt(promptText: string): Promise<string> {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: this.modelId,
+        messages: [{ role: 'user', content: promptText }],
+        temperature: 0.7,
+        max_tokens: 8192,
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Groq API request failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+    
+    if (!content) {
+      throw new Error('No content received from Groq API');
     }
 
     return content.trim();
@@ -147,7 +250,7 @@ Please produce a coherent final report.`;
   }
 }
 
-// Regular Gemini chat functionality
+// Regular chat functionality for all models
 async function sendGeminiPrompt(prompt: string): Promise<string> {
   const apiKey = Deno.env.get('GEMINI_API_KEY');
   if (!apiKey) {
@@ -183,11 +286,11 @@ async function sendGeminiPrompt(prompt: string): Promise<string> {
   return data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response generated';
 }
 
-async function processGeminiDeepResearch(query: string): Promise<string> {
-  console.log(`Starting deep research for topic: ${query}`);
+async function processDeepResearch(query: string, model: string): Promise<string> {
+  console.log(`Starting deep research for topic: ${query} using model: ${model}`);
   
   try {
-    const researchAgent = new DeepResearchAgent();
+    const researchAgent = new DeepResearchAgent(model);
     const report = await researchAgent.runDeepResearch(query);
     return report;
   } catch (error) {
@@ -209,10 +312,10 @@ serve(async (req) => {
     let result = '';
 
     if (deepResearch) {
-      // Use deep research mode
-      result = await processGeminiDeepResearch(query);
+      // Use deep research mode with the selected model
+      result = await processDeepResearch(query, model);
     } else {
-      // Regular chat mode
+      // Regular chat mode - fallback to Gemini for all models for now
       let prompt = '';
       
       if (chatHistory && chatHistory.length > 0) {
@@ -224,18 +327,8 @@ serve(async (req) => {
         prompt = `User: ${query}\n\nAssistant:`;
       }
 
-      switch (model) {
-        case 'gemini':
-        case 'mistral':
-        case 'mistral-medium-3':
-        case 'groq':
-        case 'groq-qwen-qwq':
-        case 'groq-llama4-scout':
-          result = await sendGeminiPrompt(prompt);
-          break;
-        default:
-          result = await sendGeminiPrompt(prompt);
-      }
+      // For regular chat, use Gemini for all models (can be expanded later)
+      result = await sendGeminiPrompt(prompt);
     }
 
     return new Response(
