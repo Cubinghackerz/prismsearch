@@ -7,10 +7,12 @@ import React, {
 } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
+import { textFormattingService } from '@/services/textFormattingService';
 
 export interface ChatMessage {
   id: string;
   content: string;
+  formattedContent?: string;
   isUser: boolean;
   timestamp: Date;
   parentMessageId?: string;
@@ -89,9 +91,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
 
+      const responseText = data.response || 'No response received';
+      const formattedContent = textFormattingService.formatMessage(responseText);
+
       const assistantMessage: ChatMessage = {
         id: uuidv4(),
-        content: data.response || 'No response received',
+        content: responseText,
+        formattedContent: formattedContent,
         isUser: false,
         timestamp: new Date(),
         parentMessageId: parentMessageId,
@@ -159,9 +165,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
 
+      const responseText = data.response || 'No response received';
+      const formattedContent = textFormattingService.formatMessage(responseText);
+
       const assistantMessage: ChatMessage = {
         id: `msg-${Date.now() + 1}`,
-        content: data.response || 'No response received',
+        content: responseText,
+        formattedContent: formattedContent,
         isUser: false,
         timestamp: new Date(),
       };
