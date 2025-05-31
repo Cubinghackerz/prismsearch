@@ -1,10 +1,7 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
-import { Message, generateTextWithAzureOpenAI } from '@/services/azureOpenAiService';
-import { DeepResearchAgent } from '@/services/deepResearchAgent';
 
 export type ChatModel = 'mistral' | 'groq' | 'gemini' | 'azure-gpt4-nano' | 'azure-o4-mini' | 'groq-qwen-qwq' | 'groq-llama4-scout' | 'mistral-medium-3';
 
@@ -427,49 +424,24 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     try {
       let aiResponse: string;
 
-      // Check if we should use deep research mode
-      if (selectedModel === 'gemini' && deepResearchMode) {
-        // Use environment variable for Google API key
-        const googleApiKey = import.meta.env.VITE_GOOGLE_API_KEY;
-        
-        if (!googleApiKey) {
-          handleChatError("Google API key not configured. Please contact your administrator.");
-          return;
+      // Use the edge function for all models, including deep research mode
+      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
+        body: { 
+          query: content,
+          chatId: currentChatId,
+          chatHistory: messages,
+          model: selectedModel,
+          deepResearch: selectedModel === 'gemini' && deepResearchMode
         }
+      });
 
-        try {
-          const researchAgent = new DeepResearchAgent(googleApiKey, 'gemini-2.5-flash');
-          aiResponse = await researchAgent.runDeepResearch(content);
-          
-          toast({
-            title: "Deep Research Complete",
-            description: "Comprehensive research report generated successfully.",
-            duration: 3000,
-          });
-        } catch (error) {
-          console.error("Deep research error:", error);
-          handleChatError("Failed to complete deep research. Please try again or disable deep research mode.");
-          return;
-        }
-      } else {
-        // Use existing AI function for all other models
-        const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
-          body: { 
-            query: content,
-            chatId: currentChatId,
-            chatHistory: messages,
-            model: selectedModel
-          }
-        });
-
-        if (error) {
-          console.error("Supabase function error:", error);
-          handleChatError("Sorry, I encountered an error while trying to respond. Please try again.");
-          return;
-        }
-        
-        aiResponse = data.response;
+      if (error) {
+        console.error("Supabase function error:", error);
+        handleChatError("Sorry, I encountered an error while trying to respond. Please try again.");
+        return;
       }
+      
+      aiResponse = data.response;
       
       // Add AI response to messages
       if (aiResponse) {
@@ -485,6 +457,15 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         
         // Save AI message to Supabase
         await saveMessageToSupabase(aiMessage, currentChatId);
+        
+        // Show success toast for deep research
+        if (selectedModel === 'gemini' && deepResearchMode) {
+          toast({
+            title: "Deep Research Complete",
+            description: "Comprehensive research report generated successfully.",
+            duration: 3000,
+          });
+        }
       } else {
         handleChatError("Received an empty response from the AI. Please try again.");
       }
