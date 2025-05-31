@@ -1,7 +1,4 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { corsHeaders } from '../_shared/cors.ts'
-
 interface ResearchTask {
   id: string;
   description: string;
@@ -12,13 +9,14 @@ interface TaskResult {
   content: string;
 }
 
-class DeepResearchAgent {
+export class DeepResearchAgent {
   private apiKey: string;
   private modelId: string;
 
   constructor() {
-    this.apiKey = Deno.env.get('GEMINI_API_KEY') || '';
-    this.modelId = 'gemini-2.0-flash-exp';
+    // These will be passed from the edge function environment
+    this.apiKey = process.env.GOOGLE_API_KEY || '';
+    this.modelId = process.env.GEMINI_MODEL_ID || 'gemini-2.0-flash-exp';
   }
 
   private async sendPrompt(promptText: string): Promise<string> {
@@ -100,9 +98,6 @@ Execute this subtask and provide a comprehensive response.`;
           taskId: task.id,
           content: content.trim()
         });
-        
-        // Add a small delay between tasks to avoid rate limits
-        await new Promise(resolve => setTimeout(resolve, 1000));
       } catch (error) {
         console.error(`Error conducting task ${task.id}:`, error);
         results.push({
@@ -146,119 +141,3 @@ Please produce a coherent final report.`;
     return finalReport;
   }
 }
-
-// Regular Gemini chat functionality
-async function sendGeminiPrompt(prompt: string): Promise<string> {
-  const apiKey = Deno.env.get('GEMINI_API_KEY');
-  if (!apiKey) {
-    throw new Error('GEMINI_API_KEY not configured');
-  }
-
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      contents: [{
-        parts: [{
-          text: prompt
-        }]
-      }],
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 8192,
-      }
-    })
-  });
-
-  if (!response.ok) {
-    console.error('Gemini API error:', response.status, response.statusText);
-    throw new Error(`API request failed: ${response.status}`);
-  }
-
-  const data = await response.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response generated';
-}
-
-async function processGeminiDeepResearch(query: string): Promise<string> {
-  console.log(`Starting deep research for topic: ${query}`);
-  
-  try {
-    const researchAgent = new DeepResearchAgent();
-    const report = await researchAgent.runDeepResearch(query);
-    return report;
-  } catch (error) {
-    console.error('Error in deep research:', error);
-    throw error;
-  }
-}
-
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
-
-  try {
-    const { query, chatId, chatHistory, model, deepResearch } = await req.json()
-    
-    console.log(`Processing ${model} request for chat ${chatId}${deepResearch ? ' (Deep Research Mode)' : ''}`)
-
-    let result = '';
-
-    if (deepResearch) {
-      // Use deep research mode
-      result = await processGeminiDeepResearch(query);
-    } else {
-      // Regular chat mode
-      let prompt = '';
-      
-      if (chatHistory && chatHistory.length > 0) {
-        const historyContext = chatHistory.map((msg: any) => 
-          `${msg.isUser ? 'User' : 'Assistant'}: ${msg.content}`
-        ).join('\n');
-        prompt = `Previous conversation:\n${historyContext}\n\nUser: ${query}\n\nAssistant:`;
-      } else {
-        prompt = `User: ${query}\n\nAssistant:`;
-      }
-
-      switch (model) {
-        case 'gemini':
-        case 'mistral':
-        case 'mistral-medium-3':
-        case 'groq':
-        case 'groq-qwen-qwq':
-        case 'groq-llama4-scout':
-          result = await sendGeminiPrompt(prompt);
-          break;
-        default:
-          result = await sendGeminiPrompt(prompt);
-      }
-    }
-
-    return new Response(
-      JSON.stringify({ response: result }),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
-    )
-
-  } catch (error) {
-    console.error('Error processing request:', error)
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 500,
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
-    )
-  }
-})

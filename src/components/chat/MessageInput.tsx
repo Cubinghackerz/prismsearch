@@ -1,10 +1,10 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { X, ArrowUp, Loader2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { ChatMessage } from '@/context/ChatContext';
+import DeepResearchButton from './DeepResearchButton';
 
 interface MessageInputProps {
   onSendMessage: (content: string, parentMessageId?: string | null) => void;
@@ -81,7 +81,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
           onBlur={() => setIsFocused(false)} 
           placeholder="Ask anything..." 
           className={`
-            resize-none bg-[#1A1F2C]/90 border text-orange-100 pr-12 
+            resize-none bg-[#1A1F2C]/90 border text-orange-100 pr-24 
             min-h-[56px] py-3 rounded-xl md:min-h-[64px] shadow-lg
             transition-all duration-300 placeholder:text-orange-300/30 
             focus:placeholder:opacity-50 focus:text-orange-50
@@ -140,19 +140,26 @@ const MessageInput: React.FC<MessageInputProps> = ({
             ${isFocused ? 'opacity-100' : 'opacity-0'}
           `} />
         
-        <Button 
-          type="submit" 
-          size="icon" 
-          className={`
-            absolute right-2 rounded-full text-white 
-            w-10 h-10 flex items-center justify-center shadow-md
-            transition-all duration-300
-            ${!inputValue.trim() || isLoading ? 'bg-gray-700/30 cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-orange-500 to-orange-700 hover:from-orange-600 hover:to-orange-800 cursor-pointer shadow-lg shadow-orange-900/30 hover:shadow-orange-800/40 hover:scale-105 active:scale-95 ember-glow'}
-          `} 
-          disabled={!inputValue.trim() || isLoading}
-        >
-          {isLoading ? <Loader2 className="h-5 w-5 animate-spin text-white" /> : <ArrowUp className="h-5 w-5 text-white" />}
-        </Button>
+        <div className="absolute right-2 flex items-center gap-2">
+          <DeepResearchButton 
+            topic={inputValue}
+            disabled={!inputValue.trim() || isLoading}
+          />
+          
+          <Button 
+            type="submit" 
+            size="icon" 
+            className={`
+              rounded-full text-white 
+              w-10 h-10 flex items-center justify-center shadow-md
+              transition-all duration-300
+              ${!inputValue.trim() || isLoading ? 'bg-gray-700/30 cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-orange-500 to-orange-700 hover:from-orange-600 hover:to-orange-800 cursor-pointer shadow-lg shadow-orange-900/30 hover:shadow-orange-800/40 hover:scale-105 active:scale-95 ember-glow'}
+            `} 
+            disabled={!inputValue.trim() || isLoading}
+          >
+            {isLoading ? <Loader2 className="h-5 w-5 animate-spin text-white" /> : <ArrowUp className="h-5 w-5 text-white" />}
+          </Button>
+        </div>
       </div>
     </form>
   );
