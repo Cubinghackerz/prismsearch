@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -119,7 +120,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       
       try {
         const { data, error } = await supabase
-          .from('chat_messages')
+          .from('chat_messages' as any)
           .select('chat_id, created_at')
           .order('created_at', { ascending: false })
           .limit(1);
@@ -130,7 +131,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         }
 
         if (data && data.length > 0) {
-          await loadChatById(data[0].chat_id);
+          await loadChatById((data[0] as any).chat_id);
         } else {
           // No chats found, start a new one
           startNewChat();
@@ -148,7 +149,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     const loadMessages = async (currentChatId: string) => {
       try {
         const { data, error } = await supabase
-          .from('chat_messages')
+          .from('chat_messages' as any)
           .select('*')
           .eq('chat_id', currentChatId)
           .order('created_at', { ascending: true });
@@ -159,7 +160,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         }
 
         if (data && data.length > 0) {
-          const loadedMessages: ChatMessage[] = data.map(msg => ({
+          const loadedMessages: ChatMessage[] = (data as any[]).map(msg => ({
             id: msg.id,
             content: msg.content,
             isUser: msg.is_user,
@@ -188,7 +189,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     try {
       // First check if this chat exists and has messages
       const { data: chatExists, error: checkError } = await supabase
-        .from('chat_messages')
+        .from('chat_messages' as any)
         .select('id')
         .eq('chat_id', id)
         .limit(1);
@@ -219,7 +220,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       setChatId(id);
       
       const { data, error } = await supabase
-        .from('chat_messages')
+        .from('chat_messages' as any)
         .select('*')
         .eq('chat_id', id)
         .order('created_at', { ascending: true });
@@ -236,7 +237,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (data) {
-        const loadedMessages: ChatMessage[] = data.map(msg => ({
+        const loadedMessages: ChatMessage[] = (data as any[]).map(msg => ({
           id: msg.id,
           content: msg.content,
           isUser: msg.is_user,
@@ -248,8 +249,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         
         // Update the selected model to match the one used in this chat
         // But if it's an Azure model, use mistral instead since Azure is temporarily disabled
-        if (data.length > 0 && data[0].model) {
-          const chatModel = data[0].model as ChatModel;
+        if (data.length > 0 && (data[0] as any).model) {
+          const chatModel = (data[0] as any).model as ChatModel;
           if (chatModel === 'azure-gpt4-nano' || chatModel === 'azure-o4-mini') {
             setSelectedModel('mistral');
             toast({
@@ -337,7 +338,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const saveMessageToSupabase = async (message: ChatMessage, currentChatId: string) => {
     try {
       const { error } = await supabase
-        .from('chat_messages')
+        .from('chat_messages' as any)
         .insert({
           id: message.id,
           chat_id: currentChatId,
@@ -361,7 +362,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     try {
       // Delete all messages for this chat from Supabase
       const { error } = await supabase
-        .from('chat_messages')
+        .from('chat_messages' as any)
         .delete()
         .eq('chat_id', id);
         
