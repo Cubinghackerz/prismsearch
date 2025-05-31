@@ -111,6 +111,17 @@ export class FormatterAgent {
   }
 
   private formatInlineElements(text: string): string {
+    // Preserve existing HTML tags by temporarily replacing them
+    const htmlTagMap = new Map<string, string>();
+    let tagCounter = 0;
+    
+    // Preserve existing HTML tags
+    text = text.replace(/<[^>]+>/g, (match) => {
+      const placeholder = `__HTML_TAG_${tagCounter++}__`;
+      htmlTagMap.set(placeholder, match);
+      return placeholder;
+    });
+
     // Handle bold text **text** or __text__
     text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     text = text.replace(/__(.*?)__/g, '<strong>$1</strong>');
@@ -119,10 +130,15 @@ export class FormatterAgent {
     text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
     text = text.replace(/_(.*?)_/g, '<em>$1</em>');
     
-    // Escape any remaining HTML
+    // Escape any remaining special characters (but not our preserved HTML)
     text = text.replace(/&/g, '&amp;');
     text = text.replace(/</g, '&lt;');
     text = text.replace(/>/g, '&gt;');
+    
+    // Restore preserved HTML tags
+    htmlTagMap.forEach((originalTag, placeholder) => {
+      text = text.replace(placeholder, originalTag);
+    });
     
     return text;
   }
