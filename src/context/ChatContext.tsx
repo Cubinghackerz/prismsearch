@@ -1,7 +1,7 @@
+
 import React, {
   createContext,
   useState,
-  useEffect,
   useContext,
   useCallback
 } from 'react';
@@ -35,8 +35,6 @@ interface ChatContextType {
   selectModel: (model: ChatModel) => void;
   selectedModel: ChatModel;
   chatId: string | null;
-  loadChatById: (id: string) => Promise<void>;
-  deleteChat: (id: string) => Promise<void>;
   runDeepResearch: (topic: string) => Promise<void>;
 }
 
@@ -57,19 +55,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [selectedModel, setSelectedModel] = useState<ChatModel>('mistral');
   const [chatId, setChatId] = useState<string | null>(null);
 
-  // Load chat history from Supabase on chatId change
-  useEffect(() => {
-    if (chatId) {
-      loadChatById(chatId);
-    } else {
-      setMessages([]); // Clear messages if no chatId
-    }
-  }, [chatId]);
-
   const sendMessage = async (content: string, parentMessageId?: string) => {
     if (!chatId) {
       console.warn('No chatId available. Starting a new chat.');
-      await startNewChat();
+      startNewChat();
       return;
     }
 
@@ -109,8 +98,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-      await saveMessageToDatabase(userMessage, chatId);
-      await saveMessageToDatabase(assistantMessage, chatId);
     } catch (error) {
       console.error('Error sending message:', error);
       const errorMessage: ChatMessage = {
@@ -127,78 +114,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const saveMessageToDatabase = async (message: ChatMessage, chatId: string) => {
-    const { error } = await supabase
-      .from('chat_messages')
-      .insert([
-        {
-          chat_id: chatId,
-          content: message.content,
-          is_user: message.isUser,
-          timestamp: message.timestamp.toISOString(),
-          parent_message_id: message.parentMessageId || null,
-        },
-      ]);
-
-    if (error) {
-      console.error('Error saving message to database:', error);
-    }
-  };
-
-  const startNewChat = useCallback(async () => {
+  const startNewChat = useCallback(() => {
     const newChatId = uuidv4();
     setChatId(newChatId);
     setMessages([]);
   }, []);
-
-  const loadChatById = async (id: string) => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('chat_messages')
-        .select('*')
-        .eq('chat_id', id)
-        .order('timestamp', { ascending: true });
-
-      if (error) {
-        console.error('Error loading chat history:', error);
-        return;
-      }
-
-      const loadedMessages = data.map(msg => ({
-        id: msg.id,
-        content: msg.content,
-        isUser: msg.is_user,
-        timestamp: new Date(msg.timestamp),
-        parentMessageId: msg.parent_message_id || undefined,
-      }));
-
-      setMessages(loadedMessages);
-      setChatId(id);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const deleteChat = async (id: string) => {
-    setIsLoading(true);
-    try {
-      const { error } = await supabase
-        .from('chat_messages')
-        .delete()
-        .eq('chat_id', id);
-
-      if (error) {
-        console.error('Error deleting chat:', error);
-        return;
-      }
-
-      setMessages([]);
-      setChatId(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const selectModel = (model: ChatModel) => {
     setSelectedModel(model);
@@ -272,8 +192,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       selectModel,
       selectedModel,
       chatId,
-      loadChatById,
-      deleteChat,
       runDeepResearch
     }}>
       {children}
