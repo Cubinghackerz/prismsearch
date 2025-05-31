@@ -1,4 +1,5 @@
 
+
 import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
@@ -68,7 +69,7 @@ const MessageList: React.FC<MessageListProps> = ({
               
               {!message.isUser && (
                 <MessageActions 
-                  messageId={message.id} 
+                  message={message.content} 
                   onReply={() => onReply(message.id)}
                 />
               )}
