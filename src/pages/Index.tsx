@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, MessageSquare, BookmarkPlus } from 'lucide-react';
@@ -319,7 +318,7 @@ const Index = () => {
             >
               Type your query above to search across all engines simultaneously
             </motion.p>
-          </div>
+          </motion.div>
         )}
       </main>
       
