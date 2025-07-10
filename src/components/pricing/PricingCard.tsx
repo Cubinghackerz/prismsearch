@@ -58,7 +58,6 @@ export const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
 
         <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-6">
           <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-medium text-orange-400 hover:text-orange-300 transition-colors">
-          <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-medium text-prism-primary hover:text-prism-primary-light transition-colors">
             <span className="text-prism-primary hover:text-prism-primary-light">View details</span>
             {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </CollapsibleTrigger>
@@ -101,7 +100,7 @@ export const PricingCard: React.FC<PricingCardProps> = ({ plan }) => {
             {plan.buttonText}
           </Button>
           {!plan.available && (
-                        <div className="text-xs text-prism-primary mt-2 text-center font-inter">
+            <div className="text-xs text-prism-primary mt-2 text-center font-inter">
               Currently unavailable
             </div>
           )}
