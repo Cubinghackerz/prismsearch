@@ -1,6 +1,7 @@
 
 import { motion } from 'framer-motion';
 import { Bot } from 'lucide-react';
+import LoadingAnimation from '../LoadingAnimation';
 
 const TypingIndicator = () => {
   return (
@@ -15,40 +16,7 @@ const TypingIndicator = () => {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.2 }}
       >
-        <div className="flex items-center gap-1">
-          <motion.div
-            className="w-2 h-2 rounded-full bg-orange-300"
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{
-              duration: 1.2,
-              repeat: Infinity,
-              repeatType: 'loop',
-              times: [0, 0.5, 1]
-            }}
-          />
-          <motion.div
-            className="w-2 h-2 rounded-full bg-orange-300"
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{
-              duration: 1.2,
-              repeat: Infinity,
-              repeatType: 'loop',
-              delay: 0.2,
-              times: [0, 0.5, 1]
-            }}
-          />
-          <motion.div
-            className="w-2 h-2 rounded-full bg-orange-300"
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{
-              duration: 1.2,
-              repeat: Infinity,
-              repeatType: 'loop',
-              delay: 0.4,
-              times: [0, 0.5, 1]
-            }}
-          />
-        </div>
+        <LoadingAnimation color="orange" size="small" variant="neural" />
       </motion.div>
     </div>
   );

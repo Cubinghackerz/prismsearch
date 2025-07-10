@@ -284,7 +284,7 @@ Related Topics: ${summary.relatedTopics.join(', ')}
                   {isLoading && (
                     <div className="flex items-center justify-center py-8">
                       <div className="flex flex-col items-center gap-3">
-                        <LoadingAnimation color="purple" size="medium" />
+                        <LoadingAnimation color="purple" size="medium" variant="neural" />
                         <p className="text-purple-300/70 text-sm">Analyzing search results...</p>
                       </div>
                     </div>

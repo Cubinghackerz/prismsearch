@@ -85,9 +85,7 @@ const AISearchResponse = ({
           {isLoading ? <div className="flex flex-col items-start gap-2 text-orange-300/70">
               <div className="flex items-center gap-3">
                 <div>Thinking</div>
-                <div className="ml-2">
-                  <LoadingAnimation color="orange" size="small" />
-                </div>
+                <LoadingAnimation color="orange" size="small" variant="neural" />
               </div>
             </div> : <div>
               <div className="text-orange-100 markdown-content">
