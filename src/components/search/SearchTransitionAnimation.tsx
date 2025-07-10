@@ -149,10 +149,10 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
           
           {/* Enhanced pulsing rings */}
           <motion.div 
-            className="absolute inset-0 rounded-full border-4 border-orange-500/30 z-10"
-            className="absolute inset-0 rounded-full border-4 border-prism-primary/30 z-10" 
+            className="absolute inset-0 rounded-full border-4 border-prism-primary/30 z-10"
+            animate={{
               scale: [1, 1.8, 1],
-              opacity: [0.1, 0.5, 0],
+              opacity: [0.1, 0.5, 0]
             }}
             transition={{
               duration: 2,
@@ -163,10 +163,10 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
           />
           
           <motion.div 
-            className="absolute inset-0 rounded-full border-2 border-teal-400/20 z-10"
-            className="absolute inset-0 rounded-full border-2 border-prism-accent/20 z-10" 
+            className="absolute inset-0 rounded-full border-2 border-prism-accent/20 z-10"
+            animate={{
               scale: [1, 2, 1],
-              opacity: [0.1, 0.3, 0],
+              opacity: [0.1, 0.3, 0]
             }}
             transition={{
               duration: 2.5,
@@ -210,7 +210,6 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <motion.p 
-            className="text-sm text-orange-300/90 mb-2 font-medium tracking-wide"
             className="text-sm text-prism-primary/90 mb-2 font-medium tracking-wide" 
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.5 }}
@@ -219,7 +218,6 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
           </motion.p>
           
           <motion.h2 
-            className="text-xl md:text-2xl font-bold bg-gradient-to-r from-orange-200 via-orange-100 to-teal-100 bg-clip-text text-transparent"
             className="text-xl md:text-2xl font-bold bg-gradient-to-r from-prism-primary-light via-prism-primary to-prism-accent-light bg-clip-text text-transparent" 
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.6 }}
@@ -265,7 +263,6 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
                   <span className="text-sm font-bold text-orange-200/70">{engine.name[0]}</span>
                 </div>
                 <motion.div 
-                  className="h-8 w-[1px] mt-1 bg-orange-500/20"
                   className="h-8 w-[1px] mt-1 bg-prism-primary/20" 
                   animate={{ height: 8 }}
                   transition={{ delay: engine.delay + 0.2, duration: 0.3 }}
