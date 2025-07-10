@@ -42,13 +42,13 @@ const MessageList: React.FC<MessageListProps> = ({
           <div className={`
             max-w-[80%] p-4 rounded-2xl shadow-lg
             ${message.isUser 
-              ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white message user' 
-              : 'bg-blue-900/40 text-orange-100 border border-blue-700/30 message bot'
+              ? 'bg-gradient-to-r from-prism-blue-primary to-prism-purple-primary text-white message user' 
+              : 'bg-prism-dark-bg-800/40 text-prism-text-light border border-prism-blue-primary/30 message bot'
             }
           `}>
             <div className={`
               prose prose-invert max-w-none
-              ${message.isUser ? 'prose-p:text-white prose-headings:text-white' : 'prose-p:text-orange-100 prose-headings:text-orange-200'}
+              ${message.isUser ? 'prose-p:text-white prose-headings:text-white' : 'prose-p:text-prism-text-light prose-headings:text-prism-text-muted'}
             `}>
               {message.isUser ? (
                 <p className="mb-0 whitespace-pre-wrap">{message.content}</p>
@@ -61,7 +61,7 @@ const MessageList: React.FC<MessageListProps> = ({
               )}
             </div>
             
-            <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/20">
+            <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/20 group">
               <span className="text-xs opacity-70">
                 {format(message.timestamp, 'HH:mm')}
               </span>

@@ -42,60 +42,60 @@ export const PricingTable: React.FC<PricingTableProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="hidden md:block w-full overflow-x-auto"
+      className="hidden md:block w-full overflow-x-auto rounded-xl"
     >
-      <div className="min-w-full border border-orange-500/20 rounded-lg overflow-hidden backdrop-blur-md bg-orange-900/10">
-        <table className="min-w-full divide-y divide-orange-500/20">
+      <div className="min-w-full border border-prism-blue-primary/20 rounded-lg overflow-hidden backdrop-blur-md bg-prism-blue-primary/10">
+        <table className="min-w-full divide-y divide-prism-blue-primary/20">
           <thead>
-            <tr className="bg-orange-900/30">
-              <th className="px-6 py-5 text-left text-sm font-bold text-orange-100 font-montserrat">
+            <tr className="bg-prism-blue-primary/20">
+              <th className="px-6 py-5 text-left text-sm font-bold text-prism-text-light font-montserrat">
                 Plan
               </th>
-              <th className="px-6 py-5 text-center text-sm font-bold text-orange-100 font-montserrat">Price (USD/mo)</th>
-              <th className="px-6 py-5 text-center text-sm font-bold text-orange-100 font-montserrat">
+              <th className="px-6 py-5 text-center text-sm font-bold text-prism-text-light font-montserrat">Price (USD/mo)</th>
+              <th className="px-6 py-5 text-center text-sm font-bold text-prism-text-light font-montserrat">
                 Usage Limits
               </th>
-              <th className="px-6 py-5 text-center text-sm font-bold text-orange-100 font-montserrat">
+              <th className="px-6 py-5 text-center text-sm font-bold text-prism-text-light font-montserrat">
                 Features
               </th>
-              <th className="px-6 py-5 text-center text-sm font-bold text-orange-100 font-montserrat">
+              <th className="px-6 py-5 text-center text-sm font-bold text-prism-text-light font-montserrat">
                 Support & SLA
               </th>
               <th className="px-6 py-5 text-center"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-orange-500/20">
+          <tbody className="divide-y divide-prism-blue-primary/20">
             {plans.map((plan, index) => (
               <tr key={plan.name} className={cn(
-                "transition-all hover:bg-orange-500/10", 
-                plan.popular && "bg-orange-900/20 hover:bg-orange-900/30"
+                "transition-all hover:bg-prism-blue-primary/10", 
+                plan.popular && "bg-prism-purple-primary/20 hover:bg-prism-purple-primary/30"
               )}>
                 <td className="px-6 py-4">
                   <div className="flex flex-col">
-                    <span className="text-lg font-semibold text-orange-100 font-montserrat">{plan.name}</span>
+                    <span className="text-lg font-semibold text-prism-text-light font-montserrat">{plan.name}</span>
                     {plan.popular && 
-                      <span className="text-xs text-orange-400 font-montserrat mt-1">MOST POPULAR</span>
+                      <span className="text-xs text-prism-purple-light font-montserrat mt-1">MOST POPULAR</span>
                     }
                   </div>
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <div className="font-semibold text-xl text-transparent bg-clip-text bg-gradient-to-r from-orange-300 via-orange-400 to-orange-600 font-montserrat">{plan.price}</div>
-                  <div className="text-sm text-orange-300 font-inter">
+                  <div className="font-semibold text-xl text-transparent bg-clip-text bg-gradient-to-r from-prism-blue-light via-prism-teal-primary to-prism-purple-primary font-montserrat">{plan.price}</div>
+                  <div className="text-sm text-prism-text-muted font-inter">
                     {plan.period}
                   </div>
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <div className="text-sm text-orange-200 font-inter">
+                  <div className="text-sm text-prism-text-muted font-inter">
                     {Array.isArray(plan.usage) ? plan.usage.map((item, i) => <div key={i}>{item}</div>) : plan.usage}
                   </div>
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <div className="text-sm text-orange-200 font-inter">
+                  <div className="text-sm text-prism-text-muted font-inter">
                     {plan.features.map((feature, i) => <div key={i} className="mb-1">{feature}</div>)}
                   </div>
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <div className="text-sm text-orange-200 font-inter">{plan.support}</div>
+                  <div className="text-sm text-prism-text-muted font-inter">{plan.support}</div>
                 </td>
                 <td className="px-6 py-4 text-center">
                   <Button 
@@ -105,14 +105,14 @@ export const PricingTable: React.FC<PricingTableProps> = ({
                     className={cn(
                       "transition-colors w-full", 
                       plan.available 
-                        ? "bg-orange-500 hover:bg-orange-600 text-white glow-button" 
-                        : "text-orange-400 border-orange-500/30 hover:bg-orange-500/10"
+                        ? "bg-prism-blue-primary hover:bg-prism-blue-dark text-white glow-button" 
+                        : "text-prism-blue-light border-prism-blue-primary/30 hover:bg-prism-blue-primary/10"
                     )}
                   >
                     {plan.buttonText}
                   </Button>
                   {!plan.available && (
-                    <div className="text-xs text-orange-400 mt-2 font-inter">
+                    <div className="text-xs text-prism-blue-light mt-2 font-inter">
                       Currently unavailable
                     </div>
                   )}

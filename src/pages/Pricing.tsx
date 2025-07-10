@@ -82,19 +82,19 @@ const Pricing: React.FC = () => {
     buttonAction: handleContactSales
   }];
   return <div className="min-h-screen flex flex-col bg-[#1A1F2C]">
-      <ParticleBackground color="#FF9E2C" />
+      <ParticleBackground color="#4F46E5" />
       
       {/* Header */}
-      <header className="bg-[#1A1F2C] border-b border-orange-500/20 sticky top-0 z-10">
+      <header className="bg-prism-dark-bg border-b border-prism-blue-primary/20 sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center">
             <img alt="Prism Search Logo" src="/lovable-uploads/8b2dbfd1-9fa9-4ed8-b7b9-f17ec2baca20.png" className="h-8 w-auto object-contain" />
             <span className="ml-2 text-xl font-bold text-white font-montserrat">PrismSearch</span>
           </Link>
           <nav className="hidden md:flex items-center space-x-6">
-            <Link to="/" className="text-orange-200 hover:text-orange-100 font-inter">Home</Link>
-            <Link to="/pricing" className="text-orange-100 font-medium font-inter">Pricing</Link>
-            <Link to="/chat" className="text-orange-200 hover:text-orange-100 font-inter">Chat</Link>
+            <Link to="/" className="text-prism-text-muted hover:text-prism-text-light font-inter">Home</Link>
+            <Link to="/pricing" className="text-prism-text-light font-medium font-inter">Pricing</Link>
+            <Link to="/chat" className="text-prism-text-muted hover:text-prism-text-light font-inter">Chat</Link>
           </nav>
         </div>
       </header>
@@ -106,31 +106,37 @@ const Pricing: React.FC = () => {
             <motion.h1 initial={{
             opacity: 0,
             y: -20
-          }} animate={{
+          }} 
+          animate={{
             opacity: 1,
             y: 0
-          }} transition={{
+          }} 
+          transition={{
             duration: 0.5
-          }} className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 font-montserrat bg-clip-text text-transparent bg-gradient-to-r from-orange-300 via-orange-400 to-orange-600 animate-gradient-text">
+          }} 
+          className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 font-montserrat bg-clip-text text-transparent bg-gradient-to-r from-prism-blue-light via-prism-teal-primary to-prism-purple-primary animate-gradient-text">
               Simple, Transparent Pricing
             </motion.h1>
             <motion.p initial={{
             opacity: 0,
             y: 20
-          }} animate={{
+          }} 
+          animate={{
             opacity: 1,
             y: 0
-          }} transition={{
+          }} 
+          transition={{
             duration: 0.5,
             delay: 0.2
-          }} className="text-xl text-orange-200 max-w-3xl mx-auto mb-10 font-inter">
+          }} 
+          className="text-xl text-prism-text-muted max-w-3xl mx-auto mb-10 font-inter">
               Choose the plan that's right for you and start leveraging the power of PrismSearch.
             </motion.p>
             
-            <Alert className="bg-orange-900/30 border-orange-500/30 mb-10 max-w-3xl mx-auto">
-              <Info className="h-5 w-5 text-orange-300 bg-[#1b1b1b]/0" />
-              <AlertTitle className="text-orange-100 font-montserrat">Availability Notice</AlertTitle>
-              <AlertDescription className="text-orange-200 font-inter">
+            <Alert className="bg-prism-blue-primary/20 border-prism-blue-primary/30 mb-10 max-w-3xl mx-auto">
+              <Info className="h-5 w-5 text-prism-blue-light bg-[#1b1b1b]/0" />
+              <AlertTitle className="text-prism-text-light font-montserrat">Availability Notice</AlertTitle>
+              <AlertDescription className="text-prism-text-muted font-inter">
                 Currently, only the Free plan is available. Paid plans (Starter, Professional, and Enterprise) are coming soon.
               </AlertDescription>
             </Alert>
@@ -150,65 +156,65 @@ const Pricing: React.FC = () => {
         </section>
 
         {/* Features Comparison */}
-        <section className="py-12 md:py-16 bg-[#232938]">
+        <section className="py-12 md:py-16 bg-prism-dark-bg-800">
           <div className="container mx-auto px-4">
-            <h2 className="text-2xl md:text-3xl font-bold text-center mb-12 font-montserrat bg-clip-text text-transparent bg-gradient-to-r from-orange-300 via-orange-400 to-orange-600">
+            <h2 className="text-2xl md:text-3xl font-bold text-center mb-12 font-montserrat bg-clip-text text-transparent bg-gradient-to-r from-prism-blue-light via-prism-teal-primary to-prism-purple-primary">
               Compare Plan Features
             </h2>
             
             <div className="overflow-x-auto">
-              <table className="min-w-full bg-[#1A1F2C] border border-orange-500/20 rounded-lg">
+              <table className="min-w-full bg-prism-dark-bg border border-prism-blue-primary/20 rounded-lg">
                 <thead>
-                  <tr className="bg-orange-900/20">
-                    <th className="px-6 py-3 text-left text-xs font-medium text-orange-200 uppercase tracking-wider font-montserrat">Feature</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-orange-200 uppercase tracking-wider font-montserrat">Basic</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-orange-200 uppercase tracking-wider font-montserrat">Starter</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-orange-200 uppercase tracking-wider font-montserrat">Professional</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-orange-200 uppercase tracking-wider font-montserrat">Enterprise</th>
+                  <tr className="bg-prism-blue-primary/20">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-prism-text-muted uppercase tracking-wider font-montserrat">Feature</th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-prism-text-muted uppercase tracking-wider font-montserrat">Basic</th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-prism-text-muted uppercase tracking-wider font-montserrat">Starter</th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-prism-text-muted uppercase tracking-wider font-montserrat">Professional</th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-prism-text-muted uppercase tracking-wider font-montserrat">Enterprise</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-orange-500/10">
+                <tbody className="divide-y divide-prism-blue-primary/10">
                   <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-orange-100 font-inter">Search queries</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">1,000</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">5,000</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">50,000</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">Unlimited</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-prism-text-light font-inter">Search queries</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">1,000</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">5,000</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">50,000</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">Unlimited</td>
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-orange-100 font-inter">Chat messages</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">500</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">1,000</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">15,000</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">Unlimited</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-prism-text-light font-inter">Chat messages</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">500</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">1,000</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">15,000</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">Unlimited</td>
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-orange-100 font-inter">Data retention</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">❌</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">30 days</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">90 days</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">Custom</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-prism-text-light font-inter">Data retention</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">❌</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">30 days</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">90 days</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">Custom</td>
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-orange-100 font-inter">API access</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">❌</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">❌</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">✓</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">✓</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-prism-text-light font-inter">API access</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">❌</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">❌</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">✓</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">✓</td>
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-orange-100 font-inter">Custom embeddings</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">❌</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">❌</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">✓</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">✓</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-prism-text-light font-inter">Custom embeddings</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">❌</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">❌</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">✓</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">✓</td>
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-orange-100 font-inter">Analytics</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">❌</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">Basic</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">Advanced</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-orange-200 font-inter">Custom</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-prism-text-light font-inter">Analytics</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">❌</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">Basic</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">Advanced</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-prism-text-muted font-inter">Custom</td>
                   </tr>
                 </tbody>
               </table>
@@ -219,7 +225,7 @@ const Pricing: React.FC = () => {
         {/* FAQ Section */}
         <section className="py-12 md:py-16">
           <div className="container mx-auto px-4">
-            <h2 className="text-2xl md:text-3xl font-bold text-center mb-12 font-montserrat bg-clip-text text-transparent bg-gradient-to-r from-orange-300 via-orange-400 to-orange-600">
+            <h2 className="text-2xl md:text-3xl font-bold text-center mb-12 font-montserrat bg-clip-text text-transparent bg-gradient-to-r from-prism-blue-light via-prism-teal-primary to-prism-purple-primary">
               Frequently Asked Questions
             </h2>
             
@@ -227,96 +233,108 @@ const Pricing: React.FC = () => {
               <motion.div initial={{
               opacity: 0,
               y: 20
-            }} animate={{
+            }} 
+            animate={{
               opacity: 1,
               y: 0
-            }} transition={{
+            }} 
+            transition={{
               duration: 0.3,
               delay: 0.1
-            }} className="border border-orange-500/20 rounded-lg p-6 backdrop-blur-md bg-orange-900/10">
-                <h3 className="text-lg font-semibold text-orange-100 mb-2 font-montserrat">Can I upgrade or downgrade at any time?</h3>
-                <p className="text-orange-200 font-inter">Yes, you can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle.</p>
+            }} 
+            className="border border-prism-blue-primary/20 rounded-lg p-6 backdrop-blur-md bg-prism-blue-primary/10">
+                <h3 className="text-lg font-semibold text-prism-text-light mb-2 font-montserrat">Can I upgrade or downgrade at any time?</h3>
+                <p className="text-prism-text-muted font-inter">Yes, you can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle.</p>
               </motion.div>
               
               <motion.div initial={{
               opacity: 0,
               y: 20
-            }} animate={{
+            }} 
+            animate={{
               opacity: 1,
               y: 0
-            }} transition={{
+            }} 
+            transition={{
               duration: 0.3,
               delay: 0.2
-            }} className="border border-orange-500/20 rounded-lg p-6 backdrop-blur-md bg-orange-900/10">
-                <h3 className="text-lg font-semibold text-orange-100 mb-2 font-montserrat">How do the usage limits work?</h3>
-                <p className="text-orange-200 font-inter">Usage limits are calculated on a monthly basis. If you exceed your plan's limits, you'll have the option to upgrade to a higher tier or purchase additional capacity.</p>
+            }} 
+            className="border border-prism-blue-primary/20 rounded-lg p-6 backdrop-blur-md bg-prism-blue-primary/10">
+                <h3 className="text-lg font-semibold text-prism-text-light mb-2 font-montserrat">How do the usage limits work?</h3>
+                <p className="text-prism-text-muted font-inter">Usage limits are calculated on a monthly basis. If you exceed your plan's limits, you'll have the option to upgrade to a higher tier or purchase additional capacity.</p>
               </motion.div>
               
               <motion.div initial={{
               opacity: 0,
               y: 20
-            }} animate={{
+            }} 
+            animate={{
               opacity: 1,
               y: 0
-            }} transition={{
+            }} 
+            transition={{
               duration: 0.3,
               delay: 0.3
-            }} className="border border-orange-500/20 rounded-lg p-6 backdrop-blur-md bg-orange-900/10">
-                <h3 className="text-lg font-semibold text-orange-100 mb-2 font-montserrat">When will paid plans be available?</h3>
-                <p className="text-orange-200 font-inter">We're currently in beta, and only the Free plan is available. Paid plans are expected to launch in Late 2025.</p>
+            }} 
+            className="border border-prism-blue-primary/20 rounded-lg p-6 backdrop-blur-md bg-prism-blue-primary/10">
+                <h3 className="text-lg font-semibold text-prism-text-light mb-2 font-montserrat">When will paid plans be available?</h3>
+                <p className="text-prism-text-muted font-inter">We're currently in beta, and only the Free plan is available. Paid plans are expected to launch in Late 2025.</p>
               </motion.div>
               
               <motion.div initial={{
               opacity: 0,
               y: 20
-            }} animate={{
+            }} 
+            animate={{
               opacity: 1,
               y: 0
-            }} transition={{
+            }} 
+            transition={{
               duration: 0.3,
               delay: 0.4
-            }} className="border border-orange-500/20 rounded-lg p-6 backdrop-blur-md bg-orange-900/10">
-                <h3 className="text-lg font-semibold text-orange-100 mb-2 font-montserrat">Do you offer custom solutions?</h3>
-                <p className="text-orange-200 font-inter">Yes, our Enterprise plan offers custom solutions tailored to your organization's specific needs. Contact our sales team to discuss your requirements.</p>
+            }} 
+            className="border border-prism-blue-primary/20 rounded-lg p-6 backdrop-blur-md bg-prism-blue-primary/10">
+                <h3 className="text-lg font-semibold text-prism-text-light mb-2 font-montserrat">Do you offer custom solutions?</h3>
+                <p className="text-prism-text-muted font-inter">Yes, our Enterprise plan offers custom solutions tailored to your organization's specific needs. Contact our sales team to discuss your requirements.</p>
               </motion.div>
             </div>
           </div>
         </section>
 
         {/* Contact Form */}
-        <section className="py-12 md:py-16 bg-[#232938]" ref={formRef} id="contact">
+        <section className="py-12 md:py-16 bg-prism-dark-bg-800" ref={formRef} id="contact">
           <div className="container mx-auto px-4">
             <div className="max-w-lg mx-auto">
-              <h2 className="text-2xl md:text-3xl font-bold text-center mb-6 font-montserrat bg-clip-text text-transparent bg-gradient-to-r from-orange-300 via-orange-400 to-orange-600">
+              <h2 className="text-2xl md:text-3xl font-bold text-center mb-6 font-montserrat bg-clip-text text-transparent bg-gradient-to-r from-prism-blue-light via-prism-teal-primary to-prism-purple-primary">
                 Contact Our Team
               </h2>
-              <p className="text-center text-orange-200 mb-8 font-inter">
+              <p className="text-center text-prism-text-muted mb-8 font-inter">
                 Have questions about our plans or need a custom solution? Get in touch with us.
               </p>
               
               <form onSubmit={handleFormSubmit} className="space-y-6">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-orange-200 font-montserrat">Name</label>
-                  <input type="text" id="name" className="mt-1 block w-full px-3 py-2 border border-orange-500/30 rounded-md bg-orange-900/30 text-orange-100 focus:outline-none focus:ring-orange-500 focus:border-orange-500 font-inter" required />
+                  <label htmlFor="name" className="block text-sm font-medium text-prism-text-muted font-montserrat">Name</label>
+                  <input type="text" id="name" className="mt-1 block w-full px-3 py-2 border border-prism-blue-primary/30 rounded-md bg-prism-dark-bg-700/30 text-prism-text-light focus:outline-none focus:ring-prism-blue-primary focus:border-prism-blue-primary font-inter" required />
                 </div>
                 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-orange-200 font-montserrat">Email</label>
-                  <input type="email" id="email" className="mt-1 block w-full px-3 py-2 border border-orange-500/30 rounded-md bg-orange-900/30 text-orange-100 focus:outline-none focus:ring-orange-500 focus:border-orange-500 font-inter" required />
+                  <label htmlFor="email" className="block text-sm font-medium text-prism-text-muted font-montserrat">Email</label>
+                  <input type="email" id="email" className="mt-1 block w-full px-3 py-2 border border-prism-blue-primary/30 rounded-md bg-prism-dark-bg-700/30 text-prism-text-light focus:outline-none focus:ring-prism-blue-primary focus:border-prism-blue-primary font-inter" required />
                 </div>
                 
                 <div>
-                  <label htmlFor="company" className="block text-sm font-medium text-orange-200 font-montserrat">Company</label>
-                  <input type="text" id="company" className="mt-1 block w-full px-3 py-2 border border-orange-500/30 rounded-md bg-orange-900/30 text-orange-100 focus:outline-none focus:ring-orange-500 focus:border-orange-500 font-inter" />
+                  <label htmlFor="company" className="block text-sm font-medium text-prism-text-muted font-montserrat">Company</label>
+                  <input type="text" id="company" className="mt-1 block w-full px-3 py-2 border border-prism-blue-primary/30 rounded-md bg-prism-dark-bg-700/30 text-prism-text-light focus:outline-none focus:ring-prism-blue-primary focus:border-prism-blue-primary font-inter" />
                 </div>
                 
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-orange-200 font-montserrat">Message</label>
-                  <textarea id="message" rows={4} className="mt-1 block w-full px-3 py-2 border border-orange-500/30 rounded-md bg-orange-900/30 text-orange-100 focus:outline-none focus:ring-orange-500 focus:border-orange-500 font-inter" required></textarea>
+                  <label htmlFor="message" className="block text-sm font-medium text-prism-text-muted font-montserrat">Message</label>
+                  <textarea id="message" rows={4} className="mt-1 block w-full px-3 py-2 border border-prism-blue-primary/30 rounded-md bg-prism-dark-bg-700/30 text-prism-text-light focus:outline-none focus:ring-prism-blue-primary focus:border-prism-blue-primary font-inter" required></textarea>
                 </div>
                 
                 <div>
-                  <Button type="submit" className="w-full bg-orange-500 hover:bg-orange-600 text-white font-inter glow-button">
+                  <Button type="submit" className="w-full bg-prism-blue-primary hover:bg-prism-blue-dark text-white font-inter glow-button">
                     Send Message
                   </Button>
                 </div>

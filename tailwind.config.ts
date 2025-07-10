@@ -71,14 +71,28 @@ export default {
 				'prism-orange': '#FF9E2C',
 				'prism-light-orange': '#FFC547',
 				'prism-dark-orange': '#E58B28',
-				'prism-deepest-orange': '#D47A1E',
-				'prism-teal': '#34D3EB',
-				'prism-light-teal': '#7AECFF',
-				'prism-dark-teal': '#20B5D0',
-				'prism-charcoal': '#1A1F2C',
-				'prism-dark-gray': '#232938',
-				'prism-blue': '#33C3F0',
-				'prism-bright-blue': '#0FA0CE',
+				'prism-deepest-orange': '#D47A1E', 
+				
+				// New color scheme
+				'prism-blue-primary': '#4F46E5',
+				'prism-blue-light': '#818CF8',
+				'prism-blue-dark': '#3730A3',
+				
+				'prism-teal-primary': '#20B2AA',
+				'prism-teal-light': '#5EEAD4',
+				'prism-teal-dark': '#0D9488',
+				
+				'prism-purple-primary': '#8A2BE2',
+				'prism-purple-light': '#C084FC',
+				'prism-purple-dark': '#6B21A8',
+				
+				'prism-dark-bg': '#1A1A2E',
+				'prism-dark-bg-800': '#282840',
+				'prism-dark-bg-700': '#32324D',
+				
+				'prism-text-light': '#E0E0E0',
+				'prism-text-muted': '#A0A0B0',
+				
 				'prism-light': '#F1F1F1',
 				'prism-danger': '#ea384c',
 			},

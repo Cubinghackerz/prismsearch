@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, MessageSquare, BookmarkPlus } from 'lucide-react';
@@ -121,8 +120,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#1A1F2C]">
-      {/* Changed ParticleBackground to have orange particles */}
-      <ParticleBackground color="#FF9E2C" />
+      {/* Updated ParticleBackground to use the new blue color */}
+      <ParticleBackground color="#4F46E5" />
       <ScrollToTop />
       
       <header className="py-6 px-4 relative z-10">
@@ -146,7 +145,7 @@ const Index = () => {
                   setQuery('');
                   setShowResults(false);
                 }}
-                className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30"
+                className="text-prism-text-light bg-prism-blue-primary/20 hover:bg-prism-blue-primary/30"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 New Search
@@ -164,7 +163,7 @@ const Index = () => {
               />
               <motion.h1 
                 className={`text-4xl font-bold bg-clip-text text-transparent 
-                  bg-gradient-to-r from-orange-300 via-orange-500 to-orange-700 
+                  bg-gradient-to-r from-prism-blue-light via-prism-teal-primary to-prism-purple-primary 
                   animate-gradient-text mb-2 ${hasSearched ? 'text-2xl' : ''}`} 
                 animate={{
                   backgroundPosition: ['0% 50%', '100% 50%']
@@ -182,7 +181,7 @@ const Index = () => {
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }} 
               transition={{ delay: 0.2 }} 
-              className={`text-orange-200 max-w-lg mx-auto text-center ${hasSearched ? 'hidden' : ''}`}
+              className={`text-prism-text-muted max-w-lg mx-auto text-center ${hasSearched ? 'hidden' : ''}`}
             >
               Search across the web's top engines for comprehensive results in one place
             </motion.p>
@@ -192,11 +191,11 @@ const Index = () => {
             <Button 
               variant="ghost" 
               onClick={handleViewBookmarks}
-              className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30 relative"
+              className="text-prism-text-light bg-prism-blue-primary/20 hover:bg-prism-blue-primary/30 relative"
             >
               <BookmarkPlus className="mr-2 h-4 w-4" />
               {bookmarksCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full text-xs flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-prism-blue-primary rounded-full text-xs flex items-center justify-center">
                   {bookmarksCount}
                 </span>
               )}
@@ -204,7 +203,7 @@ const Index = () => {
             </Button>
             
             <Link to="/chat">
-              <Button variant="ghost" className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30">
+              <Button variant="ghost" className="text-prism-text-light bg-prism-blue-primary/20 hover:bg-prism-blue-primary/30">
                 <MessageSquare className="mr-2 h-4 w-4" />
                 <span className="hidden sm:inline">Chat Mode</span>
               </Button>
@@ -240,8 +239,8 @@ const Index = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
-              className="mt-4 backdrop-blur-md bg-orange-500/5 p-6 rounded-xl border border-orange-500/20 
-                shadow-[0_8px_32px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_32px_rgba(255,158,44,0.15)] 
+              className="mt-4 backdrop-blur-md bg-prism-blue-primary/5 p-6 rounded-xl border border-prism-blue-primary/20 
+                shadow-[0_8px_32px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_32px_rgba(79,70,229,0.15)] 
                 transition-all duration-300"
             >
               <SearchResultSummary 
@@ -281,17 +280,17 @@ const Index = () => {
                       backdrop-blur-md border border-orange-200/10
                       ${
                         engine === 'Google'
-                          ? 'bg-orange-500/80'
+                          ? 'bg-prism-blue-primary/80'
                           : engine === 'Bing'
-                          ? 'bg-orange-700/80'
+                          ? 'bg-prism-blue-dark/80'
                           : engine === 'DuckDuckGo'
-                          ? 'bg-orange-600/80'
+                          ? 'bg-prism-teal-primary/80'
                           : engine === 'Brave'
-                          ? 'bg-orange-500/80'
-                          : 'bg-orange-500/80'
+                          ? 'bg-prism-purple-primary/80'
+                          : 'bg-prism-blue-primary/80'
                       } 
-                      hover:border-orange-300/20 transition-all duration-300
-                      shadow-lg shadow-orange-800/10 hover:shadow-xl hover:shadow-orange-700/20 glow-button`}
+                      hover:border-prism-blue-light/20 transition-all duration-300
+                      shadow-lg shadow-prism-dark-bg/10 hover:shadow-xl hover:shadow-prism-blue-primary/20 glow-button`}
                   >
                     <img
                       src={info.logo}
@@ -305,7 +304,7 @@ const Index = () => {
                       className="w-8 h-8 object-contain"
                     />
                   </div>
-                  <span className="text-sm font-medium text-orange-100 opacity-90 hover:opacity-100 transition-opacity">
+                  <span className="text-sm font-medium text-prism-text-light opacity-90 hover:opacity-100 transition-opacity">
                     {engine}
                   </span>
                 </motion.a>
@@ -315,7 +314,7 @@ const Index = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7 }}
-              className="mt-12 text-orange-100/70 color-changing-text"
+              className="mt-12 text-prism-text-light/70 color-changing-text"
             >
               Type your query above to search across all engines simultaneously
             </motion.p>

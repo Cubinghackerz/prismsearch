@@ -10,14 +10,14 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-600/20 hover:shadow-orange-600/30 border border-orange-500/40 hover:border-orange-600/60 active:translate-y-0.5 active:shadow-sm",
+        default: "bg-prism-blue-primary hover:bg-prism-blue-dark text-white shadow-lg shadow-prism-blue-primary/20 hover:shadow-prism-blue-primary/30 border border-prism-blue-primary/40 hover:border-prism-blue-dark/60 active:translate-y-0.5 active:shadow-sm",
         destructive: "bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/20 hover:shadow-red-600/30 border border-red-500/40 hover:border-red-600/60 active:translate-y-0.5 active:shadow-sm",
-        outline: "border-2 border-orange-500/40 bg-transparent hover:bg-orange-500/15 text-orange-100 hover:border-orange-500/60 active:bg-orange-500/25 active:translate-y-0.5",
-        secondary: "bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-600/20 hover:shadow-teal-600/30 border border-teal-500/40 hover:border-teal-600/60 active:translate-y-0.5 active:shadow-sm",
-        ghost: "hover:bg-orange-500/15 text-orange-100 hover:text-orange-50 active:bg-orange-500/25 active:translate-y-0.5",
-        link: "text-orange-400 underline-offset-4 hover:underline hover:text-orange-300 after:content-[''] after:block after:w-full after:scale-x-0 after:h-0.5 after:bg-orange-300/60 after:transition-transform hover:after:scale-x-100 hover:after:transition-transform hover:after:duration-500",
+        outline: "border-2 border-prism-blue-primary/40 bg-transparent hover:bg-prism-blue-primary/15 text-prism-text-light hover:border-prism-blue-primary/60 active:bg-prism-blue-primary/25 active:translate-y-0.5",
+        secondary: "bg-prism-teal-primary hover:bg-prism-teal-dark text-white shadow-lg shadow-prism-teal-primary/20 hover:shadow-prism-teal-primary/30 border border-prism-teal-primary/40 hover:border-prism-teal-dark/60 active:translate-y-0.5 active:shadow-sm",
+        ghost: "hover:bg-prism-blue-primary/15 text-prism-text-light hover:text-white active:bg-prism-blue-primary/25 active:translate-y-0.5",
+        link: "text-prism-blue-light underline-offset-4 hover:underline hover:text-prism-teal-light after:content-[''] after:block after:w-full after:scale-x-0 after:h-0.5 after:bg-prism-blue-light/60 after:transition-transform hover:after:scale-x-100 hover:after:transition-transform hover:after:duration-500",
         // Simplified gradient for better readability
-        gradient: "bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 border-none active:translate-y-0.5 active:shadow-sm",
+        gradient: "bg-gradient-to-r from-prism-blue-primary to-prism-purple-primary hover:from-prism-blue-dark hover:to-prism-purple-dark text-white shadow-lg shadow-prism-blue-primary/30 hover:shadow-prism-purple-primary/50 border-none active:translate-y-0.5 active:shadow-sm",
       },
       size: {
         default: "h-10 px-4 py-2",

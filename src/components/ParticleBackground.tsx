@@ -2,10 +2,10 @@
 import { useEffect, useRef } from 'react';
 
 interface ParticleBackgroundProps {
-  color?: string;
+  color?: string; 
 }
 
-const ParticleBackground = ({ color = '#3b82f6' }: ParticleBackgroundProps) => {
+const ParticleBackground = ({ color = '#4F46E5' }: ParticleBackgroundProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -26,8 +26,11 @@ const ParticleBackground = ({ color = '#3b82f6' }: ParticleBackgroundProps) => {
     // Particle settings
     const particles: Particle[] = [];
     const particleCount = 50;
-    const particleColor = color; // Use the provided color
-    const particleGlowColor = color === '#3b82f6' ? '#60a5fa' : '#d6bcfa'; // Blue or purple glow
+    const particleColor = color;
+    // Determine glow color based on primary color
+    const particleGlowColor = color === '#4F46E5' ? '#818CF8' : 
+                             color === '#20B2AA' ? '#5EEAD4' : 
+                             '#C084FC'; // Default to purple glow
     
     class Particle {
       x: number;

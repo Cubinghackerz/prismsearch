@@ -24,7 +24,7 @@ const Chat = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#1A1F2C]">
-      <ParticleBackground color="#FF9E2C" />
+      <ParticleBackground color="#4F46E5" />
       <ScrollToTop />
       
       <header className="py-3 px-4 relative z-10">
@@ -42,7 +42,7 @@ const Chat = () => {
               <Link to="/">
                 <Button 
                   variant="ghost" 
-                  className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30"
+                  className="text-prism-text-light bg-prism-blue-primary/20 hover:bg-prism-blue-primary/30"
                   size="sm"
                 >
                   <ArrowLeft className="mr-2 h-4 w-4" />
@@ -54,13 +54,13 @@ const Chat = () => {
             <Button 
               variant="ghost" 
               onClick={() => setIsBookmarksOpen(true)}
-              className="text-orange-100 bg-orange-500/20 hover:bg-orange-500/30 relative"
+              className="text-prism-text-light bg-prism-blue-primary/20 hover:bg-prism-blue-primary/30 relative"
               size="sm"
             >
               <BookmarkPlus className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">Bookmarks</span>
               {bookmarksCount > 0 && (
-                <span className="absolute -top-2 -right-2 w-5 h-5 bg-orange-500 rounded-full text-xs flex items-center justify-center text-white">
+                <span className="absolute -top-2 -right-2 w-5 h-5 bg-prism-blue-primary rounded-full text-xs flex items-center justify-center text-white">
                   {bookmarksCount}
                 </span>
               )}
@@ -76,7 +76,7 @@ const Chat = () => {
               />
               <motion.h1 
                 className="text-2xl font-bold bg-clip-text text-transparent 
-                  bg-gradient-to-r from-orange-300 via-orange-500 to-orange-700 
+                  bg-gradient-to-r from-prism-blue-light via-prism-teal-primary to-prism-purple-primary 
                   animate-gradient-text"
                 animate={{
                   backgroundPosition: ['0% 50%', '100% 50%']
