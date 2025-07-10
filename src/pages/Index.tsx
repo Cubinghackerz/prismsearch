@@ -10,6 +10,7 @@ import { SearchResult } from '../components/search/types';
 import AISearchResponse from '../components/AISearchResponse';
 import { searchAcrossEngines } from '../services/searchService';
 import { useToast } from '@/hooks/use-toast';
+import SearchResultSummary from '../components/search/SearchResultSummary';
 import { Button } from '@/components/ui/button';
 import ParticleBackground from '../components/ParticleBackground';
 import ScrollToTop from '../components/ScrollToTop';
@@ -243,6 +244,11 @@ const Index = () => {
                 shadow-[0_8px_32px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_32px_rgba(255,158,44,0.15)] 
                 transition-all duration-300"
             >
+              <SearchResultSummary 
+                results={results} 
+                query={query} 
+                isVisible={showResults && results.length > 0} 
+              />
               <AISearchResponse query={query} />
               <SearchResults results={results} isLoading={false} query={query} />
             </motion.div>

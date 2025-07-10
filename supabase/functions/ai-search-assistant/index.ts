@@ -305,13 +305,16 @@ serve(async (req) => {
   }
 
   try {
-    const { query, chatId, chatHistory, model, deepResearch } = await req.json()
+    const { query, chatId, chatHistory, model, deepResearch, summaryMode, searchResults } = await req.json()
     
-    console.log(`Processing ${model} request for chat ${chatId}${deepResearch ? ' (Deep Research Mode)' : ''}`)
+    console.log(`Processing ${model} request for chat ${chatId}${deepResearch ? ' (Deep Research Mode)' : ''}${summaryMode ? ' (Summary Mode)' : ''}`)
 
     let result = '';
 
-    if (deepResearch) {
+    if (summaryMode && searchResults) {
+      // Generate search result summary
+      result = await generateSearchSummary(query, searchResults, model);
+    } else if (deepResearch) {
       // Use deep research mode with the selected model
       result = await processDeepResearch(query, model);
     } else {
@@ -355,3 +358,35 @@ serve(async (req) => {
     )
   }
 })
+
+// Function to generate search result summaries
+async function generateSearchSummary(query: string, searchResults: any, model: string): Promise<string> {
+  const resultsText = searchResults.results.map((result: any) => 
+    `Title: ${result.title}\nSource: ${result.source}\nSnippet: ${result.snippet}\nRelevance: ${result.relevance}\n---`
+  ).join('\n');
+
+  const summaryPrompt = `You are an expert research analyst. Analyze the following search results for the query "${query}" and provide a comprehensive summary.
+
+Search Results:
+${resultsText}
+
+Please provide:
+1. A clear executive summary (2-3 sentences) that captures the main findings
+2. Key insights as bullet points (3-5 main points)
+3. Important patterns or themes across the sources
+4. Any notable contradictions or different perspectives
+5. Assessment of information quality and reliability
+
+Focus on synthesizing information rather than just listing what each source says. Identify the most important and actionable insights.
+
+Format your response clearly with sections, but keep it concise and focused.`;
+
+  try {
+    // Use Gemini for summary generation (can be expanded to other models)
+    const result = await sendGeminiPrompt(summaryPrompt);
+    return result;
+  } catch (error) {
+    console.error('Error generating search summary:', error);
+    throw new Error('Failed to generate search summary');
+  }
+}
