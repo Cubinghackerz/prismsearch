@@ -65,7 +65,7 @@ const SearchResultSummary = ({ results, query, isVisible }: SearchResultSummaryP
         }))
       };
 
-      const { data, error } = await Promise.race([
+      const response = await Promise.race([
         supabase.functions.invoke('ai-search-assistant', {
           body: {
             query: `Generate a comprehensive summary for the search query: "${query}"`,
@@ -76,6 +76,8 @@ const SearchResultSummary = ({ results, query, isVisible }: SearchResultSummaryP
         }),
         timeoutPromise
       ]);
+
+      const { data, error } = response as any;
       
       if (error) throw error;
 
