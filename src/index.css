@@ -199,7 +199,7 @@
 
 /* Custom styles for markdown content */
 .markdown-content .prose {
-  @apply text-prism-text;
+  @apply text-foreground;
 }
 
 .markdown-content .prose h1,
@@ -208,7 +208,7 @@
 .markdown-content .prose h4,
 .markdown-content .prose h5,
 .markdown-content .prose h6 {
-  @apply text-prism-text font-bold mb-2 mt-4;
+  @apply text-foreground font-bold mb-2 mt-4;
 }
 
 .markdown-content .prose h1 {
@@ -245,35 +245,36 @@
 }
 
 .markdown-content .prose code {
-  @apply bg-prism-surface/40 px-1.5 py-0.5 rounded text-sm text-prism-text;
+  @apply bg-muted px-1.5 py-0.5 rounded text-sm text-foreground;
 }
 
 .markdown-content .prose pre {
-  @apply bg-prism-surface/40 p-3 rounded-md my-3 overflow-x-auto;
+  @apply bg-muted p-3 rounded-md my-3 overflow-x-auto;
 }
 
 .markdown-content .prose a {
-  @apply text-prism-primary-light hover:text-prism-accent-light underline;
+  @apply text-primary hover:text-primary/80 underline;
 }
 
 .markdown-content .prose blockquote {
-  @apply border-l-4 border-prism-primary/50 pl-4 italic my-3;
+  @apply border-l-4 border-primary/50 pl-4 italic my-3;
 }
 
 .markdown-content .prose strong {
-  @apply font-bold text-prism-text;
+  @apply font-bold text-foreground;
 }
 
 .markdown-content .prose em {
-  @apply italic text-prism-text;
+  @apply italic text-foreground;
 }
 
 .markdown-content .prose img {
   @apply max-w-full rounded-md my-3;
 }
 
+/* Enhanced search gradient using semantic colors */
 .search-gradient {
-  background: linear-gradient(90deg, #00C2A8, #9B5DE5, #1DD1B8, #00C2A8);
+  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--primary)));
   background-size: 300% 100%;
   animation: gradient-shift 3s ease infinite;
 }
@@ -299,77 +300,18 @@
   }
 }
 
-.result-card {
-  transition: all 0.3s ease;
-}
-
-.result-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1), 0 10px 15px -5px rgba(0, 0, 0, 0.05);
-}
-
-.search-bar-container {
-  transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.search-bar-expanded {
-  transform: translateY(-20vh);
-}
-
-/* Glow animation for buttons and cards */
-.glow-button {
-  box-shadow: 0 0 10px rgba(0, 194, 168, 0.3);
-  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.glow-button:hover {
-  box-shadow: 0 0 15px rgba(0, 194, 168, 0.5), 0 0 30px rgba(0, 194, 168, 0.3);
-  transform: translateY(-2px);
-}
-
-.pulse-glow {
-  animation: pulse-glow 2s infinite;
-}
-
-@keyframes pulse-glow {
-  0% {
-    box-shadow: 0 0 5px rgba(0, 194, 168, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(0, 194, 168, 0.5);
-  }
-  100% {
-    box-shadow: 0 0 5px rgba(0, 194, 168, 0.3);
-  }
-}
-
-/* Glass morphism */
-.glass-card {
-  background: rgba(0, 194, 168, 0.05);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(0, 194, 168, 0.2);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
-  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.glass-card:hover {
-  background: rgba(0, 194, 168, 0.1);
-  border: 1px solid rgba(0, 194, 168, 0.3);
-  box-shadow: 0 8px 32px 0 rgba(0, 194, 168, 0.15);
-}
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-prism-primary via-prism-accent to-prism-primary-light bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent;
   }
   
   .text-gradient-blue {
-    @apply bg-gradient-to-r from-prism-primary via-prism-primary-light to-prism-accent bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent;
   }
 
   .blur-backdrop {
-    @apply backdrop-blur-md bg-prism-bg/70;
+    @apply backdrop-blur-md bg-background/70;
   }
   
   .bg-pos-0 {
@@ -388,26 +330,57 @@
     @apply transition-smooth hover:-translate-y-1;
   }
 
-  /* Triangle loader aspect ratio related classes */
-  .h-5.2 {
-    height: calc(6px * 0.866);
+  /* Enhanced glow effects using semantic colors */
+  .glow-button {
+    box-shadow: 0 0 10px hsl(var(--primary) / 0.3);
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   }
-  
-  .h-8.66 {
-    height: calc(10px * 0.866);
+
+  .glow-button:hover {
+    box-shadow: 0 0 15px hsl(var(--primary) / 0.5), 0 0 30px hsl(var(--primary) / 0.3);
+    transform: translateY(-2px);
   }
-  
-  .h-13.86 {
-    height: calc(16px * 0.866);
+
+  .pulse-glow {
+    animation: pulse-glow 2s infinite;
+  }
+
+  @keyframes pulse-glow {
+    0% {
+      box-shadow: 0 0 5px hsl(var(--primary) / 0.3);
+    }
+    50% {
+      box-shadow: 0 0 20px hsl(var(--primary) / 0.5);
+    }
+    100% {
+      box-shadow: 0 0 5px hsl(var(--primary) / 0.3);
+    }
+  }
+
+  /* Glass morphism using semantic colors */
+  .glass-card {
+    background: hsl(var(--primary) / 0.05);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid hsl(var(--primary) / 0.2);
+    box-shadow: 0 8px 32px 0 hsl(var(--foreground) / 0.1);
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .glass-card:hover {
+    background: hsl(var(--primary) / 0.1);
+    border: 1px solid hsl(var(--primary) / 0.3);
+    box-shadow: 0 8px 32px 0 hsl(var(--primary) / 0.15);
   }
 }
 
-/* Autocomplete styles */
+
+/* Autocomplete styling with semantic colors */
 .autocomplete-dropdown {
   max-height: 250px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(155, 135, 245, 0.5) rgba(30, 30, 40, 0.3);
+  scrollbar-color: hsl(var(--accent) / 0.5) hsl(var(--muted) / 0.3);
 }
 
 .autocomplete-dropdown::-webkit-scrollbar {
@@ -415,18 +388,18 @@
 }
 
 .autocomplete-dropdown::-webkit-scrollbar-track {
-  background: rgba(30, 30, 40, 0.3);
+  background: hsl(var(--muted) / 0.3);
   border-radius: 4px;
 }
 
 .autocomplete-dropdown::-webkit-scrollbar-thumb {
-  background-color: rgba(155, 135, 245, 0.5);
+  background-color: hsl(var(--accent) / 0.5);
   border-radius: 4px;
-  border: 2px solid rgba(30, 30, 40, 0.3);
+  border: 2px solid hsl(var(--muted) / 0.3);
 }
 
 .autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(155, 135, 245, 0.7);
+  background-color: hsl(var(--accent) / 0.7);
 }
 
 .autocomplete-item {
@@ -434,7 +407,7 @@
 }
 
 .autocomplete-highlight {
-  background-color: rgba(155, 135, 245, 0.3);
+  background-color: hsl(var(--accent) / 0.3);
   padding: 0 2px;
   border-radius: 2px;
   font-weight: 600;
