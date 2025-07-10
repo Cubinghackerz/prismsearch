@@ -16,7 +16,7 @@ const TypingIndicator = () => {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.2 }}
       >
-        <LoadingAnimation color="orange" size="small" variant="neural" />
+        <LoadingAnimation color="orange" size="small" variant="prism" />
       </motion.div>
     </div>
   );

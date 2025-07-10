@@ -369,3 +369,131 @@
   border-radius: 2px;
   font-weight: 600;
 }
+
+/* Prism-inspired animations */
+@keyframes prism-pulse {
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(1);
+    filter: drop-shadow(0 0 8px rgba(255,255,255,0.3));
+  }
+  50% { 
+    transform: translate(-50%, -50%) scale(1.1);
+    filter: drop-shadow(0 0 12px rgba(255,255,255,0.5));
+  }
+}
+
+@keyframes prism-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes prism-glow {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+/* Individual ray animations */
+@keyframes prism-ray-0 {
+  0%, 100% { opacity: 0.3; transform: rotate(0deg) scaleY(1); }
+  50% { opacity: 0.8; transform: rotate(0deg) scaleY(1.2); }
+}
+
+@keyframes prism-ray-1 {
+  0%, 100% { opacity: 0.4; transform: rotate(60deg) scaleY(1); }
+  50% { opacity: 0.9; transform: rotate(60deg) scaleY(1.3); }
+}
+
+@keyframes prism-ray-2 {
+  0%, 100% { opacity: 0.3; transform: rotate(120deg) scaleY(1); }
+  50% { opacity: 0.7; transform: rotate(120deg) scaleY(1.1); }
+}
+
+@keyframes prism-ray-3 {
+  0%, 100% { opacity: 0.5; transform: rotate(180deg) scaleY(1); }
+  50% { opacity: 0.8; transform: rotate(180deg) scaleY(1.2); }
+}
+
+@keyframes prism-ray-4 {
+  0%, 100% { opacity: 0.3; transform: rotate(240deg) scaleY(1); }
+  50% { opacity: 0.9; transform: rotate(240deg) scaleY(1.4); }
+}
+
+@keyframes prism-ray-5 {
+  0%, 100% { opacity: 0.4; transform: rotate(300deg) scaleY(1); }
+  50% { opacity: 0.7; transform: rotate(300deg) scaleY(1.1); }
+}
+
+/* Individual particle animations */
+@keyframes prism-particle-0 {
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.6;
+  }
+  50% { 
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+}
+
+@keyframes prism-particle-1 {
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0.5;
+  }
+  50% { 
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.9;
+  }
+}
+
+@keyframes prism-particle-2 {
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(0.7);
+    opacity: 0.7;
+  }
+  50% { 
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 1;
+  }
+}
+
+@keyframes prism-particle-3 {
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.4;
+  }
+  50% { 
+    transform: translate(-50%, -50%) scale(1.0);
+    opacity: 0.8;
+  }
+}
+
+/* Prism shape styling */
+.prism-shape {
+  position: relative;
+}
+
+.prism-shape::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(255,255,255,0.3), transparent);
+  clip-path: inherit;
+  pointer-events: none;
+}
+
+/* Enhanced glow effects for prism */
+.prism-ray {
+  filter: blur(0.5px);
+}
+
+.prism-particle {
+  filter: blur(0.3px);
+}
+
+.prism-beam {
+  filter: blur(1px);
+}

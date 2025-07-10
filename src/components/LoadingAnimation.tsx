@@ -4,14 +4,14 @@ interface LoadingAnimationProps {
   color?: "purple" | "blue" | "orange";
   size?: "small" | "medium" | "large";
   className?: string;
-  variant?: "dots" | "pulse" | "neural" | "orbit";
+  variant?: "dots" | "pulse" | "neural" | "orbit" | "prism";
 }
 
 const LoadingAnimation = ({ 
   color = "purple", 
   size = "medium",
   className,
-  variant = "neural"
+  variant = "prism"
 }: LoadingAnimationProps) => {
   const sizeClasses = {
     small: "w-8 h-8",
@@ -24,19 +24,22 @@ const LoadingAnimation = ({
       primary: "bg-blue-500",
       secondary: "bg-blue-400", 
       accent: "bg-blue-300",
-      glow: "shadow-blue-500/50"
+      glow: "shadow-blue-500/50",
+      spectrum: ["#3B82F6", "#60A5FA", "#93C5FD", "#DBEAFE"]
     },
     orange: {
       primary: "bg-orange-500",
       secondary: "bg-orange-400",
       accent: "bg-orange-300", 
-      glow: "shadow-orange-500/50"
+      glow: "shadow-orange-500/50",
+      spectrum: ["#FF9E2C", "#FFC547", "#FFD700", "#FFF8DC"]
     },
     purple: {
       primary: "bg-purple-500",
       secondary: "bg-purple-400",
       accent: "bg-purple-300",
-      glow: "shadow-purple-500/50"
+      glow: "shadow-purple-500/50",
+      spectrum: ["#8B5CF6", "#A78BFA", "#C4B5FD", "#E9D5FF"]
     }
   };
 
@@ -111,97 +114,187 @@ const LoadingAnimation = ({
     );
   }
 
-  // Default: Neural network variant
+  if (variant === "neural") {
+    return (
+      <div className={cn("relative flex items-center justify-center", sizeClasses[size], className)}>
+        {/* Neural network nodes */}
+        <div className="relative w-full h-full">
+          {/* Center node */}
+          <div className={cn(
+            "absolute top-1/2 left-1/2 w-3 h-3 -translate-x-1/2 -translate-y-1/2 rounded-full",
+            colors.primary,
+            "animate-pulse shadow-lg",
+            colors.glow
+          )} />
+          
+          {/* Surrounding nodes */}
+          {[0, 1, 2, 3, 4, 5].map((i) => {
+            const angle = (i * 60) * (Math.PI / 180);
+            const radius = size === "small" ? 12 : size === "medium" ? 16 : 20;
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius;
+            
+            return (
+              <div
+                key={i}
+                className={cn(
+                  "absolute w-2 h-2 rounded-full",
+                  colors.secondary,
+                  "animate-pulse"
+                )}
+                style={{
+                  left: `calc(50% + ${x}px)`,
+                  top: `calc(50% + ${y}px)`,
+                  transform: 'translate(-50%, -50%)',
+                  animationDelay: `${i * 0.15}s`,
+                  animationDuration: "2s"
+                }}
+              />
+            );
+          })}
+          
+          {/* Connection lines */}
+          {[0, 1, 2, 3, 4, 5].map((i) => {
+            const angle = (i * 60) * (Math.PI / 180);
+            const length = size === "small" ? 12 : size === "medium" ? 16 : 20;
+            
+            return (
+              <div
+                key={`line-${i}`}
+                className={cn(
+                  "absolute w-px opacity-30",
+                  colors.accent,
+                  "animate-pulse"
+                )}
+                style={{
+                  left: '50%',
+                  top: '50%',
+                  height: `${length}px`,
+                  transformOrigin: 'top center',
+                  transform: `rotate(${i * 60}deg)`,
+                  animationDelay: `${i * 0.1}s`,
+                  animationDuration: "3s"
+                }}
+              />
+            );
+          })}
+          
+          {/* Outer ring */}
+          <div className={cn(
+            "absolute inset-0 rounded-full border-2 border-dashed opacity-20",
+            `border-${color}-400`,
+            "animate-spin"
+          )} 
+          style={{ animationDuration: "8s" }} />
+          
+          {/* Inner ring */}
+          <div className={cn(
+            "absolute inset-2 rounded-full border border-solid opacity-30",
+            `border-${color}-300`,
+            "animate-spin"
+          )} 
+          style={{ 
+            animationDuration: "4s",
+            animationDirection: "reverse"
+          }} />
+        </div>
+        
+        {/* Pulsing glow effect */}
+        <div className={cn(
+          "absolute inset-0 rounded-full opacity-20 animate-ping",
+          colors.primary
+        )} 
+        style={{ animationDuration: "3s" }} />
+      </div>
+    );
+  }
+
+  // Default: Prism-inspired animation
   return (
     <div className={cn("relative flex items-center justify-center", sizeClasses[size], className)}>
-      {/* Neural network nodes */}
       <div className="relative w-full h-full">
-        {/* Center node */}
-        <div className={cn(
-          "absolute top-1/2 left-1/2 w-3 h-3 -translate-x-1/2 -translate-y-1/2 rounded-full",
-          colors.primary,
-          "animate-pulse shadow-lg",
-          colors.glow
-        )} />
+        {/* Central prism shape */}
+        <div 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 prism-shape"
+          style={{
+            width: size === "small" ? "16px" : size === "medium" ? "20px" : "24px",
+            height: size === "small" ? "14px" : size === "medium" ? "18px" : "22px",
+            background: `linear-gradient(135deg, ${colors.spectrum[0]}, ${colors.spectrum[1]})`,
+            clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)",
+            filter: "drop-shadow(0 0 8px rgba(255,255,255,0.3))",
+            animation: "prism-pulse 2s ease-in-out infinite"
+          }}
+        />
         
-        {/* Surrounding nodes */}
+        {/* Light rays emanating from prism */}
         {[0, 1, 2, 3, 4, 5].map((i) => {
           const angle = (i * 60) * (Math.PI / 180);
-          const radius = size === "small" ? 12 : size === "medium" ? 16 : 20;
+          const length = size === "small" ? 18 : size === "medium" ? 24 : 30;
+          const colorIndex = i % colors.spectrum.length;
+          
+          return (
+            <div
+              key={`ray-${i}`}
+              className="absolute prism-ray"
+              style={{
+                left: '50%',
+                top: '50%',
+                width: '2px',
+                height: `${length}px`,
+                background: `linear-gradient(to bottom, ${colors.spectrum[colorIndex]}, transparent)`,
+                transformOrigin: 'top center',
+                transform: `rotate(${i * 60}deg)`,
+                opacity: 0.7,
+                animation: `prism-ray-${i} 3s ease-in-out infinite`,
+                animationDelay: `${i * 0.2}s`
+              }}
+            />
+          );
+        })}
+        
+        {/* Spectral particles */}
+        {colors.spectrum.map((spectrumColor, i) => {
+          const angle = (i * 90) * (Math.PI / 180);
+          const radius = size === "small" ? 14 : size === "medium" ? 18 : 22;
           const x = Math.cos(angle) * radius;
           const y = Math.sin(angle) * radius;
           
           return (
             <div
-              key={i}
-              className={cn(
-                "absolute w-2 h-2 rounded-full",
-                colors.secondary,
-                "animate-pulse"
-              )}
+              key={`particle-${i}`}
+              className="absolute w-1 h-1 rounded-full prism-particle"
               style={{
                 left: `calc(50% + ${x}px)`,
                 top: `calc(50% + ${y}px)`,
                 transform: 'translate(-50%, -50%)',
-                animationDelay: `${i * 0.15}s`,
-                animationDuration: "2s"
+                backgroundColor: spectrumColor,
+                boxShadow: `0 0 6px ${spectrumColor}`,
+                animation: `prism-particle-${i} 2.5s ease-in-out infinite`,
+                animationDelay: `${i * 0.3}s`
               }}
             />
           );
         })}
         
-        {/* Connection lines */}
-        {[0, 1, 2, 3, 4, 5].map((i) => {
-          const angle = (i * 60) * (Math.PI / 180);
-          const length = size === "small" ? 12 : size === "medium" ? 16 : 20;
-          
-          return (
-            <div
-              key={`line-${i}`}
-              className={cn(
-                "absolute w-px opacity-30",
-                colors.accent,
-                "animate-pulse"
-              )}
-              style={{
-                left: '50%',
-                top: '50%',
-                height: `${length}px`,
-                transformOrigin: 'top center',
-                transform: `rotate(${i * 60}deg)`,
-                animationDelay: `${i * 0.1}s`,
-                animationDuration: "3s"
-              }}
-            />
-          );
-        })}
+        {/* Rotating light beam */}
+        <div 
+          className="absolute inset-0 prism-beam"
+          style={{
+            background: `conic-gradient(from 0deg, transparent, ${colors.spectrum[0]}20, transparent)`,
+            borderRadius: '50%',
+            animation: "prism-rotate 4s linear infinite"
+          }}
+        />
         
-        {/* Outer ring */}
-        <div className={cn(
-          "absolute inset-0 rounded-full border-2 border-dashed opacity-20",
-          `border-${color}-400`,
-          "animate-spin"
-        )} 
-        style={{ animationDuration: "8s" }} />
-        
-        {/* Inner ring */}
-        <div className={cn(
-          "absolute inset-2 rounded-full border border-solid opacity-30",
-          `border-${color}-300`,
-          "animate-spin"
-        )} 
-        style={{ 
-          animationDuration: "4s",
-          animationDirection: "reverse"
-        }} />
+        {/* Outer glow ring */}
+        <div 
+          className="absolute inset-0 rounded-full prism-glow"
+          style={{
+            background: `radial-gradient(circle, transparent 60%, ${colors.spectrum[0]}10, transparent)`,
+            animation: "prism-glow 3s ease-in-out infinite"
+          }}
+        />
       </div>
-      
-      {/* Pulsing glow effect */}
-      <div className={cn(
-        "absolute inset-0 rounded-full opacity-20 animate-ping",
-        colors.primary
-      )} 
-      style={{ animationDuration: "3s" }} />
     </div>
   );
 };
