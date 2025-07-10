@@ -10,11 +10,10 @@ interface SearchResultCardProps {
   index: number;
   hoverBorderColor: string;
   viewMode?: 'grid' | 'list';
-  searchTerm?: string;
   onBookmark?: (result: SearchResult) => void;
 }
 
-const SearchResultCard = ({ result, index, hoverBorderColor, viewMode = 'grid', searchTerm = '', onBookmark }: SearchResultCardProps) => {
+const SearchResultCard = ({ result, index, hoverBorderColor, viewMode = 'grid', onBookmark }: SearchResultCardProps) => {
   const [isBookmarked, setIsBookmarked] = useState(false);
   
   // Check if the result is already bookmarked on mount

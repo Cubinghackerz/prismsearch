@@ -67,58 +67,40 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Enhanced PrismSearch Color Palette
-				'prism-primary': 'hsl(174, 65%, 45%)',        // Main teal - accessible contrast
-				'prism-primary-light': 'hsl(174, 80%, 55%)',  // Lighter variant for dark mode
-				'prism-primary-dark': 'hsl(174, 55%, 35%)',   // Darker variant for hover states
+				// NeoPrism Color Scheme
+				'prism-primary': '#00C2A8',        // Primary Teal
+				'prism-primary-light': '#1DD1B8',  // Lighter teal
+				'prism-primary-dark': '#00A693',   // Darker teal
 				
-				'prism-accent': 'hsl(260, 85%, 65%)',         // Purple accent - WCAG compliant
-				'prism-accent-light': 'hsl(260, 60%, 70%)',   // Softer purple for dark mode
-				'prism-accent-dark': 'hsl(260, 90%, 55%)',    // Vibrant purple for highlights
+				'prism-accent': '#9B5DE5',         // Accent Purple
+				'prism-accent-light': '#B47EE8',   // Lighter purple
+				'prism-accent-dark': '#8A4FD3',    // Darker purple
 				
-				// Background System
-				'prism-bg-light': 'hsl(210, 20%, 98%)',       // Light mode background
-				'prism-bg-dark': 'hsl(220, 15%, 8%)',         // Dark mode background
-				'prism-surface-light': 'hsl(0, 0%, 100%)',    // Light mode cards
-				'prism-surface-dark': 'hsl(220, 15%, 10%)',   // Dark mode cards
+				'prism-bg': '#0D0D0D',             // Rich black background
+				'prism-surface': '#1A1A1A',        // Surface color for cards
+				'prism-border': '#2E2E2E',         // Border color
 				
-				// Text System
-				'prism-text-primary-light': 'hsl(220, 15%, 15%)', // High contrast dark text
-				'prism-text-primary-dark': 'hsl(210, 25%, 95%)',  // High contrast light text
-				'prism-text-muted-light': 'hsl(215, 15%, 55%)',   // Muted text for light mode
-				'prism-text-muted-dark': 'hsl(215, 15%, 65%)',    // Muted text for dark mode
+				'prism-text': '#F2F2F2',           // Primary text
+				'prism-text-muted': '#B0B0B0',     // Muted text
 				
-				// Interactive States
-				'prism-hover-light': 'hsl(215, 25%, 96%)',    // Light mode hover
-				'prism-hover-dark': 'hsl(220, 15%, 15%)',     // Dark mode hover
+				'prism-hover': '#162E2A',          // Teal-tinted black for hovers
 				
-				// Search & Highlighting
-				'prism-search-highlight-light': 'hsl(45, 100%, 85%)', // Light mode search highlight
-				'prism-search-highlight-dark': 'hsl(48, 100%, 70%)',  // Dark mode search highlight
-				
-				// Status Colors (Accessible)
-				'prism-success': 'hsl(142, 76%, 36%)',        // Green for success
-				'prism-warning': 'hsl(38, 92%, 50%)',         // Orange for warnings
-				'prism-error': 'hsl(0, 70%, 55%)',           // Red for errors
-				'prism-info': 'hsl(199, 89%, 48%)',          // Blue for info
-				
-				// Border System
-				'prism-border-light': 'hsl(215, 25%, 88%)',   // Light mode borders
-				'prism-border-dark': 'hsl(220, 15%, 22%)',    // Dark mode borders
-				
-				// Legacy Compatibility (Updated Values)
-				'prism-blue-primary': 'hsl(174, 65%, 45%)',
-				'prism-blue-light': 'hsl(174, 80%, 55%)',
-				'prism-blue-dark': 'hsl(174, 55%, 35%)',
-				'prism-teal-primary': 'hsl(174, 65%, 45%)',
-				'prism-teal-light': 'hsl(174, 80%, 55%)',
-				'prism-teal-dark': 'hsl(174, 55%, 35%)',
-				'prism-purple-primary': 'hsl(260, 85%, 65%)',
-				'prism-purple-light': 'hsl(260, 60%, 70%)',
-				'prism-purple-dark': 'hsl(260, 90%, 55%)',
-				'prism-text-light': 'hsl(210, 25%, 95%)',
-				'prism-text-muted': 'hsl(215, 15%, 65%)',
-				'prism-danger': 'hsl(0, 70%, 55%)',
+				// Legacy aliases for backward compatibility
+				'prism-blue-primary': '#00C2A8',
+				'prism-blue-light': '#1DD1B8',
+				'prism-blue-dark': '#00A693',
+				'prism-teal-primary': '#00C2A8',
+				'prism-teal-light': '#1DD1B8',
+				'prism-teal-dark': '#00A693',
+				'prism-purple-primary': '#9B5DE5',
+				'prism-purple-light': '#B47EE8',
+				'prism-purple-dark': '#8A4FD3',
+				'prism-dark-bg': '#0D0D0D',
+				'prism-dark-bg-800': '#1A1A1A',
+				'prism-dark-bg-700': '#2E2E2E',
+				'prism-text-light': '#F2F2F2',
+				'prism-text-muted': '#B0B0B0',
+				'prism-danger': '#ea384c',
 			},
 			fontFamily: {
 				'montserrat': ['Montserrat', 'sans-serif'],

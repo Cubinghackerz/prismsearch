@@ -145,6 +145,7 @@ const Index = () => {
                   setQuery('');
                   setShowResults(false);
                 }}
+                className="text-prism-text-light bg-prism-blue-primary/20 hover:bg-prism-blue-primary/30"
                 className="text-prism-text bg-prism-primary/20 hover:bg-prism-primary/30"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
