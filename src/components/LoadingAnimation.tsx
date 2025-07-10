@@ -26,19 +26,19 @@ const LoadingAnimation = ({
     glow: string;
     spectrum: string[];
   }> = {
-    teal: {
+    blue: {
       primary: "bg-prism-primary",
       secondary: "bg-prism-primary-light", 
       accent: "bg-prism-primary-light",
       glow: "shadow-prism-primary/50",
       spectrum: ["#00C2A8", "#1DD1B8", "#5EEAD4", "#A7F3EB"]
     },
-    blue: {
-      primary: "bg-blue-500",
-      secondary: "bg-blue-400",
-      accent: "bg-blue-300", 
-      glow: "shadow-blue-500/50",
-      spectrum: ["#3B82F6", "#60A5FA", "#93C5FD", "#BFDBFE"]
+    teal: {
+      primary: "bg-prism-primary",
+      secondary: "bg-prism-primary-light",
+      accent: "bg-prism-primary-light", 
+      glow: "shadow-prism-primary/50",
+      spectrum: ["#00C2A8", "#1DD1B8", "#5EEAD4", "#A7F3EB"]
     },
     cyan: {
       primary: "bg-cyan-500",
@@ -70,14 +70,7 @@ const LoadingAnimation = ({
     }
   };
 
-  // Fix: Ensure colors is always defined by providing a fallback
-  const colors = colorClasses[color] || colorClasses.teal || {
-    primary: "bg-prism-primary",
-    secondary: "bg-prism-primary-light",
-    accent: "bg-prism-primary-light",
-    glow: "shadow-prism-primary/50",
-    spectrum: ["#00C2A8", "#1DD1B8", "#5EEAD4", "#A7F3EB"]
-  };
+  const colors = colorClasses[color] || colorClasses.teal;
 
   if (variant === "dots") {
     return (

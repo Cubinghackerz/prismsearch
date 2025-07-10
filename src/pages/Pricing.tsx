@@ -14,16 +14,9 @@ import ParticleBackground from '../components/ParticleBackground';
 const Pricing: React.FC = () => {
   const formRef = useRef<HTMLDivElement>(null);
   const [isYearly, setIsYearly] = useState(false);
-  const [isDarkTheme, setIsDarkTheme] = useState(true);
   
   const toggleBillingCycle = () => {
     setIsYearly(!isYearly);
-  };
-  
-  const toggleTheme = () => {
-    setIsDarkTheme(!isDarkTheme);
-    document.body.classList.toggle('light-theme');
-    document.body.classList.toggle('theme-transition');
   };
   
   const scrollToForm = () => {
@@ -114,13 +107,7 @@ const Pricing: React.FC = () => {
           </nav>
 
           {/* Pricing Toggle */}
-          <PricingToggle 
-            isYearly={isYearly} 
-            onToggle={toggleBillingCycle} 
-            showThemeToggle={true}
-            isDarkTheme={isDarkTheme}
-            onThemeToggle={toggleTheme}
-          />
+          <PricingToggle isYearly={isYearly} onToggle={toggleBillingCycle} />
         </div>
       </header>
 

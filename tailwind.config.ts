@@ -75,16 +75,6 @@ export default {
 				'prism-accent': '#9B5DE5',         // Accent Purple
 				'prism-accent-light': '#B47EE8',   // Lighter purple
 				'prism-accent-dark': '#8A4FD3',    // Darker purple
-
-				// New indigo palette
-				'prism-indigo': '#4F46E5',         // Primary indigo
-				'prism-indigo-light': '#6366F1',   // Lighter indigo
-				'prism-indigo-dark': '#4338CA',    // Darker indigo
-
-				// Enhanced cyan palette
-				'prism-cyan': '#06B6D4',           // Primary cyan
-				'prism-cyan-light': '#22D3EE',     // Lighter cyan
-				'prism-cyan-dark': '#0891B2',      // Darker cyan
 				
 				'prism-bg': '#0D0D0D',             // Rich black background
 				'prism-surface': '#1A1A1A',        // Surface color for cards
@@ -93,8 +83,7 @@ export default {
 				'prism-text': '#F2F2F2',           // Primary text
 				'prism-text-muted': '#B0B0B0',     // Muted text
 				
-				'prism-hover': '#162E2A',          // Teal-tinted black for hovers (dark mode)
-				'prism-hover-light': '#E6F7F5',    // Teal-tinted white for hovers (light mode)
+				'prism-hover': '#162E2A',          // Teal-tinted black for hovers
 				
 				// Legacy aliases for backward compatibility
 				'prism-blue-primary': '#00C2A8',
