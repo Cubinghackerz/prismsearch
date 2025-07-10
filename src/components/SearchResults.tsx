@@ -1,7 +1,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { LayoutGrid, Database, Filter, ChevronDown, ChevronUp, RefreshCcw, List, BookmarkPlus } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { SearchResult } from './search/types';
 import SearchEngineColumn from './search/SearchEngineColumn';
 import LoadingSkeleton from './search/LoadingSkeleton';
@@ -28,60 +28,75 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
     return null;
   }
 
-  // Get all unique sources/engines
-  const engines = Array.from(new Set(results.map(result => result.source)));
+  // Memoize expensive computations
+  const engines = useMemo(() => Array.from(new Set(results.map(result => result.source))), [results]);
   
-  // Get unique categories for filtering - handle cases where category may be undefined
-  const categories = Array.from(new Set(results.map(result => result.category || 'Uncategorized')));
+  const categories = useMemo(() => 
+    Array.from(new Set(results.map(result => result.category || 'Uncategorized'))), 
+    [results]
+  );
 
-  // Toggle engine collapse
-  const toggleEngine = (engine: string) => {
+  // Memoize filtered and sorted results
+  const processedResults = useMemo(() => {
+    // Filter results
+    const filtered = selectedFilters.length > 0
+      ? results.filter(result => selectedFilters.includes(result.category || 'Uncategorized'))
+      : results;
+
+    // Sort results
+    return [...filtered].sort((a, b) => {
+      if (sortBy === 'recent' && a.date && b.date) {
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      }
+      return (b.relevance || 0) - (a.relevance || 0);
+    });
+  }, [results, selectedFilters, sortBy]);
+
+  // Memoize grouped results by engine
+  const groupedResults = useMemo(() => ({
+    Google: processedResults.filter(result => result.source === 'Google'),
+    Bing: processedResults.filter(result => result.source === 'Bing'),
+    DuckDuckGo: processedResults.filter(result => result.source === 'DuckDuckGo'),
+    Brave: processedResults.filter(result => result.source === 'Brave'),
+    'You.com': processedResults.filter(result => result.source === 'You.com'),
+  }), [processedResults]);
+
+  // Optimize event handlers with useCallback
+  const toggleEngine = useCallback((engine: string) => {
     setCollapsedEngines(prev => ({ 
       ...prev, 
       [engine]: !prev[engine] 
     }));
-  };
+  }, []);
 
-  // Toggle filter selection
-  const toggleFilter = (filter: string) => {
+  const toggleFilter = useCallback((filter: string) => {
     setSelectedFilters(prev => 
       prev.includes(filter) 
         ? prev.filter(f => f !== filter)
         : [...prev, filter]
     );
-  };
+  }, []);
 
-  // Filter results based on selected filters - safely handle undefined category
-  const filteredResults = selectedFilters.length > 0
-    ? results.filter(result => selectedFilters.includes(result.category || 'Uncategorized'))
-    : results;
+  const handleSortChange = useCallback((newSort: 'relevance' | 'recent') => {
+    setSortBy(newSort);
+  }, []);
 
-  // Sort results - safely handle undefined date
-  const sortedResults = [...filteredResults].sort((a, b) => {
-    if (sortBy === 'recent' && a.date && b.date) {
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
-    }
-    return (b.relevance || 0) - (a.relevance || 0); // Default to API-provided relevance
-  });
+  const handleViewModeChange = useCallback((mode: 'grid' | 'list') => {
+    setViewMode(mode);
+  }, []);
 
-  // Group results by engine
-  const googleResults = sortedResults.filter(result => result.source === 'Google');
-  const bingResults = sortedResults.filter(result => result.source === 'Bing');
-  const duckduckgoResults = sortedResults.filter(result => result.source === 'DuckDuckGo');
-  const braveResults = sortedResults.filter(result => result.source === 'Brave');
-  const youResults = sortedResults.filter(result => result.source === 'You.com');
+  const handleRefresh = useCallback(() => {
+    window.location.reload();
+  }, []);
 
   // Handle bookmark functionality
-  const handleBookmark = (result: SearchResult) => {
-    // Get existing bookmarks from localStorage
+  const handleBookmark = useCallback((result: SearchResult) => {
     const existingBookmarks = localStorage.getItem('prism_bookmarks');
     let bookmarks = existingBookmarks ? JSON.parse(existingBookmarks) : [];
     
-    // Check if this result is already bookmarked
     const isAlreadyBookmarked = bookmarks.some((bookmark: SearchResult) => bookmark.url === result.url);
     
     if (!isAlreadyBookmarked) {
-      // Add the bookmark
       bookmarks.push(result);
       localStorage.setItem('prism_bookmarks', JSON.stringify(bookmarks));
       
@@ -97,7 +112,7 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
         variant: "default",
       });
     }
-  };
+  }, [toast]);
 
   return (
     <div className="w-full max-w-[95vw] mx-auto mt-8 pb-12">
@@ -105,34 +120,34 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
         className="flex items-center justify-between mb-4"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.3 }}
       >
         <div className="flex items-center gap-2">
-          <LayoutGrid className="h-5 w-5 text-orange-500" />
-          <h2 className="text-xl font-semibold text-orange-100 font-montserrat">Search Results</h2>
+          <LayoutGrid className="h-5 w-5 text-primary" />
+          <h2 className="text-xl font-semibold text-foreground font-montserrat">Search Results</h2>
         </div>
         
         <motion.div 
-          className="text-sm bg-orange-500/10 px-3 py-1 rounded-full text-orange-300 border border-orange-500/10 flex items-center gap-2"
-          whileHover={{ scale: 1.05 }}
-          transition={{ type: "spring", stiffness: 400, damping: 10 }}
+          className="text-sm bg-primary/10 px-3 py-1 rounded-full text-primary border border-border flex items-center gap-2"
+          whileHover={{ scale: 1.02 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
         >
           <Database className="h-3 w-3" />
           <span>Found {results.length} results across all engines</span>
         </motion.div>
       </motion.div>
       
-      {/* Filters and controls with improved UI */}
+      {/* Filters and controls */}
       <motion.div 
-        className="bg-orange-900/10 backdrop-blur-md rounded-lg p-3 mb-4 border border-orange-500/20"
+        className="bg-card/50 backdrop-blur-sm rounded-lg p-3 mb-4 border border-border"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
+        transition={{ duration: 0.2, delay: 0.1 }}
       >
         <div className="flex flex-wrap items-center gap-3 justify-between">
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-orange-400" />
-            <span className="text-sm text-orange-200 font-medium">Filters:</span>
+            <Filter className="h-4 w-4 text-primary" />
+            <span className="text-sm text-foreground font-medium">Filters:</span>
             
             <div className="flex flex-wrap gap-2 ml-2">
               {categories.map(category => (
@@ -140,10 +155,10 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
                   key={category}
                   onClick={() => toggleFilter(category)}
                   className={`
-                    text-xs px-2 py-1 rounded-full border transition-all
+                    text-xs px-2 py-1 rounded-full border transition-colors duration-200
                     ${selectedFilters.includes(category)
-                      ? 'bg-orange-500/30 border-orange-500/40 text-orange-100'
-                      : 'border-orange-500/20 text-orange-200 hover:bg-orange-500/10'}
+                      ? 'bg-primary/20 border-primary/40 text-primary'
+                      : 'border-border text-muted-foreground hover:bg-primary/5'}
                   `}
                 >
                   {category}
@@ -153,20 +168,20 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
           </div>
           
           <div className="flex items-center gap-3">
-            {/* Added view mode toggle */}
-            <div className="flex items-center bg-orange-900/30 rounded-md overflow-hidden border border-orange-500/20">
+            {/* View mode toggle */}
+            <div className="flex items-center bg-muted/50 rounded-md overflow-hidden border border-border">
               <button
-                onClick={() => setViewMode('grid')}
-                className={`text-xs px-3 py-1.5 flex items-center gap-1
-                  ${viewMode === 'grid' ? 'bg-orange-500/30 text-orange-100' : 'text-orange-300 hover:bg-orange-500/10'}`}
+                onClick={() => handleViewModeChange('grid')}
+                className={`text-xs px-3 py-1.5 flex items-center gap-1 transition-colors duration-200
+                  ${viewMode === 'grid' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:bg-primary/5'}`}
               >
                 <LayoutGrid className="h-3 w-3" />
                 <span className="hidden sm:inline">Grid</span>
               </button>
               <button
-                onClick={() => setViewMode('list')}
-                className={`text-xs px-3 py-1.5 flex items-center gap-1
-                  ${viewMode === 'list' ? 'bg-orange-500/30 text-orange-100' : 'text-orange-300 hover:bg-orange-500/10'}`}
+                onClick={() => handleViewModeChange('list')}
+                className={`text-xs px-3 py-1.5 flex items-center gap-1 transition-colors duration-200
+                  ${viewMode === 'list' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:bg-primary/5'}`}
               >
                 <List className="h-3 w-3" />
                 <span className="hidden sm:inline">List</span>
@@ -174,11 +189,11 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
             </div>
             
             <div className="flex items-center gap-2">
-              <span className="text-sm text-orange-200">Sort by:</span>
+              <span className="text-sm text-foreground">Sort by:</span>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'relevance' | 'recent')}
-                className="text-xs bg-orange-900/20 border border-orange-500/30 rounded px-2 py-1 text-orange-100"
+                onChange={(e) => handleSortChange(e.target.value as 'relevance' | 'recent')}
+                className="text-xs bg-card border border-border rounded px-2 py-1 text-foreground"
               >
                 <option value="relevance">Relevance</option>
                 <option value="recent">Most Recent</option>
@@ -186,8 +201,8 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
             </div>
             
             <button 
-              className="text-xs flex items-center gap-1 text-orange-300 hover:text-orange-200 bg-orange-900/30 px-2 py-1 rounded-md border border-orange-500/20 hover:bg-orange-500/20 transition-colors"
-              onClick={() => window.location.reload()}
+              className="text-xs flex items-center gap-1 text-primary hover:text-primary/80 bg-card px-2 py-1 rounded-md border border-border hover:bg-primary/5 transition-colors duration-200"
+              onClick={handleRefresh}
             >
               <RefreshCcw className="h-3 w-3" />
               <span>Refresh</span>
@@ -196,65 +211,41 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
         </div>
       </motion.div>
       
-      {/* Updated grid/list view layout */}
+      {/* Results grid/list */}
       <div className={viewMode === 'grid' ? 
         "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4" :
         "flex flex-col gap-4"
       }>
         {engines.map(engine => {
-          let engineResults;
-          let bgColor;
-          let hoverBorderColor;
-          
-          switch (engine) {
-            case 'Google':
-              engineResults = googleResults;
-              bgColor = 'bg-orange-500';
-              hoverBorderColor = 'hover:border-orange-300';
-              break;
-            case 'Bing':
-              engineResults = bingResults;
-              bgColor = 'bg-orange-700';
-              hoverBorderColor = 'hover:border-orange-400';
-              break;
-            case 'DuckDuckGo':
-              engineResults = duckduckgoResults;
-              bgColor = 'bg-yellow-600';
-              hoverBorderColor = 'hover:border-yellow-300';
-              break;
-            case 'Brave':
-              engineResults = braveResults;
-              bgColor = 'bg-orange-600';
-              hoverBorderColor = 'hover:border-orange-300';
-              break;
-            case 'You.com':
-              engineResults = youResults;
-              bgColor = 'bg-orange-500';
-              hoverBorderColor = 'hover:border-orange-300';
-              break;
-            default:
-              engineResults = [];
-              bgColor = 'bg-orange-500';
-              hoverBorderColor = 'hover:border-orange-300';
-          }
-          
+          const engineResults = groupedResults[engine as keyof typeof groupedResults] || [];
           const isCollapsed = collapsedEngines[engine];
+          
+          // Engine color mapping
+          const engineStyles = {
+            'Google': { bg: 'bg-primary', hover: 'hover:border-primary/70' },
+            'Bing': { bg: 'bg-primary/90', hover: 'hover:border-primary/60' },
+            'DuckDuckGo': { bg: 'bg-accent', hover: 'hover:border-accent/70' },
+            'Brave': { bg: 'bg-accent/90', hover: 'hover:border-accent/60' },
+            'You.com': { bg: 'bg-primary/80', hover: 'hover:border-primary/50' }
+          };
+          
+          const style = engineStyles[engine as keyof typeof engineStyles] || engineStyles['Google'];
           
           return (
             <motion.div
               key={engine}
               layout
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.98 }}
               animate={{ 
                 opacity: 1, 
                 scale: 1,
                 height: isCollapsed ? 'auto' : '100%'
               }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.2 }}
               className={viewMode === 'list' ? 'w-full' : 'flex flex-col'}
             >
               <div 
-                className={`flex justify-between items-center px-3 py-2 rounded-t-lg ${bgColor} cursor-pointer`}
+                className={`flex justify-between items-center px-3 py-2 rounded-t-lg ${style.bg} cursor-pointer transition-colors duration-200`}
                 onClick={() => toggleEngine(engine)}
               >
                 <h3 className="text-white font-medium text-sm font-montserrat">{engine}</h3>
@@ -275,13 +266,14 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
                     className="flex-1"
                   >
                     <SearchEngineColumn 
                       title={engine} 
                       results={engineResults}
-                      bgColor={bgColor}
-                      hoverBorderColor={hoverBorderColor}
+                      bgColor={style.bg}
+                      hoverBorderColor={style.hover}
                       showTitle={false}
                       viewMode={viewMode}
                       onBookmark={handleBookmark}
