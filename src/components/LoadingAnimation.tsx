@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 interface LoadingAnimationProps {
-  color?: "purple" | "blue" | "teal";
+  color?: "purple" | "blue" | "teal" | "orange";
   size?: "small" | "medium" | "large";
   className?: string;
   variant?: "dots" | "pulse" | "neural" | "orbit" | "prism";
@@ -40,10 +40,17 @@ const LoadingAnimation = ({
       accent: "bg-prism-accent-light",
       glow: "shadow-prism-accent/50",
       spectrum: ["#9B5DE5", "#B47EE8", "#C9A0ED", "#E2CFF5"]
+    },
+    orange: {
+      primary: "bg-orange-500",
+      secondary: "bg-orange-400",
+      accent: "bg-orange-300",
+      glow: "shadow-orange-500/50",
+      spectrum: ["#F97316", "#FB923C", "#FDBA74", "#FED7AA"]
     }
-  };
+  } as const;
 
-  const colors = colorClasses[color];
+  const colors = colorClasses[color] || colorClasses.teal;
 
   if (variant === "dots") {
     return (
