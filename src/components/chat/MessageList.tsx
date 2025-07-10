@@ -42,13 +42,13 @@ const MessageList: React.FC<MessageListProps> = ({
           <div className={`
             max-w-[80%] p-4 rounded-2xl shadow-lg
             ${message.isUser 
-              ? 'bg-gradient-to-r from-prism-blue-primary to-prism-purple-primary text-white message user' 
-              : 'bg-prism-dark-bg-800/40 text-prism-text-light border border-prism-blue-primary/30 message bot'
+              ? 'bg-gradient-to-r from-prism-primary to-prism-accent text-white message user' 
+              : 'bg-prism-surface/40 text-prism-text border border-prism-border message bot'
             }
           `}>
             <div className={`
               prose prose-invert max-w-none
-              ${message.isUser ? 'prose-p:text-white prose-headings:text-white' : 'prose-p:text-prism-text-light prose-headings:text-prism-text-muted'}
+              ${message.isUser ? 'prose-p:text-white prose-headings:text-white' : 'prose-p:text-prism-text prose-headings:text-prism-text-muted'}
             `}>
               {message.isUser ? (
                 <p className="mb-0 whitespace-pre-wrap">{message.content}</p>

@@ -5,7 +5,7 @@ interface ParticleBackgroundProps {
   color?: string; 
 }
 
-const ParticleBackground = ({ color = '#4F46E5' }: ParticleBackgroundProps) => {
+const ParticleBackground = ({ color = '#00C2A8' }: ParticleBackgroundProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -28,9 +28,9 @@ const ParticleBackground = ({ color = '#4F46E5' }: ParticleBackgroundProps) => {
     const particleCount = 50;
     const particleColor = color;
     // Determine glow color based on primary color
-    const particleGlowColor = color === '#4F46E5' ? '#818CF8' : 
-                             color === '#20B2AA' ? '#5EEAD4' : 
-                             '#C084FC'; // Default to purple glow
+    const particleGlowColor = color === '#00C2A8' ? '#1DD1B8' : 
+                             color === '#9B5DE5' ? '#B47EE8' : 
+                             '#1DD1B8'; // Default to teal glow
     
     class Particle {
       x: number;

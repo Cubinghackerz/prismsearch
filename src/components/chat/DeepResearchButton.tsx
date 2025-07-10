@@ -35,7 +35,7 @@ const DeepResearchButton: React.FC<DeepResearchButtonProps> = ({ topic, disabled
         disabled={disabled || isLoading || isResearching || !topic.trim()}
         variant="outline"
         size="sm"
-        className="bg-gradient-to-r from-prism-purple-primary/20 to-prism-purple-dark/20 border-prism-purple-primary/30 text-prism-purple-light hover:from-prism-purple-primary/30 hover:to-prism-purple-dark/30 hover:border-prism-purple-light/50 transition-all duration-300"
+        className="bg-gradient-to-r from-prism-accent/20 to-prism-accent-dark/20 border-prism-accent/30 text-prism-accent-light hover:from-prism-accent/30 hover:to-prism-accent-dark/30 hover:border-prism-accent-light/50 transition-all duration-300"
       >
         {isResearching ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />

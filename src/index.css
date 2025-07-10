@@ -99,20 +99,20 @@
   }
 }
 
-/* Prism UI Theme - updated to orange */
+/* NeoPrism UI Theme */
 .prism-theme {
-  --prism-bg: #1A1A2E;
-  --prism-text: #E0E0E0;
-  --prism-primary: #4F46E5;
-  --prism-secondary: #20B2AA;
-  --prism-accent: #8A2BE2;
-  --prism-border: rgba(79, 70, 229, 0.2);
-  --prism-shadow: rgba(79, 70, 229, 0.1);
+  --prism-bg: #0D0D0D;
+  --prism-surface: #1A1A1A;
+  --prism-text: #F2F2F2;
+  --prism-primary: #00C2A8;
+  --prism-accent: #9B5DE5;
+  --prism-border: #2E2E2E;
+  --prism-shadow: rgba(0, 194, 168, 0.1);
 }
 
 /* Color changing animation - faster 300ms timing */
 .color-changing-text {
-  background: linear-gradient(-45deg, #4F46E5, #20B2AA, #8A2BE2, #4F46E5);
+  background: linear-gradient(-45deg, #00C2A8, #9B5DE5, #1DD1B8, #00C2A8);
   background-size: 300% 300%;
   color: transparent;
   background-clip: text;
@@ -129,7 +129,7 @@
 
 /* Custom styles for markdown content */
 .markdown-content .prose {
-  @apply text-prism-text-light;
+  @apply text-prism-text;
 }
 
 .markdown-content .prose h1,
@@ -138,7 +138,7 @@
 .markdown-content .prose h4,
 .markdown-content .prose h5,
 .markdown-content .prose h6 {
-  @apply text-prism-text-light font-bold mb-2 mt-4;
+  @apply text-prism-text font-bold mb-2 mt-4;
 }
 
 .markdown-content .prose h1 {
@@ -175,27 +175,27 @@
 }
 
 .markdown-content .prose code {
-  @apply bg-prism-dark-bg-800/40 px-1.5 py-0.5 rounded text-sm text-prism-text-light;
+  @apply bg-prism-surface/40 px-1.5 py-0.5 rounded text-sm text-prism-text;
 }
 
 .markdown-content .prose pre {
-  @apply bg-prism-dark-bg-800/40 p-3 rounded-md my-3 overflow-x-auto;
+  @apply bg-prism-surface/40 p-3 rounded-md my-3 overflow-x-auto;
 }
 
 .markdown-content .prose a {
-  @apply text-prism-blue-light hover:text-prism-teal-light underline;
+  @apply text-prism-primary-light hover:text-prism-accent-light underline;
 }
 
 .markdown-content .prose blockquote {
-  @apply border-l-4 border-prism-blue-primary/50 pl-4 italic my-3;
+  @apply border-l-4 border-prism-primary/50 pl-4 italic my-3;
 }
 
 .markdown-content .prose strong {
-  @apply font-bold text-prism-text-light;
+  @apply font-bold text-prism-text;
 }
 
 .markdown-content .prose em {
-  @apply italic text-prism-text-light;
+  @apply italic text-prism-text;
 }
 
 .markdown-content .prose img {
@@ -203,7 +203,7 @@
 }
 
 .search-gradient {
-  background: linear-gradient(90deg, #4F46E5, #20B2AA, #8A2BE2, #4F46E5);
+  background: linear-gradient(90deg, #00C2A8, #9B5DE5, #1DD1B8, #00C2A8);
   background-size: 300% 100%;
   animation: gradient-shift 3s ease infinite;
 }
@@ -248,12 +248,12 @@
 
 /* Glow animation for buttons and cards */
 .glow-button {
-  box-shadow: 0 0 10px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 0 10px rgba(0, 194, 168, 0.3);
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .glow-button:hover {
-  box-shadow: 0 0 15px rgba(79, 70, 229, 0.5), 0 0 30px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 0 15px rgba(0, 194, 168, 0.5), 0 0 30px rgba(0, 194, 168, 0.3);
   transform: translateY(-2px);
 }
 
@@ -263,43 +263,43 @@
 
 @keyframes pulse-glow {
   0% {
-    box-shadow: 0 0 5px rgba(79, 70, 229, 0.3);
+    box-shadow: 0 0 5px rgba(0, 194, 168, 0.3);
   }
   50% {
-    box-shadow: 0 0 20px rgba(79, 70, 229, 0.5);
+    box-shadow: 0 0 20px rgba(0, 194, 168, 0.5);
   }
   100% {
-    box-shadow: 0 0 5px rgba(79, 70, 229, 0.3);
+    box-shadow: 0 0 5px rgba(0, 194, 168, 0.3);
   }
 }
 
 /* Glass morphism */
 .glass-card {
-  background: rgba(79, 70, 229, 0.05);
+  background: rgba(0, 194, 168, 0.05);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(79, 70, 229, 0.2);
+  border: 1px solid rgba(0, 194, 168, 0.2);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .glass-card:hover {
-  background: rgba(79, 70, 229, 0.1);
-  border: 1px solid rgba(79, 70, 229, 0.3);
-  box-shadow: 0 8px 32px 0 rgba(79, 70, 229, 0.15);
+  background: rgba(0, 194, 168, 0.1);
+  border: 1px solid rgba(0, 194, 168, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(0, 194, 168, 0.15);
 }
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-purple-300 via-purple-400 to-purple-600 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-prism-primary via-prism-accent to-prism-primary-light bg-clip-text text-transparent;
   }
   
   .text-gradient-blue {
-    @apply bg-gradient-to-r from-blue-400 via-teal-400 to-blue-500 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-prism-primary via-prism-primary-light to-prism-accent bg-clip-text text-transparent;
   }
 
   .blur-backdrop {
-    @apply backdrop-blur-md bg-[#1A1F2C]/70;
+    @apply backdrop-blur-md bg-prism-bg/70;
   }
   
   .bg-pos-0 {

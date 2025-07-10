@@ -10,19 +10,19 @@ const RecentChats = () => {
   const { startNewChat } = useChat();
 
   return (
-    <div className="mb-2 border border-prism-blue-primary/20 rounded-lg overflow-hidden bg-prism-blue-primary/10 shadow-md">
+    <div className="mb-2 border border-prism-border rounded-lg overflow-hidden bg-prism-primary/10 shadow-md">
       <div 
-        className="p-3 flex items-center justify-between cursor-pointer bg-gradient-to-r from-prism-blue-primary/20 to-prism-purple-primary/20 hover:from-prism-blue-primary/30 hover:to-prism-purple-primary/30 transition-all duration-300" 
+        className="p-3 flex items-center justify-between cursor-pointer bg-gradient-to-r from-prism-primary/20 to-prism-accent/20 hover:from-prism-primary/30 hover:to-prism-accent/30 transition-all duration-300" 
         onClick={() => setIsExpanded(prev => !prev)}
       >
         <div className="flex items-center gap-2">
-          <MessageSquare size={18} className="text-prism-blue-light" />
-          <span className="font-medium text-prism-text-light">Recent Chats</span>
+          <MessageSquare size={18} className="text-prism-primary-light" />
+          <span className="font-medium text-prism-text">Recent Chats</span>
         </div>
         {isExpanded ? (
-          <ChevronUp size={18} className="text-prism-blue-light transition-transform duration-300" />
+          <ChevronUp size={18} className="text-prism-primary-light transition-transform duration-300" />
         ) : (
-          <ChevronDown size={18} className="text-prism-blue-light transition-transform duration-300" />
+          <ChevronDown size={18} className="text-prism-primary-light transition-transform duration-300" />
         )}
       </div>
       
@@ -38,11 +38,11 @@ const RecentChats = () => {
               All chats are temporary and stored in memory only
             </div>
             
-            <div className="p-2 border-t border-prism-blue-primary/10">
+            <div className="p-2 border-t border-prism-border/30">
               <Button 
                 variant="ghost" 
                 onClick={() => startNewChat()} 
-                className="w-full text-prism-blue-light hover:text-prism-text-light hover:bg-prism-blue-primary/20 transition-all duration-300 bg-transparent text-xs"
+                className="w-full text-prism-primary hover:text-prism-text hover:bg-prism-primary/20 transition-all duration-300 bg-transparent text-xs"
               >
                 Start New Chat
               </Button>

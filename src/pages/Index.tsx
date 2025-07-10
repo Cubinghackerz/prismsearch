@@ -119,9 +119,9 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#1A1F2C]">
+    <div className="min-h-screen flex flex-col bg-prism-bg">
       {/* Updated ParticleBackground to use the new blue color */}
-      <ParticleBackground color="#4F46E5" />
+      <ParticleBackground color="#00C2A8" />
       <ScrollToTop />
       
       <header className="py-6 px-4 relative z-10">
@@ -146,6 +146,7 @@ const Index = () => {
                   setShowResults(false);
                 }}
                 className="text-prism-text-light bg-prism-blue-primary/20 hover:bg-prism-blue-primary/30"
+                className="text-prism-text bg-prism-primary/20 hover:bg-prism-primary/30"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 New Search
@@ -163,7 +164,7 @@ const Index = () => {
               />
               <motion.h1 
                 className={`text-4xl font-bold bg-clip-text text-transparent 
-                  bg-gradient-to-r from-prism-blue-light via-prism-teal-primary to-prism-purple-primary 
+                  bg-gradient-to-r from-prism-primary-light via-prism-primary to-prism-accent 
                   animate-gradient-text mb-2 ${hasSearched ? 'text-2xl' : ''}`} 
                 animate={{
                   backgroundPosition: ['0% 50%', '100% 50%']
@@ -191,11 +192,11 @@ const Index = () => {
             <Button 
               variant="ghost" 
               onClick={handleViewBookmarks}
-              className="text-prism-text-light bg-prism-blue-primary/20 hover:bg-prism-blue-primary/30 relative"
+              className="text-prism-text bg-prism-primary/20 hover:bg-prism-primary/30 relative"
             >
               <BookmarkPlus className="mr-2 h-4 w-4" />
               {bookmarksCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-prism-blue-primary rounded-full text-xs flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-prism-primary rounded-full text-xs flex items-center justify-center">
                   {bookmarksCount}
                 </span>
               )}
@@ -203,7 +204,7 @@ const Index = () => {
             </Button>
             
             <Link to="/chat">
-              <Button variant="ghost" className="text-prism-text-light bg-prism-blue-primary/20 hover:bg-prism-blue-primary/30">
+              <Button variant="ghost" className="text-prism-text bg-prism-primary/20 hover:bg-prism-primary/30">
                 <MessageSquare className="mr-2 h-4 w-4" />
                 <span className="hidden sm:inline">Chat Mode</span>
               </Button>
@@ -239,8 +240,8 @@ const Index = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
-              className="mt-4 backdrop-blur-md bg-prism-blue-primary/5 p-6 rounded-xl border border-prism-blue-primary/20 
-                shadow-[0_8px_32px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_32px_rgba(79,70,229,0.15)] 
+              className="mt-4 backdrop-blur-md bg-prism-primary/5 p-6 rounded-xl border border-prism-border 
+                shadow-[0_8px_32px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_32px_rgba(0,194,168,0.15)] 
                 transition-all duration-300"
             >
               <SearchResultSummary 
@@ -278,19 +279,20 @@ const Index = () => {
                   <div
                     className={`w-14 h-14 rounded-full mx-auto mb-3 flex items-center justify-center 
                       backdrop-blur-md border border-orange-200/10
+                      backdrop-blur-md border border-prism-border/30
                       ${
                         engine === 'Google'
-                          ? 'bg-prism-blue-primary/80'
+                          ? 'bg-prism-primary/80'
                           : engine === 'Bing'
-                          ? 'bg-prism-blue-dark/80'
+                          ? 'bg-prism-primary-dark/80'
                           : engine === 'DuckDuckGo'
-                          ? 'bg-prism-teal-primary/80'
+                          ? 'bg-prism-accent/80'
                           : engine === 'Brave'
-                          ? 'bg-prism-purple-primary/80'
-                          : 'bg-prism-blue-primary/80'
+                          ? 'bg-prism-accent-dark/80'
+                          : 'bg-prism-primary/80'
                       } 
-                      hover:border-prism-blue-light/20 transition-all duration-300
-                      shadow-lg shadow-prism-dark-bg/10 hover:shadow-xl hover:shadow-prism-blue-primary/20 glow-button`}
+                      hover:border-prism-primary-light/20 transition-all duration-300
+                      shadow-lg shadow-prism-bg/10 hover:shadow-xl hover:shadow-prism-primary/20 glow-button`}
                   >
                     <img
                       src={info.logo}
@@ -304,7 +306,7 @@ const Index = () => {
                       className="w-8 h-8 object-contain"
                     />
                   </div>
-                  <span className="text-sm font-medium text-prism-text-light opacity-90 hover:opacity-100 transition-opacity">
+                  <span className="text-sm font-medium text-prism-text opacity-90 hover:opacity-100 transition-opacity">
                     {engine}
                   </span>
                 </motion.a>
@@ -314,7 +316,7 @@ const Index = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7 }}
-              className="mt-12 text-prism-text-light/70 color-changing-text"
+              className="mt-12 text-prism-text/70 color-changing-text"
             >
               Type your query above to search across all engines simultaneously
             </motion.p>

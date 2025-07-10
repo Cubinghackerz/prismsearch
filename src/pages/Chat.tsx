@@ -23,8 +23,8 @@ const Chat = () => {
   });
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#1A1F2C]">
-      <ParticleBackground color="#4F46E5" />
+    <div className="min-h-screen flex flex-col bg-prism-bg">
+      <ParticleBackground color="#00C2A8" />
       <ScrollToTop />
       
       <header className="py-3 px-4 relative z-10">
@@ -42,7 +42,7 @@ const Chat = () => {
               <Link to="/">
                 <Button 
                   variant="ghost" 
-                  className="text-prism-text-light bg-prism-blue-primary/20 hover:bg-prism-blue-primary/30"
+                  className="text-prism-text bg-prism-primary/20 hover:bg-prism-primary/30"
                   size="sm"
                 >
                   <ArrowLeft className="mr-2 h-4 w-4" />
@@ -54,13 +54,13 @@ const Chat = () => {
             <Button 
               variant="ghost" 
               onClick={() => setIsBookmarksOpen(true)}
-              className="text-prism-text-light bg-prism-blue-primary/20 hover:bg-prism-blue-primary/30 relative"
+              className="text-prism-text bg-prism-primary/20 hover:bg-prism-primary/30 relative"
               size="sm"
             >
               <BookmarkPlus className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">Bookmarks</span>
               {bookmarksCount > 0 && (
-                <span className="absolute -top-2 -right-2 w-5 h-5 bg-prism-blue-primary rounded-full text-xs flex items-center justify-center text-white">
+                <span className="absolute -top-2 -right-2 w-5 h-5 bg-prism-primary rounded-full text-xs flex items-center justify-center text-white">
                   {bookmarksCount}
                 </span>
               )}
@@ -76,7 +76,7 @@ const Chat = () => {
               />
               <motion.h1 
                 className="text-2xl font-bold bg-clip-text text-transparent 
-                  bg-gradient-to-r from-prism-blue-light via-prism-teal-primary to-prism-purple-primary 
+                  bg-gradient-to-r from-prism-primary-light via-prism-primary to-prism-accent 
                   animate-gradient-text"
                 animate={{
                   backgroundPosition: ['0% 50%', '100% 50%']

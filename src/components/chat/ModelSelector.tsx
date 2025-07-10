@@ -18,8 +18,8 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
   onNewChat 
 }) => {
   return (
-    <div className="p-3 border-b border-prism-blue-primary/40 bg-prism-blue-primary/5">
-      <Alert className="mb-3 py-2 bg-prism-blue-primary/10 border-prism-blue-primary/30 text-prism-text-muted text-xs">
+    <div className="p-3 border-b border-prism-border bg-prism-primary/5">
+      <Alert className="mb-3 py-2 bg-prism-primary/10 border-prism-border text-prism-text-muted text-xs">
         <p>Select your preferred AI model</p>
       </Alert>
       
@@ -101,7 +101,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
           variant="outline" 
           size="sm" 
           onClick={onNewChat} 
-          className="border-prism-blue-primary/50 text-prism-text-muted hover:border-prism-blue-primary/60 transition-all duration-300 bg-transparent text-xs h-8"
+          className="border-prism-border text-prism-text-muted hover:border-prism-primary/60 transition-all duration-300 bg-transparent text-xs h-8"
         >
           <RefreshCw className="mr-1.5 h-3 w-3" /> New Chat
         </Button>
@@ -137,16 +137,16 @@ const ModelOption: React.FC<ModelOptionProps> = ({ value, name, description, bad
         transition={{ duration: 0.2 }}
         className={`flex flex-col w-full p-2 border rounded-lg cursor-pointer transition-all duration-200 ${
           isSelected
-            ? 'bg-prism-blue-primary/30 border-prism-blue-light ring-1 ring-prism-blue-light/50 shadow-md'
-            : 'bg-prism-dark-bg-800/20 border-prism-blue-primary/30 hover:bg-prism-dark-bg-800/30'
+            ? 'bg-prism-primary/30 border-prism-primary-light ring-1 ring-prism-primary-light/50 shadow-md'
+            : 'bg-prism-surface/20 border-prism-border hover:bg-prism-surface/30'
         }`}
       >
         <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold text-prism-text-light">{name}</span>
+          <span className="text-sm font-semibold text-prism-text">{name}</span>
           <span className={`px-1.5 py-0.5 text-[10px] ${
             badge.color === "green" ? "bg-green-500/30 text-green-300" :
             badge.color === "yellow" ? "bg-yellow-500/30 text-yellow-300" :
-            "bg-prism-blue-primary/30 text-prism-blue-light"
+            "bg-prism-primary/30 text-prism-primary-light"
           } rounded-full`}>{badge.text}</span>
         </div>
         <span className="mt-1 text-xs text-prism-text-muted/70">{description}</span>

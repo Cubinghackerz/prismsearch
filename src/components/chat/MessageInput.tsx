@@ -57,8 +57,8 @@ const MessageInput: React.FC<MessageInputProps> = ({
     <form onSubmit={handleSubmit} className="p-4 md:p-6 border-t border-prism-blue-primary/40 bg-prism-dark-bg-800/10">
       {/* Replying to message indicator */}
       {replyingTo && (
-        <div className="mb-2 p-2 rounded-lg bg-prism-blue-primary/30 border border-prism-blue-primary/30 flex justify-between items-center">
-          <div className="flex items-center text-sm text-prism-blue-light">
+        <div className="mb-2 p-2 rounded-lg bg-prism-primary/30 border border-prism-primary/30 flex justify-between items-center">
+          <div className="flex items-center text-sm text-prism-primary-light">
             <span>
               Replying to: "{getReplyingToMessage()?.content.substring(0, 50)}
               {getReplyingToMessage()?.content.length! > 50 ? '...' : ''}
@@ -81,14 +81,17 @@ const MessageInput: React.FC<MessageInputProps> = ({
           onBlur={() => setIsFocused(false)} 
           placeholder="Ask anything..."
           className={`
-            resize-none bg-prism-dark-bg/90 border text-prism-text-light pr-24 
+            resize-none bg-prism-bg/90 border text-prism-text pr-24 
             min-h-[56px] py-3 rounded-xl md:min-h-[64px] shadow-lg
             transition-all duration-300 placeholder:text-prism-text-muted/30 
             focus:placeholder:opacity-50 focus:text-prism-text-light
             ${isFocused || inputValue ? 'shadow-[0_0_35px_rgba(79,70,229,0.4)] border-prism-blue-light/50 scale-[1.02]' : 'border-prism-blue-primary/30'}
             ${isFocused ? 'shadow-[0_0_40px_rgba(79,70,229,0.4)] border-prism-blue-light/50' : ''}
             hover:shadow-[0_0_30px_rgba(79,70,229,0.35)] hover:border-prism-blue-light/40
-            hover:scale-[1.01] hover:bg-prism-dark-bg/95
+            ${isFocused || inputValue ? 'shadow-[0_0_35px_rgba(0,194,168,0.4)] border-prism-primary-light/50 scale-[1.02]' : 'border-prism-border'}
+            ${isFocused ? 'shadow-[0_0_40px_rgba(0,194,168,0.4)] border-prism-primary-light/50' : ''}
+            hover:shadow-[0_0_30px_rgba(0,194,168,0.35)] hover:border-prism-primary-light/40
+            hover:scale-[1.01] hover:bg-prism-bg/95
           `} 
           disabled={isLoading} 
         />
@@ -124,7 +127,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
                   }} 
                 >
                   <div className="spark-animation w-2 h-2 rounded-full 
-                    bg-gradient-to-t from-prism-blue-primary via-prism-blue-light to-prism-teal-light
+                    bg-gradient-to-t from-prism-primary via-prism-primary-light to-prism-accent-light
                     shadow-[0_0_10px_rgba(79,70,229,0.7)]" 
                   />
                 </motion.div>
@@ -135,7 +138,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         
         <div className={`
             absolute inset-0 -z-10 transition-opacity duration-500
-            bg-gradient-to-r from-prism-blue-primary/20 via-prism-teal-primary/20 to-prism-purple-primary/20
+            bg-gradient-to-r from-prism-primary/20 via-prism-primary/20 to-prism-accent/20
             blur-3xl rounded-full
             ${isFocused ? 'opacity-100' : 'opacity-0'}
           `} />
@@ -154,6 +157,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
               w-10 h-10 flex items-center justify-center shadow-md
               transition-all duration-300
               ${!inputValue.trim() || isLoading ? 'bg-gray-700/30 cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-prism-blue-primary to-prism-purple-primary hover:from-prism-blue-dark hover:to-prism-purple-dark cursor-pointer shadow-lg shadow-prism-dark-bg/30 hover:shadow-prism-blue-primary/40 hover:scale-105 active:scale-95 ember-glow'}
+              ${!inputValue.trim() || isLoading ? 'bg-gray-700/30 cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary-dark hover:to-prism-accent-dark cursor-pointer shadow-lg shadow-prism-bg/30 hover:shadow-prism-primary/40 hover:scale-105 active:scale-95 ember-glow'}
             `} 
             disabled={!inputValue.trim() || isLoading}
           >

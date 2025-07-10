@@ -1,14 +1,14 @@
 import { cn } from "@/lib/utils";
 
 interface LoadingAnimationProps {
-  color?: "purple" | "blue" | "orange";
+  color?: "purple" | "blue" | "teal";
   size?: "small" | "medium" | "large";
   className?: string;
   variant?: "dots" | "pulse" | "neural" | "orbit" | "prism";
 }
 
 const LoadingAnimation = ({ 
-  color = "purple", 
+  color = "teal", 
   size = "medium",
   className,
   variant = "prism"
@@ -21,25 +21,25 @@ const LoadingAnimation = ({
   
   const colorClasses = {
     blue: {
-      primary: "bg-blue-500",
-      secondary: "bg-blue-400", 
-      accent: "bg-blue-300",
-      glow: "shadow-blue-500/50",
-      spectrum: ["#3B82F6", "#60A5FA", "#93C5FD", "#DBEAFE"]
+      primary: "bg-prism-primary",
+      secondary: "bg-prism-primary-light", 
+      accent: "bg-prism-primary-light",
+      glow: "shadow-prism-primary/50",
+      spectrum: ["#00C2A8", "#1DD1B8", "#5EEAD4", "#A7F3EB"]
     },
-    orange: {
-      primary: "bg-orange-500",
-      secondary: "bg-orange-400",
-      accent: "bg-orange-300", 
-      glow: "shadow-orange-500/50",
-      spectrum: ["#FF9E2C", "#FFC547", "#FFD700", "#FFF8DC"]
+    teal: {
+      primary: "bg-prism-primary",
+      secondary: "bg-prism-primary-light",
+      accent: "bg-prism-primary-light", 
+      glow: "shadow-prism-primary/50",
+      spectrum: ["#00C2A8", "#1DD1B8", "#5EEAD4", "#A7F3EB"]
     },
     purple: {
-      primary: "bg-purple-500",
-      secondary: "bg-purple-400",
-      accent: "bg-purple-300",
-      glow: "shadow-purple-500/50",
-      spectrum: ["#8B5CF6", "#A78BFA", "#C4B5FD", "#E9D5FF"]
+      primary: "bg-prism-accent",
+      secondary: "bg-prism-accent-light",
+      accent: "bg-prism-accent-light",
+      glow: "shadow-prism-accent/50",
+      spectrum: ["#9B5DE5", "#B47EE8", "#C9A0ED", "#E2CFF5"]
     }
   };
 

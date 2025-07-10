@@ -25,6 +25,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <div className="bg-gradient-to-b from-prism-dark-bg to-prism-dark-bg-800 text-prism-text-light min-h-screen font-inter">
+      <div className="bg-gradient-to-b from-prism-bg to-prism-surface text-prism-text min-h-screen font-inter">
         <Toaster />
         <Sonner />
         <BrowserRouter>

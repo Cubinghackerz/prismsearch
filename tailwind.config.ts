@@ -67,33 +67,39 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom brand colors - updated to match the refined orange theme
-				'prism-orange': '#FF9E2C',
-				'prism-light-orange': '#FFC547',
-				'prism-dark-orange': '#E58B28',
-				'prism-deepest-orange': '#D47A1E', 
+				// NeoPrism Color Scheme
+				'prism-primary': '#00C2A8',        // Primary Teal
+				'prism-primary-light': '#1DD1B8',  // Lighter teal
+				'prism-primary-dark': '#00A693',   // Darker teal
 				
-				// New color scheme
-				'prism-blue-primary': '#4F46E5',
-				'prism-blue-light': '#818CF8',
-				'prism-blue-dark': '#3730A3',
+				'prism-accent': '#9B5DE5',         // Accent Purple
+				'prism-accent-light': '#B47EE8',   // Lighter purple
+				'prism-accent-dark': '#8A4FD3',    // Darker purple
 				
-				'prism-teal-primary': '#20B2AA',
-				'prism-teal-light': '#5EEAD4',
-				'prism-teal-dark': '#0D9488',
+				'prism-bg': '#0D0D0D',             // Rich black background
+				'prism-surface': '#1A1A1A',        // Surface color for cards
+				'prism-border': '#2E2E2E',         // Border color
 				
-				'prism-purple-primary': '#8A2BE2',
-				'prism-purple-light': '#C084FC',
-				'prism-purple-dark': '#6B21A8',
+				'prism-text': '#F2F2F2',           // Primary text
+				'prism-text-muted': '#B0B0B0',     // Muted text
 				
-				'prism-dark-bg': '#1A1A2E',
-				'prism-dark-bg-800': '#282840',
-				'prism-dark-bg-700': '#32324D',
+				'prism-hover': '#162E2A',          // Teal-tinted black for hovers
 				
-				'prism-text-light': '#E0E0E0',
-				'prism-text-muted': '#A0A0B0',
-				
-				'prism-light': '#F1F1F1',
+				// Legacy aliases for backward compatibility
+				'prism-blue-primary': '#00C2A8',
+				'prism-blue-light': '#1DD1B8',
+				'prism-blue-dark': '#00A693',
+				'prism-teal-primary': '#00C2A8',
+				'prism-teal-light': '#1DD1B8',
+				'prism-teal-dark': '#00A693',
+				'prism-purple-primary': '#9B5DE5',
+				'prism-purple-light': '#B47EE8',
+				'prism-purple-dark': '#8A4FD3',
+				'prism-dark-bg': '#0D0D0D',
+				'prism-dark-bg-800': '#1A1A1A',
+				'prism-dark-bg-700': '#2E2E2E',
+				'prism-text-light': '#F2F2F2',
+				'prism-text-muted': '#B0B0B0',
 				'prism-danger': '#ea384c',
 			},
 			fontFamily: {
