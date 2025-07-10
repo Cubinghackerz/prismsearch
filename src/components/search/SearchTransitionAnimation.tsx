@@ -21,16 +21,16 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
   // Enhanced animation progression with better timing
   useEffect(() => {
     const stageTimers = [
-      setTimeout(() => setStage(1), 400),  // Start expanding
-      setTimeout(() => setStage(2), 900),  // Show particles
-      setTimeout(() => setStage(3), 2200), // Begin fade out
-      setTimeout(() => onComplete(), 2600) // Trigger completion callback
+      setTimeout(() => setStage(1), 300),  // Start expanding - faster
+      setTimeout(() => setStage(2), 700),  // Show particles - faster
+      setTimeout(() => setStage(3), 1800), // Begin fade out - faster
+      setTimeout(() => onComplete(), 2100) // Trigger completion callback - faster
     ];
     
     // Rotate through search tips
     const tipInterval = setInterval(() => {
       setCurrentTip(prev => (prev + 1) % searchTips.length);
-    }, 1200);
+    }, 900); // Faster rotation
     
     return () => {
       stageTimers.forEach(timer => clearTimeout(timer));
@@ -104,14 +104,14 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
     >
       {/* Enhanced background with subtle gradient movement */}
       <motion.div 
-        className="absolute inset-0 bg-[#1A1F2C]/95 backdrop-blur-lg"
+        className="absolute inset-0 bg-prism-bg/95 backdrop-blur-lg"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
         {/* Subtle background glow */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full opacity-20 blur-3xl bg-gradient-to-br from-orange-500/20 via-orange-300/10 to-teal-400/10 animate-pulse-light"></div>
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full opacity-20 blur-3xl bg-gradient-to-br from-prism-primary/20 via-prism-primary-light/10 to-prism-accent/10 animate-pulse-light"></div>
         </div>
       </motion.div>
 
@@ -150,7 +150,7 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
           {/* Enhanced pulsing rings */}
           <motion.div 
             className="absolute inset-0 rounded-full border-4 border-orange-500/30 z-10"
-            animate={{ 
+            className="absolute inset-0 rounded-full border-4 border-prism-primary/30 z-10" 
               scale: [1, 1.8, 1],
               opacity: [0.1, 0.5, 0],
             }}
@@ -164,7 +164,7 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
           
           <motion.div 
             className="absolute inset-0 rounded-full border-2 border-teal-400/20 z-10"
-            animate={{ 
+            className="absolute inset-0 rounded-full border-2 border-prism-accent/20 z-10" 
               scale: [1, 2, 1],
               opacity: [0.1, 0.3, 0],
             }}
@@ -179,7 +179,7 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
           
           {/* Inner glow */}
           <motion.div
-            className="absolute inset-4 rounded-full bg-gradient-to-br from-orange-400/20 to-orange-200/5 blur-sm z-5"
+            className="absolute inset-4 rounded-full bg-gradient-to-br from-prism-primary/20 to-prism-primary-light/5 blur-sm z-5"
             animate={{
               opacity: [0.3, 0.6, 0.3]
             }}
@@ -211,7 +211,7 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
         >
           <motion.p 
             className="text-sm text-orange-300/90 mb-2 font-medium tracking-wide"
-            initial={{ opacity: 0 }}
+            className="text-sm text-prism-primary/90 mb-2 font-medium tracking-wide" 
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.5 }}
           >
@@ -220,7 +220,7 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
           
           <motion.h2 
             className="text-xl md:text-2xl font-bold bg-gradient-to-r from-orange-200 via-orange-100 to-teal-100 bg-clip-text text-transparent"
-            initial={{ opacity: 0, y: 10 }}
+            className="text-xl md:text-2xl font-bold bg-gradient-to-r from-prism-primary-light via-prism-primary to-prism-accent-light bg-clip-text text-transparent" 
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.6 }}
           >
@@ -230,17 +230,17 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
         
         {/* Enhanced progress indicator */}
         <motion.div
-          className="mt-12 w-48 h-1.5 bg-orange-900/40 rounded-full overflow-hidden"
+          className="mt-12 w-48 h-1.5 bg-prism-surface/40 rounded-full overflow-hidden"
           initial={{ opacity: 0 }}
           animate={{ opacity: stage >= 3 ? 0 : 0.8 }}
           transition={{ duration: 0.4 }}
         >
           <motion.div 
-            className="h-full bg-gradient-to-r from-orange-500 via-orange-400 to-orange-300" 
+            className="h-full bg-gradient-to-r from-prism-primary via-prism-primary-light to-prism-accent-light" 
             initial={{ width: "0%" }}
             animate={{ width: "100%" }}
             transition={{
-              duration: 2.5,
+              duration: 2.0, // Faster animation
               ease: "easeInOut"
             }}
           />
@@ -266,7 +266,7 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
                 </div>
                 <motion.div 
                   className="h-8 w-[1px] mt-1 bg-orange-500/20"
-                  initial={{ height: 0 }}
+                  className="h-8 w-[1px] mt-1 bg-prism-primary/20" 
                   animate={{ height: 8 }}
                   transition={{ delay: engine.delay + 0.2, duration: 0.3 }}
                 />

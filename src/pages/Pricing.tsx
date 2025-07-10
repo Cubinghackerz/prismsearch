@@ -1,7 +1,8 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { PricingTable, PricingPlan } from '@/components/pricing/PricingTable';
 import { PricingCard } from '@/components/pricing/PricingCard';
+import PricingToggle from '@/components/pricing/PricingToggle';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -12,6 +13,12 @@ import ParticleBackground from '../components/ParticleBackground';
 
 const Pricing: React.FC = () => {
   const formRef = useRef<HTMLDivElement>(null);
+  const [isYearly, setIsYearly] = useState(false);
+  
+  const toggleBillingCycle = () => {
+    setIsYearly(!isYearly);
+  };
+  
   const scrollToForm = () => {
     if (formRef.current) {
       formRef.current.scrollIntoView({
@@ -49,8 +56,8 @@ const Pricing: React.FC = () => {
     buttonAction: handleGetStarted
   }, {
     name: "Starter",
-    price: "$15",
-    period: "/month",
+    price: isYearly ? "$135" : "$15",
+    period: isYearly ? "/year" : "/month",
     description: "For growing teams and projects",
     features: ["Advanced filtering & facets", "Upgraded chat context memory (Unlimited)", "Access to premium AI models", "Email support (48h SLAs)"],
     usage: "5,000 searches & 1,000 chat messages",
@@ -60,8 +67,8 @@ const Pricing: React.FC = () => {
     buttonAction: handleContactSales
   }, {
     name: "Professional",
-    price: "$30",
-    period: "/month",
+    price: isYearly ? "$270" : "$30",
+    period: isYearly ? "/year" : "/month",
     description: "For businesses with advanced needs",
     features: ["API access & key management", "Custom embeddings", "Analytics dashboard", "Chat context memory (Unlimited)"],
     usage: "50,000 searches & 15,000 chat messages",
@@ -98,6 +105,9 @@ const Pricing: React.FC = () => {
             <Link to="/pricing" className="text-prism-text font-medium font-inter">Pricing</Link>
             <Link to="/chat" className="text-prism-text-muted hover:text-prism-text font-inter">Chat</Link>
           </nav>
+
+          {/* Pricing Toggle */}
+          <PricingToggle isYearly={isYearly} onToggle={toggleBillingCycle} />
         </div>
       </header>
 

@@ -1,4 +1,3 @@
-
 import { useState, KeyboardEvent, useRef, useEffect } from 'react';
 import { Search, X, Sparkles, BookmarkPlus } from 'lucide-react';
 import LoadingAnimation from './LoadingAnimation';
@@ -169,9 +168,9 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
           `}
         >
           <div className="relative flex items-center h-full w-full rounded-2xl group overflow-hidden">
-            <div className="grid place-items-center h-full w-12 text-orange-300/80 transition-all duration-300 group-hover:text-orange-200">
+            <div className="grid place-items-center h-full w-12 text-prism-primary/80 transition-all duration-300 group-hover:text-prism-primary">
               <Search className={`h-5 w-5 transition-all duration-300 
-                ${isFocused ? 'scale-110 text-orange-300' : ''}
+                ${isFocused ? 'scale-110 text-prism-primary' : ''}
                 ${isSearching ? 'animate-pulse' : ''}
               `} />
             </div>
@@ -188,15 +187,15 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
               onFocus={() => {
                 setIsFocused(true);
                 // Show search options after a short delay when focusing
-                setTimeout(() => setShowSearchOptions(true), 500);
+                setTimeout(() => setShowSearchOptions(true), 300);
               }}
               onBlur={() => setIsFocused(false)}
-              className="peer h-full w-full outline-none text-lg text-white/90 px-2 bg-transparent 
-                placeholder:text-orange-200/30 
+              className="peer h-full w-full outline-none text-lg text-prism-text px-2 bg-transparent 
+                placeholder:text-prism-text-muted/30 
                 transition-all duration-300 
                 placeholder:transition-opacity placeholder:duration-300
                 focus:placeholder:opacity-50
-                focus:text-white"
+                focus:text-prism-text"
               type="text"
               placeholder="Search across the web..."
               disabled={isSearching}
@@ -212,7 +211,7 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
                 onClick={handleViewBookmarks}
                 className="absolute right-28 h-8 flex items-center gap-1 px-3 py-1 text-sm text-orange-300/70 
                   hover:text-orange-200 transition-all duration-300 rounded-full 
-                  hover:bg-orange-500/10 border border-transparent hover:border-orange-500/20"
+                  hover:bg-prism-primary/10 border border-transparent hover:border-prism-primary/20"
                 aria-label="Search options"
               >
                 <BookmarkPlus className="h-4 w-4" />
@@ -225,7 +224,7 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
                 onClick={handleClear}
                 className="absolute right-28 h-8 w-8 flex items-center justify-center text-orange-300/70 
                   hover:text-orange-200 transition-all duration-300 rounded-full 
-                  hover:bg-orange-500/10 hover:scale-110
+                  hover:bg-prism-primary/10 hover:scale-110
                   active:scale-95"
                 aria-label="Clear search"
               >
@@ -239,8 +238,8 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
               className={`
                 absolute right-2 h-12 w-24 rounded-xl text-white font-medium
                 transition-all duration-300 
-                ${query.trim() && !isSearching 
-                  ? 'bg-gradient-to-r from-orange-500 to-orange-700 hover:from-orange-600 hover:to-orange-800 cursor-pointer shadow-lg shadow-orange-900/30 hover:shadow-orange-800/40 hover:scale-105 active:scale-95 ember-glow' 
+                ${query.trim() && !isSearching
+                  ? 'bg-gradient-to-r from-prism-primary to-prism-primary-dark hover:from-prism-primary-light hover:to-prism-primary cursor-pointer shadow-lg shadow-prism-primary/30 hover:shadow-prism-primary/40 hover:scale-105 active:scale-95 ember-glow' 
                   : 'bg-gray-700/30 cursor-not-allowed opacity-50'}
               `}
               aria-label="Search button"
@@ -290,8 +289,8 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
                     >
                       <div 
                         className={`w-2 h-2 rounded-full 
-                          bg-gradient-to-t from-orange-500 via-orange-300 to-yellow-200
-                          shadow-[0_0_10px_rgba(255,158,44,0.7)]`}
+                          bg-gradient-to-t from-prism-primary via-prism-primary-light to-cyan-200
+                          shadow-[0_0_10px_rgba(0,194,168,0.7)]`}
                       />
                     </motion.div>
                   );
@@ -318,7 +317,7 @@ const SearchBar = ({ onSearch, isSearching, expanded }: SearchBarProps) => {
         {/* Decorative gradient blur effect */}
         <div className={`
           absolute inset-0 -z-10 transition-opacity duration-500
-          bg-gradient-to-r from-orange-500/20 via-orange-500/20 to-orange-500/20
+          bg-gradient-to-r from-prism-primary/20 via-prism-primary/20 to-prism-primary/20
           blur-3xl rounded-full
           ${isFocused ? 'opacity-100' : 'opacity-0'}
         `} />

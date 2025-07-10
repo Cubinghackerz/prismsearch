@@ -113,9 +113,10 @@ const BookmarksDrawer = ({ isOpen, onClose }: BookmarksDrawerProps) => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+            exit={{ opacity: 0 }} 
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" 
+            style={{ willChange: 'opacity' }}
             onClick={onClose}
           />
           
@@ -124,50 +125,51 @@ const BookmarksDrawer = ({ isOpen, onClose }: BookmarksDrawerProps) => {
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed right-0 top-0 h-full w-full md:w-[500px] lg:w-[600px] bg-[#1A1F2C] border-l border-orange-500/30 
-                      shadow-xl z-50 overflow-hidden flex flex-col"
+            transition={{ type: 'spring', damping: 30, stiffness: 350 }}
+            className="fixed right-0 top-0 h-full w-full md:w-[500px] lg:w-[600px] bg-prism-bg border-l border-prism-border 
+                      shadow-xl z-50 overflow-hidden flex flex-col" 
+            style={{ willChange: 'transform' }}
           >
             {/* Header */}
-            <div className="p-4 border-b border-orange-500/20 flex justify-between items-center bg-gradient-to-r from-orange-900/30 to-orange-800/30">
+            <div className="p-4 border-b border-prism-border flex justify-between items-center bg-gradient-to-r from-prism-primary/20 to-prism-accent/20">
               <div className="flex items-center gap-2">
-                <BookmarkPlus className="h-5 w-5 text-orange-400" />
-                <h2 className="text-xl font-semibold text-orange-100">Saved Results</h2>
+                <BookmarkPlus className="h-5 w-5 text-prism-primary" />
+                <h2 className="text-xl font-semibold text-prism-text">Saved Results</h2>
               </div>
               <button 
                 onClick={onClose}
-                className="p-2 rounded-full hover:bg-orange-500/20 text-orange-300 hover:text-orange-100 transition-colors"
+                className="p-2 rounded-full hover:bg-prism-primary/20 text-prism-primary hover:text-prism-text transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
             
             {/* Search and Filters */}
-            <div className="p-4 border-b border-orange-500/20 bg-orange-900/10">
+            <div className="p-4 border-b border-prism-border bg-prism-primary/10">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-orange-300" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-prism-primary" />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search your bookmarks..."
-                  className="w-full bg-[#1A1F2C]/80 border border-orange-500/30 rounded-lg pl-10 pr-4 py-2 text-orange-100 
-                          placeholder:text-orange-300/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                  className="w-full bg-prism-bg/80 border border-prism-border rounded-lg pl-10 pr-4 py-2 text-prism-text 
+                          placeholder:text-prism-text-muted/50 focus:outline-none focus:ring-2 focus:ring-prism-primary/50"
                 />
               </div>
               
               <div className="flex flex-wrap gap-2 mt-3">
                 {/* Category filters */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs text-orange-300 flex items-center">
+                  <span className="text-xs text-prism-primary flex items-center">
                     <Filter className="h-3 w-3 mr-1" /> Filter:
                   </span>
                   <button
                     onClick={() => setSelectedCategory(null)}
                     className={`text-xs px-2 py-1 rounded-full transition-colors
                             ${selectedCategory === null 
-                              ? 'bg-orange-500/30 text-orange-100'
-                              : 'bg-orange-500/10 text-orange-200 hover:bg-orange-500/20'}`}
+                              ? 'bg-prism-primary/30 text-prism-text'
+                              : 'bg-prism-primary/10 text-prism-text-muted hover:bg-prism-primary/20'}`}
                   >
                     All
                   </button>
@@ -177,8 +179,8 @@ const BookmarksDrawer = ({ isOpen, onClose }: BookmarksDrawerProps) => {
                       onClick={() => setSelectedCategory(category)}
                       className={`text-xs px-2 py-1 rounded-full transition-colors
                               ${selectedCategory === category 
-                                ? 'bg-orange-500/30 text-orange-100'
-                                : 'bg-orange-500/10 text-orange-200 hover:bg-orange-500/20'}`}
+                                ? 'bg-prism-primary/30 text-prism-text'
+                                : 'bg-prism-primary/10 text-prism-text-muted hover:bg-prism-primary/20'}`}
                     >
                       {category}
                     </button>
@@ -187,7 +189,7 @@ const BookmarksDrawer = ({ isOpen, onClose }: BookmarksDrawerProps) => {
                 
                 {/* Sort options */}
                 <div className="flex items-center gap-2 ml-auto">
-                  <span className="text-xs text-orange-300 flex items-center">
+                  <span className="text-xs text-prism-primary flex items-center">
                     {sortOrder === 'asc' ? <SortAsc className="h-3 w-3 mr-1" /> : <SortDesc className="h-3 w-3 mr-1" />}
                     Sort:
                   </span>
@@ -195,8 +197,8 @@ const BookmarksDrawer = ({ isOpen, onClose }: BookmarksDrawerProps) => {
                     onClick={() => setSortBy('date')}
                     className={`text-xs px-2 py-1 rounded-full transition-colors
                             ${sortBy === 'date'
-                              ? 'bg-orange-500/30 text-orange-100'
-                              : 'bg-orange-500/10 text-orange-200 hover:bg-orange-500/20'}`}
+                              ? 'bg-prism-primary/30 text-prism-text'
+                              : 'bg-prism-primary/10 text-prism-text-muted hover:bg-prism-primary/20'}`}
                   >
                     Date
                   </button>
@@ -204,14 +206,14 @@ const BookmarksDrawer = ({ isOpen, onClose }: BookmarksDrawerProps) => {
                     onClick={() => setSortBy('title')}
                     className={`text-xs px-2 py-1 rounded-full transition-colors
                             ${sortBy === 'title'
-                              ? 'bg-orange-500/30 text-orange-100'
-                              : 'bg-orange-500/10 text-orange-200 hover:bg-orange-500/20'}`}
+                              ? 'bg-prism-primary/30 text-prism-text'
+                              : 'bg-prism-primary/10 text-prism-text-muted hover:bg-prism-primary/20'}`}
                   >
                     Title
                   </button>
                   <button
                     onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                    className="text-xs p-1 rounded-full bg-orange-500/10 text-orange-300 hover:bg-orange-500/20 transition-colors"
+                    className="text-xs p-1 rounded-full bg-prism-primary/10 text-prism-primary hover:bg-prism-primary/20 transition-colors"
                   >
                     {sortOrder === 'asc' ? <SortAsc className="h-3 w-3" /> : <SortDesc className="h-3 w-3" />}
                   </button>
@@ -223,11 +225,11 @@ const BookmarksDrawer = ({ isOpen, onClose }: BookmarksDrawerProps) => {
             <div className="flex-1 overflow-y-auto p-4">
               {filteredBookmarks.length === 0 ? (
                 <div className="text-center py-10">
-                  <BookmarkPlus className="h-12 w-12 mx-auto text-orange-500/30 mb-4" />
+                  <BookmarkPlus className="h-12 w-12 mx-auto text-prism-primary/30 mb-4" />
                   {bookmarks.length === 0 ? (
-                    <p className="text-orange-300/70">You haven't saved any results yet.</p>
+                    <p className="text-prism-text-muted">You haven't saved any results yet.</p>
                   ) : (
-                    <p className="text-orange-300/70">No bookmarks match your current filters.</p>
+                    <p className="text-prism-text-muted">No bookmarks match your current filters.</p>
                   )}
                 </div>
               ) : (
@@ -239,16 +241,17 @@ const BookmarksDrawer = ({ isOpen, onClose }: BookmarksDrawerProps) => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                      className="p-4 rounded-lg border border-orange-500/20 bg-orange-500/5 hover:bg-orange-500/10 
-                              transition-all group relative overflow-hidden"
+                      transition={{ duration: 0.15 }}
+                      className="p-4 rounded-lg border border-prism-border bg-prism-primary/5 hover:bg-prism-primary/10 
+                              transition-all group relative overflow-hidden" 
+                      style={{ willChange: 'transform, opacity' }}
                     >
                       {/* Delete button */}
                       <button
                         onClick={() => handleDeleteBookmark(bookmark.id)}
                         disabled={isDeleting === bookmark.id}
                         className="absolute top-2 right-2 p-1.5 rounded-full opacity-0 group-hover:opacity-100 
-                                bg-orange-500/10 hover:bg-orange-500/30 text-orange-300 hover:text-orange-100
+                                bg-prism-primary/10 hover:bg-prism-primary/30 text-prism-primary hover:text-prism-text
                                 transition-all transform hover:scale-110"
                         aria-label="Delete bookmark"
                       >
@@ -260,10 +263,10 @@ const BookmarksDrawer = ({ isOpen, onClose }: BookmarksDrawerProps) => {
                       </button>
 
                       {/* Metadata */}
-                      <div className="flex items-center gap-2 mb-2 text-xs text-orange-300/70">
+                      <div className="flex items-center gap-2 mb-2 text-xs text-prism-text-muted">
                         {bookmark.source && (
                           <span className="flex items-center">
-                            <span className="w-2 h-2 rounded-full bg-orange-500 mr-1"></span>
+                            <span className="w-2 h-2 rounded-full bg-prism-primary mr-1"></span>
                             {bookmark.source}
                           </span>
                         )}
@@ -277,19 +280,19 @@ const BookmarksDrawer = ({ isOpen, onClose }: BookmarksDrawerProps) => {
                         
                         {bookmark.category && (
                           <span className="flex items-center ml-auto">
-                            <Tag className="h-3 w-3 mr-1" />
+                            <Tag className="h-3 w-3 mr-1" /> 
                             {bookmark.category}
                           </span>
                         )}
                       </div>
                       
                       {/* Title */}
-                      <h3 className="font-medium text-lg text-orange-100 mb-2 line-clamp-2">
+                      <h3 className="font-medium text-lg text-prism-text mb-2 line-clamp-2">
                         <a 
                           href={bookmark.url} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="hover:underline focus:outline-none focus:ring-2 focus:ring-orange-500/50 rounded-sm"
+                          className="hover:underline focus:outline-none focus:ring-2 focus:ring-prism-primary/50 rounded-sm"
                         >
                           {bookmark.title}
                         </a>
@@ -297,7 +300,7 @@ const BookmarksDrawer = ({ isOpen, onClose }: BookmarksDrawerProps) => {
                       
                       {/* Snippet */}
                       {bookmark.snippet && (
-                        <p className="text-sm text-orange-200/90 mb-3 line-clamp-2">
+                        <p className="text-sm text-prism-text-muted mb-3 line-clamp-2">
                           {bookmark.snippet}
                         </p>
                       )}
@@ -308,13 +311,13 @@ const BookmarksDrawer = ({ isOpen, onClose }: BookmarksDrawerProps) => {
                           href={bookmark.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs bg-orange-600/60 hover:bg-orange-500
+                          className="inline-flex items-center gap-1 text-xs bg-prism-primary/60 hover:bg-prism-primary
                                   text-white px-3 py-1.5 rounded-md transition-all hover:translate-y-[-1px]"
                         >
                           Visit <ArrowUpRight className="h-3 w-3 ml-1" />
                         </a>
                         
-                        <div className="text-xs text-orange-300/70 truncate max-w-[50%]">
+                        <div className="text-xs text-prism-text-muted truncate max-w-[50%]">
                           {new URL(bookmark.url).hostname.replace('www.', '')}
                         </div>
                       </div>
@@ -325,8 +328,8 @@ const BookmarksDrawer = ({ isOpen, onClose }: BookmarksDrawerProps) => {
             </div>
             
             {/* Footer */}
-            <div className="p-4 border-t border-orange-500/20 bg-orange-900/10 flex justify-between items-center">
-              <div className="text-sm text-orange-300/70">
+            <div className="p-4 border-t border-prism-border bg-prism-primary/10 flex justify-between items-center">
+              <div className="text-sm text-prism-text-muted">
                 {filteredBookmarks.length} {filteredBookmarks.length === 1 ? 'result' : 'results'} saved
               </div>
               
@@ -334,7 +337,7 @@ const BookmarksDrawer = ({ isOpen, onClose }: BookmarksDrawerProps) => {
                 <Button
                   variant="outline"
                   onClick={handleClearAllBookmarks}
-                  className="text-xs border-orange-500/30 text-orange-300 hover:bg-orange-500/20 hover:text-orange-100"
+                  className="text-xs border-prism-border text-prism-primary hover:bg-prism-primary/20 hover:text-prism-text"
                 >
                   <Trash2 className="h-3 w-3 mr-1" /> Clear All
                 </Button>

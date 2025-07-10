@@ -1,14 +1,14 @@
 /* Existing styles - keep them */
 .color-changing-text {
-  animation: color-change 15s infinite alternate;
+  animation: color-change 10s infinite alternate;
 }
 
 @keyframes color-change {
-  0% { color: rgba(255, 237, 213, 0.7); }
-  25% { color: rgba(254, 215, 170, 0.8); }
-  50% { color: rgba(253, 186, 116, 0.7); }
-  75% { color: rgba(254, 215, 170, 0.8); }
-  100% { color: rgba(255, 237, 213, 0.7); }
+  0% { color: rgba(0, 194, 168, 0.7); }
+  25% { color: rgba(29, 209, 184, 0.8); }
+  50% { color: rgba(155, 93, 229, 0.7); }
+  75% { color: rgba(180, 126, 232, 0.8); }
+  100% { color: rgba(0, 194, 168, 0.7); }
 }
 
 .animate-gradient-text {
@@ -93,15 +93,15 @@
 }
 
 .autocomplete-highlight {
-  color: #f97316;
+  color: #00C2A8;
   font-weight: 500;
 }
 
 .autocomplete-dropdown {
   max-height: 360px;
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(249, 115, 22, 0.3) rgba(26, 31, 44, 0.5);
+  scrollbar-width: thin; 
+  scrollbar-color: rgba(0, 194, 168, 0.3) rgba(26, 31, 44, 0.5);
 }
 
 .autocomplete-dropdown::-webkit-scrollbar {
@@ -114,9 +114,9 @@
 }
 
 .autocomplete-dropdown::-webkit-scrollbar-thumb {
-  background-color: rgba(249, 115, 22, 0.3);
+  background-color: rgba(0, 194, 168, 0.3);
   border-radius: 3px;
-  border: 1px solid rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(0, 194, 168, 0.1);
 }
 
 .autocomplete-item {
@@ -128,10 +128,10 @@
   position: absolute;
   left: 0;
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-50%); 
   width: 3px;
   height: 0;
-  background: linear-gradient(to bottom, #f97316, #fb923c);
+  background: linear-gradient(to bottom, #00C2A8, #1DD1B8);
   opacity: 0;
   transition: all 0.2s ease;
 }

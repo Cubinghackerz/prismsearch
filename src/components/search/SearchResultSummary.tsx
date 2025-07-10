@@ -38,7 +38,7 @@ const SearchResultSummary = ({ results, query, isVisible }: SearchResultSummaryP
   useEffect(() => {
     if (isVisible && results.length > 0 && query) {
       generateSummary();
-    }
+    } 
   }, [isVisible, results, query]);
 
   const generateSummary = async () => {
@@ -46,6 +46,11 @@ const SearchResultSummary = ({ results, query, isVisible }: SearchResultSummaryP
 
     setIsLoading(true);
     setError(null);
+
+    // Use a more efficient approach with Promise.race to handle timeouts
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Summary generation timed out')), 10000);
+    });
 
     try {
       // Prepare data for summarization
@@ -60,7 +65,7 @@ const SearchResultSummary = ({ results, query, isVisible }: SearchResultSummaryP
         }))
       };
 
-      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
+      const { data, error } = await Promise.race([supabase.functions.invoke('ai-search-assistant', {
         body: {
           query: `Generate a comprehensive summary for the search query: "${query}"`,
           summaryMode: true,
@@ -68,7 +73,7 @@ const SearchResultSummary = ({ results, query, isVisible }: SearchResultSummaryP
           model: 'gemini' // Use Gemini for summary generation
         }
       });
-
+      }, timeoutPromise]);
       if (error) throw error;
 
       // Parse the AI response to extract structured summary data
@@ -212,27 +217,27 @@ Related Topics: ${summary.relatedTopics.join(', ')}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.3 }}
+        exit={{ opacity: 0, y: -20 }} 
+        transition={{ duration: 0.25 }}
         className="mb-6"
       >
-        <Card className="border-purple-500/30 bg-gradient-to-br from-purple-900/20 to-purple-800/10 shadow-lg shadow-purple-500/10">
+        <Card className="border-prism-accent/30 bg-gradient-to-br from-prism-accent/20 to-prism-accent-dark/10 shadow-lg shadow-prism-accent/10">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-full bg-purple-500/20">
-                  <Sparkles className="h-5 w-5 text-purple-400" />
+                <div className="p-2 rounded-full bg-prism-accent/20">
+                  <Sparkles className="h-5 w-5 text-prism-accent-light" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg text-purple-100 flex items-center gap-2">
+                  <CardTitle className="text-lg text-prism-text flex items-center gap-2">
                     AI Search Summary
                     {summary && (
-                      <Badge variant="outline" className="border-purple-400/30 text-purple-300 text-xs">
+                      <Badge variant="outline" className="border-prism-accent/30 text-prism-accent-light text-xs">
                         {summary.confidence}% confidence
                       </Badge>
                     )}
                   </CardTitle>
-                  <p className="text-sm text-purple-300/70 mt-1">
+                  <p className="text-sm text-prism-text-muted mt-1">
                     Intelligent analysis of {results.length} search results
                   </p>
                 </div>
@@ -245,7 +250,7 @@ Related Topics: ${summary.relatedTopics.join(', ')}
                       variant="ghost"
                       size="sm"
                       onClick={handleCopySummary}
-                      className="text-purple-300 hover:text-purple-100 hover:bg-purple-500/20"
+                      className="text-prism-accent-light hover:text-prism-text hover:bg-prism-accent/20"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
@@ -253,7 +258,7 @@ Related Topics: ${summary.relatedTopics.join(', ')}
                       variant="ghost"
                       size="sm"
                       onClick={handleBookmarkSummary}
-                      className="text-purple-300 hover:text-purple-100 hover:bg-purple-500/20"
+                      className="text-prism-accent-light hover:text-prism-text hover:bg-prism-accent/20"
                     >
                       <BookmarkPlus className="h-4 w-4" />
                     </Button>
@@ -263,7 +268,7 @@ Related Topics: ${summary.relatedTopics.join(', ')}
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="text-purple-300 hover:text-purple-100 hover:bg-purple-500/20"
+                  className="text-prism-accent-light hover:text-prism-text hover:bg-prism-accent/20"
                 >
                   {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </Button>
@@ -283,15 +288,15 @@ Related Topics: ${summary.relatedTopics.join(', ')}
                 <CardContent className="pt-0">
                   {isLoading && (
                     <div className="flex items-center justify-center py-8">
-                      <div className="flex flex-col items-center gap-3">
-                        <LoadingAnimation color="purple" size="medium" variant="prism" />
-                        <p className="text-purple-300/70 text-sm">Analyzing search results...</p>
+                      <div className="flex flex-col items-center gap-3" style={{ willChange: 'transform' }}>
+                        <LoadingAnimation color="indigo" size="medium" variant="prism" />
+                        <p className="text-prism-accent-light/70 text-sm">Analyzing search results...</p>
                       </div>
                     </div>
                   )}
 
                   {error && (
-                    <div className="p-4 rounded-lg bg-red-900/20 border border-red-500/30 text-red-300">
+                    <div className="p-4 rounded-lg bg-red-900/20 border border-red-500/30 text-red-300" style={{ willChange: 'transform' }}>
                       <p className="text-sm">{error}</p>
                       <Button
                         variant="outline"
@@ -308,11 +313,11 @@ Related Topics: ${summary.relatedTopics.join(', ')}
                     <div className="space-y-6">
                       {/* Executive Summary */}
                       <div>
-                        <h3 className="text-sm font-semibold text-purple-200 mb-2 flex items-center gap-2">
+                        <h3 className="text-sm font-semibold text-prism-text mb-2 flex items-center gap-2">
                           <FileText className="h-4 w-4" />
                           Executive Summary
                         </h3>
-                        <p className="text-purple-100/90 leading-relaxed text-sm bg-purple-900/20 p-3 rounded-lg border border-purple-500/20">
+                        <p className="text-prism-text/90 leading-relaxed text-sm bg-prism-accent/10 p-3 rounded-lg border border-prism-accent/20">
                           {summary.executiveSummary}
                         </p>
                       </div>
@@ -320,7 +325,7 @@ Related Topics: ${summary.relatedTopics.join(', ')}
                       {/* Key Insights */}
                       {summary.keyInsights.length > 0 && (
                         <div>
-                          <h3 className="text-sm font-semibold text-purple-200 mb-2 flex items-center gap-2">
+                          <h3 className="text-sm font-semibold text-prism-text mb-2 flex items-center gap-2">
                             <TrendingUp className="h-4 w-4" />
                             Key Insights
                           </h3>
@@ -331,9 +336,9 @@ Related Topics: ${summary.relatedTopics.join(', ')}
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: index * 0.1 }}
-                                className="flex items-start gap-2 text-sm text-purple-100/80"
+                                className="flex items-start gap-2 text-sm text-prism-text/80"
                               >
-                                <span className="w-1.5 h-1.5 rounded-full bg-purple-400 mt-2 shrink-0" />
+                                <span className="w-1.5 h-1.5 rounded-full bg-prism-accent mt-2 shrink-0" />
                                 {insight}
                               </motion.li>
                             ))}
@@ -344,25 +349,25 @@ Related Topics: ${summary.relatedTopics.join(', ')}
                       {/* Top Sources */}
                       {summary.topSources.length > 0 && (
                         <div>
-                          <h3 className="text-sm font-semibold text-purple-200 mb-2">Top Sources</h3>
+                          <h3 className="text-sm font-semibold text-prism-text mb-2">Top Sources</h3>
                           <div className="space-y-2">
                             {summary.topSources.map((source, index) => (
                               <motion.div
                                 key={index}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                                className="flex items-center justify-between p-2 rounded-lg bg-purple-900/20 border border-purple-500/20 hover:bg-purple-900/30 transition-colors"
+                                transition={{ delay: index * 0.05 }}
+                                className="flex items-center justify-between p-2 rounded-lg bg-prism-accent/10 border border-prism-accent/20 hover:bg-prism-accent/20 transition-colors"
                               >
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-sm text-purple-100 truncate">{source.title}</p>
-                                  <p className="text-xs text-purple-300/70 truncate">{new URL(source.url).hostname}</p>
+                                  <p className="text-sm text-prism-text truncate">{source.title}</p>
+                                  <p className="text-xs text-prism-text-muted truncate">{new URL(source.url).hostname}</p>
                                 </div>
                                 <a
                                   href={source.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="ml-2 p-1 rounded hover:bg-purple-500/20 text-purple-300 hover:text-purple-100 transition-colors"
+                                  className="ml-2 p-1 rounded hover:bg-prism-accent/20 text-prism-accent-light hover:text-prism-text transition-colors"
                                 >
                                   <Share2 className="h-3 w-3" />
                                 </a>
@@ -375,13 +380,13 @@ Related Topics: ${summary.relatedTopics.join(', ')}
                       {/* Related Topics */}
                       {summary.relatedTopics.length > 0 && (
                         <div>
-                          <h3 className="text-sm font-semibold text-purple-200 mb-2">Related Topics</h3>
+                          <h3 className="text-sm font-semibold text-prism-text mb-2">Related Topics</h3>
                           <div className="flex flex-wrap gap-2">
                             {summary.relatedTopics.map((topic, index) => (
                               <Badge
                                 key={index}
                                 variant="outline"
-                                className="border-purple-400/30 text-purple-300 hover:bg-purple-500/20 cursor-pointer transition-colors text-xs"
+                                className="border-prism-accent/30 text-prism-accent-light hover:bg-prism-accent/20 cursor-pointer transition-colors text-xs"
                               >
                                 {topic}
                               </Badge>
@@ -391,8 +396,8 @@ Related Topics: ${summary.relatedTopics.join(', ')}
                       )}
 
                       {/* Metadata */}
-                      <div className="flex items-center justify-between pt-3 border-t border-purple-500/20">
-                        <div className="flex items-center gap-4 text-xs text-purple-300/70">
+                      <div className="flex items-center justify-between pt-3 border-t border-prism-border">
+                        <div className="flex items-center gap-4 text-xs text-prism-text-muted">
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             Generated {new Date(summary.lastUpdated).toLocaleTimeString()}
@@ -403,7 +408,7 @@ Related Topics: ${summary.relatedTopics.join(', ')}
                           variant="ghost"
                           size="sm"
                           onClick={generateSummary}
-                          className="text-purple-300 hover:text-purple-100 hover:bg-purple-500/20 text-xs"
+                          className="text-prism-accent-light hover:text-prism-text hover:bg-prism-accent/20 text-xs"
                         >
                           Regenerate
                         </Button>

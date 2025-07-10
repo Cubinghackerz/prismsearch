@@ -61,18 +61,18 @@ const AutocompleteDropdown = ({
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.15 }}
+      transition={{ duration: 0.12 }}
       className="absolute left-0 right-0 mt-2 z-50 bg-[#1A1F2C]/95 backdrop-blur-lg 
-                rounded-xl border border-orange-500/30 shadow-xl 
-                shadow-orange-900/30 py-2 autocomplete-dropdown"
+                rounded-xl border border-prism-border shadow-xl 
+                shadow-prism-primary/30 py-2 autocomplete-dropdown"
       role="listbox"
       aria-activedescendant={highlightedIndex >= 0 ? `suggestion-${highlightedIndex}` : undefined}
     >
-      <ul className="divide-y divide-orange-500/10">
+      <ul className="divide-y divide-prism-border/30">
         {/* Trending suggestions */}
         {trendingSuggestions.length > 0 && (
           <li className="pt-2 pb-1">
-            <div className="px-3 py-1.5 text-xs text-orange-300/80 font-medium flex items-center">
+            <div className="px-3 py-1.5 text-xs text-prism-primary/80 font-medium flex items-center">
               <TrendingUp className="h-3.5 w-3.5 mr-1.5" />
               Trending Searches
             </div>
@@ -95,7 +95,7 @@ const AutocompleteDropdown = ({
         {/* Popular suggestions */}
         {popularSuggestions.length > 0 && (
           <li className="pt-2 pb-1">
-            <div className="px-3 py-1.5 text-xs text-orange-300/80 font-medium flex items-center">
+            <div className="px-3 py-1.5 text-xs text-prism-primary/80 font-medium flex items-center">
               <Star className="h-3.5 w-3.5 mr-1.5" />
               Popular Searches
             </div>
@@ -118,7 +118,7 @@ const AutocompleteDropdown = ({
         {/* Other suggestions */}
         {otherSuggestions.length > 0 && (
           <li className="pt-2">
-            <div className="px-3 py-1.5 text-xs text-orange-300/80 font-medium flex items-center">
+            <div className="px-3 py-1.5 text-xs text-prism-primary/80 font-medium flex items-center">
               <Users className="h-3.5 w-3.5 mr-1.5" />
               Suggested Searches
             </div>
@@ -143,15 +143,15 @@ const AutocompleteDropdown = ({
           <li className="pt-2 mt-1">
             <motion.div
               onClick={() => onSelectSuggestion(inputValue)}
-              className="px-4 py-2 cursor-pointer text-gray-200 hover:bg-orange-500/30
+              className="px-4 py-2 cursor-pointer text-prism-text hover:bg-prism-primary/30
                       transition-all duration-300 flex items-center justify-between"
-              whileHover={{ backgroundColor: 'rgba(249, 115, 22, 0.2)' }}
+              whileHover={{ backgroundColor: 'rgba(0, 194, 168, 0.2)' }}
             >
               <div className="flex items-center">
-                <BookmarkPlus className="h-4 w-4 mr-2 text-orange-400" />
+                <BookmarkPlus className="h-4 w-4 mr-2 text-prism-primary" />
                 <span>Search for "{inputValue}"</span>
               </div>
-              <div className="text-xs px-2 py-0.5 rounded bg-orange-500/20 text-orange-300">Enter</div>
+              <div className="text-xs px-2 py-0.5 rounded bg-prism-primary/20 text-prism-primary-light">Enter</div>
             </motion.div>
           </li>
         )}
@@ -181,8 +181,8 @@ const SuggestionItem = ({
       id={`suggestion-${index}`}
       onClick={() => onSelect(suggestion.text)}
       className={`px-4 py-2 cursor-pointer text-gray-200 hover:bg-orange-500/30
-                transition-all duration-300 flex items-center autocomplete-item
-                ${highlightedIndex === index ? 'bg-orange-500/30 border-l-2 border-orange-400' : ''}`}
+                transition-all duration-300 flex items-center autocomplete-item 
+                ${highlightedIndex === index ? 'bg-prism-primary/30 border-l-2 border-prism-primary' : ''}`}
       role="option"
       aria-selected={highlightedIndex === index}
       whileHover={{ x: 5 }}
@@ -194,7 +194,7 @@ const SuggestionItem = ({
           <div 
             className="w-1 h-6 mr-2 rounded-full" 
             style={{ 
-              backgroundColor: `rgba(255, 158, 44, ${Math.min(0.4 + suggestion.score * 0.6, 1)})`
+              backgroundColor: `rgba(0, 194, 168, ${Math.min(0.4 + suggestion.score * 0.6, 1)})`
             }}
           />
         )}
@@ -208,13 +208,13 @@ const SuggestionItem = ({
           <motion.div 
             className="w-8 h-1.5 bg-orange-900/30 rounded-full overflow-hidden"
             whileHover={{ width: '12px', height: '12px' }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.2 }}
           >
             <motion.div 
-              className="h-full rounded-full bg-gradient-to-r from-orange-300 to-orange-500"
+              className="h-full rounded-full bg-gradient-to-r from-prism-primary-light to-prism-primary"
               initial={{ width: 0 }}
               animate={{ width: `${Math.min(100, suggestion.score * 100)}%` }}
-              transition={{ duration: 0.5, delay: index * 0.05 }}
+              transition={{ duration: 0.3, delay: index * 0.03 }}
             ></motion.div>
           </motion.div>
         </div>
