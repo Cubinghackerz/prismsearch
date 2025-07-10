@@ -48,7 +48,7 @@ const SearchResultSummary = ({ results, query, isVisible }: SearchResultSummaryP
     setError(null);
 
     // Use a more efficient approach with Promise.race to handle timeouts
-    const timeoutPromise = new Promise((_, reject) => {
+    const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error('Summary generation timed out')), 30000);
     });
 

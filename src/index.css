@@ -4,6 +4,39 @@
 
 @layer base {
   :root {
+    /* Light mode colors */
+    --background: 210 40% 98%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 183 100% 38%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 262 76% 60%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 183 100% 38%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
     --background: 210 40% 98%;
     --foreground: 222.2 84% 4.9%;
 
@@ -44,7 +77,8 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
-  .dark {
+  /* Dark mode colors */
+  [data-theme="dark"] {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
@@ -54,7 +88,7 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 217.2 91.2% 59.8%;
+    --primary: 183 100% 38%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -71,7 +105,7 @@
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --ring: 183 100% 38%;
 
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
@@ -101,13 +135,24 @@
 
 /* NeoPrism UI Theme */
 .prism-theme {
-  --prism-bg: #0D0D0D;
-  --prism-surface: #1A1A1A;
-  --prism-text: #F2F2F2;
-  --prism-primary: #00C2A8;
-  --prism-accent: #9B5DE5;
-  --prism-border: #2E2E2E;
-  --prism-shadow: rgba(0, 194, 168, 0.1);
+  --prism-bg: var(--prism-bg-color, #0D0D0D);
+  --prism-surface: var(--prism-surface-color, #1A1A1A);
+  --prism-text: var(--prism-text-color, #F2F2F2);
+  --prism-primary: var(--prism-primary-color, #00C2A8);
+  --prism-accent: var(--prism-accent-color, #9B5DE5);
+  --prism-border: var(--prism-border-color, #2E2E2E);
+  --prism-shadow: var(--prism-shadow-color, rgba(0, 194, 168, 0.1));
+}
+
+/* Light theme overrides */
+.light-theme {
+  --prism-bg-color: #F8FAFC;
+  --prism-surface-color: #FFFFFF;
+  --prism-text-color: #1E293B;
+  --prism-primary-color: #00C2A8;
+  --prism-accent-color: #9B5DE5;
+  --prism-border-color: #E2E8F0;
+  --prism-shadow-color: rgba(0, 194, 168, 0.1);
 }
 
 /* Color changing animation - faster 300ms timing */
@@ -200,6 +245,11 @@
 
 .markdown-content .prose img {
   @apply max-w-full rounded-md my-3;
+}
+
+/* Theme toggle transition */
+.theme-transition {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .search-gradient {

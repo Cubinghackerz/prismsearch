@@ -1,16 +1,25 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Check } from 'lucide-react';
+import { Check, Sun, Moon } from 'lucide-react';
 
 interface PricingToggleProps {
   isYearly: boolean;
   onToggle: () => void;
+  showThemeToggle?: boolean;
+  isDarkTheme?: boolean;
+  onThemeToggle?: () => void;
 }
 
-const PricingToggle: React.FC<PricingToggleProps> = ({ isYearly, onToggle }) => {
+const PricingToggle: React.FC<PricingToggleProps> = ({ 
+  isYearly, 
+  onToggle, 
+  showThemeToggle = false,
+  isDarkTheme = true,
+  onThemeToggle
+}) => {
   return (
-    <div className="flex flex-col items-center justify-center mb-10">
-      <div className="flex items-center justify-center space-x-4 bg-prism-surface/50 p-1 rounded-lg border border-prism-border">
+    <div className="flex flex-col items-center justify-center mb-10 relative">
+      <div className="flex items-center justify-center space-x-4 bg-prism-surface/50 p-1 rounded-lg border border-prism-border relative">
         <button
           onClick={!isYearly ? onToggle : undefined}
           className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
@@ -40,6 +49,21 @@ const PricingToggle: React.FC<PricingToggleProps> = ({ isYearly, onToggle }) => 
             <span>25% off</span>
           </motion.div>
         </button>
+        
+        {/* Theme toggle button */}
+        {showThemeToggle && onThemeToggle && (
+          <button
+            onClick={onThemeToggle}
+            className="absolute -right-12 p-2 rounded-full bg-prism-surface/70 border border-prism-border hover:bg-prism-primary/20 transition-colors"
+            aria-label={isDarkTheme ? "Switch to light theme" : "Switch to dark theme"}
+          >
+            {isDarkTheme ? (
+              <Sun className="h-4 w-4 text-prism-text-muted" />
+            ) : (
+              <Moon className="h-4 w-4 text-prism-text-muted" />
+            )}
+          </button>
+        )}
       </div>
       
       <p className="mt-4 text-sm text-prism-text-muted">
