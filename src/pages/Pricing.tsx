@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 import { Info } from 'lucide-react';
 import ParticleBackground from '../components/ParticleBackground';
+
 const Pricing: React.FC = () => {
   const formRef = useRef<HTMLDivElement>(null);
   const scrollToForm = () => {
@@ -81,8 +82,8 @@ const Pricing: React.FC = () => {
     buttonText: "Contact Sales",
     buttonAction: handleContactSales
   }];
-  return <div className="min-h-screen flex flex-col bg-[#1A1F2C]">
-   return <div className="min-h-screen flex flex-col bg-prism-bg">
+  return (
+    <div className="min-h-screen flex flex-col bg-prism-bg">
       <ParticleBackground color="#00C2A8" />
       
       {/* Header */}
@@ -157,10 +158,8 @@ const Pricing: React.FC = () => {
         </section>
 
         {/* Features Comparison */}
-        <section className="py-12 md:py-16 bg-prism-dark-bg-800">
         <section className="py-12 md:py-16 bg-prism-surface">
           <div className="container mx-auto px-4">
-            <h2 className="text-2xl md:text-3xl font-bold text-center mb-12 font-montserrat bg-clip-text text-transparent bg-gradient-to-r from-prism-blue-light via-prism-teal-primary to-prism-purple-primary">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-12 font-montserrat bg-clip-text text-transparent bg-gradient-to-r from-prism-primary-light via-prism-primary to-prism-accent">
               Compare Plan Features
             </h2>
@@ -348,6 +347,8 @@ const Pricing: React.FC = () => {
       </main>
 
       <Footer />
-    </div>;
+    </div>
+  );
 };
+
 export default Pricing;
