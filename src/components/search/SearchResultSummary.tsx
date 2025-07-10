@@ -65,7 +65,7 @@ const SearchResultSummary = ({ results, query, isVisible }: SearchResultSummaryP
         }))
       };
 
-      const { data, error } = await Promise.race([
+      const response = await Promise.race([
         supabase.functions.invoke('ai-search-assistant', {
           body: {
             query: `Generate a comprehensive summary for the search query: "${query}"`,
@@ -75,12 +75,12 @@ const SearchResultSummary = ({ results, query, isVisible }: SearchResultSummaryP
           }
         }),
         timeoutPromise
-      ]);
+      ]) as { data?: any; error?: any };
       
-      if (error) throw error;
+      if (response.error) throw response.error;
 
       // Parse the AI response to extract structured summary data
-      const summaryResponse = data.response;
+      const summaryResponse = response.data?.response || '';
       const parsedSummary = parseSummaryResponse(summaryResponse, results);
       
       setSummary(parsedSummary);
