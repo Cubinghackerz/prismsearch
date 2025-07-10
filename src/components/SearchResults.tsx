@@ -120,7 +120,7 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
         className="flex items-center justify-between mb-4"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.2 }}
       >
         <div className="flex items-center gap-2">
           <LayoutGrid className="h-5 w-5 text-primary" />
@@ -142,7 +142,7 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
         className="bg-card/50 backdrop-blur-sm rounded-lg p-3 mb-4 border border-border"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2, delay: 0.1 }}
+        transition={{ duration: 0.15, delay: 0.05 }}
       >
         <div className="flex flex-wrap items-center gap-3 justify-between">
           <div className="flex items-center gap-2">
@@ -155,7 +155,7 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
                   key={category}
                   onClick={() => toggleFilter(category)}
                   className={`
-                    text-xs px-2 py-1 rounded-full border transition-colors duration-200
+                    text-xs px-2 py-1 rounded-full border transition-colors duration-150
                     ${selectedFilters.includes(category)
                       ? 'bg-primary/20 border-primary/40 text-primary'
                       : 'border-border text-muted-foreground hover:bg-primary/5'}
@@ -172,7 +172,7 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
             <div className="flex items-center bg-muted/50 rounded-md overflow-hidden border border-border">
               <button
                 onClick={() => handleViewModeChange('grid')}
-                className={`text-xs px-3 py-1.5 flex items-center gap-1 transition-colors duration-200
+                className={`text-xs px-3 py-1.5 flex items-center gap-1 transition-colors duration-150
                   ${viewMode === 'grid' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:bg-primary/5'}`}
               >
                 <LayoutGrid className="h-3 w-3" />
@@ -180,7 +180,7 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
               </button>
               <button
                 onClick={() => handleViewModeChange('list')}
-                className={`text-xs px-3 py-1.5 flex items-center gap-1 transition-colors duration-200
+                className={`text-xs px-3 py-1.5 flex items-center gap-1 transition-colors duration-150
                   ${viewMode === 'list' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:bg-primary/5'}`}
               >
                 <List className="h-3 w-3" />
@@ -201,7 +201,7 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
             </div>
             
             <button 
-              className="text-xs flex items-center gap-1 text-primary hover:text-primary/80 bg-card px-2 py-1 rounded-md border border-border hover:bg-primary/5 transition-colors duration-200"
+              className="text-xs flex items-center gap-1 text-primary hover:text-primary/80 bg-card px-2 py-1 rounded-md border border-border hover:bg-primary/5 transition-colors duration-150"
               onClick={handleRefresh}
             >
               <RefreshCcw className="h-3 w-3" />
@@ -241,11 +241,11 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
                 scale: 1,
                 height: isCollapsed ? 'auto' : '100%'
               }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.15 }}
               className={viewMode === 'list' ? 'w-full' : 'flex flex-col'}
             >
               <div 
-                className={`flex justify-between items-center px-3 py-2 rounded-t-lg ${style.bg} cursor-pointer transition-colors duration-200`}
+                className={`flex justify-between items-center px-3 py-2 rounded-t-lg ${style.bg} cursor-pointer transition-colors duration-150`}
                 onClick={() => toggleEngine(engine)}
               >
                 <h3 className="text-white font-medium text-sm font-montserrat">{engine}</h3>
@@ -266,7 +266,7 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: 0.15 }}
                     className="flex-1"
                   >
                     <SearchEngineColumn 
