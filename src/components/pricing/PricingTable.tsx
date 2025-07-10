@@ -46,7 +46,6 @@ export const PricingTable: React.FC<PricingTableProps> = ({
     >
       <div className="min-w-full border border-prism-border rounded-lg overflow-hidden backdrop-blur-md bg-prism-surface/50">
         <table className="min-w-full divide-y divide-prism-blue-primary/20">
-        <table className="min-w-full divide-y divide-prism-border">
           <thead>
             <tr className="bg-prism-primary/20">
               <th className="px-6 py-5 text-left text-sm font-bold text-prism-text font-montserrat">
