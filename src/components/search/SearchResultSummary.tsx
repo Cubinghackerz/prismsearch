@@ -65,15 +65,18 @@ const SearchResultSummary = ({ results, query, isVisible }: SearchResultSummaryP
         }))
       };
 
-      const { data, error } = await Promise.race([supabase.functions.invoke('ai-search-assistant', {
-        body: {
-          query: `Generate a comprehensive summary for the search query: "${query}"`,
-          summaryMode: true,
-          searchResults: summaryData,
-          model: 'gemini' // Use Gemini for summary generation
-        }
-      });
-      }, timeoutPromise]);
+      const { data, error } = await Promise.race([
+        supabase.functions.invoke('ai-search-assistant', {
+          body: {
+            query: `Generate a comprehensive summary for the search query: "${query}"`,
+            summaryMode: true,
+            searchResults: summaryData,
+            model: 'gemini' // Use Gemini for summary generation
+          }
+        }),
+        timeoutPromise
+      ]);
+      
       if (error) throw error;
 
       // Parse the AI response to extract structured summary data
