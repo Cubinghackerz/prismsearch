@@ -95,10 +95,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const assistantMessage: ChatMessage = {
         id: uuidv4(),
         content: responseText,
-        formattedContent: responseText
-          .replace(/\*/g, '•')
-          .replace(/• +/g, '• ')
-          .replace(/•• +/g, '•• '),
+        formattedContent: responseText.replace(/\* /g, '• '),
         isUser: false,
         timestamp: new Date(),
         parentMessageId: parentMessageId,
@@ -171,10 +168,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const assistantMessage: ChatMessage = {
         id: `msg-${Date.now() + 1}`,
         content: responseText,
-        formattedContent: responseText
-          .replace(/\*/g, '•')
-          .replace(/• +/g, '• ')
-          .replace(/•• +/g, '•• '),
+        formattedContent: responseText,
         isUser: false,
         timestamp: new Date(),
       };

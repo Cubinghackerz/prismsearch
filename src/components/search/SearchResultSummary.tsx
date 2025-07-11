@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import LoadingAnimation from '../LoadingAnimation';
-import ReactMarkdown from 'react-markdown';
 
 interface SearchResultSummaryProps {
   results: SearchResult[];
@@ -50,7 +49,7 @@ const SearchResultSummary = ({ results, query, isVisible }: SearchResultSummaryP
 
     // Use a more efficient approach with Promise.race to handle timeouts
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Summary generation timed out')), 30000);
+      setTimeout(() => reject(new Error('Summary generation timed out')), 8000);
     });
 
     try {
@@ -321,13 +320,9 @@ Related Topics: ${summary.relatedTopics.join(', ')}
                           <FileText className="h-4 w-4" />
                           Executive Summary
                         </h3>
-                        <div className="text-prism-text/90 leading-relaxed text-sm bg-prism-accent/10 p-3 rounded-lg border border-prism-accent/20">
-                          <ReactMarkdown components={{
-                            p: ({ node, ...props }) => <p className="mb-2" {...props} />,
-                          }}>
-                            {summary.executiveSummary.replace(/\*/g, '•')}
-                          </ReactMarkdown>
-                        </div>
+                        <p className="text-prism-text/90 leading-relaxed text-sm bg-prism-accent/10 p-3 rounded-lg border border-prism-accent/20">
+                          {summary.executiveSummary}
+                        </p>
                       </div>
 
                       {/* Key Insights */}
@@ -347,11 +342,7 @@ Related Topics: ${summary.relatedTopics.join(', ')}
                                 className="flex items-start gap-2 text-sm text-prism-text/80"
                               >
                                 <span className="w-1.5 h-1.5 rounded-full bg-prism-accent mt-2 shrink-0" />
-                                <ReactMarkdown components={{
-                                  p: ({ node, ...props }) => <span {...props} />,
-                                }}>
-                                  {insight.replace(/\*/g, '•')}
-                                </ReactMarkdown>
+                                {insight}
                               </motion.li>
                             ))}
                           </ul>

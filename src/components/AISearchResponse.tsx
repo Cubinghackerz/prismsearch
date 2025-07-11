@@ -88,23 +88,23 @@ const AISearchResponse = ({
                 <LoadingAnimation color="orange" size="small" variant="prism" />
               </div>
             </div> : <div>
-            <div className="text-orange-100 markdown-content">
-              <ReactMarkdown components={{
-                strong: ({ node, ...props }) => <span className="font-bold" {...props} />,
-                em: ({ node, ...props }) => <span className="italic" {...props} />,
-                h1: ({ node, ...props }) => <h1 className="text-xl font-bold mt-4 mb-2" {...props} />,
-                h2: ({ node, ...props }) => <h2 className="text-lg font-bold mt-3 mb-2" {...props} />,
-                h3: ({ node, ...props }) => <h3 className="text-md font-bold mt-3 mb-1" {...props} />,
-                p: ({ node, ...props }) => <p className="mb-3" {...props} />,
-                ul: ({ node, ...props }) => <ul className="list-disc pl-5 mb-3 space-y-2" {...props} />,
-                ol: ({ node, ...props }) => <ol className="list-decimal pl-5 mb-3" {...props} />,
-                li: ({ node, ...props }) => <li className="ml-2" {...props} />,
-                a: ({ node, ...props }) => <a className="text-prism-primary-light hover:underline" {...props} />,
-                code: ({ node, ...props }) => <code className="bg-prism-surface/40 px-1 py-0.5 rounded text-sm" {...props} />
-              }}>
-                {aiResponse.replace(/\*/g, '•')}
-              </ReactMarkdown>
-            </div>
+              <div className="text-orange-100 markdown-content">
+                <ReactMarkdown components={{
+                  strong: ({ node, ...props }) => <span className="font-bold" {...props} />,
+                  em: ({ node, ...props }) => <span className="italic" {...props} />,
+                  h1: ({ node, ...props }) => <h1 className="text-xl font-bold mt-4 mb-2" {...props} />,
+                  h2: ({ node, ...props }) => <h2 className="text-lg font-bold mt-3 mb-2" {...props} />,
+                  h3: ({ node, ...props }) => <h3 className="text-md font-bold mt-3 mb-1" {...props} />,
+                  p: ({ node, ...props }) => <p className="mb-3" {...props} />,
+                  ul: ({ node, ...props }) => <ul className="list-disc pl-5 mb-3 space-y-2" {...props} />,
+                  ol: ({ node, ...props }) => <ol className="list-decimal pl-5 mb-3" {...props} />,
+                  li: ({ node, ...props }) => <li className="ml-2" {...props} />,
+                  a: ({ node, ...props }) => <a className="text-prism-primary-light hover:underline" {...props} />,
+                  code: ({ node, ...props }) => <code className="bg-prism-surface/40 px-1 py-0.5 rounded text-sm" {...props} />
+                }}>
+                  {aiResponse}
+                </ReactMarkdown>
+              </div>
               
               {/* Chat button - Using Link component from react-router-dom */}
               {showChatButton && <div className="mt-3">

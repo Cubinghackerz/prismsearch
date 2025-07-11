@@ -1,19 +1,13 @@
 
 class TextFormattingService {
   public formatMessage(rawText: string): string {
-    // Replace asterisks with bullet points
-    return rawText
-      .replace(/\*/g, '•')
-      .replace(/• +/g, '• ')
-      .replace(/•• +/g, '•• ');
+    // Return raw text without HTML formatting
+    return rawText;
   }
 
   public formatToPlainText(rawText: string): string {
-    // For user messages, just return the raw text with asterisks replaced
-    return rawText
-      .replace(/\*/g, '•')
-      .replace(/• +/g, '• ')
-      .replace(/•• +/g, '•• ');
+    // For user messages, just return the raw text
+    return rawText;
   }
 }
 

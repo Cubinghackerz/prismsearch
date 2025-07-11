@@ -104,14 +104,12 @@ export const searchAcrossEngines = async (
     setTimeout(() => {
       const encodedQuery = encodeURIComponent(query);
       
-      // Create more realistic mock results with valid domains
-      
       // Create more detailed and realistic mock results
       const mockResults: SearchResult[] = [];
       
       // Function to replace asterisks with bullet points in snippets
       const formatSnippet = (text: string) => {
-        return text.replace(/\*/g, '•').replace(/• /g, '• ');
+        return text.replace(/\* /g, '• ');
       };
       
       // Google mock results
@@ -119,7 +117,7 @@ export const searchAcrossEngines = async (
         {
           id: generateId(),
           title: `${query} - Comprehensive Guide (2025)`,
-          url: `https://www.wikipedia.org/wiki/${encodedQuery}`,
+          url: `https://www.example.com/guides/${encodedQuery}`,
           snippet: formatSnippet(`A detailed guide about ${query} with the latest information and expert insights. Learn about key concepts, practical applications, and best practices.`),
           source: 'Google',
           relevance: 0.95,
@@ -129,7 +127,7 @@ export const searchAcrossEngines = async (
         {
           id: generateId(),
           title: `Understanding ${query}: Complete Tutorial`,
-          url: `https://www.w3schools.com/tutorials/${encodedQuery}`,
+          url: `https://www.tutorialsite.com/${encodedQuery}`,
           snippet: `This comprehensive tutorial explains ${query} in simple terms with practical examples and code snippets that you can follow along with.`,
           source: 'Google',
           relevance: 0.92,
@@ -139,7 +137,7 @@ export const searchAcrossEngines = async (
         {
           id: generateId(),
           title: `${query} Research Paper - Journal of Technology`,
-          url: `https://www.researchgate.net/publication/${encodedQuery}`,
+          url: `https://journal.tech/papers/${encodedQuery}`,
           snippet: `Recent academic research on ${query} showing significant advancements in the field. The paper discusses methodology, findings, and implications.`,
           source: 'Google',
           relevance: 0.88,
@@ -153,7 +151,7 @@ export const searchAcrossEngines = async (
         {
           id: generateId(),
           title: `${query} - Latest News and Updates (2025)`,
-          url: `https://www.bbc.com/news/technology/${encodedQuery}`,
+          url: `https://www.technews.com/topics/${encodedQuery}`,
           snippet: `Stay updated with the latest developments in ${query}. Our news coverage includes recent breakthroughs, industry trends, and expert opinions.`,
           source: 'Bing',
           relevance: 0.91,
@@ -163,7 +161,7 @@ export const searchAcrossEngines = async (
         {
           id: generateId(),
           title: `Top 10 ${query} Tools for Professionals`,
-          url: `https://www.techradar.com/best/${encodedQuery}-tools`,
+          url: `https://www.toolreviews.com/${encodedQuery}-tools`,
           snippet: `Discover the best tools for working with ${query}. This curated list includes both free and premium options with detailed reviews and comparisons.`,
           source: 'Bing',
           relevance: 0.87,
@@ -177,7 +175,7 @@ export const searchAcrossEngines = async (
         {
           id: generateId(),
           title: `${query} Explained Simply - No Jargon Guide`,
-          url: `https://www.howtogeek.com/guides/${encodedQuery}`,
+          url: `https://www.simpleexplained.com/${encodedQuery}`,
           snippet: `An easy-to-understand explanation of ${query} without unnecessary technical jargon. Perfect for beginners and non-technical readers.`,
           source: 'DuckDuckGo',
           relevance: 0.89,
@@ -187,7 +185,7 @@ export const searchAcrossEngines = async (
         {
           id: generateId(),
           title: `${query} Community Forum - Discussions`,
-          url: `https://stackoverflow.com/questions/tagged/${encodedQuery}`,
+          url: `https://community.tech/forum/${encodedQuery}`,
           snippet: `Join the conversation about ${query} with experts and enthusiasts. Find solutions to common problems and share your experiences.`,
           source: 'DuckDuckGo',
           relevance: 0.84,
@@ -201,7 +199,7 @@ export const searchAcrossEngines = async (
         {
           id: generateId(),
           title: `${query} - Privacy-Focused Implementation Guide`,
-          url: `https://www.privacytools.io/guides/${encodedQuery}`,
+          url: `https://www.privacytech.com/guides/${encodedQuery}`,
           snippet: `Learn how to implement ${query} while maintaining privacy and security. This guide covers best practices, potential pitfalls, and ethical considerations.`,
           source: 'Brave',
           relevance: 0.86,
@@ -211,7 +209,7 @@ export const searchAcrossEngines = async (
         {
           id: generateId(),
           title: `Open Source ${query} Projects Worth Following`,
-          url: `https://github.com/topics/${encodedQuery}`,
+          url: `https://www.opensource.dev/projects/${encodedQuery}`,
           snippet: `Discover the most promising open source projects related to ${query}. Includes project descriptions, activity metrics, and contribution opportunities.`,
           source: 'Brave',
           relevance: 0.83,
@@ -225,7 +223,7 @@ export const searchAcrossEngines = async (
         {
           id: generateId(),
           title: `${query} - AI-Enhanced Analysis and Insights`,
-          url: `https://www.kaggle.com/datasets/search?q=${encodedQuery}`,
+          url: `https://www.aiinsights.com/analysis/${encodedQuery}`,
           snippet: `Our AI-powered analysis provides deeper insights into ${query}, identifying patterns and connections that might be missed by traditional research methods.`,
           source: 'You.com',
           relevance: 0.85,
@@ -235,7 +233,7 @@ export const searchAcrossEngines = async (
         {
           id: generateId(),
           title: `How ${query} is Transforming Industries in 2025`,
-          url: `https://hbr.org/search?term=${encodedQuery}`,
+          url: `https://www.industrytrends.com/transformation/${encodedQuery}`,
           snippet: `Explore how ${query} is disrupting traditional business models and creating new opportunities across multiple sectors. Includes case studies and expert interviews.`,
           source: 'You.com',
           relevance: 0.82,
@@ -245,7 +243,7 @@ export const searchAcrossEngines = async (
       );
       
       resolve(mockResults);
-    }, 1000); // Further reduced latency for better performance
+    }, 1500); // Reduced latency from 2500ms to 1500ms for better performance
   });
 };
 
