@@ -21,16 +21,16 @@ const SearchTransitionAnimation = ({ query, onComplete }: SearchTransitionAnimat
   // Enhanced animation progression with better timing
   useEffect(() => {
     const stageTimers = [
-      setTimeout(() => setStage(1), 300),  // Start expanding - faster
-      setTimeout(() => setStage(2), 700),  // Show particles - faster
-      setTimeout(() => setStage(3), 1800), // Begin fade out - faster
-      setTimeout(() => onComplete(), 2100) // Trigger completion callback - faster
+      setTimeout(() => setStage(1), 200),  // Start expanding - even faster
+      setTimeout(() => setStage(2), 500),  // Show particles - even faster
+      setTimeout(() => setStage(3), 1200), // Begin fade out - even faster
+      setTimeout(() => onComplete(), 1500) // Trigger completion callback - even faster
     ];
     
     // Rotate through search tips
     const tipInterval = setInterval(() => {
       setCurrentTip(prev => (prev + 1) % searchTips.length);
-    }, 900); // Faster rotation
+    }, 600); // Even faster rotation
     
     return () => {
       stageTimers.forEach(timer => clearTimeout(timer));

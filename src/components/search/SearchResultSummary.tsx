@@ -49,7 +49,7 @@ const SearchResultSummary = ({ results, query, isVisible }: SearchResultSummaryP
 
     // Use a more efficient approach with Promise.race to handle timeouts
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Summary generation timed out')), 10000);
+      setTimeout(() => reject(new Error('Summary generation timed out')), 8000);
     });
 
     try {
@@ -68,7 +68,7 @@ const SearchResultSummary = ({ results, query, isVisible }: SearchResultSummaryP
       const { data, error } = await Promise.race([
         supabase.functions.invoke('ai-search-assistant', {
           body: {
-            query: `Generate a comprehensive summary for the search query: "${query}"`,
+            query: `Summarize search results for: "${query}"`,
             summaryMode: true,
             searchResults: summaryData,
             model: 'gemini' // Use Gemini for summary generation

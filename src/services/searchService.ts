@@ -104,7 +104,171 @@ export const searchAcrossEngines = async (
     setTimeout(() => {
       const encodedQuery = encodeURIComponent(query);
       
-      const mockResults: SearchResult[] = [
+      // Create more detailed and realistic mock results
+      const mockResults: SearchResult[] = [];
+      
+      // Google mock results
+      mockResults.push(
+        {
+          id: generateId(),
+          title: `${query} - Comprehensive Guide (2025)`,
+          url: `https://www.example.com/guides/${encodedQuery}`,
+          snippet: `A detailed guide about ${query} with the latest information and expert insights. Learn about key concepts, practical applications, and best practices.`,
+          source: 'Google',
+          relevance: 0.95,
+          category: 'Guide',
+          date: new Date().toISOString()
+        },
+        {
+          id: generateId(),
+          title: `Understanding ${query}: Complete Tutorial`,
+          url: `https://www.tutorialsite.com/${encodedQuery}`,
+          snippet: `This comprehensive tutorial explains ${query} in simple terms with practical examples and code snippets that you can follow along with.`,
+          source: 'Google',
+          relevance: 0.92,
+          category: 'Tutorial',
+          date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          id: generateId(),
+          title: `${query} Research Paper - Journal of Technology`,
+          url: `https://journal.tech/papers/${encodedQuery}`,
+          snippet: `Recent academic research on ${query} showing significant advancements in the field. The paper discusses methodology, findings, and implications.`,
+          source: 'Google',
+          relevance: 0.88,
+          category: 'Academic',
+          date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+        }
+      );
+      
+      // Bing mock results
+      mockResults.push(
+        {
+          id: generateId(),
+          title: `${query} - Latest News and Updates (2025)`,
+          url: `https://www.technews.com/topics/${encodedQuery}`,
+          snippet: `Stay updated with the latest developments in ${query}. Our news coverage includes recent breakthroughs, industry trends, and expert opinions.`,
+          source: 'Bing',
+          relevance: 0.91,
+          category: 'News',
+          date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          id: generateId(),
+          title: `Top 10 ${query} Tools for Professionals`,
+          url: `https://www.toolreviews.com/${encodedQuery}-tools`,
+          snippet: `Discover the best tools for working with ${query}. This curated list includes both free and premium options with detailed reviews and comparisons.`,
+          source: 'Bing',
+          relevance: 0.87,
+          category: 'Tools',
+          date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+        }
+      );
+      
+      // DuckDuckGo mock results
+      mockResults.push(
+        {
+          id: generateId(),
+          title: `${query} Explained Simply - No Jargon Guide`,
+          url: `https://www.simpleexplained.com/${encodedQuery}`,
+          snippet: `An easy-to-understand explanation of ${query} without unnecessary technical jargon. Perfect for beginners and non-technical readers.`,
+          source: 'DuckDuckGo',
+          relevance: 0.89,
+          category: 'Beginner',
+          date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          id: generateId(),
+          title: `${query} Community Forum - Discussions`,
+          url: `https://community.tech/forum/${encodedQuery}`,
+          snippet: `Join the conversation about ${query} with experts and enthusiasts. Find solutions to common problems and share your experiences.`,
+          source: 'DuckDuckGo',
+          relevance: 0.84,
+          category: 'Community',
+          date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+        }
+      );
+
+      // Brave Search mock results
+      mockResults.push(
+        {
+          id: generateId(),
+          title: `${query} - Privacy-Focused Implementation Guide`,
+          url: `https://www.privacytech.com/guides/${encodedQuery}`,
+          snippet: `Learn how to implement ${query} while maintaining privacy and security. This guide covers best practices, potential pitfalls, and ethical considerations.`,
+          source: 'Brave',
+          relevance: 0.86,
+          category: 'Privacy',
+          date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          id: generateId(),
+          title: `Open Source ${query} Projects Worth Following`,
+          url: `https://www.opensource.dev/projects/${encodedQuery}`,
+          snippet: `Discover the most promising open source projects related to ${query}. Includes project descriptions, activity metrics, and contribution opportunities.`,
+          source: 'Brave',
+          relevance: 0.83,
+          category: 'Open Source',
+          date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString()
+        }
+      );
+
+      // You.com mock results
+      mockResults.push(
+        {
+          id: generateId(),
+          title: `${query} - AI-Enhanced Analysis and Insights`,
+          url: `https://www.aiinsights.com/analysis/${encodedQuery}`,
+          snippet: `Our AI-powered analysis provides deeper insights into ${query}, identifying patterns and connections that might be missed by traditional research methods.`,
+          source: 'You.com',
+          relevance: 0.85,
+          category: 'AI Analysis',
+          date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          id: generateId(),
+          title: `How ${query} is Transforming Industries in 2025`,
+          url: `https://www.industrytrends.com/transformation/${encodedQuery}`,
+          snippet: `Explore how ${query} is disrupting traditional business models and creating new opportunities across multiple sectors. Includes case studies and expert interviews.`,
+          source: 'You.com',
+          relevance: 0.82,
+          category: 'Industry',
+          date: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString()
+        }
+      );
+      
+      resolve(mockResults);
+    }, 1500); // Reduced latency from 2500ms to 1500ms for better performance
+  });
+};
+
+// Function to get popular searches with advanced ranking and personalization
+export const getPopularSearches = async (
+  currentQuery?: string
+): Promise<PopularSearch[]> => {
+  return new Promise((resolve) => {
+    // Simulate a network request delay - reduced for better performance
+    setTimeout(() => {
+      // Start with our static popular searches
+      let popularSearches = [...POPULAR_SEARCHES];
+      
+      // Add a few recommended searches based on current query context
+      if (currentQuery) {
+        const contextualSuggestions = generateContextualSuggestions(currentQuery);
+        popularSearches = [...contextualSuggestions, ...popularSearches];
+      }
+      
+      // Add exploration component (introduce some diversity)
+      const exploratorySuggestions = generateExploratorySuggestions();
+      
+      // Combine and take top N results
+      popularSearches = [...popularSearches, ...exploratorySuggestions]
+        .slice(0, 12); // Limit to top 12 results
+      
+      resolve(popularSearches);
+    }, 200); // Reduced from 300ms to 200ms
+  });
+};
         // Google mock results
         {
           id: generateId(),

@@ -1,20 +1,8 @@
 
-import { FormatterAgent } from './formatterAgent';
-
 class TextFormattingService {
-  private formatter: FormatterAgent;
-
-  constructor() {
-    this.formatter = new FormatterAgent();
-  }
-
   public formatMessage(rawText: string): string {
-    try {
-      return this.formatter.formatToHtml(rawText);
-    } catch (error) {
-      console.error('Error formatting text:', error);
-      return rawText; // Return original text if formatting fails
-    }
+    // Return raw text without HTML formatting
+    return rawText;
   }
 
   public formatToPlainText(rawText: string): string {
