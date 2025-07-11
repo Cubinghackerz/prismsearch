@@ -59,7 +59,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const sendMessage = async (content: string, parentMessageId?: string) => {
     if (!chatId) {
       console.warn('No chatId available. Starting a new chat.');
-      startNewChat();
+      await startNewChat();
       return;
     }
 
@@ -75,8 +75,15 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     setIsTyping(true);
 
+    // Add a timeout to prevent hanging
+    const timeoutPromise = new Promise<void>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Request timed out after 30 seconds'));
+      }, 30000);
+    });
+
     try {
-      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
+      const responsePromise = supabase.functions.invoke('ai-search-assistant', {
         body: {
           query: content,
           chatId: chatId,
@@ -84,6 +91,14 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           model: selectedModel
         }
       });
+      
+      // Race the response against the timeout
+      const { data, error } = await Promise.race([
+        responsePromise,
+        timeoutPromise.then(() => {
+          throw new Error('Request timed out after 30 seconds');
+        })
+      ]);
 
       if (error) {
         console.error('Supabase function error:', error);
@@ -95,7 +110,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const assistantMessage: ChatMessage = {
         id: uuidv4(),
         content: responseText,
-        formattedContent: responseText.replace(/\* /g, '• '),
+        formattedContent: responseText.replace(/\* /g, '• ').replace(/\n\* /g, '\n• '),
         isUser: false,
         timestamp: new Date(),
         parentMessageId: parentMessageId,
@@ -147,8 +162,15 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     setIsTyping(true);
 
+    // Add a timeout to prevent hanging
+    const timeoutPromise = new Promise<void>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Request timed out after 45 seconds'));
+      }, 45000);
+    });
+
     try {
-      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
+      const responsePromise = supabase.functions.invoke('ai-search-assistant', {
         body: {
           query: topic,
           chatId: chatId,
@@ -157,6 +179,14 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           deepResearch: true
         }
       });
+      
+      // Race the response against the timeout
+      const { data, error } = await Promise.race([
+        responsePromise,
+        timeoutPromise.then(() => {
+          throw new Error('Deep research request timed out after 45 seconds');
+        })
+      ]);
 
       if (error) {
         console.error('Supabase function error:', error);
@@ -168,7 +198,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const assistantMessage: ChatMessage = {
         id: `msg-${Date.now() + 1}`,
         content: responseText,
-        formattedContent: responseText,
+        formattedContent: responseText.replace(/\* /g, '• ').replace(/\n\* /g, '\n• '),
         isUser: false,
         timestamp: new Date(),
       };

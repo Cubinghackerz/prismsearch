@@ -1,6 +1,24 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from '../_shared/cors.ts'
 
+// Ensure API keys are available
+const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+const MISTRAL_API_KEY = Deno.env.get('MISTRAL_API_KEY');
+const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY');
+const AZURE_OPENAI_KEY = Deno.env.get('AZURE_OPENAI_KEY');
+
+// Check which API keys are available
+const availableModels = {
+  gemini: !!GEMINI_API_KEY,
+  mistral: !!MISTRAL_API_KEY,
+  'mistral-medium-3': !!MISTRAL_API_KEY,
+  groq: !!GROQ_API_KEY,
+  'groq-qwen-qwq': !!GROQ_API_KEY,
+  'groq-llama4-scout': !!GROQ_API_KEY,
+  'azure-gpt4-nano': !!AZURE_OPENAI_KEY,
+  'azure-o4-mini': !!AZURE_OPENAI_KEY
+};
+
 interface ResearchTask {
   id: string;
   description: string;
@@ -17,23 +35,29 @@ class DeepResearchAgent {
   private model: string;
 
   constructor(model: string) {
-    this.model = model;
+    // Default to gemini if the requested model is not available
+    if (!availableModels[model]) {
+      console.warn(`Model ${model} is not available. Falling back to gemini.`);
+      this.model = 'gemini';
+    } else {
+      this.model = model;
+    }
     
     // Set API key and model ID based on the selected model
     switch (model) {
       case 'gemini':
-        this.apiKey = Deno.env.get('GEMINI_API_KEY') || '';
+        this.apiKey = GEMINI_API_KEY || '';
         this.modelId = 'gemini-2.0-flash-exp';
         break;
       case 'mistral':
       case 'mistral-medium-3':
-        this.apiKey = Deno.env.get('MISTRAL_API_KEY') || '';
+        this.apiKey = MISTRAL_API_KEY || '';
         this.modelId = model === 'mistral-medium-3' ? 'mistral-large-2411' : 'mistral-medium-latest';
         break;
       case 'groq':
       case 'groq-qwen-qwq':
       case 'groq-llama4-scout':
-        this.apiKey = Deno.env.get('GROQ_API_KEY') || '';
+        this.apiKey = GROQ_API_KEY || '';
         if (model === 'groq-qwen-qwq') {
           this.modelId = 'qwen2.5-72b-instruct';
         } else if (model === 'groq-llama4-scout') {
@@ -44,17 +68,17 @@ class DeepResearchAgent {
         break;
       case 'azure-gpt4-nano':
       case 'azure-o4-mini':
-        this.apiKey = Deno.env.get('AZURE_OPENAI_KEY') || '';
+        this.apiKey = AZURE_OPENAI_KEY || '';
         this.modelId = model === 'azure-o4-mini' ? 'o1-mini' : 'gpt-4';
         break;
       default:
         // Default to Gemini
-        this.apiKey = Deno.env.get('GEMINI_API_KEY') || '';
+        this.apiKey = GEMINI_API_KEY || '';
         this.modelId = 'gemini-2.0-flash-exp';
     }
 
     if (!this.apiKey) {
-      throw new Error(`API key not found for model: ${model}`);
+      throw new Error(`API key not found for model: ${this.model}`);
     }
   }
 
@@ -98,7 +122,7 @@ class DeepResearchAgent {
           temperature: 0.7,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 8192,
+          maxOutputTokens: 4096, // Reduced to avoid potential token limit issues
         }
       })
     });
@@ -311,6 +335,11 @@ Please produce a coherent final report.`;
 
 // Regular chat functionality
 async function sendRegularChat(prompt: string, model: string): Promise<string> {
+  // Check if any API keys are available
+  if (!Object.values(availableModels).some(available => available)) {
+    return "I'm sorry, but I'm currently unable to generate a response as no AI models are available. Please try again later or contact support.";
+  }
+
   try {
     const agent = new DeepResearchAgent(model);
     return await agent.sendPrompt(prompt);
@@ -335,6 +364,11 @@ async function sendRegularChat(prompt: string, model: string): Promise<string> {
 
 async function processDeepResearch(query: string, model: string): Promise<string> {
   console.log(`Starting deep research for topic: ${query} using model: ${model}`);
+
+  // Check if any API keys are available
+  if (!Object.values(availableModels).some(available => available)) {
+    return "I'm sorry, but I'm currently unable to perform deep research as no AI models are available. Please try again later or contact support.";
+  }
   
   try {
     const researchAgent = new DeepResearchAgent(model);
@@ -362,6 +396,11 @@ async function processDeepResearch(query: string, model: string): Promise<string
 
 // Function to generate search result summaries
 async function generateSearchSummary(query: string, searchResults: any, model: string): Promise<string> {
+  // Check if any API keys are available
+  if (!Object.values(availableModels).some(available => available)) {
+    return "I'm sorry, but I'm currently unable to generate a search summary as no AI models are available. Please try again later or contact support.";
+  }
+
   const resultsText = searchResults.results.map((result: any) => 
     `Title: ${result.title}\nSource: ${result.source}\nSnippet: ${result.snippet}\nRelevance: ${result.relevance}\n---`
   ).join('\n');
@@ -392,13 +431,28 @@ Format your response clearly with sections, but keep it concise and focused.`;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const { query, chatId, chatHistory, model, deepResearch, summaryMode, searchResults } = await req.json()
+    const { query, chatId, chatHistory, model = 'gemini', deepResearch, summaryMode, searchResults } = await req.json();
     
-    console.log(`Processing ${model} request for chat ${chatId}${deepResearch ? ' (Deep Research Mode)' : ''}${summaryMode ? ' (Summary Mode)' : ''}`)
+    console.log(`Processing ${model} request for chat ${chatId}${deepResearch ? ' (Deep Research Mode)' : ''}${summaryMode ? ' (Summary Mode)' : ''}`);
+
+    // Check if any API keys are available
+    if (!Object.values(availableModels).some(available => available)) {
+      return new Response(
+        JSON.stringify({ 
+          response: "I'm sorry, but I'm currently unable to generate a response as no AI models are available. Please try again later or contact support." 
+        }),
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
+    }
 
     let result = '';
 
@@ -428,7 +482,7 @@ serve(async (req) => {
       JSON.stringify({ response: result }),
       { 
         headers: { 
-          ...corsHeaders, 
+          ...corsHeaders,
           'Content-Type': 'application/json' 
         } 
       }
@@ -442,11 +496,10 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify({ 
-        error: errorMessage,
-        details: 'If this error persists, please check your API keys and try again later.'
+        response: `I'm sorry, but I encountered an error: ${errorMessage}. If this error persists, please try again later or contact support.`
       }),
       { 
-        status: 500,
+        status: 200, // Return 200 even for errors to prevent client-side crashes
         headers: { 
           ...corsHeaders, 
           'Content-Type': 'application/json' 

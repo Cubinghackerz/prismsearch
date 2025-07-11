@@ -3,7 +3,7 @@ import { Bot, MessageSquare } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from './ui/button';
+import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import LoadingAnimation from './LoadingAnimation';
 import ReactMarkdown from 'react-markdown';
@@ -19,6 +19,7 @@ const AISearchResponse = ({
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [showChatButton, setShowChatButton] = useState(false);
+  const [requestTimeout, setRequestTimeout] = useState<NodeJS.Timeout | null>(null);
   const {
     toast
   } = useToast();
@@ -28,6 +29,17 @@ const AISearchResponse = ({
       if (!query) return;
       setIsLoading(true);
       setHasError(false);
+      
+      // Set a timeout to prevent hanging
+      const timeout = setTimeout(() => {
+        setIsLoading(false);
+        setHasError(true);
+        toast({
+          title: "Request Timeout",
+          description: "The AI assistant took too long to respond. Please try again.",
+          variant: "destructive"
+        });
+      }, 30000);
       try {
         const {
           data,
@@ -40,6 +52,7 @@ const AISearchResponse = ({
         });
         if (error) throw error;
         if (data && data.response) {
+          // Format the response to replace asterisks with bullet points
           setAiResponse(data.response);
           setShowChatButton(true);
         } else {
@@ -56,6 +69,10 @@ const AISearchResponse = ({
         setAiResponse('');
         setShowChatButton(false);
       } finally {
+        // Clear the timeout
+        if (timeout) {
+          clearTimeout(timeout);
+        }
         setIsLoading(false);
       }
     };
@@ -92,7 +109,7 @@ const AISearchResponse = ({
                 <ReactMarkdown components={{
                   strong: ({ node, ...props }) => <span className="font-bold" {...props} />,
                   em: ({ node, ...props }) => <span className="italic" {...props} />,
-                  h1: ({ node, ...props }) => <h1 className="text-xl font-bold mt-4 mb-2" {...props} />,
+                  h1: ({ node, ...props }) => <h1 className="text-xl font-bold mt-4 mb-2 text-orange-100" {...props} />,
                   h2: ({ node, ...props }) => <h2 className="text-lg font-bold mt-3 mb-2" {...props} />,
                   h3: ({ node, ...props }) => <h3 className="text-md font-bold mt-3 mb-1" {...props} />,
                   p: ({ node, ...props }) => <p className="mb-3" {...props} />,
@@ -100,9 +117,10 @@ const AISearchResponse = ({
                   ol: ({ node, ...props }) => <ol className="list-decimal pl-5 mb-3" {...props} />,
                   li: ({ node, ...props }) => <li className="ml-2" {...props} />,
                   a: ({ node, ...props }) => <a className="text-prism-primary-light hover:underline" {...props} />,
-                  code: ({ node, ...props }) => <code className="bg-prism-surface/40 px-1 py-0.5 rounded text-sm" {...props} />
+                  code: ({ node, ...props }) => <code className="bg-prism-surface/40 px-1 py-0.5 rounded text-sm" {...props} />,
+                  pre: ({ node, ...props }) => <pre className="bg-prism-surface/40 p-3 rounded-md overflow-x-auto my-3" {...props} />
                 }}>
-                  {aiResponse}
+                  {aiResponse.replace(/\* /g, '• ').replace(/\n\* /g, '\n• ')}
                 </ReactMarkdown>
               </div>
               
