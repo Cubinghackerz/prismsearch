@@ -145,6 +145,7 @@ const Index = () => {
                   setQuery('');
                   setShowResults(false);
                 }}
+                className="text-prism-text-light bg-prism-blue-primary/20 hover:bg-prism-blue-primary/30"
                 className="text-prism-text bg-prism-primary/20 hover:bg-prism-primary/30"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -277,6 +278,7 @@ const Index = () => {
                 >
                   <div
                     className={`w-14 h-14 rounded-full mx-auto mb-3 flex items-center justify-center 
+                      backdrop-blur-md border border-orange-200/10
                       backdrop-blur-md border border-prism-border/30
                       ${
                         engine === 'Google'
