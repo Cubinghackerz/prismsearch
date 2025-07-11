@@ -28,13 +28,14 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
     return null;
   }
 
-  // Memoize expensive computations
-  const engines = useMemo(() => Array.from(new Set(results.map(result => result.source))), [results]);
+  // Memoize expensive computations with stable dependencies
+  const engines = useMemo(() => {
+    return Array.from(new Set(results.map(result => result.source)));
+  }, [results]);
   
-  const categories = useMemo(() => 
-    Array.from(new Set(results.map(result => result.category || 'Uncategorized'))), 
-    [results]
-  );
+  const categories = useMemo(() => {
+    return Array.from(new Set(results.map(result => result.category || 'Uncategorized')));
+  }, [results]);
 
   // Memoize filtered and sorted results
   const processedResults = useMemo(() => {
@@ -52,14 +53,24 @@ const SearchResults = ({ results, isLoading, query }: SearchResultsProps) => {
     });
   }, [results, selectedFilters, sortBy]);
 
-  // Memoize grouped results by engine
-  const groupedResults = useMemo(() => ({
-    Google: processedResults.filter(result => result.source === 'Google'),
-    Bing: processedResults.filter(result => result.source === 'Bing'),
-    DuckDuckGo: processedResults.filter(result => result.source === 'DuckDuckGo'),
-    Brave: processedResults.filter(result => result.source === 'Brave'),
-    'You.com': processedResults.filter(result => result.source === 'You.com'),
-  }), [processedResults]);
+  // Fix: Create stable object reference for grouped results
+  const groupedResults = useMemo(() => {
+    const grouped = {
+      Google: [] as SearchResult[],
+      Bing: [] as SearchResult[],
+      DuckDuckGo: [] as SearchResult[],
+      Brave: [] as SearchResult[],
+      'You.com': [] as SearchResult[]
+    };
+
+    processedResults.forEach(result => {
+      if (result.source in grouped) {
+        grouped[result.source as keyof typeof grouped].push(result);
+      }
+    });
+
+    return grouped;
+  }, [processedResults]);
 
   // Optimize event handlers with useCallback
   const toggleEngine = useCallback((engine: string) => {
