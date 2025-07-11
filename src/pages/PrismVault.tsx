@@ -51,13 +51,13 @@ const PrismVault = () => {
     if (!isVaultLoading) return;
 
     const characters = '!@#$%^&*()_+-=[]{}|;:,.<>?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const maxDrops = 50;
+    const maxDrops = 80; // Increased from 50
     
     const createRainDrop = (id: number): DigitalRainDrop => ({
       id,
       x: Math.random() * window.innerWidth,
       y: -20,
-      speed: Math.random() * 3 + 2,
+      speed: Math.random() * 5 + 3, // Increased speed from 3 + 2
       char: characters[Math.floor(Math.random() * characters.length)],
       opacity: Math.random() * 0.8 + 0.2
     });
@@ -75,11 +75,11 @@ const PrismVault = () => {
           return {
             ...drop,
             y: newY,
-            char: Math.random() < 0.1 ? characters[Math.floor(Math.random() * characters.length)] : drop.char
+            char: Math.random() < 0.15 ? characters[Math.floor(Math.random() * characters.length)] : drop.char // Increased character change rate
           };
         })
       );
-    }, 50);
+    }, 30); // Decreased interval from 50ms to 30ms for faster animation
 
     const timer = setTimeout(() => {
       setIsVaultLoading(false);
@@ -272,19 +272,19 @@ const PrismVault = () => {
 
   if (isVaultLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center relative overflow-hidden">
+      <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
         {/* Digital Rain Background */}
         <div className="absolute inset-0 pointer-events-none">
           {rainDrops.map(drop => (
             <div
               key={drop.id}
-              className="absolute font-mono text-cyan-400 select-none"
+              className="absolute font-mono text-green-400 select-none"
               style={{
                 left: `${drop.x}px`,
                 top: `${drop.y}px`,
                 opacity: drop.opacity,
                 fontSize: '14px',
-                textShadow: '0 0 8px rgba(34, 211, 184, 0.8)'
+                textShadow: '0 0 8px rgba(34, 197, 94, 0.8)'
               }}
             >
               {drop.char}
@@ -293,9 +293,8 @@ const PrismVault = () => {
         </div>
         
         <div className="text-center space-y-6 z-10">
-          <LoadingAnimation variant="neural" color="cyan" size="large" />
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-cyan-300">Initializing Prism Vault</h2>
+            <h2 className="text-2xl font-bold text-green-400">Initializing Prism Vault</h2>
             <p className="text-slate-400">Encrypting your secure environment...</p>
           </div>
         </div>
