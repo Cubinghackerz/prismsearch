@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Search, MessageCircle, DollarSign, ArrowRight, ChevronRight, FileSearch, Zap } from 'lucide-react';
+import { Search, MessageCircle, DollarSign, ArrowRight, ChevronRight, FileSearch, Zap, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Footer from '@/components/Footer';
@@ -61,6 +61,7 @@ const Home = () => {
     pro: ["Coming Soon - Unlimited searches", "Coming Soon - Advanced chat with file upload", "Coming Soon - Priority response time", "Coming Soon - Custom data integration"],
     enterprise: ["All Pro features", "Dedicated support team", "Custom model training", "SLA guarantees"]
   };
+
   return <div className="min-h-screen flex flex-col bg-gradient-to-b from-prism-darkgray to-black text-white">
       <ParticleBackground />
       
@@ -84,22 +85,37 @@ const Home = () => {
               <NavigationMenuList>
                 <NavigationMenuItem>
                   <Link to="/">
-                    
+                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                      Home
+                    </NavigationMenuLink>
                   </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
                   <Link to="/search">
-                    
+                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                      Search
+                    </NavigationMenuLink>
                   </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
                   <Link to="/chat">
-                    
+                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                      Chat
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link to="/vault">
+                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                      Vault
+                    </NavigationMenuLink>
                   </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
                   <Link to="/pricing">
-                    
+                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                      Pricing
+                    </NavigationMenuLink>
                   </Link>
                 </NavigationMenuItem>
               </NavigationMenuList>
@@ -109,8 +125,8 @@ const Home = () => {
           {/* User Menu */}
           <div className="flex items-center">
             <Avatar>
-              
-              
+              <AvatarImage src="/placeholder.svg" alt="User Avatar" />
+              <AvatarFallback>AJ</AvatarFallback>
             </Avatar>
           </div>
         </div>
@@ -143,6 +159,14 @@ const Home = () => {
                 </Button>
               </Link>
             </motion.div>
+
+            <motion.div variants={item}>
+              <Link to="/vault">
+                <Button size="lg" className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 border-none shadow-lg shadow-purple-500/20 transition-all duration-300 hover:shadow-purple-500/40">
+                  <Lock className="mr-2 h-5 w-5" /> Prism Vault
+                </Button>
+              </Link>
+            </motion.div>
             
             <motion.div variants={item}>
               <Link to="/pricing">
@@ -170,7 +194,7 @@ const Home = () => {
             Explore Our Features
           </motion.h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Search Feature Card */}
             <motion.div initial={{
             opacity: 0,
@@ -268,8 +292,8 @@ const Home = () => {
                 </CardFooter>
               </Card>
             </motion.div>
-            
-            {/* Pricing Feature Card */}
+
+            {/* Prism Vault Feature Card */}
             <motion.div initial={{
             opacity: 0,
             y: 30
@@ -287,9 +311,58 @@ const Home = () => {
               <Card className="h-full bg-gradient-to-br from-gray-900 to-purple-900/50 border-t-2 border-purple-400 transition-all duration-300 shadow-xl hover:shadow-purple-500/20">
                 <CardHeader className="text-center pb-2">
                   <div className="mx-auto bg-purple-900/40 p-4 rounded-full w-16 h-16 flex items-center justify-center mb-4">
-                    <DollarSign className="h-8 w-8 text-purple-400" />
+                    <Lock className="h-8 w-8 text-purple-400" />
                   </div>
-                  <CardTitle className="text-xl font-bold text-purple-100">Flexible Plans</CardTitle>
+                  <CardTitle className="text-xl font-bold text-purple-100">Prism Vault</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center px-6">
+                  <p className="text-gray-300 mb-6">
+                    Generate strong, secure passwords with AI-powered strength assessment and customizable options.
+                  </p>
+                  
+                  {/* Mock Vault Features */}
+                  <div className="space-y-4 mt-6">
+                    <div className="bg-gradient-to-r from-purple-900/30 to-purple-800/30 p-3 rounded-lg text-left border border-purple-700/30">
+                      <h4 className="text-purple-300 font-semibold text-sm">Password Generator</h4>
+                      <p className="text-xs text-gray-400 mt-1">Create strong passwords with customizable length and character sets</p>
+                    </div>
+                    <div className="bg-gradient-to-r from-purple-900/30 to-purple-800/30 p-3 rounded-lg text-left border border-purple-700/30">
+                      <h4 className="text-purple-300 font-semibold text-sm">AI Strength Assessment</h4>
+                      <p className="text-xs text-gray-400 mt-1">Get real-time feedback on password security with improvement suggestions</p>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="pt-2">
+                  <Link to="/vault" className="w-full">
+                    <Button className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 shadow-lg shadow-purple-600/10 hover:shadow-purple-600/20">
+                      Generate Password <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                </CardFooter>
+              </Card>
+            </motion.div>
+            
+            {/* Pricing Feature Card */}
+            <motion.div initial={{
+            opacity: 0,
+            y: 30
+          }} animate={{
+            opacity: 1,
+            y: 0
+          }} transition={{
+            delay: 0.6
+          }} whileHover={{
+            y: -5,
+            transition: {
+              duration: 0.2
+            }
+          }} className="h-full">
+              <Card className="h-full bg-gradient-to-br from-gray-900 to-orange-900/50 border-t-2 border-orange-400 transition-all duration-300 shadow-xl hover:shadow-orange-500/20">
+                <CardHeader className="text-center pb-2">
+                  <div className="mx-auto bg-orange-900/40 p-4 rounded-full w-16 h-16 flex items-center justify-center mb-4">
+                    <DollarSign className="h-8 w-8 text-orange-400" />
+                  </div>
+                  <CardTitle className="text-xl font-bold text-orange-100">Flexible Plans</CardTitle>
                 </CardHeader>
                 <CardContent className="text-center px-6">
                   <p className="text-gray-300 mb-6">
@@ -304,8 +377,8 @@ const Home = () => {
                         {pricingFeatures.free.map((feature, index) => <li key={index}>{feature}</li>)}
                       </ul>
                     </div>
-                    <div className="bg-gradient-to-r from-purple-900/30 to-purple-800/30 p-3 rounded-lg text-left border border-purple-700/30">
-                      <h4 className="text-purple-300 font-semibold">Pro <span className="text-xs font-normal ml-1 text-purple-400/80">(Coming Soon)</span></h4>
+                    <div className="bg-gradient-to-r from-orange-900/30 to-orange-800/30 p-3 rounded-lg text-left border border-orange-700/30">
+                      <h4 className="text-orange-300 font-semibold">Pro <span className="text-xs font-normal ml-1 text-orange-400/80">(Coming Soon)</span></h4>
                       <ul className="text-xs text-gray-400 mt-2 list-disc pl-4">
                         {pricingFeatures.pro.map((feature, index) => <li key={index}>{feature}</li>)}
                       </ul>
@@ -314,7 +387,7 @@ const Home = () => {
                 </CardContent>
                 <CardFooter className="pt-2">
                   <Link to="/pricing" className="w-full">
-                    <Button className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 shadow-lg shadow-purple-600/10 hover:shadow-purple-600/20">
+                    <Button className="w-full bg-gradient-to-r from-orange-600 to-orange-800 hover:from-orange-700 hover:to-orange-900 shadow-lg shadow-orange-600/10 hover:shadow-orange-600/20">
                       View Plans <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>

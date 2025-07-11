@@ -10,7 +10,6 @@ import NotFound from "./pages/NotFound";
 import Chat from "./pages/Chat";
 import Pricing from "./pages/Pricing";
 import Home from "./pages/Home";
-import Dashboard from "./pages/Dashboard";
 import PrismVault from "./pages/PrismVault";
 
 // Create QueryClient with custom settings for better UI
@@ -36,7 +35,6 @@ const App: React.FC = () => (
             <Route path="/search" element={<Index />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/pricing" element={<Pricing />} />
-            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/vault" element={<PrismVault />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

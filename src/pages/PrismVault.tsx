@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, RefreshCw, Copy, Eye, EyeOff, Lock, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { Shield, RefreshCw, Copy, Eye, EyeOff, Lock, AlertTriangle, CheckCircle, XCircle, Home, ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const PrismVault = () => {
@@ -23,9 +24,7 @@ const PrismVault = () => {
     feedback: string[];
   } | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
 
   const generatePassword = () => {
     setIsGenerating(true);
@@ -106,17 +105,17 @@ const PrismVault = () => {
   const getStrengthColor = (level: string) => {
     switch (level) {
       case 'very-strong':
-        return 'text-green-700 bg-green-100 border-green-200';
+        return 'text-green-300 bg-green-900/30 border-green-700';
       case 'strong':
-        return 'text-green-600 bg-green-50 border-green-200';
+        return 'text-green-400 bg-green-900/20 border-green-700';
       case 'good':
-        return 'text-yellow-700 bg-yellow-100 border-yellow-200';
+        return 'text-yellow-300 bg-yellow-900/30 border-yellow-700';
       case 'fair':
-        return 'text-orange-600 bg-orange-100 border-orange-200';
+        return 'text-orange-300 bg-orange-900/30 border-orange-700';
       case 'weak':
-        return 'text-red-600 bg-red-100 border-red-200';
+        return 'text-red-300 bg-red-900/30 border-red-700';
       default:
-        return 'text-gray-600 bg-gray-100 border-gray-200';
+        return 'text-gray-300 bg-gray-900/30 border-gray-700';
     }
   };
 
@@ -136,33 +135,47 @@ const PrismVault = () => {
     }
   };
 
-  return <div className="min-h-screen bg-gradient-to-br from-prism-bg to-prism-surface p-6">
+  return <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black p-6">
+      {/* Header with back to home navigation */}
+      <div className="max-w-4xl mx-auto mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <Link to="/" className="flex items-center text-blue-400 hover:text-blue-300 transition-colors">
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            <span>Back to Home</span>
+          </Link>
+          <Link to="/" className="flex items-center text-gray-400 hover:text-gray-300 transition-colors">
+            <Home className="h-5 w-5 mr-2" />
+            <span>Home</span>
+          </Link>
+        </div>
+      </div>
+
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center space-x-3">
-            <Lock className="h-12 w-12 text-prism-primary" />
-            <h1 className="text-4xl font-bold text-prism-text">Prism Vault</h1>
+            <Lock className="h-12 w-12 text-purple-400" />
+            <h1 className="text-4xl font-bold text-white">Prism Vault</h1>
           </div>
-          <p className="text-xl text-prism-text-muted max-w-2xl mx-auto">
+          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
             Generate strong, secure passwords with AI-powered strength assessment
           </p>
         </div>
 
         <div className="grid gap-8 md:grid-cols-2">
           {/* Password Generator */}
-          <Card className="h-fit bg-white border-prism-border">
+          <Card className="h-fit bg-gray-800/50 border-gray-700 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2 text-gray-900">
+              <CardTitle className="flex items-center space-x-2 text-white">
                 <Shield className="h-5 w-5" />
                 <span>Password Generator</span>
               </CardTitle>
-              <CardDescription className="text-gray-600">
+              <CardDescription className="text-gray-300">
                 Customize your password settings and generate secure passwords
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label className="text-gray-900 font-medium">Password Length: {passwordLength[0]}</Label>
+                <Label className="text-white font-medium">Password Length: {passwordLength[0]}</Label>
                 <Slider 
                   value={passwordLength} 
                   onValueChange={setPasswordLength} 
@@ -175,27 +188,27 @@ const PrismVault = () => {
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="uppercase" className="text-gray-900 font-medium">Uppercase Letters (A-Z)</Label>
+                  <Label htmlFor="uppercase" className="text-white font-medium">Uppercase Letters (A-Z)</Label>
                   <Switch id="uppercase" checked={includeUppercase} onCheckedChange={setIncludeUppercase} />
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="lowercase" className="text-gray-900 font-medium">Lowercase Letters (a-z)</Label>
+                  <Label htmlFor="lowercase" className="text-white font-medium">Lowercase Letters (a-z)</Label>
                   <Switch id="lowercase" checked={includeLowercase} onCheckedChange={setIncludeLowercase} />
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="numbers" className="text-gray-900 font-medium">Numbers (0-9)</Label>
+                  <Label htmlFor="numbers" className="text-white font-medium">Numbers (0-9)</Label>
                   <Switch id="numbers" checked={includeNumbers} onCheckedChange={setIncludeNumbers} />
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="symbols" className="text-gray-900 font-medium">Symbols (!@#$%)</Label>
+                  <Label htmlFor="symbols" className="text-white font-medium">Symbols (!@#$%)</Label>
                   <Switch id="symbols" checked={includeSymbols} onCheckedChange={setIncludeSymbols} />
                 </div>
               </div>
 
-              <Button onClick={generatePassword} disabled={isGenerating} className="w-full">
+              <Button onClick={generatePassword} disabled={isGenerating} className="w-full bg-purple-600 hover:bg-purple-700">
                 {isGenerating ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
                 Generate Password
               </Button>
@@ -203,13 +216,13 @@ const PrismVault = () => {
           </Card>
 
           {/* Password Display & Assessment */}
-          <Card className="h-fit bg-white border-prism-border">
+          <Card className="h-fit bg-gray-800/50 border-gray-700 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2 text-gray-900">
+              <CardTitle className="flex items-center space-x-2 text-white">
                 <Eye className="h-5 w-5" />
                 <span>Generated Password</span>
               </CardTitle>
-              <CardDescription className="text-gray-600">
+              <CardDescription className="text-gray-300">
                 Your secure password with AI strength assessment
               </CardDescription>
             </CardHeader>
@@ -217,18 +230,18 @@ const PrismVault = () => {
               {password && (
                 <>
                   <div className="space-y-2">
-                    <Label className="text-gray-900 font-medium">Password</Label>
+                    <Label className="text-white font-medium">Password</Label>
                     <div className="flex space-x-2">
                       <Input 
                         type={showPassword ? "text" : "password"} 
                         value={password} 
                         readOnly 
-                        className="font-mono text-sm bg-gray-50 text-gray-900" 
+                        className="font-mono text-sm bg-gray-900/50 text-white border-gray-600" 
                       />
-                      <Button variant="outline" size="icon" onClick={() => setShowPassword(!showPassword)}>
+                      <Button variant="outline" size="icon" onClick={() => setShowPassword(!showPassword)} className="border-gray-600 hover:bg-gray-700">
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
-                      <Button variant="outline" size="icon" onClick={copyToClipboard}>
+                      <Button variant="outline" size="icon" onClick={copyToClipboard} className="border-gray-600 hover:bg-gray-700">
                         <Copy className="h-4 w-4" />
                       </Button>
                     </div>
@@ -237,7 +250,7 @@ const PrismVault = () => {
                   {strengthAssessment && (
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <Label className="text-gray-900 font-medium">AI Strength Assessment</Label>
+                        <Label className="text-white font-medium">AI Strength Assessment</Label>
                         <Badge className={getStrengthColor(strengthAssessment.level)}>
                           {getStrengthIcon(strengthAssessment.level)}
                           <span className="ml-1 capitalize">{strengthAssessment.level.replace('-', ' ')}</span>
@@ -246,10 +259,10 @@ const PrismVault = () => {
                       
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-700 font-medium">Strength Score</span>
-                          <span className="text-gray-900 font-semibold">{strengthAssessment.score}/100</span>
+                          <span className="text-gray-300 font-medium">Strength Score</span>
+                          <span className="text-white font-semibold">{strengthAssessment.score}/100</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-gray-700 rounded-full h-2">
                           <div 
                             className={`h-2 rounded-full transition-all duration-500 ${
                               strengthAssessment.score >= 90 ? 'bg-green-500' : 
@@ -264,11 +277,11 @@ const PrismVault = () => {
 
                       {strengthAssessment.feedback.length > 0 && (
                         <div className="space-y-2">
-                          <Label className="text-sm text-gray-900 font-medium">Improvement Suggestions</Label>
-                          <ul className="text-sm text-gray-700 space-y-1">
+                          <Label className="text-sm text-white font-medium">Improvement Suggestions</Label>
+                          <ul className="text-sm text-gray-300 space-y-1">
                             {strengthAssessment.feedback.map((item, index) => (
                               <li key={index} className="flex items-start space-x-2">
-                                <span className="text-prism-primary mt-1">•</span>
+                                <span className="text-purple-400 mt-1">•</span>
                                 <span>{item}</span>
                               </li>
                             ))}
@@ -281,7 +294,7 @@ const PrismVault = () => {
               )}
 
               {!password && (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-gray-400">
                   <Lock className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p>Generate a password to see AI strength assessment</p>
                 </div>
