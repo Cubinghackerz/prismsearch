@@ -24,9 +24,9 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
+const App: React.FC = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider delayDuration={300}>
+    <TooltipProvider>
       <div className="bg-gradient-to-b from-prism-bg to-prism-surface text-prism-text min-h-screen font-inter">
         <Toaster />
         <SonnerToaster />
