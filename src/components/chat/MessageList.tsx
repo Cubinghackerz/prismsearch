@@ -58,21 +58,19 @@ const MessageList: React.FC<MessageListProps> = ({
                   h2: ({ node, ...props }) => <h2 className="text-md font-bold mt-3 mb-2" {...props} />,
                   h3: ({ node, ...props }) => <h3 className="text-sm font-bold mt-3 mb-1" {...props} />,
                   p: ({ node, ...props }) => <p className="mb-2" {...props} />,
-              <ReactMarkdown 
-                components={{
+                  ul: ({ node, ...props }) => <ul className="list-disc pl-5 mb-3 space-y-2" {...props} />,
+                  li: ({ node, ...props }) => <li className="ml-2 mb-1" {...props} />,
                   ol: ({ node, ...props }) => <ol className="list-decimal pl-5 mb-3" {...props} />,
-                  li: ({ node, ...props }) => <li className="ml-2" {...props} />,
                   a: ({ node, ...props }) => <a className="text-prism-primary-light hover:underline" {...props} />,
                   code: ({ node, ...props }) => <code className="bg-prism-surface/40 px-1 py-0.5 rounded text-sm" {...props} />
                 }}>
                   {message.formattedContent || message.content}
-                ul: ({ node, ...props }) => <ul className="list-disc pl-5 mb-3 space-y-2" {...props} />,
+                </ReactMarkdown>
               </div>
-                li: ({ node, ...props }) => <li className="ml-2 mb-1" {...props} />,
+            )}
             
-            <div className="absolute bottom-1 right-2">
             <div className="absolute bottom-1 right-2 opacity-50 text-xs">
-              >
+              <span>
                 {(message.formattedContent || message.content).replace(/\*/g, '•')}
               </span>
             </div>
