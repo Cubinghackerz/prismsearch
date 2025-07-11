@@ -1,4 +1,3 @@
-
 import { SearchResult, PopularSearch, SearchCategory } from '../components/search/types';
 
 const generateId = () => Math.random().toString(36).substring(2, 15);
@@ -97,14 +96,26 @@ const POPULAR_SEARCHES = [
   }
 ];
 
+// Generate search engine URLs for the given query
+const generateSearchEngineUrls = (query: string) => {
+  const encodedQuery = encodeURIComponent(query);
+  return {
+    google: `https://www.google.com/search?q=${encodedQuery}`,
+    bing: `https://www.bing.com/search?q=${encodedQuery}`,
+    duckduckgo: `https://duckduckgo.com/?q=${encodedQuery}`,
+    brave: `https://search.brave.com/search?q=${encodedQuery}`,
+    you: `https://you.com/search?q=${encodedQuery}`
+  };
+};
+
 export const searchAcrossEngines = async (
   query: string
 ): Promise<SearchResult[]> => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      const encodedQuery = encodeURIComponent(query);
+      const searchUrls = generateSearchEngineUrls(query);
       
-      // Create more detailed and realistic mock results
+      // Create more detailed and realistic mock results with actual search engine URLs
       const mockResults: SearchResult[] = [];
       
       // Function to replace asterisks with bullet points in snippets
@@ -112,81 +123,81 @@ export const searchAcrossEngines = async (
         return text.replace(/\* /g, '• ');
       };
       
-      // Google mock results
+      // Google mock results - redirect to Google search
       mockResults.push(
         {
           id: generateId(),
-          title: `${query} - Comprehensive Guide (2025)`,
-          url: `https://www.example.com/guides/${encodedQuery}`,
-          snippet: formatSnippet(`A detailed guide about ${query} with the latest information and expert insights. Learn about key concepts, practical applications, and best practices.`),
+          title: `${query} - Search Results on Google`,
+          url: searchUrls.google,
+          snippet: formatSnippet(`Find comprehensive information about ${query} on Google. Access millions of web pages, images, videos, and more with Google's powerful search engine.`),
           source: 'Google',
           relevance: 0.95,
-          category: 'Guide',
+          category: 'Search Engine',
           date: new Date().toISOString()
         },
         {
           id: generateId(),
-          title: `Understanding ${query}: Complete Tutorial`,
-          url: `https://www.tutorialsite.com/${encodedQuery}`,
-          snippet: `This comprehensive tutorial explains ${query} in simple terms with practical examples and code snippets that you can follow along with.`,
+          title: `Understanding ${query}: Complete Guide`,
+          url: searchUrls.google,
+          snippet: `Explore detailed information about ${query} with Google's search results. Find tutorials, guides, and expert resources.`,
           source: 'Google',
           relevance: 0.92,
-          category: 'Tutorial',
+          category: 'Guide',
           date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
         },
         {
           id: generateId(),
-          title: `${query} Research Paper - Journal of Technology`,
-          url: `https://journal.tech/papers/${encodedQuery}`,
-          snippet: `Recent academic research on ${query} showing significant advancements in the field. The paper discusses methodology, findings, and implications.`,
+          title: `${query} Research and Articles`,
+          url: searchUrls.google,
+          snippet: `Access academic papers, research articles, and professional content about ${query} through Google's comprehensive search results.`,
           source: 'Google',
           relevance: 0.88,
-          category: 'Academic',
+          category: 'Research',
           date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
         }
       );
       
-      // Bing mock results
+      // Bing mock results - redirect to Bing search
       mockResults.push(
         {
           id: generateId(),
-          title: `${query} - Latest News and Updates (2025)`,
-          url: `https://www.technews.com/topics/${encodedQuery}`,
-          snippet: `Stay updated with the latest developments in ${query}. Our news coverage includes recent breakthroughs, industry trends, and expert opinions.`,
+          title: `${query} - Bing Search Results`,
+          url: searchUrls.bing,
+          snippet: `Discover relevant information about ${query} with Bing's intelligent search. Get news, images, videos, and web results.`,
           source: 'Bing',
           relevance: 0.91,
-          category: 'News',
+          category: 'Search Engine',
           date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
         },
         {
           id: generateId(),
-          title: `Top 10 ${query} Tools for Professionals`,
-          url: `https://www.toolreviews.com/${encodedQuery}-tools`,
-          snippet: `Discover the best tools for working with ${query}. This curated list includes both free and premium options with detailed reviews and comparisons.`,
+          title: `Top Resources for ${query}`,
+          url: searchUrls.bing,
+          snippet: `Find the best tools, resources, and information about ${query} using Bing's comprehensive search capabilities.`,
           source: 'Bing',
           relevance: 0.87,
-          category: 'Tools',
+          category: 'Resources',
           date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
         }
       );
       
-      // DuckDuckGo mock results
+      // DuckDuckGo mock results - redirect to DuckDuckGo search
       mockResults.push(
         {
           id: generateId(),
-          title: `${query} Explained Simply - No Jargon Guide`,
-          url: `https://www.simpleexplained.com/${encodedQuery}`,
-          snippet: `An easy-to-understand explanation of ${query} without unnecessary technical jargon. Perfect for beginners and non-technical readers.`,
+          title: `${query} - Private Search on DuckDuckGo`,
+          url: searchUrls.duckduckgo,
+          snippet: `Search for ${query} privately with DuckDuckGo. No tracking, no personal data collection, just pure search results.`,
           source: 'DuckDuckGo',
           relevance: 0.89,
-          category: 'Beginner',
+          category: 'Privacy Search',
           date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
         },
         {
           id: generateId(),
-          title: `${query} Community Forum - Discussions`,
-          url: `https://community.tech/forum/${encodedQuery}`,
-          snippet: `Join the conversation about ${query} with experts and enthusiasts. Find solutions to common problems and share your experiences.`,
+          title: `${query} Discussion Forums`,
+          url: searchUrls.duckduckgo,
+          snippet: `Find community discussions and forums about ${query} through DuckDuckGo's privacy-focused search results.`,
           source: 'DuckDuckGo',
           relevance: 0.84,
           category: 'Community',
@@ -194,23 +205,23 @@ export const searchAcrossEngines = async (
         }
       );
 
-      // Brave Search mock results
+      // Brave Search mock results - redirect to Brave search
       mockResults.push(
         {
           id: generateId(),
-          title: `${query} - Privacy-Focused Implementation Guide`,
-          url: `https://www.privacytech.com/guides/${encodedQuery}`,
-          snippet: `Learn how to implement ${query} while maintaining privacy and security. This guide covers best practices, potential pitfalls, and ethical considerations.`,
+          title: `${query} - Independent Search on Brave`,
+          url: searchUrls.brave,
+          snippet: `Explore ${query} with Brave's independent search engine. Get unbiased results without tracking or manipulation.`,
           source: 'Brave',
           relevance: 0.86,
-          category: 'Privacy',
+          category: 'Independent Search',
           date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
         },
         {
           id: generateId(),
-          title: `Open Source ${query} Projects Worth Following`,
-          url: `https://www.opensource.dev/projects/${encodedQuery}`,
-          snippet: `Discover the most promising open source projects related to ${query}. Includes project descriptions, activity metrics, and contribution opportunities.`,
+          title: `Open Source Projects: ${query}`,
+          url: searchUrls.brave,
+          snippet: `Discover open source projects and privacy-focused resources related to ${query} through Brave Search.`,
           source: 'Brave',
           relevance: 0.83,
           category: 'Open Source',
@@ -218,32 +229,32 @@ export const searchAcrossEngines = async (
         }
       );
 
-      // You.com mock results
+      // You.com mock results - redirect to You.com search
       mockResults.push(
         {
           id: generateId(),
-          title: `${query} - AI-Enhanced Analysis and Insights`,
-          url: `https://www.aiinsights.com/analysis/${encodedQuery}`,
-          snippet: `Our AI-powered analysis provides deeper insights into ${query}, identifying patterns and connections that might be missed by traditional research methods.`,
+          title: `${query} - AI-Powered Search on You.com`,
+          url: searchUrls.you,
+          snippet: `Get AI-enhanced search results for ${query} on You.com. Personalized results with intelligent summaries and insights.`,
           source: 'You.com',
           relevance: 0.85,
-          category: 'AI Analysis',
+          category: 'AI Search',
           date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
         },
         {
           id: generateId(),
-          title: `How ${query} is Transforming Industries in 2025`,
-          url: `https://www.industrytrends.com/transformation/${encodedQuery}`,
-          snippet: `Explore how ${query} is disrupting traditional business models and creating new opportunities across multiple sectors. Includes case studies and expert interviews.`,
+          title: `${query} Trends and Insights`,
+          url: searchUrls.you,
+          snippet: `Explore trending topics and insights about ${query} with You.com's intelligent search and personalized results.`,
           source: 'You.com',
           relevance: 0.82,
-          category: 'Industry',
+          category: 'Trends',
           date: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString()
         }
       );
       
       resolve(mockResults);
-    }, 1500); // Reduced latency from 2500ms to 1500ms for better performance
+    }, 1500);
   });
 };
 

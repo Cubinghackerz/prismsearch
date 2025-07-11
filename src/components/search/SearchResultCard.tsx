@@ -92,7 +92,7 @@ const SearchResultCard = ({ result, index, hoverBorderColor, viewMode = 'grid', 
         {/* Title with improved readability */}
         <h3 className={`font-medium text-prism-text mb-2 transition-colors line-clamp-2 font-inter
                       ${viewMode === 'list' ? 'text-lg' : 'text-base'}`}>
-          <a href={result.url} target="_blank" rel="noopener noreferrer" className="focus:outline-1 focus:outline-prism-primary/50 rounded-sm">
+          <a href={result.url} target="_blank" rel="noopener noreferrer" className="focus:outline-1 focus:outline-prism-primary/50 rounded-sm hover:text-prism-primary">
             {result.title}
           </a>
         </h3>
