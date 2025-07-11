@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -12,7 +11,8 @@ import {
   Info,
   Mail,
   Package,
-  Calendar
+  Calendar,
+  Lock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -140,6 +140,19 @@ export function DashboardSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
+              isActive={isActive("/vault")}
+              tooltip="Prism Vault"
+            >
+              <Link to="/vault">
+                <Lock className="h-4 w-4" />
+                <span>Prism Vault</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
               isActive={isActive("/pricing")}
               tooltip="Pricing"
             >
@@ -187,6 +200,9 @@ export function DashboardNavbar() {
           </Link>
           <Link to="/chat">
             <Button variant="ghost" size="sm">Chat</Button>
+          </Link>
+          <Link to="/vault">
+            <Button variant="ghost" size="sm">Vault</Button>
           </Link>
           <Link to="/pricing">
             <Button variant="ghost" size="sm">Pricing</Button>

@@ -6,7 +6,8 @@ import {
   DollarSign, 
   ArrowRight, 
   RefreshCw, 
-  PlusCircle
+  PlusCircle,
+  Lock
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -56,7 +57,7 @@ const Dashboard = () => {
         </div>
       </DashboardHeader>
       
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card className="hover:shadow-lg transition-shadow duration-200">
           <CardHeader className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
             <CardTitle className="flex items-center">
@@ -98,6 +99,29 @@ const Dashboard = () => {
             <Link to="/chat" className="w-full">
               <Button className="w-full bg-prism-violet hover:bg-prism-teal transition-colors">
                 Start Chatting <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
+        
+        <Card className="hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+            <CardTitle className="flex items-center">
+              <Lock className="mr-2 h-5 w-5" /> Prism Vault
+            </CardTitle>
+            <CardDescription className="text-purple-100">
+              Secure password generator
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <p className="text-sm text-gray-600">
+              Generate strong passwords with AI-powered strength assessment.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Link to="/vault" className="w-full">
+              <Button className="w-full bg-prism-violet hover:bg-prism-teal transition-colors">
+                Generate Password <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
           </CardFooter>
