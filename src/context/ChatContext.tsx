@@ -53,7 +53,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isTyping, setIsTyping] = useState<boolean>(false);
-  const [selectedModel, setSelectedModel] = useState<ChatModel>('mistral');
+  const [selectedModel, setSelectedModel] = useState<ChatModel>('gemini');
   const [chatId, setChatId] = useState<string | null>(null);
 
   const sendMessage = async (content: string, parentMessageId?: string) => {
@@ -88,7 +88,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           query: content,
           chatId: chatId,
           chatHistory: messages,
-          model: selectedModel
+          model: 'gemini' // Force Gemini model
         }
       });
       
@@ -140,7 +140,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const selectModel = (model: ChatModel) => {
-    setSelectedModel(model);
+    // Force Gemini model only
+    setSelectedModel('gemini');
   };
 
   const runDeepResearch = async (topic: string) => {
@@ -175,7 +176,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           query: topic,
           chatId: chatId,
           chatHistory: messages,
-          model: selectedModel,
+          model: 'gemini', // Force Gemini model
           deepResearch: true
         }
       });
@@ -227,7 +228,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isTyping,
       startNewChat,
       selectModel,
-      selectedModel,
+      selectedModel: 'gemini', // Always return Gemini
       chatId,
       runDeepResearch
     }}>

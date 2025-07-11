@@ -20,7 +20,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
   return (
     <div className="p-3 border-b border-prism-border bg-prism-primary/5">
       <Alert className="mb-3 py-2 bg-prism-primary/10 border-prism-border text-prism-text-muted text-xs">
-        <p>Select your preferred AI model</p>
+        <p>AI Model: Gemini 2.5</p>
       </Alert>
       
       <RadioGroup 
@@ -30,70 +30,12 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
         className="grid grid-cols-1 gap-2"
       >
         <ModelOption 
-          value="mistral" 
-          name="Mistral Medium" 
-          description="Efficient AI assistant" 
-          badge={{ text: "Recommended", color: "green" }} 
-          isSelected={selectedModel === 'mistral'}
-        />
-
-        <ModelOption 
-          value="mistral-medium-3" 
-          name="Mistral Large (24.11)" 
-          description="Latest flagship Mistral model" 
-          badge={{ text: "New", color: "yellow" }} 
-          isSelected={selectedModel === 'mistral-medium-3'}
-        />
-
-        <ModelOption 
-          value="groq" 
-          name="Llama-3-70B" 
-          description="High-performance model" 
-          badge={{ text: "Fast", color: "orange" }} 
-          isSelected={selectedModel === 'groq'}
-        />
-
-        <ModelOption 
-          value="groq-qwen-qwq" 
-          name="Qwen-QwQ" 
-          description="Specialized AI model on Groq" 
-          badge={{ text: "New", color: "yellow" }} 
-          isSelected={selectedModel === 'groq-qwen-qwq'}
-        />
-
-        <ModelOption 
-          value="groq-llama4-scout" 
-          name="Llama 4 Scout" 
-          description="Latest Llama model on Groq" 
-          badge={{ text: "New", color: "yellow" }} 
-          isSelected={selectedModel === 'groq-llama4-scout'}
-        />
-
-        <ModelOption 
           value="gemini" 
           name="Gemini 2.5" 
           description="Google's latest AI model" 
-          badge={{ text: "Accurate", color: "yellow" }} 
+          badge={{ text: "Active", color: "green" }} 
           isSelected={selectedModel === 'gemini'}
         />
-        
-        {/* Azure OpenAI models temporarily disabled
-        <ModelOption 
-          value="azure-gpt4-nano" 
-          name="GPT-4.1 Nano" 
-          description="Azure OpenAI - Efficient" 
-          badge={{ text: "Azure", color: "orange" }} 
-          isSelected={selectedModel === 'azure-gpt4-nano'}
-        />
-        
-        <ModelOption 
-          value="azure-o4-mini" 
-          name="O4 Mini" 
-          description="Azure OpenAI - Compact" 
-          badge={{ text: "Azure", color: "orange" }} 
-          isSelected={selectedModel === 'azure-o4-mini'}
-        />
-        */}
       </RadioGroup>
 
       <div className="mt-3 flex justify-end">
@@ -143,11 +85,9 @@ const ModelOption: React.FC<ModelOptionProps> = ({ value, name, description, bad
       >
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold text-prism-text">{name}</span>
-          <span className={`px-1.5 py-0.5 text-[10px] ${
-            badge.color === "green" ? "bg-green-500/30 text-green-300" :
-            badge.color === "yellow" ? "bg-yellow-500/30 text-yellow-300" :
-            "bg-prism-primary/30 text-prism-primary-light"
-          } rounded-full`}>{badge.text}</span>
+          <span className={`px-1.5 py-0.5 text-[10px] ${badgeColors[badge.color]} rounded-full`}>
+            {badge.text}
+          </span>
         </div>
         <span className="mt-1 text-xs text-prism-text-muted/70">{description}</span>
       </motion.label>
