@@ -21,15 +21,6 @@ interface PasswordData {
   };
 }
 
-interface DigitalRainDrop {
-  id: number;
-  x: number;
-  y: number;
-  speed: number;
-  char: string;
-  opacity: number;
-}
-
 const PrismVault = () => {
   const [passwords, setPasswords] = useState<PasswordData[]>([]);
   const [passwordCount, setPasswordCount] = useState(1);
@@ -43,53 +34,25 @@ const PrismVault = () => {
   const [generationProgress, setGenerationProgress] = useState(0);
   const [isVaultLoading, setIsVaultLoading] = useState(true);
   const [animatingPasswords, setAnimatingPasswords] = useState<string[]>([]);
-  const [rainDrops, setRainDrops] = useState<DigitalRainDrop[]>([]);
+  const [encryptionProgress, setEncryptionProgress] = useState(0);
   const { toast } = useToast();
 
-  // Digital rain animation for loading
+  // Encryption loading animation
   useEffect(() => {
     if (!isVaultLoading) return;
 
-    const characters = '!@#$%^&*()_+-=[]{}|;:,.<>?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const maxDrops = 80; // Increased from 50
-    
-    const createRainDrop = (id: number): DigitalRainDrop => ({
-      id,
-      x: Math.random() * window.innerWidth,
-      y: -20,
-      speed: Math.random() * 5 + 3, // Increased speed from 3 + 2
-      char: characters[Math.floor(Math.random() * characters.length)],
-      opacity: Math.random() * 0.8 + 0.2
-    });
-
-    const initialDrops = Array.from({ length: maxDrops }, (_, i) => createRainDrop(i));
-    setRainDrops(initialDrops);
-
     const interval = setInterval(() => {
-      setRainDrops(prevDrops => 
-        prevDrops.map(drop => {
-          const newY = drop.y + drop.speed;
-          if (newY > window.innerHeight + 20) {
-            return createRainDrop(drop.id);
-          }
-          return {
-            ...drop,
-            y: newY,
-            char: Math.random() < 0.15 ? characters[Math.floor(Math.random() * characters.length)] : drop.char // Increased character change rate
-          };
-        })
-      );
-    }, 30); // Decreased interval from 50ms to 30ms for faster animation
+      setEncryptionProgress(prev => {
+        if (prev >= 100) {
+          setIsVaultLoading(false);
+          clearInterval(interval);
+          return 100;
+        }
+        return prev + 2;
+      });
+    }, 50);
 
-    const timer = setTimeout(() => {
-      setIsVaultLoading(false);
-      clearInterval(interval);
-    }, 2500);
-
-    return () => {
-      clearTimeout(timer);
-      clearInterval(interval);
-    };
+    return () => clearInterval(interval);
   }, []);
 
   const generatePasswords = async () => {
@@ -273,29 +236,70 @@ const PrismVault = () => {
   if (isVaultLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
-        {/* Digital Rain Background */}
-        <div className="absolute inset-0 pointer-events-none">
-          {rainDrops.map(drop => (
-            <div
-              key={drop.id}
-              className="absolute font-mono text-green-400 select-none"
-              style={{
-                left: `${drop.x}px`,
-                top: `${drop.y}px`,
-                opacity: drop.opacity,
-                fontSize: '14px',
-                textShadow: '0 0 8px rgba(34, 197, 94, 0.8)'
-              }}
-            >
-              {drop.char}
-            </div>
-          ))}
-        </div>
+        {/* Encryption animation background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-slate-900 to-black opacity-70"></div>
         
-        <div className="text-center space-y-6 z-10">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-green-400">Initializing Prism Vault</h2>
+        <div className="text-center space-y-8 z-10">
+          {/* Animated Lock */}
+          <div className="relative">
+            <div className="relative w-32 h-32 mx-auto">
+              {/* Lock body */}
+              <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-green-600 to-green-800 shadow-2xl shadow-green-500/20">
+                {/* Lock shackle */}
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-16 h-12 border-4 border-green-400 rounded-t-full bg-transparent"></div>
+                
+                {/* Keyhole */}
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                  <div className="w-4 h-4 bg-black rounded-full relative">
+                    <div className="absolute top-3 left-1/2 transform -translate-x-1/2 w-1 h-3 bg-black rounded-b-sm"></div>
+                  </div>
+                </div>
+                
+                {/* Encryption particles */}
+                <div className="absolute inset-0 overflow-hidden rounded-lg">
+                  {Array.from({ length: 12 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="absolute w-1 h-1 bg-green-300 rounded-full animate-ping"
+                      style={{
+                        left: `${20 + (i * 8) % 60}%`,
+                        top: `${30 + (i * 12) % 40}%`,
+                        animationDelay: `${i * 200}ms`,
+                        animationDuration: '2s'
+                      }}
+                    ></div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Glowing effect */}
+              <div className="absolute inset-0 rounded-lg bg-green-400/20 blur-xl animate-pulse"></div>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <h2 className="text-3xl font-bold text-green-400">Initializing Prism Vault</h2>
             <p className="text-slate-400">Encrypting your secure environment...</p>
+            
+            {/* Encryption progress */}
+            <div className="w-80 mx-auto space-y-2">
+              <div className="flex justify-between text-sm text-green-300">
+                <span>Encryption Progress</span>
+                <span>{encryptionProgress}%</span>
+              </div>
+              <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                <div 
+                  className="h-2 bg-gradient-to-r from-green-500 to-green-400 rounded-full transition-all duration-300 ease-out shadow-lg shadow-green-500/30"
+                  style={{ width: `${encryptionProgress}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-slate-500 text-center">
+                {encryptionProgress < 25 && "Initializing security protocols..."}
+                {encryptionProgress >= 25 && encryptionProgress < 50 && "Generating encryption keys..."}
+                {encryptionProgress >= 50 && encryptionProgress < 75 && "Securing vault environment..."}
+                {encryptionProgress >= 75 && "Finalizing security measures..."}
+              </p>
+            </div>
           </div>
         </div>
       </div>
