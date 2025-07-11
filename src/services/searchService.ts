@@ -107,13 +107,18 @@ export const searchAcrossEngines = async (
       // Create more detailed and realistic mock results
       const mockResults: SearchResult[] = [];
       
+      // Function to replace asterisks with bullet points in snippets
+      const formatSnippet = (text: string) => {
+        return text.replace(/\* /g, '• ');
+      };
+      
       // Google mock results
       mockResults.push(
         {
           id: generateId(),
           title: `${query} - Comprehensive Guide (2025)`,
           url: `https://www.example.com/guides/${encodedQuery}`,
-          snippet: `A detailed guide about ${query} with the latest information and expert insights. Learn about key concepts, practical applications, and best practices.`,
+          snippet: formatSnippet(`A detailed guide about ${query} with the latest information and expert insights. Learn about key concepts, practical applications, and best practices.`),
           source: 'Google',
           relevance: 0.95,
           category: 'Guide',

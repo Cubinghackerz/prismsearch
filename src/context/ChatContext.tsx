@@ -95,7 +95,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const assistantMessage: ChatMessage = {
         id: uuidv4(),
         content: responseText,
-        formattedContent: responseText,
+        formattedContent: responseText.replace(/\* /g, '• '),
         isUser: false,
         timestamp: new Date(),
         parentMessageId: parentMessageId,

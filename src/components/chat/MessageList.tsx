@@ -3,8 +3,8 @@ import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { ChatMessage } from '@/context/ChatContext';
-import MessageActions from './MessageActions';
 import TypingIndicator from './TypingIndicator';
+import ReactMarkdown from 'react-markdown';
 import ReactMarkdown from 'react-markdown';
 
 interface MessageListProps {
@@ -45,29 +45,12 @@ const MessageList: React.FC<MessageListProps> = ({
             ${message.isUser 
               ? 'bg-gradient-to-r from-prism-primary to-prism-accent text-white message user' 
               : 'bg-prism-surface/40 text-prism-text border border-prism-border message bot'
-            }
+            } relative
           `}>
-            <div className={`
-              prose prose-invert max-w-none
-              ${message.isUser ? 'prose-p:text-white prose-headings:text-white' : 'prose-p:text-prism-text prose-headings:text-prism-text-muted'}
-            `}>
-              {message.isUser ? (
-                <p className="mb-0 whitespace-pre-wrap">{message.content}</p>
-              ) : (
-                <div 
-                  dangerouslySetInnerHTML={{ 
-                    __html: message.formattedContent || message.content 
-                  }} 
-                />
-              )}
-            </div>
-            
-            <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/20 group">
-              <span className="text-xs opacity-70">
-                {format(message.timestamp, 'HH:mm')}
-              </span>
-              
-              {!message.isUser && (
+            {message.isUser ? (
+              <div className="whitespace-pre-wrap mb-0">{message.content}</div>
+            ) : (
+              <div className="prose prose-invert max-w-none prose-p:text-prism-text prose-headings:text-prism-text-muted">
                 <ReactMarkdown components={{
                   strong: ({ node, ...props }) => <span className="font-bold" {...props} />,
                   em: ({ node, ...props }) => <span className="italic" {...props} />,
@@ -75,15 +58,21 @@ const MessageList: React.FC<MessageListProps> = ({
                   h2: ({ node, ...props }) => <h2 className="text-md font-bold mt-3 mb-2" {...props} />,
                   h3: ({ node, ...props }) => <h3 className="text-sm font-bold mt-3 mb-1" {...props} />,
                   p: ({ node, ...props }) => <p className="mb-2" {...props} />,
-                  ul: ({ node, ...props }) => <ul className="list-disc pl-5 mb-3" {...props} />,
+                  ul: ({ node, ...props }) => <ul className="list-disc pl-5 mb-3 space-y-1" {...props} />,
                   ol: ({ node, ...props }) => <ol className="list-decimal pl-5 mb-3" {...props} />,
-                  li: ({ node, ...props }) => <li className="mb-1" {...props} />,
+                  li: ({ node, ...props }) => <li className="ml-2" {...props} />,
                   a: ({ node, ...props }) => <a className="text-prism-primary-light hover:underline" {...props} />,
                   code: ({ node, ...props }) => <code className="bg-prism-surface/40 px-1 py-0.5 rounded text-sm" {...props} />
                 }}>
                   {message.formattedContent || message.content}
                 </ReactMarkdown>
-              )}
+              </div>
+            )}
+            
+            <div className="absolute bottom-1 right-2">
+              <span className="text-xs opacity-50 text-right">
+                {format(message.timestamp, 'HH:mm')}
+              </span>
             </div>
           </div>
         </motion.div>

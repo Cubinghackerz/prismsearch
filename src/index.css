@@ -163,7 +163,7 @@
 }
 
 .markdown-content .prose ul {
-  @apply list-disc;
+  @apply list-disc space-y-2;
 }
 
 .markdown-content .prose ol {
@@ -171,7 +171,7 @@
 }
 
 .markdown-content .prose li {
-  @apply mb-1;
+  @apply ml-2;
 }
 
 .markdown-content .prose code {

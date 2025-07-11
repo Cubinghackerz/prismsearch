@@ -96,9 +96,9 @@ const AISearchResponse = ({
                   h2: ({ node, ...props }) => <h2 className="text-lg font-bold mt-3 mb-2" {...props} />,
                   h3: ({ node, ...props }) => <h3 className="text-md font-bold mt-3 mb-1" {...props} />,
                   p: ({ node, ...props }) => <p className="mb-3" {...props} />,
-                  ul: ({ node, ...props }) => <ul className="list-disc pl-5 mb-3" {...props} />,
+                  ul: ({ node, ...props }) => <ul className="list-disc pl-5 mb-3 space-y-2" {...props} />,
                   ol: ({ node, ...props }) => <ol className="list-decimal pl-5 mb-3" {...props} />,
-                  li: ({ node, ...props }) => <li className="mb-1" {...props} />,
+                  li: ({ node, ...props }) => <li className="ml-2" {...props} />,
                   a: ({ node, ...props }) => <a className="text-prism-primary-light hover:underline" {...props} />,
                   code: ({ node, ...props }) => <code className="bg-prism-surface/40 px-1 py-0.5 rounded text-sm" {...props} />
                 }}>
