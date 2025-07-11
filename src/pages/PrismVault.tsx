@@ -11,6 +11,7 @@ import { Shield, RefreshCw, Copy, Eye, EyeOff, Lock, AlertTriangle, CheckCircle,
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import LoadingAnimation from '@/components/LoadingAnimation';
+
 interface PasswordData {
   password: string;
   strengthAssessment: {
@@ -19,6 +20,16 @@ interface PasswordData {
     feedback: string[];
   };
 }
+
+interface DigitalRainDrop {
+  id: number;
+  x: number;
+  y: number;
+  speed: number;
+  char: string;
+  opacity: number;
+}
+
 const PrismVault = () => {
   const [passwords, setPasswords] = useState<PasswordData[]>([]);
   const [passwordCount, setPasswordCount] = useState(1);
@@ -31,17 +42,56 @@ const PrismVault = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [isVaultLoading, setIsVaultLoading] = useState(true);
-  const {
-    toast
-  } = useToast();
+  const [animatingPasswords, setAnimatingPasswords] = useState<string[]>([]);
+  const [rainDrops, setRainDrops] = useState<DigitalRainDrop[]>([]);
+  const { toast } = useToast();
 
-  // Vault loading animation
+  // Digital rain animation for loading
   useEffect(() => {
+    if (!isVaultLoading) return;
+
+    const characters = '!@#$%^&*()_+-=[]{}|;:,.<>?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const maxDrops = 50;
+    
+    const createRainDrop = (id: number): DigitalRainDrop => ({
+      id,
+      x: Math.random() * window.innerWidth,
+      y: -20,
+      speed: Math.random() * 3 + 2,
+      char: characters[Math.floor(Math.random() * characters.length)],
+      opacity: Math.random() * 0.8 + 0.2
+    });
+
+    const initialDrops = Array.from({ length: maxDrops }, (_, i) => createRainDrop(i));
+    setRainDrops(initialDrops);
+
+    const interval = setInterval(() => {
+      setRainDrops(prevDrops => 
+        prevDrops.map(drop => {
+          const newY = drop.y + drop.speed;
+          if (newY > window.innerHeight + 20) {
+            return createRainDrop(drop.id);
+          }
+          return {
+            ...drop,
+            y: newY,
+            char: Math.random() < 0.1 ? characters[Math.floor(Math.random() * characters.length)] : drop.char
+          };
+        })
+      );
+    }, 50);
+
     const timer = setTimeout(() => {
       setIsVaultLoading(false);
+      clearInterval(interval);
     }, 2500);
-    return () => clearTimeout(timer);
+
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
   }, []);
+
   const generatePasswords = async () => {
     setIsGenerating(true);
     setGenerationProgress(0);
@@ -50,6 +100,7 @@ const PrismVault = () => {
     if (includeLowercase) charset += 'abcdefghijklmnopqrstuvwxyz';
     if (includeNumbers) charset += '0123456789';
     if (includeSymbols) charset += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+
     if (charset === '') {
       toast({
         title: "No character types selected",
@@ -59,27 +110,63 @@ const PrismVault = () => {
       setIsGenerating(false);
       return;
     }
+
     const newPasswords: PasswordData[] = [];
     const progressStep = 100 / passwordCount;
+    
+    // Initialize animating passwords array
+    const animatingPasswordsArray = new Array(passwordCount).fill('');
+    setAnimatingPasswords(animatingPasswordsArray);
+
     for (let i = 0; i < passwordCount; i++) {
-      // Simulate encryption process
-      await new Promise(resolve => setTimeout(resolve, 800));
-      let newPassword = '';
+      // Character-by-character animation
+      let finalPassword = '';
       for (let j = 0; j < passwordLength[0]; j++) {
-        newPassword += charset.charAt(Math.floor(Math.random() * charset.length));
+        finalPassword += charset.charAt(Math.floor(Math.random() * charset.length));
       }
-      const strengthAssessment = assessPasswordStrength(newPassword);
+
+      // Animate each character appearing
+      for (let charIndex = 0; charIndex <= passwordLength[0]; charIndex++) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        setAnimatingPasswords(prev => {
+          const newAnimating = [...prev];
+          let animatedPassword = '';
+          
+          // Show final characters up to current index
+          for (let k = 0; k < charIndex; k++) {
+            animatedPassword += finalPassword[k];
+          }
+          
+          // Show random characters for remaining positions
+          for (let k = charIndex; k < passwordLength[0]; k++) {
+            animatedPassword += charset.charAt(Math.floor(Math.random() * charset.length));
+          }
+          
+          newAnimating[i] = animatedPassword;
+          return newAnimating;
+        });
+      }
+
+      // Final password is set
+      const strengthAssessment = assessPasswordStrength(finalPassword);
       newPasswords.push({
-        password: newPassword,
+        password: finalPassword,
         strengthAssessment
       });
+
+      // Wait a bit before processing next password
+      await new Promise(resolve => setTimeout(resolve, 300));
       setGenerationProgress((i + 1) * progressStep);
     }
+
     setPasswords(newPasswords);
     setShowPasswords(new Array(passwordCount).fill(false));
+    setAnimatingPasswords([]);
     setIsGenerating(false);
     setGenerationProgress(0);
   };
+
   const assessPasswordStrength = (pwd: string) => {
     let score = 0;
     const feedback: string[] = [];
@@ -96,23 +183,30 @@ const PrismVault = () => {
     }
 
     // Character variety assessment
-    if (/[a-z]/.test(pwd)) score += 15;else feedback.push('Add lowercase letters');
-    if (/[A-Z]/.test(pwd)) score += 15;else feedback.push('Add uppercase letters');
-    if (/[0-9]/.test(pwd)) score += 15;else feedback.push('Add numbers');
-    if (/[^a-zA-Z0-9]/.test(pwd)) score += 20;else feedback.push('Add special characters');
+    if (/[a-z]/.test(pwd)) score += 15;
+    else feedback.push('Add lowercase letters');
+    if (/[A-Z]/.test(pwd)) score += 15;
+    else feedback.push('Add uppercase letters');
+    if (/[0-9]/.test(pwd)) score += 15;
+    else feedback.push('Add numbers');
+    if (/[^a-zA-Z0-9]/.test(pwd)) score += 20;
+    else feedback.push('Add special characters');
 
     // Pattern assessment
-    if (!/(.)\1{2,}/.test(pwd)) score += 10;else feedback.push('Avoid repeating characters');
+    if (!/(.)\1{2,}/.test(pwd)) score += 10;
+    else feedback.push('Avoid repeating characters');
 
     // Determine strength level
     let level: 'weak' | 'fair' | 'good' | 'strong' | 'very-strong';
-    if (score >= 90) level = 'very-strong';else if (score >= 70) level = 'strong';else if (score >= 50) level = 'good';else if (score >= 30) level = 'fair';else level = 'weak';
-    return {
-      score,
-      level,
-      feedback
-    };
+    if (score >= 90) level = 'very-strong';
+    else if (score >= 70) level = 'strong';
+    else if (score >= 50) level = 'good';
+    else if (score >= 30) level = 'fair';
+    else level = 'weak';
+
+    return { score, level, feedback };
   };
+
   const copyToClipboard = async (password: string, index: number) => {
     try {
       await navigator.clipboard.writeText(password);
@@ -128,11 +222,13 @@ const PrismVault = () => {
       });
     }
   };
+
   const togglePasswordVisibility = (index: number) => {
     const newShowPasswords = [...showPasswords];
     newShowPasswords[index] = !newShowPasswords[index];
     setShowPasswords(newShowPasswords);
   };
+
   const getStrengthColor = (level: string) => {
     switch (level) {
       case 'very-strong':
@@ -149,6 +245,7 @@ const PrismVault = () => {
         return 'text-slate-300 bg-slate-950/50 border-slate-600';
     }
   };
+
   const getStrengthIcon = (level: string) => {
     switch (level) {
       case 'very-strong':
@@ -164,6 +261,7 @@ const PrismVault = () => {
         return <Shield className="h-4 w-4" />;
     }
   };
+
   const getStrengthBarColor = (score: number) => {
     if (score >= 90) return 'bg-gradient-to-r from-emerald-500 to-emerald-400';
     if (score >= 70) return 'bg-gradient-to-r from-green-500 to-green-400';
@@ -171,26 +269,56 @@ const PrismVault = () => {
     if (score >= 30) return 'bg-gradient-to-r from-amber-500 to-amber-400';
     return 'bg-gradient-to-r from-red-500 to-red-400';
   };
+
   if (isVaultLoading) {
-    return <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
-        <div className="text-center space-y-6">
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center relative overflow-hidden">
+        {/* Digital Rain Background */}
+        <div className="absolute inset-0 pointer-events-none">
+          {rainDrops.map(drop => (
+            <div
+              key={drop.id}
+              className="absolute font-mono text-cyan-400 select-none"
+              style={{
+                left: `${drop.x}px`,
+                top: `${drop.y}px`,
+                opacity: drop.opacity,
+                fontSize: '14px',
+                textShadow: '0 0 8px rgba(34, 211, 184, 0.8)'
+              }}
+            >
+              {drop.char}
+            </div>
+          ))}
+        </div>
+        
+        <div className="text-center space-y-6 z-10">
           <LoadingAnimation variant="neural" color="cyan" size="large" />
           <div className="space-y-2">
             <h2 className="text-2xl font-bold text-cyan-300">Initializing Prism Vault</h2>
             <p className="text-slate-400">Encrypting your secure environment...</p>
           </div>
         </div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
       {/* Header with navigation */}
       <div className="max-w-6xl mx-auto mb-8">
         <div className="flex items-center justify-between mb-4">
-          <Link to="/" className="flex items-center text-cyan-400 hover:text-cyan-300 transition-colors group">
+          <Link 
+            to="/" 
+            className="flex items-center text-cyan-400 hover:text-cyan-300 transition-colors group"
+          >
             <ArrowLeft className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform" />
             <span>Back to Home</span>
           </Link>
-          <Link to="/" className="flex items-center text-slate-400 hover:text-slate-300 transition-colors">
+          <Link 
+            to="/" 
+            className="flex items-center text-slate-400 hover:text-slate-300 transition-colors"
+          >
             <Home className="h-5 w-5 mr-2" />
             <span>Home</span>
           </Link>
@@ -203,9 +331,6 @@ const PrismVault = () => {
           <div className="flex items-center justify-center space-x-3">
             <div className="relative">
               <Lock className="h-12 w-12 text-cyan-400" />
-              <div className="absolute -top-1 -right-1">
-                
-              </div>
             </div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">
               Prism Vault
@@ -231,7 +356,14 @@ const PrismVault = () => {
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <Label className="text-slate-200 font-medium">Number of Passwords: {passwordCount}</Label>
-                <Slider value={[passwordCount]} onValueChange={value => setPasswordCount(value[0])} max={3} min={1} step={1} className="w-full" />
+                <Slider 
+                  value={[passwordCount]} 
+                  onValueChange={(value) => setPasswordCount(value[0])} 
+                  max={3} 
+                  min={1} 
+                  step={1} 
+                  className="w-full" 
+                />
                 <div className="flex justify-between text-xs text-slate-400">
                   <span>Single</span>
                   <span>Triple</span>
@@ -240,7 +372,14 @@ const PrismVault = () => {
 
               <div className="space-y-2">
                 <Label className="text-slate-200 font-medium">Password Length: {passwordLength[0]}</Label>
-                <Slider value={passwordLength} onValueChange={setPasswordLength} max={64} min={4} step={1} className="w-full" />
+                <Slider 
+                  value={passwordLength} 
+                  onValueChange={setPasswordLength} 
+                  max={64} 
+                  min={4} 
+                  step={1} 
+                  className="w-full" 
+                />
                 <div className="flex justify-between text-xs text-slate-400">
                   <span>Weak (4)</span>
                   <span>Ultra Secure (64)</span>
@@ -269,7 +408,8 @@ const PrismVault = () => {
                 </div>
               </div>
 
-              {isGenerating && <div className="space-y-3">
+              {isGenerating && (
+                <div className="space-y-3">
                   <div className="flex items-center space-x-2">
                     <LoadingAnimation variant="orbit" color="cyan" size="small" />
                     <Label className="text-cyan-300 font-medium">Generating secure passwords...</Label>
@@ -278,23 +418,63 @@ const PrismVault = () => {
                   <p className="text-xs text-slate-400 text-center">
                     Applying encryption algorithms • {Math.round(generationProgress)}%
                   </p>
-                </div>}
+                </div>
+              )}
 
-              <Button onClick={generatePasswords} disabled={isGenerating} className="w-full bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-700 hover:to-emerald-700 text-white font-semibold py-3 transition-all duration-200">
-                {isGenerating ? <>
+              <Button 
+                onClick={generatePasswords} 
+                disabled={isGenerating} 
+                className="w-full bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-700 hover:to-emerald-700 text-white font-semibold py-3 transition-all duration-200"
+              >
+                {isGenerating ? (
+                  <>
                     <LoadingAnimation variant="dots" color="cyan" size="small" className="mr-2" />
                     Encrypting...
-                  </> : <>
+                  </>
+                ) : (
+                  <>
                     <RefreshCw className="mr-2 h-4 w-4" />
                     Generate {passwordCount > 1 ? `${passwordCount} Passwords` : 'Password'}
-                  </>}
+                  </>
+                )}
               </Button>
             </CardContent>
           </Card>
 
           {/* Generated Passwords */}
           <div className="space-y-4">
-            {passwords.length > 0 ? passwords.map((passwordData, index) => <Card key={index} className="bg-slate-900/50 border-slate-700 backdrop-blur-sm shadow-xl">
+            {isGenerating && animatingPasswords.some(p => p) ? (
+              animatingPasswords.map((animPassword, index) => (
+                animPassword && (
+                  <Card key={`animating-${index}`} className="bg-slate-900/50 border-slate-700 backdrop-blur-sm shadow-xl">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center space-x-2 text-cyan-300">
+                        <Shield className="h-5 w-5" />
+                        <span>Encrypting Password {index + 1}</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-slate-200 font-medium">Password</Label>
+                        <div className="flex space-x-2">
+                          <Input 
+                            type="text" 
+                            value={animPassword} 
+                            readOnly 
+                            className="font-mono text-sm bg-slate-800/50 text-cyan-300 border-slate-600 focus:border-cyan-500" 
+                          />
+                        </div>
+                      </div>
+                      <div className="text-sm text-slate-400 animate-pulse">
+                        Analyzing security strength...
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              ))
+            ) : passwords.length > 0 ? (
+              passwords.map((passwordData, index) => (
+                <Card key={index} className="bg-slate-900/50 border-slate-700 backdrop-blur-sm shadow-xl">
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center space-x-2 text-cyan-300">
                       <Shield className="h-5 w-5" />
@@ -305,11 +485,26 @@ const PrismVault = () => {
                     <div className="space-y-2">
                       <Label className="text-slate-200 font-medium">Password</Label>
                       <div className="flex space-x-2">
-                        <Input type={showPasswords[index] ? "text" : "password"} value={passwordData.password} readOnly className="font-mono text-sm bg-slate-800/50 text-slate-200 border-slate-600 focus:border-cyan-500" />
-                        <Button variant="outline" size="icon" onClick={() => togglePasswordVisibility(index)} className="border-slate-600 hover:bg-slate-700 hover:border-cyan-500">
+                        <Input 
+                          type={showPasswords[index] ? "text" : "password"} 
+                          value={passwordData.password} 
+                          readOnly 
+                          className="font-mono text-sm bg-slate-800/50 text-slate-200 border-slate-600 focus:border-cyan-500" 
+                        />
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          onClick={() => togglePasswordVisibility(index)} 
+                          className="border-slate-600 hover:bg-slate-700 hover:border-cyan-500"
+                        >
                           {showPasswords[index] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </Button>
-                        <Button variant="outline" size="icon" onClick={() => copyToClipboard(passwordData.password, index)} className="border-slate-600 hover:bg-slate-700 hover:border-emerald-500">
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          onClick={() => copyToClipboard(passwordData.password, index)} 
+                          className="border-slate-600 hover:bg-slate-700 hover:border-emerald-500"
+                        >
                           <Copy className="h-4 w-4" />
                         </Button>
                       </div>
@@ -330,24 +525,32 @@ const PrismVault = () => {
                           <span className="text-cyan-300 font-semibold">{passwordData.strengthAssessment.score}/100</span>
                         </div>
                         <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
-                          <div className={`h-3 rounded-full transition-all duration-1000 ${getStrengthBarColor(passwordData.strengthAssessment.score)}`} style={{
-                      width: `${passwordData.strengthAssessment.score}%`
-                    }} />
+                          <div 
+                            className={`h-3 rounded-full transition-all duration-1000 ${getStrengthBarColor(passwordData.strengthAssessment.score)}`} 
+                            style={{ width: `${passwordData.strengthAssessment.score}%` }} 
+                          />
                         </div>
                       </div>
 
-                      {passwordData.strengthAssessment.feedback.length > 0 && <div className="space-y-2">
+                      {passwordData.strengthAssessment.feedback.length > 0 && (
+                        <div className="space-y-2">
                           <Label className="text-sm text-slate-200 font-medium">Security Recommendations</Label>
                           <ul className="text-sm text-slate-400 space-y-1">
-                            {passwordData.strengthAssessment.feedback.map((item, feedbackIndex) => <li key={feedbackIndex} className="flex items-start space-x-2">
+                            {passwordData.strengthAssessment.feedback.map((item, feedbackIndex) => (
+                              <li key={feedbackIndex} className="flex items-start space-x-2">
                                 <span className="text-cyan-400 mt-1">•</span>
                                 <span>{item}</span>
-                              </li>)}
+                              </li>
+                            ))}
                           </ul>
-                        </div>}
+                        </div>
+                      )}
                     </div>
                   </CardContent>
-                </Card>) : <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm shadow-xl">
+                </Card>
+              ))
+            ) : (
+              <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm shadow-xl">
                 <CardContent className="text-center py-12">
                   <div className="space-y-4">
                     <div className="relative mx-auto w-16 h-16">
@@ -362,10 +565,13 @@ const PrismVault = () => {
                     </div>
                   </div>
                 </CardContent>
-              </Card>}
+              </Card>
+            )}
           </div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default PrismVault;
