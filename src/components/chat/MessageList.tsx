@@ -5,7 +5,6 @@ import { format } from 'date-fns';
 import { ChatMessage } from '@/context/ChatContext';
 import TypingIndicator from './TypingIndicator';
 import ReactMarkdown from 'react-markdown';
-import ReactMarkdown from 'react-markdown';
 
 interface MessageListProps {
   messages: ChatMessage[];

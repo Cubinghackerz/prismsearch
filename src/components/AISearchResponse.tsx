@@ -7,7 +7,6 @@ import { Button } from './ui/button';
 import { Link } from 'react-router-dom';
 import LoadingAnimation from './LoadingAnimation';
 import ReactMarkdown from 'react-markdown';
-import ReactMarkdown from 'react-markdown';
 
 interface AISearchResponseProps {
   query: string;
