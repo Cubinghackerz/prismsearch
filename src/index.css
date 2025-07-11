@@ -1,63 +1,86 @@
-
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 210 40% 98%;
     --foreground: 222.2 84% 4.9%;
+
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
+
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
+
+    --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 96%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 84% 4.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
+
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --ring: 221.2 83.2% 53.3%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
+
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
+
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
+
+    --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 47.4% 11.2%;
+
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
+
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
+
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
+
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
+
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --ring: 224.3 76.3% 48%;
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -65,149 +88,412 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
+  }
+  
+  html {
+    @apply scroll-smooth;
   }
 }
 
-/* Prism Vault Custom Animations */
-@keyframes prism-pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
+/* NeoPrism UI Theme */
+.prism-theme {
+  --prism-bg: #0D0D0D;
+  --prism-surface: #1A1A1A;
+  --prism-text: #F2F2F2;
+  --prism-primary: #00C2A8;
+  --prism-accent: #9B5DE5;
+  --prism-border: #2E2E2E;
+  --prism-shadow: rgba(0, 194, 168, 0.1);
+}
+
+/* Color changing animation - faster 300ms timing */
+.color-changing-text {
+  background: linear-gradient(-45deg, #00C2A8, #9B5DE5, #1DD1B8, #00C2A8);
+  background-size: 300% 300%;
+  color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-animation 1s ease infinite;
+}
+
+@keyframes gradient-animation {
+  0% { background-position: 0% 50% }
+  50% { background-position: 100% 50% }
+  100% { background-position: 0% 50% }
+}
+
+/* Custom styles for markdown content */
+.markdown-content .prose {
+  @apply text-prism-text;
+}
+
+.markdown-content .prose h1,
+.markdown-content .prose h2,
+.markdown-content .prose h3,
+.markdown-content .prose h4,
+.markdown-content .prose h5,
+.markdown-content .prose h6 {
+  @apply text-prism-text font-bold mb-2 mt-4;
+}
+
+.markdown-content .prose h1 {
+  @apply text-2xl;
+}
+
+.markdown-content .prose h2 {
+  @apply text-xl;
+}
+
+.markdown-content .prose h3 {
+  @apply text-lg;
+}
+
+.markdown-content .prose p {
+  @apply mb-3;
+}
+
+.markdown-content .prose ul,
+.markdown-content .prose ol {
+  @apply ml-5 mb-3;
+}
+
+.markdown-content .prose ul {
+  @apply list-disc space-y-2;
+}
+
+.markdown-content .prose ol {
+  @apply list-decimal;
+}
+
+.markdown-content .prose li {
+  @apply ml-2;
+}
+
+.markdown-content .prose code {
+  @apply bg-prism-surface/40 px-1.5 py-0.5 rounded text-sm text-prism-text;
+}
+
+.markdown-content .prose pre {
+  @apply bg-prism-surface/40 p-3 rounded-md my-3 overflow-x-auto;
+}
+
+.markdown-content .prose a {
+  @apply text-prism-primary-light hover:text-prism-accent-light underline;
+}
+
+.markdown-content .prose blockquote {
+  @apply border-l-4 border-prism-primary/50 pl-4 italic my-3;
+}
+
+.markdown-content .prose strong {
+  @apply font-bold text-prism-text;
+}
+
+.markdown-content .prose em {
+  @apply italic text-prism-text;
+}
+
+.markdown-content .prose img {
+  @apply max-w-full rounded-md my-3;
+}
+
+.search-gradient {
+  background: linear-gradient(90deg, #00C2A8, #9B5DE5, #1DD1B8, #00C2A8);
+  background-size: 300% 100%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
   }
   50% {
-    opacity: 0.8;
-    transform: scale(1.05);
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes gradient-border {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.result-card {
+  transition: all 0.3s ease;
+}
+
+.result-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1), 0 10px 15px -5px rgba(0, 0, 0, 0.05);
+}
+
+.search-bar-container {
+  transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.search-bar-expanded {
+  transform: translateY(-20vh);
+}
+
+/* Glow animation for buttons and cards */
+.glow-button {
+  box-shadow: 0 0 10px rgba(0, 194, 168, 0.3);
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.glow-button:hover {
+  box-shadow: 0 0 15px rgba(0, 194, 168, 0.5), 0 0 30px rgba(0, 194, 168, 0.3);
+  transform: translateY(-2px);
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 5px rgba(0, 194, 168, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 194, 168, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(0, 194, 168, 0.3);
+  }
+}
+
+/* Glass morphism */
+.glass-card {
+  background: rgba(0, 194, 168, 0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 194, 168, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.glass-card:hover {
+  background: rgba(0, 194, 168, 0.1);
+  border: 1px solid rgba(0, 194, 168, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(0, 194, 168, 0.15);
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-prism-primary via-prism-accent to-prism-primary-light bg-clip-text text-transparent;
+  }
+  
+  .text-gradient-blue {
+    @apply bg-gradient-to-r from-prism-primary via-prism-primary-light to-prism-accent bg-clip-text text-transparent;
+  }
+
+  .blur-backdrop {
+    @apply backdrop-blur-md bg-prism-bg/70;
+  }
+  
+  .bg-pos-0 {
+    background-position: 0% 50%;
+  }
+  
+  .bg-pos-100 {
+    background-position: 100% 50%;
+  }
+  
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  
+  .hover-lift {
+    @apply transition-smooth hover:-translate-y-1;
+  }
+
+  /* Triangle loader aspect ratio related classes */
+  .h-5.2 {
+    height: calc(6px * 0.866);
+  }
+  
+  .h-8.66 {
+    height: calc(10px * 0.866);
+  }
+  
+  .h-13.86 {
+    height: calc(16px * 0.866);
+  }
+}
+
+/* Autocomplete styles */
+.autocomplete-dropdown {
+  max-height: 250px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(155, 135, 245, 0.5) rgba(30, 30, 40, 0.3);
+}
+
+.autocomplete-dropdown::-webkit-scrollbar {
+  width: 8px;
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-track {
+  background: rgba(30, 30, 40, 0.3);
+  border-radius: 4px;
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-thumb {
+  background-color: rgba(155, 135, 245, 0.5);
+  border-radius: 4px;
+  border: 2px solid rgba(30, 30, 40, 0.3);
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(155, 135, 245, 0.7);
+}
+
+.autocomplete-item {
+  transition: background-color 0.2s ease;
+}
+
+.autocomplete-highlight {
+  background-color: rgba(155, 135, 245, 0.3);
+  padding: 0 2px;
+  border-radius: 2px;
+  font-weight: 600;
+}
+
+/* Prism-inspired animations */
+@keyframes prism-pulse {
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(1);
+    filter: drop-shadow(0 0 8px rgba(255,255,255,0.3));
+  }
+  50% { 
+    transform: translate(-50%, -50%) scale(1.1);
+    filter: drop-shadow(0 0 12px rgba(255,255,255,0.5));
   }
 }
 
 @keyframes prism-rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 @keyframes prism-glow {
-  0%, 100% {
-    opacity: 0.5;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.1);
-  }
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
 }
 
+/* Individual ray animations */
 @keyframes prism-ray-0 {
-  0%, 100% {
-    opacity: 0.3;
-    transform: rotate(0deg) scaleY(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: rotate(0deg) scaleY(1.2);
-  }
+  0%, 100% { opacity: 0.3; transform: rotate(0deg) scaleY(1); }
+  50% { opacity: 0.8; transform: rotate(0deg) scaleY(1.2); }
 }
 
 @keyframes prism-ray-1 {
-  0%, 100% {
-    opacity: 0.4;
-    transform: rotate(60deg) scaleY(1);
-  }
-  50% {
-    opacity: 0.9;
-    transform: rotate(60deg) scaleY(1.3);
-  }
+  0%, 100% { opacity: 0.4; transform: rotate(60deg) scaleY(1); }
+  50% { opacity: 0.9; transform: rotate(60deg) scaleY(1.3); }
 }
 
 @keyframes prism-ray-2 {
-  0%, 100% {
-    opacity: 0.3;
-    transform: rotate(120deg) scaleY(1);
-  }
-  50% {
-    opacity: 0.7;
-    transform: rotate(120deg) scaleY(1.1);
-  }
+  0%, 100% { opacity: 0.3; transform: rotate(120deg) scaleY(1); }
+  50% { opacity: 0.7; transform: rotate(120deg) scaleY(1.1); }
 }
 
 @keyframes prism-ray-3 {
-  0%, 100% {
-    opacity: 0.5;
-    transform: rotate(180deg) scaleY(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: rotate(180deg) scaleY(1.2);
-  }
+  0%, 100% { opacity: 0.5; transform: rotate(180deg) scaleY(1); }
+  50% { opacity: 0.8; transform: rotate(180deg) scaleY(1.2); }
 }
 
 @keyframes prism-ray-4 {
-  0%, 100% {
-    opacity: 0.3;
-    transform: rotate(240deg) scaleY(1);
-  }
-  50% {
-    opacity: 0.9;
-    transform: rotate(240deg) scaleY(1.4);
-  }
+  0%, 100% { opacity: 0.3; transform: rotate(240deg) scaleY(1); }
+  50% { opacity: 0.9; transform: rotate(240deg) scaleY(1.4); }
 }
 
 @keyframes prism-ray-5 {
-  0%, 100% {
-    opacity: 0.4;
-    transform: rotate(300deg) scaleY(1);
-  }
-  50% {
-    opacity: 0.7;
-    transform: rotate(300deg) scaleY(1.1);
-  }
+  0%, 100% { opacity: 0.4; transform: rotate(300deg) scaleY(1); }
+  50% { opacity: 0.7; transform: rotate(300deg) scaleY(1.1); }
 }
 
+/* Individual particle animations */
 @keyframes prism-particle-0 {
-  0%, 100% {
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(0.8);
     opacity: 0.6;
-    transform: translate(-50%, -50%) scale(1);
   }
-  50% {
-    opacity: 1;
+  50% { 
     transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
   }
 }
 
 @keyframes prism-particle-1 {
-  0%, 100% {
-    opacity: 0.8;
-    transform: translate(-50%, -50%) scale(1);
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0.5;
   }
-  50% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.3);
+  50% { 
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.9;
   }
 }
 
 @keyframes prism-particle-2 {
-  0%, 100% {
-    opacity: 0.5;
-    transform: translate(-50%, -50%) scale(1);
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(0.7);
+    opacity: 0.7;
   }
-  50% {
-    opacity: 0.9;
-    transform: translate(-50%, -50%) scale(1.1);
+  50% { 
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 1;
   }
 }
 
 @keyframes prism-particle-3 {
-  0%, 100% {
-    opacity: 0.7;
-    transform: translate(-50%, -50%) scale(1);
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.4;
   }
-  50% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.4);
+  50% { 
+    transform: translate(-50%, -50%) scale(1.0);
+    opacity: 0.8;
   }
+}
+
+/* Prism shape styling */
+.prism-shape {
+  position: relative;
+}
+
+.prism-shape::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(255,255,255,0.3), transparent);
+  clip-path: inherit;
+  pointer-events: none;
+}
+
+/* Enhanced glow effects for prism */
+.prism-ray {
+  filter: blur(0.5px);
+}
+
+.prism-particle {
+  filter: blur(0.3px);
+}
+
+.prism-beam {
+  filter: blur(1px);
 }
