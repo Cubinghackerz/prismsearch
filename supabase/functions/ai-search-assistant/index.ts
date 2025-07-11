@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from '../_shared/cors.ts'
 
@@ -42,27 +43,14 @@ class DeepResearchAgent {
           this.modelId = 'llama-3.1-70b-versatile';
         }
         break;
-      case 'azure-gpt4-nano':
-      case 'azure-o4-mini':
-        this.apiKey = Deno.env.get('AZURE_OPENAI_KEY') || '';
-        this.modelId = model === 'azure-o4-mini' ? 'o4-mini' : 'gpt-4.1-nano';
-        break;
       default:
         // Default to Gemini
         this.apiKey = Deno.env.get('GEMINI_API_KEY') || '';
         this.modelId = 'gemini-2.0-flash-exp';
     }
-
-    if (!this.apiKey) {
-      console.error(`No API key found for model: ${model}`);
-    }
   }
 
   private async sendPrompt(promptText: string): Promise<string> {
-    if (!this.apiKey) {
-      throw new Error(`API key not configured for model: ${this.model}`);
-    }
-
     switch (this.model) {
       case 'gemini':
         return this.sendGeminiPrompt(promptText);
@@ -73,9 +61,6 @@ class DeepResearchAgent {
       case 'groq-qwen-qwq':
       case 'groq-llama4-scout':
         return this.sendGroqPrompt(promptText);
-      case 'azure-gpt4-nano':
-      case 'azure-o4-mini':
-        return this.sendAzurePrompt(promptText);
       default:
         return this.sendGeminiPrompt(promptText);
     }
@@ -103,8 +88,6 @@ class DeepResearchAgent {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Gemini API request failed: ${response.status} - ${errorText}`);
       throw new Error(`Gemini API request failed: ${response.status}`);
     }
 
@@ -134,8 +117,6 @@ class DeepResearchAgent {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Mistral API request failed: ${response.status} - ${errorText}`);
       throw new Error(`Mistral API request failed: ${response.status}`);
     }
 
@@ -165,8 +146,6 @@ class DeepResearchAgent {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Groq API request failed: ${response.status} - ${errorText}`);
       throw new Error(`Groq API request failed: ${response.status}`);
     }
 
@@ -175,39 +154,6 @@ class DeepResearchAgent {
     
     if (!content) {
       throw new Error('No content received from Groq API');
-    }
-
-    return content.trim();
-  }
-
-  private async sendAzurePrompt(promptText: string): Promise<string> {
-    const endpoint = Deno.env.get('AZURE_OPENAI_ENDPOINT') || 'https://prismsearchai.cognitiveservices.azure.com/';
-    const deploymentName = this.modelId;
-    
-    const response = await fetch(`${endpoint}openai/deployments/${deploymentName}/chat/completions?api-version=2024-04-01-preview`, {
-      method: 'POST',
-      headers: {
-        'api-key': this.apiKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        messages: [{ role: 'user', content: promptText }],
-        temperature: 0.7,
-        max_tokens: 8192,
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Azure OpenAI API request failed: ${response.status} - ${errorText}`);
-      throw new Error(`Azure OpenAI API request failed: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
-    
-    if (!content) {
-      throw new Error('No content received from Azure OpenAI API');
     }
 
     return content.trim();
@@ -305,11 +251,39 @@ Please produce a coherent final report.`;
 }
 
 // Regular chat functionality for all models
-async function sendChatPrompt(prompt: string, model: string): Promise<string> {
-  console.log(`Processing chat request with model: ${model}`);
-  
-  const agent = new DeepResearchAgent(model);
-  return await agent.sendPrompt(prompt);
+async function sendGeminiPrompt(prompt: string): Promise<string> {
+  const apiKey = Deno.env.get('GEMINI_API_KEY');
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY not configured');
+  }
+
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      contents: [{
+        parts: [{
+          text: prompt
+        }]
+      }],
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 8192,
+      }
+    })
+  });
+
+  if (!response.ok) {
+    console.error('Gemini API error:', response.status, response.statusText);
+    throw new Error(`API request failed: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response generated';
 }
 
 async function processDeepResearch(query: string, model: string): Promise<string> {
@@ -331,7 +305,7 @@ serve(async (req) => {
   }
 
   try {
-    const { query, chatId, chatHistory, model = 'gemini', deepResearch, summaryMode, searchResults } = await req.json()
+    const { query, chatId, chatHistory, model, deepResearch, summaryMode, searchResults } = await req.json()
     
     console.log(`Processing ${model} request for chat ${chatId}${deepResearch ? ' (Deep Research Mode)' : ''}${summaryMode ? ' (Summary Mode)' : ''}`)
 
@@ -344,7 +318,7 @@ serve(async (req) => {
       // Use deep research mode with the selected model
       result = await processDeepResearch(query, model);
     } else {
-      // Regular chat mode
+      // Regular chat mode - fallback to Gemini for all models for now
       let prompt = '';
       
       if (chatHistory && chatHistory.length > 0) {
@@ -356,7 +330,8 @@ serve(async (req) => {
         prompt = `User: ${query}\n\nAssistant:`;
       }
 
-      result = await sendChatPrompt(prompt, model);
+      // For regular chat, use Gemini for all models (can be expanded later)
+      result = await sendGeminiPrompt(prompt);
     }
 
     return new Response(
@@ -371,21 +346,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error processing request:', error)
-    
-    // Return a more specific error message
-    let errorMessage = 'An unexpected error occurred. Please try again.';
-    
-    if (error.message.includes('API key not configured')) {
-      errorMessage = 'API configuration error. Please check your API keys.';
-    } else if (error.message.includes('request failed')) {
-      errorMessage = 'External API request failed. Please try again or switch models.';
-    }
-    
     return new Response(
-      JSON.stringify({ 
-        error: errorMessage,
-        details: error.message 
-      }),
+      JSON.stringify({ error: error.message }),
       { 
         status: 500,
         headers: { 
@@ -420,7 +382,8 @@ Focus on synthesizing information rather than just listing what each source says
 Format your response clearly with sections, but keep it concise and focused.`;
 
   try {
-    const result = await sendChatPrompt(summaryPrompt, model);
+    // Use Gemini for summary generation (can be expanded to other models)
+    const result = await sendGeminiPrompt(summaryPrompt);
     return result;
   } catch (error) {
     console.error('Error generating search summary:', error);
