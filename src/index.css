@@ -130,6 +130,7 @@
 /* Custom styles for markdown content */
 .markdown-content .prose {
   @apply text-prism-text;
+  position: relative;
 }
 
 .markdown-content .prose h1,
@@ -163,15 +164,16 @@
 }
 
 .markdown-content .prose ul {
-  @apply list-disc space-y-2;
+  @apply list-disc space-y-2 pl-5 my-3;
 }
 
 .markdown-content .prose ol {
-  @apply list-decimal;
+  @apply list-decimal pl-5 my-3;
 }
 
 .markdown-content .prose li {
-  @apply ml-2;
+  @apply ml-2 mb-1;
+  position: relative;
 }
 
 .markdown-content .prose code {
@@ -200,6 +202,31 @@
 
 .markdown-content .prose img {
   @apply max-w-full rounded-md my-3;
+}
+
+/* Fix for bullet points */
+.markdown-content ul li::marker {
+  content: "• ";
+  color: var(--prism-primary);
+}
+
+.markdown-content ol li::marker {
+  color: var(--prism-primary);
+}
+
+/* Ensure timestamps don't interfere with content */
+.message {
+  position: relative;
+  padding-bottom: 1.5rem;
+}
+
+.message .timestamp {
+  position: absolute;
+  bottom: 0.25rem;
+  right: 0.5rem;
+  font-size: 0.75rem;
+  opacity: 0.5;
+  color: var(--prism-text-muted);
 }
 
 .search-gradient {
