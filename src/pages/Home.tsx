@@ -8,7 +8,6 @@ import Footer from '@/components/Footer';
 import ParticleBackground from '@/components/ParticleBackground';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, navigationMenuTriggerStyle } from '@/components/ui/navigation-menu';
-
 const container = {
   hidden: {
     opacity: 0
@@ -30,7 +29,6 @@ const item = {
     y: 0
   }
 };
-
 const Home = () => {
   // Scroll to top when component mounts
   useEffect(() => {
@@ -61,7 +59,6 @@ const Home = () => {
     pro: ["Coming Soon - Unlimited searches", "Coming Soon - Advanced chat with file upload", "Coming Soon - Priority response time", "Coming Soon - Custom data integration"],
     enterprise: ["All Pro features", "Dedicated support team", "Custom model training", "SLA guarantees"]
   };
-
   return <div className="min-h-screen flex flex-col bg-gradient-to-b from-prism-darkgray to-black text-white">
       <ParticleBackground />
       
@@ -70,11 +67,7 @@ const Home = () => {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           {/* Logo with prism image */}
           <Link to="/" className="flex items-center gap-2">
-            <img 
-              src="/lovable-uploads/aeaad4a8-0dc2-4d4b-b2b3-cb248e0843db.png" 
-              alt="Prism Search Logo" 
-              className="h-9 w-9" 
-            />
+            <img src="/lovable-uploads/aeaad4a8-0dc2-4d4b-b2b3-cb248e0843db.png" alt="Prism Search Logo" className="h-9 w-9" />
             <span className="font-montserrat font-bold text-2xl text-prism-teal">Prism</span>
             <span className="font-montserrat font-medium text-2xl text-gray-300">Search</span>
           </Link>
@@ -125,7 +118,7 @@ const Home = () => {
           {/* User Menu */}
           <div className="flex items-center">
             <Avatar>
-              <AvatarImage src="/placeholder.svg" alt="User Avatar" />
+              
               <AvatarFallback>AJ</AvatarFallback>
             </Avatar>
           </div>
