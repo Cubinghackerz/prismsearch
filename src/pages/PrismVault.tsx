@@ -326,7 +326,7 @@ const PrismVault = () => {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2 text-cyan-300">
                 <Fingerprint className="h-5 w-5" />
-                <span>Encryption Generator</span>
+                <span>Secure Password Generator</span>
               </CardTitle>
               <CardDescription className="text-slate-400">
                 Configure your secure password parameters
