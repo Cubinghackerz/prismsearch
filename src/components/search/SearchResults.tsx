@@ -2,9 +2,9 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { LayoutGrid, Database, Filter, ChevronDown, ChevronUp, RefreshCcw, List, BookmarkPlus } from 'lucide-react';
 import { useState, useMemo } from 'react';
-import { SearchResult } from './search/types';
-import SearchEngineColumn from './search/SearchEngineColumn';
-import LoadingSkeleton from './search/LoadingSkeleton';
+import { SearchResult } from './types';
+import SearchEngineColumn from './SearchEngineColumn';
+import LoadingSkeleton from './LoadingSkeleton';
 import { useToast } from '@/hooks/use-toast';
 
 interface SearchResultsProps {
