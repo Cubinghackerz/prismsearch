@@ -21,15 +21,6 @@ interface PasswordData {
   };
 }
 
-interface DigitalRainDrop {
-  id: number;
-  x: number;
-  y: number;
-  speed: number;
-  char: string;
-  opacity: number;
-}
-
 const PrismVault = () => {
   const [passwords, setPasswords] = useState<PasswordData[]>([]);
   const [passwordCount, setPasswordCount] = useState(1);
@@ -43,53 +34,59 @@ const PrismVault = () => {
   const [generationProgress, setGenerationProgress] = useState(0);
   const [isVaultLoading, setIsVaultLoading] = useState(true);
   const [animatingPasswords, setAnimatingPasswords] = useState<string[]>([]);
-  const [rainDrops, setRainDrops] = useState<DigitalRainDrop[]>([]);
+  const [vaultText, setVaultText] = useState('');
+  const [encryptionProgress, setEncryptionProgress] = useState(0);
   const { toast } = useToast();
 
-  // Digital rain animation for loading
+  // Vault opening animation
   useEffect(() => {
     if (!isVaultLoading) return;
 
-    const characters = '!@#$%^&*()_+-=[]{}|;:,.<>?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const maxDrops = 80; // Increased from 50
+    const targetText = "OPENING VAULT";
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
+    let currentIndex = 0;
     
-    const createRainDrop = (id: number): DigitalRainDrop => ({
-      id,
-      x: Math.random() * window.innerWidth,
-      y: -20,
-      speed: Math.random() * 5 + 3, // Increased speed from 3 + 2
-      char: characters[Math.floor(Math.random() * characters.length)],
-      opacity: Math.random() * 0.8 + 0.2
-    });
-
-    const initialDrops = Array.from({ length: maxDrops }, (_, i) => createRainDrop(i));
-    setRainDrops(initialDrops);
-
-    const interval = setInterval(() => {
-      setRainDrops(prevDrops => 
-        prevDrops.map(drop => {
-          const newY = drop.y + drop.speed;
-          if (newY > window.innerHeight + 20) {
-            return createRainDrop(drop.id);
+    const animateText = () => {
+      if (currentIndex <= targetText.length) {
+        let displayText = '';
+        
+        // Show final characters up to current index
+        for (let i = 0; i < currentIndex; i++) {
+          displayText += targetText[i];
+        }
+        
+        // Show random characters for remaining positions
+        for (let i = currentIndex; i < targetText.length; i++) {
+          if (targetText[i] === ' ') {
+            displayText += ' ';
+          } else {
+            displayText += characters[Math.floor(Math.random() * characters.length)];
           }
-          return {
-            ...drop,
-            y: newY,
-            char: Math.random() < 0.15 ? characters[Math.floor(Math.random() * characters.length)] : drop.char // Increased character change rate
-          };
-        })
-      );
-    }, 30); // Decreased interval from 50ms to 30ms for faster animation
-
-    const timer = setTimeout(() => {
-      setIsVaultLoading(false);
-      clearInterval(interval);
-    }, 2500);
-
-    return () => {
-      clearTimeout(timer);
-      clearInterval(interval);
+        }
+        
+        setVaultText(displayText);
+        
+        // Update progress
+        const progress = (currentIndex / targetText.length) * 100;
+        setEncryptionProgress(progress);
+        
+        if (currentIndex < targetText.length) {
+          currentIndex++;
+          setTimeout(animateText, 200); // Slower character reveal
+        } else {
+          // Final reveal complete, wait a bit then finish
+          setTimeout(() => {
+            setIsVaultLoading(false);
+          }, 1000);
+        }
+      }
     };
+
+    // Start animation after a short delay
+    setTimeout(() => {
+      animateText();
+    }, 500);
+
   }, []);
 
   const generatePasswords = async () => {
@@ -273,29 +270,47 @@ const PrismVault = () => {
   if (isVaultLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
-        {/* Digital Rain Background */}
-        <div className="absolute inset-0 pointer-events-none">
-          {rainDrops.map(drop => (
-            <div
-              key={drop.id}
-              className="absolute font-mono text-green-400 select-none"
-              style={{
-                left: `${drop.x}px`,
-                top: `${drop.y}px`,
-                opacity: drop.opacity,
-                fontSize: '14px',
-                textShadow: '0 0 8px rgba(34, 197, 94, 0.8)'
-              }}
-            >
-              {drop.char}
+        <div className="text-center space-y-8 z-10">
+          {/* Main vault opening animation */}
+          <div className="relative">
+            <div className="p-8 rounded-full bg-gradient-to-br from-cyan-500/20 to-emerald-500/20 border border-cyan-400/30 backdrop-blur-sm">
+              <Lock className="h-24 w-24 text-cyan-400 mx-auto animate-pulse" />
             </div>
-          ))}
-        </div>
-        
-        <div className="text-center space-y-6 z-10">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-green-400">Initializing Prism Vault</h2>
-            <p className="text-slate-400">Encrypting your secure environment...</p>
+            <div className="absolute -bottom-2 -right-2">
+              <Key className="h-12 w-12 text-emerald-400 animate-bounce" />
+            </div>
+          </div>
+          
+          {/* Animated text */}
+          <div className="space-y-4">
+            <h2 className="text-4xl font-bold font-mono text-green-400 tracking-wider">
+              {vaultText}
+            </h2>
+            <p className="text-slate-400">Decrypting secure environment...</p>
+          </div>
+
+          {/* Progress bar */}
+          <div className="w-80 mx-auto space-y-3">
+            <Progress value={encryptionProgress} className="w-full h-3" />
+            <p className="text-xs text-slate-400 text-center">
+              Encryption Progress: {Math.round(encryptionProgress)}%
+            </p>
+          </div>
+
+          {/* Security indicators */}
+          <div className="flex justify-center space-x-6 text-xs text-slate-500">
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span>AES-256 Encryption</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+              <span>Secure Protocol</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+              <span>Quantum Resistant</span>
+            </div>
           </div>
         </div>
       </div>

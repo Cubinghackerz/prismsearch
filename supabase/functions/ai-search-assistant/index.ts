@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from '../_shared/cors.ts'
 
@@ -43,26 +42,43 @@ class DeepResearchAgent {
           this.modelId = 'llama-3.1-70b-versatile';
         }
         break;
+      case 'azure-gpt4-nano':
+      case 'azure-o4-mini':
+        this.apiKey = Deno.env.get('AZURE_OPENAI_KEY') || '';
+        this.modelId = model === 'azure-o4-mini' ? 'o1-mini' : 'gpt-4';
+        break;
       default:
         // Default to Gemini
         this.apiKey = Deno.env.get('GEMINI_API_KEY') || '';
         this.modelId = 'gemini-2.0-flash-exp';
     }
+
+    if (!this.apiKey) {
+      throw new Error(`API key not found for model: ${model}`);
+    }
   }
 
   private async sendPrompt(promptText: string): Promise<string> {
-    switch (this.model) {
-      case 'gemini':
-        return this.sendGeminiPrompt(promptText);
-      case 'mistral':
-      case 'mistral-medium-3':
-        return this.sendMistralPrompt(promptText);
-      case 'groq':
-      case 'groq-qwen-qwq':
-      case 'groq-llama4-scout':
-        return this.sendGroqPrompt(promptText);
-      default:
-        return this.sendGeminiPrompt(promptText);
+    try {
+      switch (this.model) {
+        case 'gemini':
+          return await this.sendGeminiPrompt(promptText);
+        case 'mistral':
+        case 'mistral-medium-3':
+          return await this.sendMistralPrompt(promptText);
+        case 'groq':
+        case 'groq-qwen-qwq':
+        case 'groq-llama4-scout':
+          return await this.sendGroqPrompt(promptText);
+        case 'azure-gpt4-nano':
+        case 'azure-o4-mini':
+          return await this.sendAzurePrompt(promptText);
+        default:
+          return await this.sendGeminiPrompt(promptText);
+      }
+    } catch (error) {
+      console.error(`Error with ${this.model}:`, error);
+      throw new Error(`Failed to generate response with ${this.model}: ${error.message}`);
     }
   }
 
@@ -88,7 +104,9 @@ class DeepResearchAgent {
     });
 
     if (!response.ok) {
-      throw new Error(`Gemini API request failed: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Gemini API error:', response.status, errorText);
+      throw new Error(`Gemini API request failed: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
@@ -117,7 +135,9 @@ class DeepResearchAgent {
     });
 
     if (!response.ok) {
-      throw new Error(`Mistral API request failed: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Mistral API error:', response.status, errorText);
+      throw new Error(`Mistral API request failed: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
@@ -146,7 +166,9 @@ class DeepResearchAgent {
     });
 
     if (!response.ok) {
-      throw new Error(`Groq API request failed: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Groq API error:', response.status, errorText);
+      throw new Error(`Groq API request failed: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
@@ -154,6 +176,43 @@ class DeepResearchAgent {
     
     if (!content) {
       throw new Error('No content received from Groq API');
+    }
+
+    return content.trim();
+  }
+
+  private async sendAzurePrompt(promptText: string): Promise<string> {
+    const endpoint = Deno.env.get('AZURE_OPENAI_ENDPOINT');
+    const deploymentName = Deno.env.get('AZURE_DEPLOYMENT_NAME') || 'gpt-4';
+    
+    if (!endpoint) {
+      throw new Error('Azure OpenAI endpoint not configured');
+    }
+
+    const response = await fetch(`${endpoint}/openai/deployments/${deploymentName}/chat/completions?api-version=2024-08-01-preview`, {
+      method: 'POST',
+      headers: {
+        'api-key': this.apiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: promptText }],
+        temperature: 0.7,
+        max_tokens: 8192,
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Azure OpenAI API error:', response.status, errorText);
+      throw new Error(`Azure OpenAI API request failed: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+    
+    if (!content) {
+      throw new Error('No content received from Azure OpenAI API');
     }
 
     return content.trim();
@@ -250,40 +309,28 @@ Please produce a coherent final report.`;
   }
 }
 
-// Regular chat functionality for all models
-async function sendGeminiPrompt(prompt: string): Promise<string> {
-  const apiKey = Deno.env.get('GEMINI_API_KEY');
-  if (!apiKey) {
-    throw new Error('GEMINI_API_KEY not configured');
-  }
-
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      contents: [{
-        parts: [{
-          text: prompt
-        }]
-      }],
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 8192,
+// Regular chat functionality
+async function sendRegularChat(prompt: string, model: string): Promise<string> {
+  try {
+    const agent = new DeepResearchAgent(model);
+    return await agent.sendPrompt(prompt);
+  } catch (error) {
+    console.error(`Error with regular chat for ${model}:`, error);
+    
+    // Fallback to Gemini if the selected model fails
+    if (model !== 'gemini') {
+      console.log('Falling back to Gemini...');
+      try {
+        const geminiAgent = new DeepResearchAgent('gemini');
+        return await geminiAgent.sendPrompt(prompt);
+      } catch (geminiError) {
+        console.error('Gemini fallback also failed:', geminiError);
+        throw new Error('All AI models are currently unavailable. Please try again later.');
       }
-    })
-  });
-
-  if (!response.ok) {
-    console.error('Gemini API error:', response.status, response.statusText);
-    throw new Error(`API request failed: ${response.status}`);
+    }
+    
+    throw error;
   }
-
-  const data = await response.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response generated';
 }
 
 async function processDeepResearch(query: string, model: string): Promise<string> {
@@ -295,69 +342,23 @@ async function processDeepResearch(query: string, model: string): Promise<string
     return report;
   } catch (error) {
     console.error('Error in deep research:', error);
+    
+    // Fallback to Gemini for deep research if the selected model fails
+    if (model !== 'gemini') {
+      console.log('Falling back to Gemini for deep research...');
+      try {
+        const geminiAgent = new DeepResearchAgent('gemini');
+        const report = await geminiAgent.runDeepResearch(query);
+        return report;
+      } catch (geminiError) {
+        console.error('Gemini fallback for deep research also failed:', geminiError);
+        throw new Error('Deep research is currently unavailable. Please try again later.');
+      }
+    }
+    
     throw error;
   }
 }
-
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
-
-  try {
-    const { query, chatId, chatHistory, model, deepResearch, summaryMode, searchResults } = await req.json()
-    
-    console.log(`Processing ${model} request for chat ${chatId}${deepResearch ? ' (Deep Research Mode)' : ''}${summaryMode ? ' (Summary Mode)' : ''}`)
-
-    let result = '';
-
-    if (summaryMode && searchResults) {
-      // Generate search result summary
-      result = await generateSearchSummary(query, searchResults, model);
-    } else if (deepResearch) {
-      // Use deep research mode with the selected model
-      result = await processDeepResearch(query, model);
-    } else {
-      // Regular chat mode - fallback to Gemini for all models for now
-      let prompt = '';
-      
-      if (chatHistory && chatHistory.length > 0) {
-        const historyContext = chatHistory.map((msg: any) => 
-          `${msg.isUser ? 'User' : 'Assistant'}: ${msg.content}`
-        ).join('\n');
-        prompt = `Previous conversation:\n${historyContext}\n\nUser: ${query}\n\nAssistant:`;
-      } else {
-        prompt = `User: ${query}\n\nAssistant:`;
-      }
-
-      // For regular chat, use Gemini for all models (can be expanded later)
-      result = await sendGeminiPrompt(prompt);
-    }
-
-    return new Response(
-      JSON.stringify({ response: result }),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
-    )
-
-  } catch (error) {
-    console.error('Error processing request:', error)
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 500,
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
-    )
-  }
-})
 
 // Function to generate search result summaries
 async function generateSearchSummary(query: string, searchResults: any, model: string): Promise<string> {
@@ -382,11 +383,75 @@ Focus on synthesizing information rather than just listing what each source says
 Format your response clearly with sections, but keep it concise and focused.`;
 
   try {
-    // Use Gemini for summary generation (can be expanded to other models)
-    const result = await sendGeminiPrompt(summaryPrompt);
-    return result;
+    return await sendRegularChat(summaryPrompt, model);
   } catch (error) {
     console.error('Error generating search summary:', error);
-    throw new Error('Failed to generate search summary');
+    throw new Error('Failed to generate search summary. Please try again later.');
   }
 }
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
+  try {
+    const { query, chatId, chatHistory, model, deepResearch, summaryMode, searchResults } = await req.json()
+    
+    console.log(`Processing ${model} request for chat ${chatId}${deepResearch ? ' (Deep Research Mode)' : ''}${summaryMode ? ' (Summary Mode)' : ''}`)
+
+    let result = '';
+
+    if (summaryMode && searchResults) {
+      // Generate search result summary
+      result = await generateSearchSummary(query, searchResults, model);
+    } else if (deepResearch) {
+      // Use deep research mode with the selected model
+      result = await processDeepResearch(query, model);
+    } else {
+      // Regular chat mode
+      let prompt = '';
+      
+      if (chatHistory && chatHistory.length > 0) {
+        const historyContext = chatHistory.map((msg: any) => 
+          `${msg.isUser ? 'User' : 'Assistant'}: ${msg.content}`
+        ).join('\n');
+        prompt = `Previous conversation:\n${historyContext}\n\nUser: ${query}\n\nAssistant:`;
+      } else {
+        prompt = `User: ${query}\n\nAssistant:`;
+      }
+
+      result = await sendRegularChat(prompt, model);
+    }
+
+    return new Response(
+      JSON.stringify({ response: result }),
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
+    )
+
+  } catch (error) {
+    console.error('Error processing request:', error)
+    
+    // Return a more user-friendly error message
+    const errorMessage = error.message || 'An unexpected error occurred. Please try again.';
+    
+    return new Response(
+      JSON.stringify({ 
+        error: errorMessage,
+        details: 'If this error persists, please check your API keys and try again later.'
+      }),
+      { 
+        status: 500,
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
+    )
+  }
+})
