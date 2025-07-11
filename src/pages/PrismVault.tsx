@@ -475,7 +475,7 @@ const PrismVault = () => {
                     <div className="relative mx-auto w-16 h-16">
                       <Lock className="h-16 w-16 text-slate-600 mx-auto" />
                       <div className="absolute -bottom-1 -right-1">
-                        <Key className="h-8 w-8 text-slate-500" />
+                        
                       </div>
                     </div>
                     <div className="space-y-2">
