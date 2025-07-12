@@ -3,18 +3,23 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import { Shield, Chrome, Fingerprint, Eye, Lock } from 'lucide-react';
+import { Shield, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import ParticleBackground from '@/components/ParticleBackground';
 import { useToast } from '@/hooks/use-toast';
 
 const Auth = () => {
-  const { signInWithGoogle, user, loading } = useAuth();
+  const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [biometricSupported, setBiometricSupported] = useState(false);
-  const [signingIn, setSigningIn] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     // Redirect if already authenticated
@@ -23,65 +28,48 @@ const Auth = () => {
     }
   }, [user, loading, navigate]);
 
-  useEffect(() => {
-    // Check if biometric authentication is supported
-    const checkBiometricSupport = async () => {
-      if ('credentials' in navigator && 'create' in navigator.credentials) {
-        try {
-          // Check if WebAuthn is supported
-          const available = await navigator.credentials.get({
-            publicKey: {
-              challenge: new Uint8Array(32),
-              allowCredentials: [],
-              timeout: 1000,
-            }
-          }).catch(() => false);
-          setBiometricSupported(!!available || 'authenticatorAttachment' in PublicKeyCredential.prototype);
-        } catch {
-          setBiometricSupported(false);
-        }
-      }
-    };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    checkBiometricSupport();
-  }, []);
-
-  const handleGoogleSignIn = async () => {
-    setSigningIn(true);
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      console.error('Sign in error:', error);
-    } finally {
-      setSigningIn(false);
-    }
-  };
-
-  const handleBiometricAuth = async () => {
-    if (!biometricSupported) {
+    if (isSignUp && password !== confirmPassword) {
       toast({
-        title: "Biometric authentication not supported",
-        description: "Please use Google sign-in instead.",
+        title: "Passwords don't match",
+        description: "Please make sure both passwords are the same.",
         variant: "destructive"
       });
       return;
     }
 
-    try {
-      // This would integrate with WebAuthn for biometric authentication
-      // For now, we'll redirect to Google OAuth with biometric preference
+    if (password.length < 6) {
       toast({
-        title: "Biometric authentication",
-        description: "Redirecting to secure authentication...",
-      });
-      
-      await handleGoogleSignIn();
-    } catch (error) {
-      toast({
-        title: "Biometric authentication failed",
-        description: "Please try Google sign-in instead.",
+        title: "Password too short",
+        description: "Password must be at least 6 characters long.",
         variant: "destructive"
       });
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      if (isSignUp) {
+        const { error } = await signUp(email, password);
+        if (!error) {
+          toast({
+            title: "Account created successfully!",
+            description: "Please check your email for a confirmation link.",
+          });
+        }
+      } else {
+        const { error } = await signIn(email, password);
+        if (!error) {
+          navigate('/', { replace: true });
+        }
+      }
+    } catch (error) {
+      console.error('Auth error:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -125,7 +113,7 @@ const Auth = () => {
             </h1>
           </motion.div>
           <p className="text-prism-text-muted">
-            Sign in to sync your passwords and bookmarks across devices
+            {isSignUp ? 'Create your account' : 'Sign in to your account'}
           </p>
         </div>
 
@@ -133,45 +121,105 @@ const Auth = () => {
           <CardHeader>
             <CardTitle className="text-center text-prism-text flex items-center justify-center gap-2">
               <Lock className="h-5 w-5" />
-              Secure Authentication
+              {isSignUp ? 'Create Account' : 'Welcome Back'}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <Button
-              onClick={handleGoogleSignIn}
-              disabled={signingIn}
-              className="w-full bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 
-                shadow-sm transition-all duration-200 hover:shadow-md"
-            >
-              {signingIn ? (
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-600 border-t-transparent"></div>
-                  Signing in...
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="email" className="text-sm text-prism-text">
+                  Email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-prism-text-muted" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10 bg-prism-surface border-prism-border text-prism-text"
+                    required
+                  />
                 </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Chrome className="h-5 w-5" />
-                  Continue with Google
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-sm text-prism-text">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-prism-text-muted" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 pr-10 bg-prism-surface border-prism-border text-prism-text"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-prism-text-muted hover:text-prism-text"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {isSignUp && (
+                <div className="space-y-2">
+                  <label htmlFor="confirmPassword" className="text-sm text-prism-text">
+                    Confirm Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-prism-text-muted" />
+                    <Input
+                      id="confirmPassword"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Confirm your password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="pl-10 bg-prism-surface border-prism-border text-prism-text"
+                      required
+                    />
+                  </div>
                 </div>
               )}
-            </Button>
 
-            {biometricSupported && (
               <Button
-                onClick={handleBiometricAuth}
-                variant="outline"
-                className="w-full border-prism-primary text-prism-primary hover:bg-prism-primary/10"
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary-dark hover:to-prism-accent-dark"
               >
-                <div className="flex items-center gap-2">
-                  <Fingerprint className="h-5 w-5" />
-                  Use Biometric Authentication
-                </div>
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    {isSignUp ? 'Creating Account...' : 'Signing In...'}
+                  </div>
+                ) : (
+                  isSignUp ? 'Create Account' : 'Sign In'
+                )}
               </Button>
-            )}
+            </form>
 
-            <div className="text-center pt-4 border-t border-prism-border">
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-prism-primary hover:text-prism-primary-light transition-colors"
+              >
+                {isSignUp 
+                  ? 'Already have an account? Sign in' 
+                  : "Don't have an account? Sign up"
+                }
+              </button>
+            </div>
+
+            <div className="text-center pt-4 border-t border-prism-border mt-6">
               <p className="text-sm text-prism-text-muted mb-3">
-                Why sign in?
+                Why create an account?
               </p>
               <div className="space-y-2 text-xs text-prism-text-muted">
                 <div className="flex items-center gap-2">
