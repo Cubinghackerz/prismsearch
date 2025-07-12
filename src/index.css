@@ -70,38 +70,6 @@
   }
 }
 
-/* Optimized animations with reduced complexity */
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fade-out {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
 /* Custom styles for markdown content */
 .markdown-content ul {
   list-style-type: disc;
@@ -164,20 +132,144 @@
   z-index: 10;
 }
 
-/* Performance optimized animations */
-* {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* Prism Vault Custom Animations */
+@keyframes prism-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
 }
 
-/* Reduce motion for users who prefer it */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+@keyframes prism-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes prism-glow {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes prism-ray-0 {
+  0%, 100% {
+    opacity: 0.3;
+    transform: rotate(0deg) scaleY(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: rotate(0deg) scaleY(1.2);
+  }
+}
+
+@keyframes prism-ray-1 {
+  0%, 100% {
+    opacity: 0.4;
+    transform: rotate(60deg) scaleY(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: rotate(60deg) scaleY(1.3);
+  }
+}
+
+@keyframes prism-ray-2 {
+  0%, 100% {
+    opacity: 0.3;
+    transform: rotate(120deg) scaleY(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: rotate(120deg) scaleY(1.1);
+  }
+}
+
+@keyframes prism-ray-3 {
+  0%, 100% {
+    opacity: 0.5;
+    transform: rotate(180deg) scaleY(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: rotate(180deg) scaleY(1.2);
+  }
+}
+
+@keyframes prism-ray-4 {
+  0%, 100% {
+    opacity: 0.3;
+    transform: rotate(240deg) scaleY(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: rotate(240deg) scaleY(1.4);
+  }
+}
+
+@keyframes prism-ray-5 {
+  0%, 100% {
+    opacity: 0.4;
+    transform: rotate(300deg) scaleY(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: rotate(300deg) scaleY(1.1);
+  }
+}
+
+@keyframes prism-particle-0 {
+  0%, 100% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+}
+
+@keyframes prism-particle-1 {
+  0%, 100% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.3);
+  }
+}
+
+@keyframes prism-particle-2 {
+  0%, 100% {
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+}
+
+@keyframes prism-particle-3 {
+  0%, 100% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.4);
   }
 }

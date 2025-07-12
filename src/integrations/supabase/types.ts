@@ -14,93 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
-      bookmarks: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          title: string
-          updated_at: string
-          url: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          title: string
-          updated_at?: string
-          url: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          title?: string
-          updated_at?: string
-          url?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          created_at: string
-          email: string | null
-          full_name: string | null
-          id: string
-          updated_at: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string
-          email?: string | null
-          full_name?: string | null
-          id: string
-          updated_at?: string
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string
-          email?: string | null
-          full_name?: string | null
-          id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       stored_passwords: {
         Row: {
           created_at: string
-          device_id: string | null
           id: string
           name: string
           password_encrypted: string
-          synced_at: string | null
           updated_at: string
           url: string | null
           user_id: string
         }
         Insert: {
           created_at?: string
-          device_id?: string | null
           id?: string
           name: string
           password_encrypted: string
-          synced_at?: string | null
           updated_at?: string
           url?: string | null
           user_id: string
         }
         Update: {
           created_at?: string
-          device_id?: string | null
           id?: string
           name?: string
           password_encrypted?: string
-          synced_at?: string | null
           updated_at?: string
           url?: string | null
           user_id?: string
