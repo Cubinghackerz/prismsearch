@@ -1,158 +1,166 @@
-
 import CryptoJS from 'crypto-js';
 
-interface MasterPasswordData {
-  hash: string;
-  salt: string;
-  createdAt: string;
-}
+class MasterPasswordServiceClass {
+  private masterPasswordHash: string | null = null;
+  private sessionCreatedAt: number | null = null;
+  private readonly SESSION_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+  private autoLockTimer: NodeJS.Timeout | null = null;
 
-class MasterPasswordService {
-  private static readonly MASTER_PASSWORD_KEY = 'prism_vault_master_password';
-  private static readonly SESSION_KEY = 'prism_vault_session';
-  private static readonly SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
-
-  static setMasterPassword(password: string): void {
-    const salt = CryptoJS.lib.WordArray.random(128/8).toString();
-    const hash = CryptoJS.PBKDF2(password, salt, {
-      keySize: 256/32,
-      iterations: 1000
-    }).toString();
-
-    const masterPasswordData: MasterPasswordData = {
-      hash,
-      salt,
-      createdAt: new Date().toISOString()
-    };
-
-    localStorage.setItem(this.MASTER_PASSWORD_KEY, JSON.stringify(masterPasswordData));
+  constructor() {
+    this.loadMasterPassword();
+    this.loadSession();
   }
 
-  static hasMasterPassword(): boolean {
-    return localStorage.getItem(this.MASTER_PASSWORD_KEY) !== null;
+  private loadMasterPassword(): void {
+    const storedHash = localStorage.getItem('prism_vault_master_password');
+    if (storedHash) {
+      this.masterPasswordHash = storedHash;
+    }
   }
 
-  static verifyMasterPassword(password: string): boolean {
-    const stored = localStorage.getItem(this.MASTER_PASSWORD_KEY);
-    if (!stored) return false;
-
-    const { hash, salt }: MasterPasswordData = JSON.parse(stored);
-    const inputHash = CryptoJS.PBKDF2(password, salt, {
-      keySize: 256/32,
-      iterations: 1000
-    }).toString();
-
-    return hash === inputHash;
+  private loadSession(): void {
+    const storedSession = localStorage.getItem('prism_vault_session');
+    if (storedSession) {
+      this.sessionCreatedAt = parseInt(storedSession, 10);
+    }
   }
 
-  static changeMasterPassword(oldPassword: string, newPassword: string): boolean {
-    if (!this.verifyMasterPassword(oldPassword)) {
+  private hashPassword(password: string): string {
+    return CryptoJS.SHA256(password).toString();
+  }
+
+  hasMasterPassword(): boolean {
+    return !!this.masterPasswordHash;
+  }
+
+  setMasterPassword(password: string): void {
+    this.masterPasswordHash = this.hashPassword(password);
+    localStorage.setItem('prism_vault_master_password', this.masterPasswordHash);
+  }
+
+  verifyMasterPassword(password: string): boolean {
+    const hashedPassword = this.hashPassword(password);
+    return this.masterPasswordHash === hashedPassword;
+  }
+
+  removeMasterPassword(): void {
+    this.masterPasswordHash = null;
+    localStorage.removeItem('prism_vault_master_password');
+    this.clearSession();
+  }
+
+  createSession(): void {
+    this.sessionCreatedAt = Date.now();
+    localStorage.setItem('prism_vault_session', this.sessionCreatedAt.toString());
+    this.startAutoLockTimer();
+  }
+
+  private startAutoLockTimer(): void {
+    this.clearAutoLockTimer();
+    this.autoLockTimer = setTimeout(() => {
+      this.clearSession();
+    }, this.SESSION_DURATION);
+  }
+
+  private clearAutoLockTimer(): void {
+    if (this.autoLockTimer) {
+      clearTimeout(this.autoLockTimer);
+      this.autoLockTimer = null;
+    }
+  }
+
+  clearSession(): void {
+    this.sessionCreatedAt = null;
+    localStorage.removeItem('prism_vault_session');
+    this.clearAutoLockTimer();
+    // Dispatch custom event to notify components about session clearing
+    window.dispatchEvent(new CustomEvent('masterPasswordSessionCleared'));
+  }
+
+  isSessionValid(): boolean {
+    if (!this.sessionCreatedAt) {
+      const stored = localStorage.getItem('prism_vault_session');
+      if (!stored) return false;
+      this.sessionCreatedAt = parseInt(stored);
+    }
+
+    if (!this.sessionCreatedAt) return false;
+
+    const now = Date.now();
+    const isValid = (now - this.sessionCreatedAt) < this.SESSION_DURATION;
+    
+    if (!isValid) {
+      this.clearSession();
       return false;
     }
 
-    this.setMasterPassword(newPassword);
-    this.clearSession(); // Clear session after password change
+    // Restart the timer on session check (activity detection)
+    this.startAutoLockTimer();
     return true;
   }
 
-  static createSession(): void {
-    const sessionData = {
-      timestamp: Date.now(),
-      expires: Date.now() + this.SESSION_TIMEOUT
-    };
-    localStorage.setItem(this.SESSION_KEY, JSON.stringify(sessionData));
+  protectPassword(passwordId: string): void {
+    let protectedPasswords = localStorage.getItem('prism_vault_protected_passwords');
+    let passwordIds = protectedPasswords ? new Set(JSON.parse(protectedPasswords)) : new Set<string>();
+    passwordIds.add(passwordId);
+    localStorage.setItem('prism_vault_protected_passwords', JSON.stringify(Array.from(passwordIds)));
   }
 
-  static isSessionValid(): boolean {
-    const session = localStorage.getItem(this.SESSION_KEY);
-    if (!session) return false;
-
-    const { expires } = JSON.parse(session);
-    return Date.now() < expires;
-  }
-
-  static clearSession(): void {
-    localStorage.removeItem(this.SESSION_KEY);
-  }
-
-  static encryptPassword(password: string, masterPassword: string): string {
-    return CryptoJS.AES.encrypt(password, masterPassword).toString();
-  }
-
-  static decryptPassword(encryptedPassword: string, masterPassword: string): string {
-    const bytes = CryptoJS.AES.decrypt(encryptedPassword, masterPassword);
-    return bytes.toString(CryptoJS.enc.Utf8);
-  }
-
-  static removeMasterPassword(): void {
-    localStorage.removeItem(this.MASTER_PASSWORD_KEY);
-    localStorage.removeItem(this.SESSION_KEY);
-  }
-
-  // Check if a specific password requires master password protection
-  static passwordRequiresMasterPassword(passwordId: string): boolean {
-    const protectedPasswords = localStorage.getItem('prism_vault_protected_passwords');
-    if (!protectedPasswords) return false;
-    
-    const protectedList = JSON.parse(protectedPasswords);
-    return protectedList.includes(passwordId);
-  }
-
-  // Add a password to master password protection
-  static protectPassword(passwordId: string): void {
-    const protectedPasswords = localStorage.getItem('prism_vault_protected_passwords');
-    const protectedList = protectedPasswords ? JSON.parse(protectedPasswords) : [];
-    
-    if (!protectedList.includes(passwordId)) {
-      protectedList.push(passwordId);
-      localStorage.setItem('prism_vault_protected_passwords', JSON.stringify(protectedList));
+  unprotectPassword(passwordId: string): void {
+    let protectedPasswords = localStorage.getItem('prism_vault_protected_passwords');
+    if (protectedPasswords) {
+      let passwordIds = new Set(JSON.parse(protectedPasswords));
+      passwordIds.delete(passwordId);
+      localStorage.setItem('prism_vault_protected_passwords', JSON.stringify(Array.from(passwordIds)));
     }
   }
 
-  // Remove a password from master password protection
-  static unprotectPassword(passwordId: string): void {
+  passwordRequiresMasterPassword(passwordId: string): boolean {
     const protectedPasswords = localStorage.getItem('prism_vault_protected_passwords');
-    if (!protectedPasswords) return;
-    
-    const protectedList = JSON.parse(protectedPasswords);
-    const updatedList = protectedList.filter((id: string) => id !== passwordId);
-    localStorage.setItem('prism_vault_protected_passwords', JSON.stringify(updatedList));
+    if (!protectedPasswords) return false;
+    const passwordIds = new Set(JSON.parse(protectedPasswords));
+    return passwordIds.has(passwordId);
   }
 
-  // Get password update suggestion based on creation/update date
-  static getPasswordUpdateSuggestion(createdAt: string, updatedAt: string): {
-    shouldUpdate: boolean;
-    urgency: 'low' | 'medium' | 'high';
-    message: string;
-    daysOld: number;
-  } {
-    const lastUpdated = new Date(updatedAt > createdAt ? updatedAt : createdAt);
+  getPasswordUpdateSuggestion(createdAt: string, updatedAt: string): { shouldUpdate: boolean; urgency: 'low' | 'medium' | 'high'; message: string; daysOld: number } {
+    const createdDate = new Date(createdAt);
+    const updatedDate = new Date(updatedAt);
     const now = new Date();
-    const daysOld = Math.floor((now.getTime() - lastUpdated.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (daysOld < 90) {
-      return {
-        shouldUpdate: false,
-        urgency: 'low',
-        message: 'Password is recent',
-        daysOld
-      };
-    } else if (daysOld < 180) {
-      return {
-        shouldUpdate: true,
-        urgency: 'medium',
-        message: 'Consider updating soon',
-        daysOld
-      };
-    } else {
+    const daysSinceUpdate = Math.floor((now.getTime() - updatedDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysSinceCreation = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (daysSinceUpdate >= 180) {
       return {
         shouldUpdate: true,
         urgency: 'high',
-        message: 'Strongly recommend updating',
-        daysOld
+        message: 'Update immediately',
+        daysOld: daysSinceUpdate
+      };
+    } else if (daysSinceUpdate >= 90) {
+      return {
+        shouldUpdate: true,
+        urgency: 'medium',
+        message: 'Update soon',
+        daysOld: daysSinceUpdate
+      };
+    } else if (daysSinceCreation >= 365 && daysSinceUpdate < 90) {
+      return {
+        shouldUpdate: true,
+        urgency: 'low',
+        message: 'Consider updating',
+        daysOld: daysSinceUpdate
       };
     }
+
+    return {
+      shouldUpdate: false,
+      urgency: 'low',
+      message: '',
+      daysOld: daysSinceUpdate
+    };
   }
 }
 
+const MasterPasswordService = new MasterPasswordServiceClass();
 export default MasterPasswordService;

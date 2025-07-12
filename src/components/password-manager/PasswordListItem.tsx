@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -42,11 +41,41 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
 }) => {
   const [showMasterPasswordDialog, setShowMasterPasswordDialog] = useState(false);
   const [showProtectionDialog, setShowProtectionDialog] = useState(false);
+  const [isUnlockedState, setIsUnlockedState] = useState(false);
   const { toast } = useToast();
 
   const isProtected = MasterPasswordService.passwordRequiresMasterPassword(password.id);
-  const isUnlocked = !isProtected || MasterPasswordService.isSessionValid();
+  
+  // Check if password is unlocked (protected passwords are locked by default)
+  const isUnlocked = !isProtected || (isProtected && isUnlockedState && MasterPasswordService.isSessionValid());
+  
   const updateSuggestion = MasterPasswordService.getPasswordUpdateSuggestion(password.created_at, password.updated_at);
+
+  // Listen for session clearing events
+  useEffect(() => {
+    const handleSessionCleared = () => {
+      setIsUnlockedState(false);
+    };
+
+    window.addEventListener('masterPasswordSessionCleared', handleSessionCleared);
+    
+    return () => {
+      window.removeEventListener('masterPasswordSessionCleared', handleSessionCleared);
+    };
+  }, []);
+
+  // Check session validity periodically and update unlock state
+  useEffect(() => {
+    if (isProtected && isUnlockedState) {
+      const interval = setInterval(() => {
+        if (!MasterPasswordService.isSessionValid()) {
+          setIsUnlockedState(false);
+        }
+      }, 1000); // Check every second
+
+      return () => clearInterval(interval);
+    }
+  }, [isProtected, isUnlockedState]);
 
   const getUpdateSuggestionStatus = () => {
     if (!updateSuggestion.shouldUpdate) return null;
@@ -78,9 +107,10 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
 
   const handleMasterPasswordVerified = () => {
     setShowMasterPasswordDialog(false);
+    setIsUnlockedState(true);
     toast({
       title: "Password unlocked",
-      description: "All actions are now available for this session."
+      description: "All actions are now available. Password will lock automatically after 10 minutes."
     });
   };
 
