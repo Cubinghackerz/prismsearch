@@ -12,13 +12,14 @@ import Pricing from "./pages/Pricing";
 import Home from "./pages/Home";
 import PrismVault from "./pages/PrismVault";
 
-// Create QueryClient with custom settings for better UI
+// Create QueryClient with optimized settings for better performance
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
-      staleTime: 30000,
+      staleTime: 60000, // Increased stale time to reduce refetches
+      gcTime: 300000, // 5 minutes cache time
     },
   },
 });
@@ -36,7 +37,6 @@ const App: React.FC = () => (
             <Route path="/chat" element={<Chat />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/vault" element={<PrismVault />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

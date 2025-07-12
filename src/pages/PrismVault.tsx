@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { VaultHeader } from '@/components/vault/VaultHeader';
 import { VaultLoadingScreen } from '@/components/vault/VaultLoadingScreen';
@@ -9,6 +8,7 @@ import { AnimatingPasswordCard } from '@/components/vault/AnimatingPasswordCard'
 import { EmptyVaultCard } from '@/components/vault/EmptyVaultCard';
 import { StoredPasswordsList } from '@/components/StoredPasswordsList';
 import { PasswordManagerDialog } from '@/components/PasswordManagerDialog';
+import { SecurityScoreDashboard } from '@/components/vault/SecurityScoreDashboard';
 import zxcvbn from 'zxcvbn';
 
 interface PasswordData {
@@ -44,6 +44,17 @@ const PrismVault = () => {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const { toast } = useToast();
+
+  // Memoize stored passwords to prevent unnecessary re-fetches
+  const storedPasswords = useMemo(() => {
+    try {
+      const storedData = localStorage.getItem('prism_vault_passwords');
+      return storedData ? JSON.parse(storedData) : [];
+    } catch (error) {
+      console.error('Error loading stored passwords:', error);
+      return [];
+    }
+  }, [refreshKey]);
 
   useEffect(() => {
     if (!isVaultLoading) return;
@@ -89,76 +100,8 @@ const PrismVault = () => {
     }, 500);
   }, []);
 
-  const generatePasswords = async () => {
-    setIsGenerating(true);
-    setGenerationProgress(0);
-    
-    let charset = '';
-    if (includeUppercase) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    if (includeLowercase) charset += 'abcdefghijklmnopqrstuvwxyz';
-    if (includeNumbers) charset += '0123456789';
-    if (includeSymbols) charset += '!@#$%^&*()_+-=[]{}|;:,.<>?';
-
-    if (charset === '') {
-      toast({
-        title: "No character types selected",
-        description: "Please select at least one character type for password generation.",
-        variant: "destructive"
-      });
-      setIsGenerating(false);
-      return;
-    }
-
-    const newPasswords: PasswordData[] = [];
-    const progressStep = 100 / passwordCount;
-
-    const animatingPasswordsArray = new Array(passwordCount).fill('');
-    setAnimatingPasswords(animatingPasswordsArray);
-
-    for (let i = 0; i < passwordCount; i++) {
-      let finalPassword = '';
-      for (let j = 0; j < passwordLength[0]; j++) {
-        finalPassword += charset.charAt(Math.floor(Math.random() * charset.length));
-      }
-
-      for (let charIndex = 0; charIndex <= passwordLength[0]; charIndex++) {
-        await new Promise(resolve => setTimeout(resolve, 50));
-        setAnimatingPasswords(prev => {
-          const newAnimating = [...prev];
-          let animatedPassword = '';
-
-          for (let k = 0; k < charIndex; k++) {
-            animatedPassword += finalPassword[k];
-          }
-
-          for (let k = charIndex; k < passwordLength[0]; k++) {
-            animatedPassword += charset.charAt(Math.floor(Math.random() * charset.length));
-          }
-          
-          newAnimating[i] = animatedPassword;
-          return newAnimating;
-        });
-      }
-
-      const strengthAssessment = assessPasswordStrengthWithZxcvbn(finalPassword);
-      newPasswords.push({
-        password: finalPassword,
-        strengthAssessment,
-        isEditing: false
-      });
-
-      await new Promise(resolve => setTimeout(resolve, 300));
-      setGenerationProgress((i + 1) * progressStep);
-    }
-
-    setPasswords(newPasswords);
-    setShowPasswords(new Array(passwordCount).fill(false));
-    setAnimatingPasswords([]);
-    setIsGenerating(false);
-    setGenerationProgress(0);
-  };
-
-  const assessPasswordStrengthWithZxcvbn = (pwd: string) => {
+  // Memoize password strength assessment to avoid recalculation
+  const assessPasswordStrengthWithZxcvbn = useCallback((pwd: string) => {
     if (!pwd) {
       return {
         score: 0,
@@ -218,7 +161,78 @@ const PrismVault = () => {
       crackTime,
       entropy
     };
-  };
+  }, []);
+
+  // Optimized password generation with reduced re-renders
+  const generatePasswords = useCallback(async () => {
+    setIsGenerating(true);
+    setGenerationProgress(0);
+    
+    let charset = '';
+    if (includeUppercase) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    if (includeLowercase) charset += 'abcdefghijklmnopqrstuvwxyz';
+    if (includeNumbers) charset += '0123456789';
+    if (includeSymbols) charset += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+
+    if (charset === '') {
+      toast({
+        title: "No character types selected",
+        description: "Please select at least one character type for password generation.",
+        variant: "destructive"
+      });
+      setIsGenerating(false);
+      return;
+    }
+
+    const newPasswords: PasswordData[] = [];
+    const progressStep = 100 / passwordCount;
+
+    const animatingPasswordsArray = new Array(passwordCount).fill('');
+    setAnimatingPasswords(animatingPasswordsArray);
+
+    for (let i = 0; i < passwordCount; i++) {
+      let finalPassword = '';
+      for (let j = 0; j < passwordLength[0]; j++) {
+        finalPassword += charset.charAt(Math.floor(Math.random() * charset.length));
+      }
+
+      // Reduced animation steps for better performance
+      for (let charIndex = 0; charIndex <= passwordLength[0]; charIndex += 2) {
+        await new Promise(resolve => setTimeout(resolve, 30));
+        setAnimatingPasswords(prev => {
+          const newAnimating = [...prev];
+          let animatedPassword = '';
+
+          for (let k = 0; k < charIndex; k++) {
+            animatedPassword += finalPassword[k];
+          }
+
+          for (let k = charIndex; k < passwordLength[0]; k++) {
+            animatedPassword += charset.charAt(Math.floor(Math.random() * charset.length));
+          }
+          
+          newAnimating[i] = animatedPassword;
+          return newAnimating;
+        });
+      }
+
+      const strengthAssessment = assessPasswordStrengthWithZxcvbn(finalPassword);
+      newPasswords.push({
+        password: finalPassword,
+        strengthAssessment,
+        isEditing: false
+      });
+
+      await new Promise(resolve => setTimeout(resolve, 100));
+      setGenerationProgress((i + 1) * progressStep);
+    }
+
+    setPasswords(newPasswords);
+    setShowPasswords(new Array(passwordCount).fill(false));
+    setAnimatingPasswords([]);
+    setIsGenerating(false);
+    setGenerationProgress(0);
+  }, [passwordCount, passwordLength, includeUppercase, includeLowercase, includeNumbers, includeSymbols, assessPasswordStrengthWithZxcvbn, toast]);
 
   const copyToClipboard = async (password: string, index: number) => {
     try {
@@ -292,6 +306,8 @@ const PrismVault = () => {
       <VaultHeader />
 
       <div className="max-w-6xl mx-auto space-y-8">
+        <SecurityScoreDashboard passwords={storedPasswords} />
+        
         <StoredPasswordsList key={refreshKey} />
 
         <div className="grid gap-8 lg:grid-cols-2">

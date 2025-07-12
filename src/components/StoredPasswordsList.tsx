@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +24,7 @@ interface StoredPassword {
   breach_count?: number;
 }
 
-export const StoredPasswordsList: React.FC = () => {
+export const StoredPasswordsList: React.FC = React.memo(() => {
   const [passwords, setPasswords] = useState<StoredPassword[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPasswords, setShowPasswords] = useState<{ [key: string]: boolean }>({});
@@ -36,11 +35,8 @@ export const StoredPasswordsList: React.FC = () => {
   const [showChangeMasterPassword, setShowChangeMasterPassword] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchPasswords();
-  }, []);
-
-  const fetchPasswords = () => {
+  // Memoize password fetch function
+  const fetchPasswords = useCallback(() => {
     try {
       const storedData = localStorage.getItem('prism_vault_passwords');
       const parsedData = storedData ? JSON.parse(storedData) : [];
@@ -55,15 +51,20 @@ export const StoredPasswordsList: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  const updatePassword = (id: string, updates: Partial<StoredPassword>) => {
+  useEffect(() => {
+    fetchPasswords();
+  }, [fetchPasswords]);
+
+  // Memoize update function to prevent unnecessary re-renders
+  const updatePassword = useCallback((id: string, updates: Partial<StoredPassword>) => {
     setPasswords(prev => {
       const updated = prev.map(p => p.id === id ? { ...p, ...updates } : p);
       localStorage.setItem('prism_vault_passwords', JSON.stringify(updated));
       return updated;
     });
-  };
+  }, []);
 
   const togglePasswordVisibility = (id: string) => {
     setShowPasswords(prev => ({ ...prev, [id]: !prev[id] }));
@@ -96,14 +97,13 @@ export const StoredPasswordsList: React.FC = () => {
     }
   };
 
-  const deletePassword = (id: string, name: string) => {
+  const deletePassword = useCallback((id: string, name: string) => {
     if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
 
     try {
       const updatedPasswords = passwords.filter(p => p.id !== id);
       localStorage.setItem('prism_vault_passwords', JSON.stringify(updatedPasswords));
       
-      // Also remove from protected passwords list if it exists
       MasterPasswordService.unprotectPassword(id);
       
       setPasswords(updatedPasswords);
@@ -119,7 +119,7 @@ export const StoredPasswordsList: React.FC = () => {
         variant: "destructive"
       });
     }
-  };
+  }, [passwords, toast]);
 
   const handleEdit = (password: StoredPassword) => {
     setEditingPassword(password);
@@ -175,6 +175,22 @@ export const StoredPasswordsList: React.FC = () => {
       description: "Your master password has been updated successfully."
     });
   };
+
+  // Memoize rendered password items
+  const passwordItems = useMemo(() => 
+    passwords.map((password) => (
+      <PasswordListItem
+        key={password.id}
+        password={password}
+        isVisible={showPasswords[password.id]}
+        onToggleVisibility={() => togglePasswordVisibility(password.id)}
+        onToggleFavorite={() => toggleFavorite(password.id)}
+        onCopy={copyToClipboard}
+        onEdit={() => handleEdit(password)}
+        onDelete={() => deletePassword(password.id, password.name)}
+      />
+    )), [passwords, showPasswords, deletePassword]
+  );
 
   if (loading) {
     return (
@@ -239,18 +255,7 @@ export const StoredPasswordsList: React.FC = () => {
               </div>
             </div>
           ) : (
-            passwords.map((password) => (
-              <PasswordListItem
-                key={password.id}
-                password={password}
-                isVisible={showPasswords[password.id]}
-                onToggleVisibility={() => togglePasswordVisibility(password.id)}
-                onToggleFavorite={() => toggleFavorite(password.id)}
-                onCopy={copyToClipboard}
-                onEdit={() => handleEdit(password)}
-                onDelete={() => deletePassword(password.id, password.name)}
-              />
-            ))
+            passwordItems
           )}
         </CardContent>
       </Card>
@@ -322,4 +327,6 @@ export const StoredPasswordsList: React.FC = () => {
       />
     </div>
   );
-};
+});
+
+StoredPasswordsList.displayName = 'StoredPasswordsList';
