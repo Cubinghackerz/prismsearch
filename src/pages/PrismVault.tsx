@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { VaultHeader } from '@/components/vault/VaultHeader';
@@ -38,6 +37,7 @@ const PrismVault = () => {
   const [encryptionProgress, setEncryptionProgress] = useState(0);
   const [isPasswordManagerOpen, setIsPasswordManagerOpen] = useState(false);
   const [prefilledPassword, setPrefilledPassword] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const { toast } = useToast();
 
@@ -253,6 +253,12 @@ const PrismVault = () => {
   const handlePasswordManagerClose = () => {
     setIsPasswordManagerOpen(false);
     setPrefilledPassword('');
+    // Force refresh of StoredPasswordsList by updating the key
+    setRefreshKey(prev => prev + 1);
+  };
+
+  const handlePasswordSaved = () => {
+    handlePasswordManagerClose();
   };
 
   if (isVaultLoading) {
@@ -270,7 +276,7 @@ const PrismVault = () => {
 
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Password Manager Section */}
-        <StoredPasswordsList />
+        <StoredPasswordsList key={refreshKey} />
 
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Password Generator */}
@@ -329,7 +335,7 @@ const PrismVault = () => {
         isOpen={isPasswordManagerOpen}
         onClose={handlePasswordManagerClose}
         editingPassword={null}
-        onPasswordSaved={handlePasswordManagerClose}
+        onPasswordSaved={handlePasswordSaved}
         prefilledPassword={prefilledPassword}
       />
     </div>

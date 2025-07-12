@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Copy, Eye, EyeOff, Edit, Trash2, ExternalLink, Heart, Clock, AlertTriangle, Shield, Lock, RefreshCw } from 'lucide-react';
+import { Copy, Eye, EyeOff, Edit, Trash2, ExternalLink, Heart, Clock, AlertTriangle, Shield, Lock, RefreshCw, Unlock } from 'lucide-react';
 import MasterPasswordService from '@/services/masterPasswordService';
 import { MasterPasswordDialog } from '@/components/vault/MasterPasswordDialog';
 import { PasswordProtectionDialog } from './PasswordProtectionDialog';
@@ -42,10 +42,10 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
 }) => {
   const [showMasterPasswordDialog, setShowMasterPasswordDialog] = useState(false);
   const [showProtectionDialog, setShowProtectionDialog] = useState(false);
-  const [pendingAction, setPendingAction] = useState<'view' | 'copy' | 'edit' | 'delete' | null>(null);
   const { toast } = useToast();
 
   const isProtected = MasterPasswordService.passwordRequiresMasterPassword(password.id);
+  const isUnlocked = !isProtected || MasterPasswordService.isSessionValid();
   const updateSuggestion = MasterPasswordService.getPasswordUpdateSuggestion(password.created_at, password.updated_at);
 
   const getUpdateSuggestionStatus = () => {
@@ -72,91 +72,20 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
     }
   };
 
-  const requiresAuthentication = (action: 'view' | 'copy' | 'edit' | 'delete'): boolean => {
-    return isProtected && !MasterPasswordService.isSessionValid();
-  };
-
-  const handleToggleVisibility = () => {
-    if (requiresAuthentication('view')) {
-      setPendingAction('view');
-      setShowMasterPasswordDialog(true);
-    } else {
-      onToggleVisibility();
-    }
-  };
-
-  const handleCopy = () => {
-    if (requiresAuthentication('copy')) {
-      setPendingAction('copy');
-      setShowMasterPasswordDialog(true);
-    } else {
-      onCopy(password.password_encrypted, 'Password');
-    }
-  };
-
-  const handleEdit = () => {
-    if (requiresAuthentication('edit')) {
-      setPendingAction('edit');
-      setShowMasterPasswordDialog(true);
-    } else {
-      onEdit();
-    }
-  };
-
-  const handleDelete = () => {
-    if (requiresAuthentication('delete')) {
-      setPendingAction('delete');
-      setShowMasterPasswordDialog(true);
-    } else {
-      onDelete();
-    }
+  const handleUnlock = () => {
+    setShowMasterPasswordDialog(true);
   };
 
   const handleMasterPasswordVerified = () => {
     setShowMasterPasswordDialog(false);
-    
-    // Execute the pending action
-    switch (pendingAction) {
-      case 'view':
-        onToggleVisibility();
-        break;
-      case 'copy':
-        onCopy(password.password_encrypted, 'Password');
-        break;
-      case 'edit':
-        onEdit();
-        break;
-      case 'delete':
-        onDelete();
-        break;
-    }
-    
-    setPendingAction(null);
-    
     toast({
-      title: "Authentication successful",
-      description: "All actions are now unlocked for this session."
+      title: "Password unlocked",
+      description: "All actions are now available for this session."
     });
   };
 
-  const handleProtectionChanged = () => {
-    // Reset any pending actions when protection changes
-    setPendingAction(null);
-  };
-
   const getActionDescription = () => {
-    switch (pendingAction) {
-      case 'view':
-        return `Enter your master password to view "${password.name}".`;
-      case 'copy':
-        return `Enter your master password to copy "${password.name}".`;
-      case 'edit':
-        return `Enter your master password to edit "${password.name}".`;
-      case 'delete':
-        return `Enter your master password to delete "${password.name}".`;
-      default:
-        return `Enter your master password to access "${password.name}".`;
-    }
+    return `Enter your master password to unlock "${password.name}".`;
   };
 
   const updateStatus = getUpdateSuggestionStatus();
@@ -174,6 +103,9 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
               )}
               {isProtected && (
                 <Shield className="h-4 w-4 text-amber-400" />
+              )}
+              {isProtected && !isUnlocked && (
+                <Lock className="h-4 w-4 text-red-400" />
               )}
             </div>
             {password.url && (
@@ -194,7 +126,7 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
               {isProtected && (
                 <Badge variant="outline" className="bg-amber-950/50 text-amber-400 border-amber-400 text-xs">
                   <Lock className="h-3 w-3 mr-1" />
-                  Protected
+                  {isUnlocked ? 'Protected (Unlocked)' : 'Protected (Locked)'}
                 </Badge>
               )}
               
@@ -221,67 +153,88 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
           </div>
           
           <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setShowProtectionDialog(true)}
-              className="border-slate-600 hover:bg-slate-700 hover:border-amber-500"
-              title="Password Protection Settings"
-            >
-              <Shield className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={onToggleFavorite}
-              className={`border-slate-600 hover:bg-slate-700 ${
-                password.is_favorite 
-                  ? 'hover:border-red-400 text-red-400' 
-                  : 'hover:border-red-500'
-              }`}
-            >
-              <Heart className={`h-4 w-4 ${password.is_favorite ? 'fill-red-400' : ''}`} />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleEdit}
-              className="border-slate-600 hover:bg-slate-700 hover:border-cyan-500"
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleDelete}
-              className="border-slate-600 hover:bg-slate-700 hover:border-red-500"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {/* Show unlock button if protected and locked */}
+            {isProtected && !isUnlocked ? (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleUnlock}
+                className="border-red-600 hover:bg-red-950/50 hover:border-red-500 text-red-400"
+                title="Unlock Password"
+              >
+                <Unlock className="h-4 w-4" />
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowProtectionDialog(true)}
+                  className={`border-slate-600 hover:bg-slate-700 hover:border-amber-500 ${!isUnlocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title="Password Protection Settings"
+                  disabled={!isUnlocked}
+                >
+                  <Shield className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={onToggleFavorite}
+                  className={`border-slate-600 hover:bg-slate-700 ${
+                    password.is_favorite 
+                      ? 'hover:border-red-400 text-red-400' 
+                      : 'hover:border-red-500'
+                  } ${!isUnlocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={!isUnlocked}
+                >
+                  <Heart className={`h-4 w-4 ${password.is_favorite ? 'fill-red-400' : ''}`} />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={onEdit}
+                  className={`border-slate-600 hover:bg-slate-700 hover:border-cyan-500 ${!isUnlocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={!isUnlocked}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={onDelete}
+                  className={`border-slate-600 hover:bg-slate-700 hover:border-red-500 ${!isUnlocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={!isUnlocked}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
         <div className="space-y-2">
           <div className="flex space-x-2">
             <Input
-              type={isVisible && (!isProtected || MasterPasswordService.isSessionValid()) ? "text" : "password"}
-              value={isProtected && !MasterPasswordService.isSessionValid() ? "••••••••••••••••" : password.password_encrypted}
+              type={isVisible && isUnlocked ? "text" : "password"}
+              value={!isUnlocked ? "••••••••••••••••" : password.password_encrypted}
               readOnly
               className="font-mono text-sm bg-slate-800/50 text-slate-200 border-slate-600"
             />
             <Button
               variant="outline"
               size="icon"
-              onClick={handleToggleVisibility}
-              className="border-slate-600 hover:bg-slate-700 hover:border-cyan-500"
+              onClick={onToggleVisibility}
+              className={`border-slate-600 hover:bg-slate-700 hover:border-cyan-500 ${!isUnlocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={!isUnlocked}
             >
-              {isVisible && (!isProtected || MasterPasswordService.isSessionValid()) ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {isVisible && isUnlocked ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </Button>
             <Button
               variant="outline"
               size="icon"
-              onClick={handleCopy}
-              className="border-slate-600 hover:bg-slate-700 hover:border-emerald-500"
+              onClick={() => onCopy(password.password_encrypted, 'Password')}
+              className={`border-slate-600 hover:bg-slate-700 hover:border-emerald-500 ${!isUnlocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={!isUnlocked}
             >
               <Copy className="h-4 w-4" />
             </Button>
@@ -305,13 +258,10 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
 
       <MasterPasswordDialog
         isOpen={showMasterPasswordDialog}
-        onClose={() => {
-          setShowMasterPasswordDialog(false);
-          setPendingAction(null);
-        }}
+        onClose={() => setShowMasterPasswordDialog(false)}
         onAuthenticated={handleMasterPasswordVerified}
         mode="verify"
-        title="Enter Master Password"
+        title="Unlock Password"
         description={getActionDescription()}
       />
 
@@ -319,7 +269,7 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
         isOpen={showProtectionDialog}
         onClose={() => setShowProtectionDialog(false)}
         password={password}
-        onProtectionChanged={handleProtectionChanged}
+        onProtectionChanged={() => {}}
       />
     </>
   );
