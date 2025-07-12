@@ -8,6 +8,7 @@ import { AnimatingPasswordCard } from '@/components/vault/AnimatingPasswordCard'
 import { EmptyVaultCard } from '@/components/vault/EmptyVaultCard';
 import { StoredPasswordsList } from '@/components/StoredPasswordsList';
 import { PasswordManagerDialog } from '@/components/PasswordManagerDialog';
+import zxcvbn from 'zxcvbn';
 
 interface PasswordData {
   password: string;
@@ -15,6 +16,8 @@ interface PasswordData {
     score: number;
     level: 'weak' | 'fair' | 'good' | 'strong' | 'very-strong';
     feedback: string[];
+    crackTime?: string;
+    entropy?: number;
   };
   isEditing?: boolean;
   editedPassword?: string;
@@ -41,7 +44,6 @@ const PrismVault = () => {
 
   const { toast } = useToast();
 
-  // Vault opening animation
   useEffect(() => {
     if (!isVaultLoading) return;
     
@@ -53,12 +55,10 @@ const PrismVault = () => {
       if (currentIndex <= targetText.length) {
         let displayText = '';
 
-        // Show final characters up to current index
         for (let i = 0; i < currentIndex; i++) {
           displayText += targetText[i];
         }
 
-        // Show random characters for remaining positions
         for (let i = currentIndex; i < targetText.length; i++) {
           if (targetText[i] === ' ') {
             displayText += ' ';
@@ -69,7 +69,6 @@ const PrismVault = () => {
         
         setVaultText(displayText);
 
-        // Update progress
         const progress = (currentIndex / targetText.length) * 100;
         setEncryptionProgress(progress);
         
@@ -112,30 +111,25 @@ const PrismVault = () => {
     const newPasswords: PasswordData[] = [];
     const progressStep = 100 / passwordCount;
 
-    // Initialize animating passwords array
     const animatingPasswordsArray = new Array(passwordCount).fill('');
     setAnimatingPasswords(animatingPasswordsArray);
 
     for (let i = 0; i < passwordCount; i++) {
-      // Character-by-character animation
       let finalPassword = '';
       for (let j = 0; j < passwordLength[0]; j++) {
         finalPassword += charset.charAt(Math.floor(Math.random() * charset.length));
       }
 
-      // Animate each character appearing
       for (let charIndex = 0; charIndex <= passwordLength[0]; charIndex++) {
         await new Promise(resolve => setTimeout(resolve, 50));
         setAnimatingPasswords(prev => {
           const newAnimating = [...prev];
           let animatedPassword = '';
 
-          // Show final characters up to current index
           for (let k = 0; k < charIndex; k++) {
             animatedPassword += finalPassword[k];
           }
 
-          // Show random characters for remaining positions
           for (let k = charIndex; k < passwordLength[0]; k++) {
             animatedPassword += charset.charAt(Math.floor(Math.random() * charset.length));
           }
@@ -145,15 +139,13 @@ const PrismVault = () => {
         });
       }
 
-      // Final password is set
-      const strengthAssessment = assessPasswordStrength(finalPassword);
+      const strengthAssessment = assessPasswordStrengthWithZxcvbn(finalPassword);
       newPasswords.push({
         password: finalPassword,
         strengthAssessment,
         isEditing: false
       });
 
-      // Wait a bit before processing next password
       await new Promise(resolve => setTimeout(resolve, 300));
       setGenerationProgress((i + 1) * progressStep);
     }
@@ -165,39 +157,66 @@ const PrismVault = () => {
     setGenerationProgress(0);
   };
 
-  const assessPasswordStrength = (pwd: string) => {
-    let score = 0;
-    const feedback: string[] = [];
-
-    // Length assessment
-    if (pwd.length >= 12) {
-      score += 25;
-    } else if (pwd.length >= 8) {
-      score += 15;
-      feedback.push('Consider using a longer password (12+ characters)');
-    } else {
-      score += 5;
-      feedback.push('Password is too short. Use at least 8 characters');
+  const assessPasswordStrengthWithZxcvbn = (pwd: string) => {
+    if (!pwd) {
+      return {
+        score: 0,
+        level: 'weak' as const,
+        feedback: ['Enter a password to see strength analysis'],
+        crackTime: 'instant',
+        entropy: 0
+      };
     }
 
-    // Character variety assessment
-    if (/[a-z]/.test(pwd)) score += 15; else feedback.push('Add lowercase letters');
-    if (/[A-Z]/.test(pwd)) score += 15; else feedback.push('Add uppercase letters');
-    if (/[0-9]/.test(pwd)) score += 15; else feedback.push('Add numbers');
-    if (/[^a-zA-Z0-9]/.test(pwd)) score += 20; else feedback.push('Add special characters');
+    const zxcvbnResult = zxcvbn(pwd);
+    
+    const baseScore = (zxcvbnResult.score / 4) * 100;
+    
+    let bonusScore = 0;
+    const feedback: string[] = [];
 
-    // Pattern assessment
-    if (!/(.)\1{2,}/.test(pwd)) score += 10; else feedback.push('Avoid repeating characters');
+    if (pwd.length >= 16) bonusScore += 10;
+    else if (pwd.length >= 12) bonusScore += 5;
+    else if (pwd.length < 8) feedback.push('Password is too short. Use at least 12 characters');
 
-    // Determine strength level
+    const hasLower = /[a-z]/.test(pwd);
+    const hasUpper = /[A-Z]/.test(pwd);
+    const hasNumber = /[0-9]/.test(pwd);
+    const hasSymbol = /[^a-zA-Z0-9]/.test(pwd);
+    
+    const charTypes = [hasLower, hasUpper, hasNumber, hasSymbol].filter(Boolean).length;
+    if (charTypes >= 4) bonusScore += 5;
+    else if (charTypes < 3) feedback.push('Use a mix of uppercase, lowercase, numbers, and symbols');
+
+    const finalScore = Math.min(100, Math.round(baseScore + bonusScore));
+
     let level: 'weak' | 'fair' | 'good' | 'strong' | 'very-strong';
-    if (score >= 90) level = 'very-strong';
-    else if (score >= 70) level = 'strong';
-    else if (score >= 50) level = 'good';
-    else if (score >= 30) level = 'fair';
+    if (finalScore >= 90) level = 'very-strong';
+    else if (finalScore >= 75) level = 'strong';
+    else if (finalScore >= 60) level = 'good';
+    else if (finalScore >= 40) level = 'fair';
     else level = 'weak';
 
-    return { score, level, feedback };
+    if (zxcvbnResult.feedback.warning) {
+      feedback.unshift(zxcvbnResult.feedback.warning);
+    }
+    
+    zxcvbnResult.feedback.suggestions.forEach(suggestion => {
+      if (!feedback.includes(suggestion)) {
+        feedback.push(suggestion);
+      }
+    });
+
+    const crackTime = zxcvbnResult.crack_times_display.offline_slow_hashing_1e4_per_second;
+    const entropy = Math.round(zxcvbnResult.guesses_log10 * 3.32);
+
+    return {
+      score: finalScore,
+      level,
+      feedback: feedback.slice(0, 5),
+      crackTime,
+      entropy
+    };
   };
 
   const copyToClipboard = async (password: string, index: number) => {
@@ -225,14 +244,12 @@ const PrismVault = () => {
   const togglePasswordEdit = (index: number) => {
     const newPasswords = [...passwords];
     if (newPasswords[index].isEditing) {
-      // Save the edit
       const editedPassword = newPasswords[index].editedPassword || newPasswords[index].password;
       newPasswords[index].password = editedPassword;
-      newPasswords[index].strengthAssessment = assessPasswordStrength(editedPassword);
+      newPasswords[index].strengthAssessment = assessPasswordStrengthWithZxcvbn(editedPassword);
       newPasswords[index].isEditing = false;
       newPasswords[index].editedPassword = undefined;
     } else {
-      // Start editing
       newPasswords[index].isEditing = true;
       newPasswords[index].editedPassword = newPasswords[index].password;
     }
@@ -253,7 +270,6 @@ const PrismVault = () => {
   const handlePasswordManagerClose = () => {
     setIsPasswordManagerOpen(false);
     setPrefilledPassword('');
-    // Force refresh of StoredPasswordsList by updating the key
     setRefreshKey(prev => prev + 1);
   };
 
@@ -275,11 +291,9 @@ const PrismVault = () => {
       <VaultHeader />
 
       <div className="max-w-6xl mx-auto space-y-8">
-        {/* Password Manager Section */}
         <StoredPasswordsList key={refreshKey} />
 
         <div className="grid gap-8 lg:grid-cols-2">
-          {/* Password Generator */}
           <PasswordGenerator
             passwordCount={passwordCount}
             setPasswordCount={setPasswordCount}
@@ -298,7 +312,6 @@ const PrismVault = () => {
             onGenerate={generatePasswords}
           />
 
-          {/* Generated Passwords */}
           <div className="space-y-4">
             {isGenerating && animatingPasswords.some(p => p) ? (
               animatingPasswords.map((animPassword, index) => (

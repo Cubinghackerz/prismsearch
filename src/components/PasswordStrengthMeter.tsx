@@ -3,11 +3,14 @@ import React from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Shield, AlertTriangle, XCircle } from 'lucide-react';
+import zxcvbn from 'zxcvbn';
 
 interface PasswordStrengthAssessment {
   score: number;
   level: 'weak' | 'fair' | 'good' | 'strong' | 'very-strong';
   feedback: string[];
+  crackTime: string;
+  entropy: number;
 }
 
 interface PasswordStrengthMeterProps {
@@ -20,42 +23,80 @@ export const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({
   onAssessmentChange 
 }) => {
   const assessPasswordStrength = (pwd: string): PasswordStrengthAssessment => {
-    let score = 0;
-    const feedback: string[] = [];
-
-    if (pwd.length >= 12) {
-      score += 25;
-    } else if (pwd.length >= 8) {
-      score += 15;
-      feedback.push('Consider using a longer password (12+ characters)');
-    } else {
-      score += 5;
-      feedback.push('Password is too short. Use at least 8 characters');
+    if (!pwd) {
+      return {
+        score: 0,
+        level: 'weak',
+        feedback: ['Enter a password to see strength analysis'],
+        crackTime: 'instant',
+        entropy: 0
+      };
     }
 
-    if (/[a-z]/.test(pwd)) score += 15;
-    else feedback.push('Add lowercase letters');
+    // Use zxcvbn for comprehensive analysis
+    const zxcvbnResult = zxcvbn(pwd);
     
-    if (/[A-Z]/.test(pwd)) score += 15;
-    else feedback.push('Add uppercase letters');
+    // Convert zxcvbn score (0-4) to our percentage scale (0-100)
+    const baseScore = (zxcvbnResult.score / 4) * 100;
     
-    if (/[0-9]/.test(pwd)) score += 15;
-    else feedback.push('Add numbers');
-    
-    if (/[^a-zA-Z0-9]/.test(pwd)) score += 20;
-    else feedback.push('Add special characters');
+    // Additional scoring based on our criteria
+    let bonusScore = 0;
+    const feedback: string[] = [];
 
-    if (!/(.)\1{2,}/.test(pwd)) score += 10;
-    else feedback.push('Avoid repeating characters');
+    // Length bonus
+    if (pwd.length >= 16) bonusScore += 10;
+    else if (pwd.length >= 12) bonusScore += 5;
+    else if (pwd.length < 8) feedback.push('Password is too short. Use at least 12 characters');
 
+    // Character diversity
+    const hasLower = /[a-z]/.test(pwd);
+    const hasUpper = /[A-Z]/.test(pwd);
+    const hasNumber = /[0-9]/.test(pwd);
+    const hasSymbol = /[^a-zA-Z0-9]/.test(pwd);
+    
+    const charTypes = [hasLower, hasUpper, hasNumber, hasSymbol].filter(Boolean).length;
+    if (charTypes >= 4) bonusScore += 5;
+    else if (charTypes < 3) feedback.push('Use a mix of uppercase, lowercase, numbers, and symbols');
+
+    // Calculate final score
+    const finalScore = Math.min(100, Math.round(baseScore + bonusScore));
+
+    // Determine level
     let level: 'weak' | 'fair' | 'good' | 'strong' | 'very-strong';
-    if (score >= 90) level = 'very-strong';
-    else if (score >= 70) level = 'strong';
-    else if (score >= 50) level = 'good';
-    else if (score >= 30) level = 'fair';
+    if (finalScore >= 90) level = 'very-strong';
+    else if (finalScore >= 75) level = 'strong';
+    else if (finalScore >= 60) level = 'good';
+    else if (finalScore >= 40) level = 'fair';
     else level = 'weak';
 
-    return { score, level, feedback };
+    // Add zxcvbn feedback
+    if (zxcvbnResult.feedback.warning) {
+      feedback.unshift(zxcvbnResult.feedback.warning);
+    }
+    
+    zxcvbnResult.feedback.suggestions.forEach(suggestion => {
+      if (!feedback.includes(suggestion)) {
+        feedback.push(suggestion);
+      }
+    });
+
+    // Format crack time
+    const crackTime = formatCrackTime(zxcvbnResult.crack_times_display.offline_slow_hashing_1e4_per_second);
+
+    return {
+      score: finalScore,
+      level,
+      feedback: feedback.slice(0, 5), // Limit to 5 most important suggestions
+      crackTime,
+      entropy: Math.round(zxcvbnResult.guesses_log10 * 3.32) // Convert log10 to bits
+    };
+  };
+
+  const formatCrackTime = (crackTime: string): string => {
+    if (crackTime.includes('instant')) return 'instant';
+    if (crackTime.includes('less than a second')) return '< 1 second';
+    if (crackTime.includes('centuries')) return '> 100 years';
+    return crackTime;
   };
 
   const assessment = React.useMemo(() => assessPasswordStrength(password), [password]);
@@ -88,9 +129,9 @@ export const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({
 
   const getStrengthBarColor = (score: number) => {
     if (score >= 90) return 'bg-gradient-to-r from-emerald-500 to-emerald-400';
-    if (score >= 70) return 'bg-gradient-to-r from-green-500 to-green-400';
-    if (score >= 50) return 'bg-gradient-to-r from-cyan-500 to-cyan-400';
-    if (score >= 30) return 'bg-gradient-to-r from-amber-500 to-amber-400';
+    if (score >= 75) return 'bg-gradient-to-r from-green-500 to-green-400';
+    if (score >= 60) return 'bg-gradient-to-r from-cyan-500 to-cyan-400';
+    if (score >= 40) return 'bg-gradient-to-r from-amber-500 to-amber-400';
     return 'bg-gradient-to-r from-red-500 to-red-400';
   };
 
@@ -99,7 +140,7 @@ export const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-slate-200 font-medium text-sm">Password Strength</span>
+        <span className="text-slate-200 font-medium text-sm">Password Strength (zxcvbn)</span>
         <Badge className={getStrengthColor(assessment.level)}>
           {getStrengthIcon(assessment.level)}
           <span className="ml-1 capitalize">{assessment.level.replace('-', ' ')}</span>
@@ -119,9 +160,20 @@ export const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({
         </div>
       </div>
 
+      <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="bg-slate-800/30 rounded p-2">
+          <span className="text-slate-400">Crack Time:</span>
+          <div className="text-cyan-300 font-medium">{assessment.crackTime}</div>
+        </div>
+        <div className="bg-slate-800/30 rounded p-2">
+          <span className="text-slate-400">Entropy:</span>
+          <div className="text-cyan-300 font-medium">{assessment.entropy} bits</div>
+        </div>
+      </div>
+
       {assessment.feedback.length > 0 && (
         <div className="space-y-2">
-          <span className="text-sm text-slate-200 font-medium">Recommendations</span>
+          <span className="text-sm text-slate-200 font-medium">Security Recommendations</span>
           <ul className="text-sm text-slate-400 space-y-1">
             {assessment.feedback.map((item, index) => (
               <li key={index} className="flex items-start space-x-2">
