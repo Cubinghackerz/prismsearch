@@ -154,7 +154,7 @@ export const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({
           <div className="text-cyan-300 font-medium">{assessment.crackTime}</div>
         </div>
         <div className="bg-slate-800/30 rounded p-2">
-          <span className="text-slate-400">Entropy:</span>
+          <span className="text-slate-400">Entropy (Randomness):</span>
           <div className="text-cyan-300 font-medium">{assessment.entropy} bits</div>
         </div>
       </div>
