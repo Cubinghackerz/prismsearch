@@ -3,12 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Database, Settings, Shield } from 'lucide-react';
+import { Plus, Database, Settings, Shield, Key } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PasswordManagerDialog } from './PasswordManagerDialog';
 import { PasswordListItem } from './password-manager/PasswordListItem';
 import { PasswordSecurityDashboard } from './vault/PasswordSecurityDashboard';
 import { MasterPasswordDialog } from './vault/MasterPasswordDialog';
+import { ChangeMasterPasswordDialog } from './vault/ChangeMasterPasswordDialog';
 import MasterPasswordService from '@/services/masterPasswordService';
 
 interface StoredPassword {
@@ -31,6 +32,8 @@ export const StoredPasswordsList: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPassword, setEditingPassword] = useState<StoredPassword | null>(null);
   const [showMasterPasswordSetup, setShowMasterPasswordSetup] = useState(false);
+  const [showMasterPasswordSettings, setShowMasterPasswordSettings] = useState(false);
+  const [showChangeMasterPassword, setShowChangeMasterPassword] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -142,6 +145,10 @@ export const StoredPasswordsList: React.FC = () => {
     });
   };
 
+  const handleMasterPasswordSettings = () => {
+    setShowMasterPasswordSettings(true);
+  };
+
   const handleRemoveMasterPassword = () => {
     if (!confirm("Are you sure you want to remove the master password? This will remove protection from all protected passwords.")) {
       return;
@@ -154,9 +161,18 @@ export const StoredPasswordsList: React.FC = () => {
       localStorage.removeItem('prism_vault_protected_passwords');
     }
     
+    setShowMasterPasswordSettings(false);
     toast({
       title: "Master password removed",
       description: "Master password protection has been disabled for all passwords."
+    });
+  };
+
+  const handlePasswordChanged = () => {
+    setShowChangeMasterPassword(false);
+    toast({
+      title: "Master password changed",
+      description: "Your master password has been updated successfully."
     });
   };
 
@@ -192,13 +208,13 @@ export const StoredPasswordsList: React.FC = () => {
             </CardTitle>
             <div className="flex items-center space-x-2">
               <Button
-                onClick={() => setShowMasterPasswordSetup(true)}
+                onClick={() => MasterPasswordService.hasMasterPassword() ? handleMasterPasswordSettings() : setShowMasterPasswordSetup(true)}
                 size="sm"
                 variant="outline"
                 className="border-slate-600 hover:bg-slate-700"
               >
                 <Shield className="h-4 w-4 mr-2" />
-                {MasterPasswordService.hasMasterPassword() ? 'Manage Master Password' : 'Set Master Password'}
+                {MasterPasswordService.hasMasterPassword() ? 'Master Password' : 'Set Master Password'}
               </Button>
               <Button
                 onClick={handleAddNew}
@@ -250,29 +266,46 @@ export const StoredPasswordsList: React.FC = () => {
         isOpen={showMasterPasswordSetup}
         onClose={() => setShowMasterPasswordSetup(false)}
         onAuthenticated={handleSetupMasterPassword}
-        mode={MasterPasswordService.hasMasterPassword() ? 'verify' : 'setup'}
-        title={MasterPasswordService.hasMasterPassword() ? 'Master Password Settings' : 'Set Up Master Password'}
-        description={MasterPasswordService.hasMasterPassword() ? 
-          'Manage your master password settings.' : 
-          'Create a master password to protect selected passwords in your vault.'
-        }
+        mode="setup"
+        title="Set Up Master Password"
+        description="Create a master password to protect selected passwords in your vault."
       />
 
-      {MasterPasswordService.hasMasterPassword() && showMasterPasswordSetup && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowMasterPasswordSetup(false)}>
+      {/* Master Password Settings Modal */}
+      {showMasterPasswordSettings && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowMasterPasswordSettings(false)}>
           <div className="bg-slate-900 p-6 rounded-lg border border-slate-700 max-w-md w-full mx-4" onClick={e => e.stopPropagation()}>
-            <h3 className="text-xl font-semibold text-cyan-300 mb-4">Master Password Settings</h3>
+            <h3 className="text-xl font-semibold text-cyan-300 mb-4 flex items-center space-x-2">
+              <Shield className="h-6 w-6" />
+              <span>Master Password Settings</span>
+            </h3>
             <div className="space-y-4">
               <p className="text-slate-300">Master password is currently active. You can use it to protect individual passwords.</p>
+              
+              <div className="space-y-3">
+                <Button
+                  onClick={() => {
+                    setShowMasterPasswordSettings(false);
+                    setShowChangeMasterPassword(true);
+                  }}
+                  variant="outline"
+                  className="w-full border-cyan-600 text-cyan-400 hover:bg-cyan-950/50"
+                >
+                  <Key className="h-4 w-4 mr-2" />
+                  Change Master Password
+                </Button>
+                
+                <Button
+                  onClick={handleRemoveMasterPassword}
+                  variant="outline"
+                  className="w-full border-red-600 text-red-400 hover:bg-red-950/50"
+                >
+                  Remove Master Password
+                </Button>
+              </div>
+              
               <Button
-                onClick={handleRemoveMasterPassword}
-                variant="outline"
-                className="w-full border-red-600 text-red-400 hover:bg-red-950/50"
-              >
-                Remove Master Password
-              </Button>
-              <Button
-                onClick={() => setShowMasterPasswordSetup(false)}
+                onClick={() => setShowMasterPasswordSettings(false)}
                 className="w-full bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-700 hover:to-emerald-700"
               >
                 Close
@@ -281,6 +314,12 @@ export const StoredPasswordsList: React.FC = () => {
           </div>
         </div>
       )}
+
+      <ChangeMasterPasswordDialog
+        isOpen={showChangeMasterPassword}
+        onClose={() => setShowChangeMasterPassword(false)}
+        onPasswordChanged={handlePasswordChanged}
+      />
     </div>
   );
 };

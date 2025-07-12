@@ -45,6 +45,16 @@ class MasterPasswordService {
     return hash === inputHash;
   }
 
+  static changeMasterPassword(oldPassword: string, newPassword: string): boolean {
+    if (!this.verifyMasterPassword(oldPassword)) {
+      return false;
+    }
+
+    this.setMasterPassword(newPassword);
+    this.clearSession(); // Clear session after password change
+    return true;
+  }
+
   static createSession(): void {
     const sessionData = {
       timestamp: Date.now(),

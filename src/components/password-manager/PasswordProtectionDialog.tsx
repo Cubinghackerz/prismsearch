@@ -39,15 +39,32 @@ export const PasswordProtectionDialog: React.FC<PasswordProtectionDialogProps> =
     MasterPasswordService.passwordRequiresMasterPassword(password.id)
   );
   const [showMasterPasswordSetup, setShowMasterPasswordSetup] = useState(false);
+  const [showMasterPasswordVerify, setShowMasterPasswordVerify] = useState(false);
+  const [pendingProtectionChange, setPendingProtectionChange] = useState<boolean | null>(null);
   const { toast } = useToast();
 
   const handleProtectionToggle = (enabled: boolean) => {
-    if (enabled && !MasterPasswordService.hasMasterPassword()) {
-      // Need to set up master password first
-      setShowMasterPasswordSetup(true);
+    if (!MasterPasswordService.hasMasterPassword()) {
+      if (enabled) {
+        // Need to set up master password first
+        setShowMasterPasswordSetup(true);
+        setPendingProtectionChange(enabled);
+      }
       return;
     }
 
+    // If master password exists, require verification for any change
+    if (!MasterPasswordService.isSessionValid()) {
+      setPendingProtectionChange(enabled);
+      setShowMasterPasswordVerify(true);
+      return;
+    }
+
+    // Session is valid, proceed with change
+    applyProtectionChange(enabled);
+  };
+
+  const applyProtectionChange = (enabled: boolean) => {
     if (enabled) {
       MasterPasswordService.protectPassword(password.id);
       toast({
@@ -63,19 +80,24 @@ export const PasswordProtectionDialog: React.FC<PasswordProtectionDialogProps> =
     }
 
     setIsProtected(enabled);
+    setPendingProtectionChange(null);
     onProtectionChanged();
   };
 
   const handleMasterPasswordSetup = () => {
     setShowMasterPasswordSetup(false);
     // After master password is set up, enable protection for this password
-    MasterPasswordService.protectPassword(password.id);
-    setIsProtected(true);
-    onProtectionChanged();
-    toast({
-      title: "Password protected",
-      description: `"${password.name}" now requires master password to view.`
-    });
+    if (pendingProtectionChange !== null) {
+      applyProtectionChange(pendingProtectionChange);
+    }
+  };
+
+  const handleMasterPasswordVerified = () => {
+    setShowMasterPasswordVerify(false);
+    // After verification, apply the pending change
+    if (pendingProtectionChange !== null) {
+      applyProtectionChange(pendingProtectionChange);
+    }
   };
 
   return (
@@ -101,7 +123,7 @@ export const PasswordProtectionDialog: React.FC<PasswordProtectionDialogProps> =
               <div className="space-y-1">
                 <Label className="text-slate-200 font-medium">Master Password Protection</Label>
                 <p className="text-slate-400 text-sm">
-                  Require master password to view this password
+                  Require master password to view, copy, edit, or delete this password
                 </p>
               </div>
               <Switch
@@ -116,7 +138,7 @@ export const PasswordProtectionDialog: React.FC<PasswordProtectionDialogProps> =
                   <Lock className="h-4 w-4 text-amber-400 mt-0.5 flex-shrink-0" />
                   <div className="text-sm text-amber-200">
                     <p className="font-medium mb-1">Protected</p>
-                    <p>This password requires master password verification to view.</p>
+                    <p>This password requires master password verification to view, copy, edit, or delete.</p>
                   </div>
                 </div>
               </div>
@@ -148,11 +170,26 @@ export const PasswordProtectionDialog: React.FC<PasswordProtectionDialogProps> =
 
       <MasterPasswordDialog
         isOpen={showMasterPasswordSetup}
-        onClose={() => setShowMasterPasswordSetup(false)}
+        onClose={() => {
+          setShowMasterPasswordSetup(false);
+          setPendingProtectionChange(null);
+        }}
         onAuthenticated={handleMasterPasswordSetup}
         mode="setup"
         title="Set Up Master Password"
         description="Create a master password to protect selected passwords in your vault."
+      />
+
+      <MasterPasswordDialog
+        isOpen={showMasterPasswordVerify}
+        onClose={() => {
+          setShowMasterPasswordVerify(false);
+          setPendingProtectionChange(null);
+        }}
+        onAuthenticated={handleMasterPasswordVerified}
+        mode="verify"
+        title="Verify Master Password"
+        description="Enter your master password to change protection settings."
       />
     </>
   );

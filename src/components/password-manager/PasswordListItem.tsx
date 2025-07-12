@@ -43,7 +43,7 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
 }) => {
   const [showMasterPasswordDialog, setShowMasterPasswordDialog] = useState(false);
   const [showProtectionDialog, setShowProtectionDialog] = useState(false);
-  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'view' | 'copy' | 'edit' | 'delete' | null>(null);
   const { toast } = useToast();
 
   const isProtected = MasterPasswordService.passwordRequiresMasterPassword(password.id);
@@ -70,8 +70,13 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
     }
   };
 
+  const requiresAuthentication = (action: 'view' | 'copy' | 'edit' | 'delete'): boolean => {
+    return isProtected && !MasterPasswordService.isSessionValid();
+  };
+
   const handleToggleVisibility = () => {
-    if (isProtected && !isUnlocked) {
+    if (requiresAuthentication('view')) {
+      setPendingAction('view');
       setShowMasterPasswordDialog(true);
     } else {
       onToggleVisibility();
@@ -79,29 +84,77 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
   };
 
   const handleCopy = () => {
-    if (isProtected && !isUnlocked) {
+    if (requiresAuthentication('copy')) {
+      setPendingAction('copy');
       setShowMasterPasswordDialog(true);
     } else {
       onCopy(password.password_encrypted, 'Password');
     }
   };
 
-  const handleMasterPasswordVerified = () => {
-    setIsUnlocked(true);
-    setShowMasterPasswordDialog(false);
-    // Auto-show the password after successful verification
-    if (!isVisible) {
-      onToggleVisibility();
+  const handleEdit = () => {
+    if (requiresAuthentication('edit')) {
+      setPendingAction('edit');
+      setShowMasterPasswordDialog(true);
+    } else {
+      onEdit();
     }
+  };
+
+  const handleDelete = () => {
+    if (requiresAuthentication('delete')) {
+      setPendingAction('delete');
+      setShowMasterPasswordDialog(true);
+    } else {
+      onDelete();
+    }
+  };
+
+  const handleMasterPasswordVerified = () => {
+    setShowMasterPasswordDialog(false);
+    
+    // Execute the pending action
+    switch (pendingAction) {
+      case 'view':
+        onToggleVisibility();
+        break;
+      case 'copy':
+        onCopy(password.password_encrypted, 'Password');
+        break;
+      case 'edit':
+        onEdit();
+        break;
+      case 'delete':
+        onDelete();
+        break;
+    }
+    
+    setPendingAction(null);
+    
     toast({
-      title: "Password unlocked",
-      description: "You can now view and copy this password."
+      title: "Authentication successful",
+      description: "You can now perform the requested action."
     });
   };
 
   const handleProtectionChanged = () => {
-    // Reset unlock state when protection changes
-    setIsUnlocked(false);
+    // Reset any pending actions when protection changes
+    setPendingAction(null);
+  };
+
+  const getActionDescription = () => {
+    switch (pendingAction) {
+      case 'view':
+        return `Enter your master password to view "${password.name}".`;
+      case 'copy':
+        return `Enter your master password to copy "${password.name}".`;
+      case 'edit':
+        return `Enter your master password to edit "${password.name}".`;
+      case 'delete':
+        return `Enter your master password to delete "${password.name}".`;
+      default:
+        return `Enter your master password to access "${password.name}".`;
+    }
   };
 
   const expiryStatus = getExpiryStatus();
@@ -190,7 +243,7 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
             <Button
               variant="outline"
               size="icon"
-              onClick={onEdit}
+              onClick={handleEdit}
               className="border-slate-600 hover:bg-slate-700 hover:border-cyan-500"
             >
               <Edit className="h-4 w-4" />
@@ -198,7 +251,7 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
             <Button
               variant="outline"
               size="icon"
-              onClick={onDelete}
+              onClick={handleDelete}
               className="border-slate-600 hover:bg-slate-700 hover:border-red-500"
             >
               <Trash2 className="h-4 w-4" />
@@ -209,8 +262,8 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
         <div className="space-y-2">
           <div className="flex space-x-2">
             <Input
-              type={isVisible && (!isProtected || isUnlocked) ? "text" : "password"}
-              value={isProtected && !isUnlocked ? "••••••••••••••••" : password.password_encrypted}
+              type={isVisible && (!isProtected || MasterPasswordService.isSessionValid()) ? "text" : "password"}
+              value={isProtected && !MasterPasswordService.isSessionValid() ? "••••••••••••••••" : password.password_encrypted}
               readOnly
               className="font-mono text-sm bg-slate-800/50 text-slate-200 border-slate-600"
             />
@@ -220,7 +273,7 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
               onClick={handleToggleVisibility}
               className="border-slate-600 hover:bg-slate-700 hover:border-cyan-500"
             >
-              {isVisible && (!isProtected || isUnlocked) ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {isVisible && (!isProtected || MasterPasswordService.isSessionValid()) ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </Button>
             <Button
               variant="outline"
@@ -248,11 +301,14 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
 
       <MasterPasswordDialog
         isOpen={showMasterPasswordDialog}
-        onClose={() => setShowMasterPasswordDialog(false)}
+        onClose={() => {
+          setShowMasterPasswordDialog(false);
+          setPendingAction(null);
+        }}
         onAuthenticated={handleMasterPasswordVerified}
         mode="verify"
         title="Enter Master Password"
-        description={`Enter your master password to access "${password.name}".`}
+        description={getActionDescription()}
       />
 
       <PasswordProtectionDialog

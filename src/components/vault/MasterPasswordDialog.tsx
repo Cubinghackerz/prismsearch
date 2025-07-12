@@ -56,6 +56,7 @@ export const MasterPasswordDialog: React.FC<MasterPasswordDialogProps> = ({
         }
 
         MasterPasswordService.setMasterPassword(password);
+        MasterPasswordService.createSession();
         
         toast({
           title: "Master password set",
@@ -65,6 +66,7 @@ export const MasterPasswordDialog: React.FC<MasterPasswordDialogProps> = ({
         if (onAuthenticated) onAuthenticated();
       } else {
         if (MasterPasswordService.verifyMasterPassword(password)) {
+          MasterPasswordService.createSession();
           if (onAuthenticated) onAuthenticated();
         } else {
           toast({
