@@ -292,15 +292,6 @@ const PrismVault = () => {
     handlePasswordManagerClose();
   };
 
-  if (isVaultLoading) {
-    return (
-      <VaultLoadingScreen 
-        vaultText={vaultText} 
-        encryptionProgress={encryptionProgress} 
-      />
-    );
-  }
-
   const clearVaultHistory = useCallback(() => {
     // Clear stored passwords from localStorage
     localStorage.removeItem('prism_vault_passwords');
@@ -313,6 +304,15 @@ const PrismVault = () => {
     // Refresh the stored passwords list
     setRefreshKey(prev => prev + 1);
   }, []);
+
+  if (isVaultLoading) {
+    return (
+      <VaultLoadingScreen 
+        vaultText={vaultText} 
+        encryptionProgress={encryptionProgress} 
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
