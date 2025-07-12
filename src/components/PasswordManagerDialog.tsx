@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RefreshCw, Save, Wand2, Calendar, Shield } from 'lucide-react';
+import { RefreshCw, Save, Wand2, Shield } from 'lucide-react';
 import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 import { SavePasswordAnimation } from './SavePasswordAnimation';
 import { PasswordGeneratorSettings } from './password-manager/PasswordGeneratorSettings';
@@ -18,7 +18,6 @@ interface StoredPassword {
   password_encrypted: string;
   created_at: string;
   updated_at: string;
-  expires_at?: string;
   is_favorite?: boolean;
   breach_status?: 'safe' | 'breached' | 'checking';
   breach_count?: number;
@@ -29,6 +28,7 @@ interface PasswordManagerDialogProps {
   onClose: () => void;
   editingPassword?: StoredPassword | null;
   onPasswordSaved: () => void;
+  prefilledPassword?: string;
 }
 
 export const PasswordManagerDialog: React.FC<PasswordManagerDialogProps> = ({
@@ -36,11 +36,11 @@ export const PasswordManagerDialog: React.FC<PasswordManagerDialogProps> = ({
   onClose,
   editingPassword,
   onPasswordSaved,
+  prefilledPassword = ''
 }) => {
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
   const [password, setPassword] = useState('');
-  const [expiryDate, setExpiryDate] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showSaveAnimation, setShowSaveAnimation] = useState(false);
@@ -60,15 +60,13 @@ export const PasswordManagerDialog: React.FC<PasswordManagerDialogProps> = ({
       setName(editingPassword.name);
       setUrl(editingPassword.url || '');
       setPassword(editingPassword.password_encrypted);
-      setExpiryDate(editingPassword.expires_at ? editingPassword.expires_at.split('T')[0] : '');
     } else {
       setName('');
       setUrl('');
-      setPassword('');
-      setExpiryDate('');
+      setPassword(prefilledPassword);
     }
     setBreachData(null);
-  }, [editingPassword, isOpen]);
+  }, [editingPassword, isOpen, prefilledPassword]);
 
   const checkBreach = async (passwordToCheck: string) => {
     if (!passwordToCheck.trim()) return;
@@ -151,7 +149,6 @@ export const PasswordManagerDialog: React.FC<PasswordManagerDialogProps> = ({
                 name: name.trim(),
                 url: url.trim() || undefined,
                 password_encrypted: password,
-                expires_at: expiryDate ? new Date(expiryDate).toISOString() : undefined,
                 updated_at: new Date().toISOString(),
               }
             : p
@@ -181,7 +178,6 @@ export const PasswordManagerDialog: React.FC<PasswordManagerDialogProps> = ({
           name: name.trim(),
           url: url.trim() || undefined,
           password_encrypted: password,
-          expires_at: expiryDate ? new Date(expiryDate).toISOString() : undefined,
           is_favorite: false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -273,23 +269,6 @@ export const PasswordManagerDialog: React.FC<PasswordManagerDialogProps> = ({
                       <Wand2 className="h-4 w-4" />
                     )}
                   </Button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="expiryDate" className="text-slate-200 font-medium">
-                  Expiry Date (optional)
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="expiryDate"
-                    type="date"
-                    value={expiryDate}
-                    onChange={(e) => setExpiryDate(e.target.value)}
-                    className="bg-slate-800/50 border-slate-600 text-slate-200"
-                    min={new Date().toISOString().split('T')[0]}
-                  />
-                  <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                 </div>
               </div>
             </div>

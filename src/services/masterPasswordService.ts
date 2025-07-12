@@ -118,6 +118,41 @@ class MasterPasswordService {
     const updatedList = protectedList.filter((id: string) => id !== passwordId);
     localStorage.setItem('prism_vault_protected_passwords', JSON.stringify(updatedList));
   }
+
+  // Get password update suggestion based on creation/update date
+  static getPasswordUpdateSuggestion(createdAt: string, updatedAt: string): {
+    shouldUpdate: boolean;
+    urgency: 'low' | 'medium' | 'high';
+    message: string;
+    daysOld: number;
+  } {
+    const lastUpdated = new Date(updatedAt > createdAt ? updatedAt : createdAt);
+    const now = new Date();
+    const daysOld = Math.floor((now.getTime() - lastUpdated.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (daysOld < 90) {
+      return {
+        shouldUpdate: false,
+        urgency: 'low',
+        message: 'Password is recent',
+        daysOld
+      };
+    } else if (daysOld < 180) {
+      return {
+        shouldUpdate: true,
+        urgency: 'medium',
+        message: 'Consider updating soon',
+        daysOld
+      };
+    } else {
+      return {
+        shouldUpdate: true,
+        urgency: 'high',
+        message: 'Strongly recommend updating',
+        daysOld
+      };
+    }
+  }
 }
 
 export default MasterPasswordService;

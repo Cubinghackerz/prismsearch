@@ -37,6 +37,7 @@ const PrismVault = () => {
   const [vaultText, setVaultText] = useState('');
   const [encryptionProgress, setEncryptionProgress] = useState(0);
   const [isPasswordManagerOpen, setIsPasswordManagerOpen] = useState(false);
+  const [prefilledPassword, setPrefilledPassword] = useState('');
 
   const { toast } = useToast();
 
@@ -245,7 +246,13 @@ const PrismVault = () => {
   };
 
   const savePasswordToManager = (password: string) => {
+    setPrefilledPassword(password);
     setIsPasswordManagerOpen(true);
+  };
+
+  const handlePasswordManagerClose = () => {
+    setIsPasswordManagerOpen(false);
+    setPrefilledPassword('');
   };
 
   if (isVaultLoading) {
@@ -320,9 +327,10 @@ const PrismVault = () => {
 
       <PasswordManagerDialog
         isOpen={isPasswordManagerOpen}
-        onClose={() => setIsPasswordManagerOpen(false)}
+        onClose={handlePasswordManagerClose}
         editingPassword={null}
-        onPasswordSaved={() => setIsPasswordManagerOpen(false)}
+        onPasswordSaved={handlePasswordManagerClose}
+        prefilledPassword={prefilledPassword}
       />
     </div>
   );

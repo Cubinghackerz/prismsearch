@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Copy, Eye, EyeOff, Edit, Trash2, ExternalLink, Heart, Clock, AlertTriangle, Shield, Lock } from 'lucide-react';
+import { Copy, Eye, EyeOff, Edit, Trash2, ExternalLink, Heart, Clock, AlertTriangle, Shield, Lock, RefreshCw } from 'lucide-react';
 import MasterPasswordService from '@/services/masterPasswordService';
 import { MasterPasswordDialog } from '@/components/vault/MasterPasswordDialog';
 import { PasswordProtectionDialog } from './PasswordProtectionDialog';
@@ -16,7 +16,6 @@ interface StoredPassword {
   password_encrypted: string;
   created_at: string;
   updated_at: string;
-  expires_at?: string;
   is_favorite?: boolean;
   breach_status?: 'safe' | 'breached' | 'checking';
   breach_count?: number;
@@ -47,14 +46,17 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
   const { toast } = useToast();
 
   const isProtected = MasterPasswordService.passwordRequiresMasterPassword(password.id);
-  const isExpired = password.expires_at && new Date(password.expires_at) < new Date();
-  const isExpiringSoon = password.expires_at && !isExpired && 
-    new Date(password.expires_at) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  const updateSuggestion = MasterPasswordService.getPasswordUpdateSuggestion(password.created_at, password.updated_at);
 
-  const getExpiryStatus = () => {
-    if (isExpired) return { text: 'Expired', color: 'text-red-400', bg: 'bg-red-950/50' };
-    if (isExpiringSoon) return { text: 'Expires Soon', color: 'text-amber-400', bg: 'bg-amber-950/50' };
-    return null;
+  const getUpdateSuggestionStatus = () => {
+    if (!updateSuggestion.shouldUpdate) return null;
+    
+    const colors = {
+      medium: { text: 'Update Soon', color: 'text-amber-400', bg: 'bg-amber-950/50' },
+      high: { text: 'Update Now', color: 'text-red-400', bg: 'bg-red-950/50' }
+    };
+    
+    return colors[updateSuggestion.urgency] || null;
   };
 
   const getBreachStatus = () => {
@@ -133,7 +135,7 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
     
     toast({
       title: "Authentication successful",
-      description: "You can now perform the requested action."
+      description: "All actions are now unlocked for this session."
     });
   };
 
@@ -157,7 +159,7 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
     }
   };
 
-  const expiryStatus = getExpiryStatus();
+  const updateStatus = getUpdateSuggestionStatus();
   const breachStatus = getBreachStatus();
 
   return (
@@ -196,10 +198,10 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
                 </Badge>
               )}
               
-              {expiryStatus && (
-                <Badge variant="outline" className={`${expiryStatus.bg} ${expiryStatus.color} border-current text-xs`}>
-                  <Clock className="h-3 w-3 mr-1" />
-                  {expiryStatus.text}
+              {updateStatus && (
+                <Badge variant="outline" className={`${updateStatus.bg} ${updateStatus.color} border-current text-xs`}>
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  {updateStatus.text} ({updateSuggestion.daysOld}d old)
                 </Badge>
               )}
               
@@ -291,8 +293,10 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
               {password.updated_at !== password.created_at && (
                 <span> • Updated: {new Date(password.updated_at).toLocaleDateString()}</span>
               )}
-              {password.expires_at && (
-                <span> • Expires: {new Date(password.expires_at).toLocaleDateString()}</span>
+              {updateSuggestion.shouldUpdate && (
+                <span className={`ml-2 ${updateStatus?.color}`}>
+                  • {updateSuggestion.message}
+                </span>
               )}
             </p>
           </div>
