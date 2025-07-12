@@ -11,15 +11,19 @@ import MasterPasswordService from '@/services/masterPasswordService';
 interface MasterPasswordDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onAuthenticated: () => void;
+  onAuthenticated?: () => void;
   mode: 'setup' | 'verify';
+  title?: string;
+  description?: string;
 }
 
 export const MasterPasswordDialog: React.FC<MasterPasswordDialogProps> = ({
   isOpen,
   onClose,
   onAuthenticated,
-  mode
+  mode,
+  title,
+  description
 }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -52,18 +56,16 @@ export const MasterPasswordDialog: React.FC<MasterPasswordDialogProps> = ({
         }
 
         MasterPasswordService.setMasterPassword(password);
-        MasterPasswordService.createSession();
         
         toast({
           title: "Master password set",
-          description: "Your vault is now protected with a master password."
+          description: "Your master password has been created successfully."
         });
         
-        onAuthenticated();
+        if (onAuthenticated) onAuthenticated();
       } else {
         if (MasterPasswordService.verifyMasterPassword(password)) {
-          MasterPasswordService.createSession();
-          onAuthenticated();
+          if (onAuthenticated) onAuthenticated();
         } else {
           toast({
             title: "Incorrect password",
@@ -88,15 +90,26 @@ export const MasterPasswordDialog: React.FC<MasterPasswordDialogProps> = ({
     }
   };
 
+  const getTitle = () => {
+    if (title) return title;
+    return mode === 'setup' ? 'Set Up Master Password' : 'Enter Master Password';
+  };
+
+  const getDescription = () => {
+    if (description) return description;
+    if (mode === 'setup') {
+      return 'Create a master password to protect selected passwords in your vault.';
+    }
+    return 'Enter your master password to access this protected password.';
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-slate-900/95 border-slate-700 backdrop-blur-sm max-w-md">
         <DialogHeader>
           <DialogTitle className="text-cyan-300 text-xl flex items-center space-x-2">
             <Shield className="h-6 w-6" />
-            <span>
-              {mode === 'setup' ? 'Set Up Master Password' : 'Enter Master Password'}
-            </span>
+            <span>{getTitle()}</span>
           </DialogTitle>
         </DialogHeader>
 
@@ -150,11 +163,11 @@ export const MasterPasswordDialog: React.FC<MasterPasswordDialogProps> = ({
               <div className="text-sm text-amber-200">
                 {mode === 'setup' ? (
                   <>
-                    <p className="font-medium mb-1">Important:</p>
-                    <p>Your master password encrypts all stored passwords. If you forget it, you'll lose access to all your passwords.</p>
+                    <p className="font-medium mb-1">Note:</p>
+                    <p>{getDescription()}</p>
                   </>
                 ) : (
-                  <p>Enter your master password to access your secure vault.</p>
+                  <p>{getDescription()}</p>
                 )}
               </div>
             </div>
@@ -174,7 +187,7 @@ export const MasterPasswordDialog: React.FC<MasterPasswordDialogProps> = ({
               disabled={isLoading || !password || (mode === 'setup' && !confirmPassword)}
               className="bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-700 hover:to-emerald-700"
             >
-              {isLoading ? 'Processing...' : mode === 'setup' ? 'Set Password' : 'Unlock Vault'}
+              {isLoading ? 'Processing...' : mode === 'setup' ? 'Set Password' : 'Unlock'}
             </Button>
           </div>
         </form>

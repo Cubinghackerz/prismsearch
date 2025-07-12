@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Database, Shield, Lock } from 'lucide-react';
+import { Plus, Database, Settings, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PasswordManagerDialog } from './PasswordManagerDialog';
 import { PasswordListItem } from './password-manager/PasswordListItem';
@@ -30,36 +30,12 @@ export const StoredPasswordsList: React.FC = () => {
   const [showPasswords, setShowPasswords] = useState<{ [key: string]: boolean }>({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPassword, setEditingPassword] = useState<StoredPassword | null>(null);
-  const [isMasterPasswordOpen, setIsMasterPasswordOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [masterPasswordMode, setMasterPasswordMode] = useState<'setup' | 'verify'>('setup');
+  const [showMasterPasswordSetup, setShowMasterPasswordSetup] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    checkAuthentication();
-  }, []);
-
-  const checkAuthentication = () => {
-    const hasMasterPassword = MasterPasswordService.hasMasterPassword();
-    const isSessionValid = MasterPasswordService.isSessionValid();
-
-    if (!hasMasterPassword) {
-      setMasterPasswordMode('setup');
-      setIsMasterPasswordOpen(true);
-    } else if (!isSessionValid) {
-      setMasterPasswordMode('verify');
-      setIsMasterPasswordOpen(true);
-    } else {
-      setIsAuthenticated(true);
-      fetchPasswords();
-    }
-  };
-
-  const handleAuthenticated = () => {
-    setIsAuthenticated(true);
-    setIsMasterPasswordOpen(false);
     fetchPasswords();
-  };
+  }, []);
 
   const fetchPasswords = () => {
     try {
@@ -123,6 +99,10 @@ export const StoredPasswordsList: React.FC = () => {
     try {
       const updatedPasswords = passwords.filter(p => p.id !== id);
       localStorage.setItem('prism_vault_passwords', JSON.stringify(updatedPasswords));
+      
+      // Also remove from protected passwords list if it exists
+      MasterPasswordService.unprotectPassword(id);
+      
       setPasswords(updatedPasswords);
       toast({
         title: "Password deleted",
@@ -154,37 +134,31 @@ export const StoredPasswordsList: React.FC = () => {
     setEditingPassword(null);
   };
 
-  const handleLockVault = () => {
-    MasterPasswordService.clearSession();
-    setIsAuthenticated(false);
-    setMasterPasswordMode('verify');
-    setIsMasterPasswordOpen(true);
+  const handleSetupMasterPassword = () => {
+    setShowMasterPasswordSetup(false);
+    toast({
+      title: "Master password created",
+      description: "You can now protect individual passwords with master password."
+    });
   };
 
-  if (!isAuthenticated) {
-    return (
-      <>
-        <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
-          <CardContent className="text-center py-12">
-            <div className="space-y-4">
-              <Lock className="h-12 w-12 text-slate-600 mx-auto" />
-              <div>
-                <h3 className="text-lg font-semibold text-slate-300">Vault Locked</h3>
-                <p className="text-slate-400">Enter your master password to access your passwords</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+  const handleRemoveMasterPassword = () => {
+    if (!confirm("Are you sure you want to remove the master password? This will remove protection from all protected passwords.")) {
+      return;
+    }
 
-        <MasterPasswordDialog
-          isOpen={isMasterPasswordOpen}
-          onClose={() => setIsMasterPasswordOpen(false)}
-          onAuthenticated={handleAuthenticated}
-          mode={masterPasswordMode}
-        />
-      </>
-    );
-  }
+    MasterPasswordService.removeMasterPassword();
+    // Remove protection from all passwords
+    const protectedPasswords = localStorage.getItem('prism_vault_protected_passwords');
+    if (protectedPasswords) {
+      localStorage.removeItem('prism_vault_protected_passwords');
+    }
+    
+    toast({
+      title: "Master password removed",
+      description: "Master password protection has been disabled for all passwords."
+    });
+  };
 
   if (loading) {
     return (
@@ -218,13 +192,13 @@ export const StoredPasswordsList: React.FC = () => {
             </CardTitle>
             <div className="flex items-center space-x-2">
               <Button
-                onClick={handleLockVault}
+                onClick={() => setShowMasterPasswordSetup(true)}
                 size="sm"
                 variant="outline"
                 className="border-slate-600 hover:bg-slate-700"
               >
-                <Lock className="h-4 w-4 mr-2" />
-                Lock Vault
+                <Shield className="h-4 w-4 mr-2" />
+                {MasterPasswordService.hasMasterPassword() ? 'Manage Master Password' : 'Set Master Password'}
               </Button>
               <Button
                 onClick={handleAddNew}
@@ -271,6 +245,42 @@ export const StoredPasswordsList: React.FC = () => {
         editingPassword={editingPassword}
         onPasswordSaved={handlePasswordSaved}
       />
+
+      <MasterPasswordDialog
+        isOpen={showMasterPasswordSetup}
+        onClose={() => setShowMasterPasswordSetup(false)}
+        onAuthenticated={handleSetupMasterPassword}
+        mode={MasterPasswordService.hasMasterPassword() ? 'verify' : 'setup'}
+        title={MasterPasswordService.hasMasterPassword() ? 'Master Password Settings' : 'Set Up Master Password'}
+        description={MasterPasswordService.hasMasterPassword() ? 
+          'Manage your master password settings.' : 
+          'Create a master password to protect selected passwords in your vault.'
+        }
+      />
+
+      {MasterPasswordService.hasMasterPassword() && showMasterPasswordSetup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowMasterPasswordSetup(false)}>
+          <div className="bg-slate-900 p-6 rounded-lg border border-slate-700 max-w-md w-full mx-4" onClick={e => e.stopPropagation()}>
+            <h3 className="text-xl font-semibold text-cyan-300 mb-4">Master Password Settings</h3>
+            <div className="space-y-4">
+              <p className="text-slate-300">Master password is currently active. You can use it to protect individual passwords.</p>
+              <Button
+                onClick={handleRemoveMasterPassword}
+                variant="outline"
+                className="w-full border-red-600 text-red-400 hover:bg-red-950/50"
+              >
+                Remove Master Password
+              </Button>
+              <Button
+                onClick={() => setShowMasterPasswordSetup(false)}
+                className="w-full bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-700 hover:to-emerald-700"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

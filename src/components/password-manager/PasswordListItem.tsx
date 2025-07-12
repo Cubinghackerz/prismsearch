@@ -1,9 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Copy, Eye, EyeOff, Edit, Trash2, ExternalLink, Heart, Clock, AlertTriangle, Shield } from 'lucide-react';
+import { Copy, Eye, EyeOff, Edit, Trash2, ExternalLink, Heart, Clock, AlertTriangle, Shield, Lock } from 'lucide-react';
+import MasterPasswordService from '@/services/masterPasswordService';
+import { MasterPasswordDialog } from '@/components/vault/MasterPasswordDialog';
+import { PasswordProtectionDialog } from './PasswordProtectionDialog';
+import { useToast } from '@/hooks/use-toast';
 
 interface StoredPassword {
   id: string;
@@ -37,6 +41,12 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
   onEdit,
   onDelete
 }) => {
+  const [showMasterPasswordDialog, setShowMasterPasswordDialog] = useState(false);
+  const [showProtectionDialog, setShowProtectionDialog] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const { toast } = useToast();
+
+  const isProtected = MasterPasswordService.passwordRequiresMasterPassword(password.id);
   const isExpired = password.expires_at && new Date(password.expires_at) < new Date();
   const isExpiringSoon = password.expires_at && !isExpired && 
     new Date(password.expires_at) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
@@ -60,126 +70,197 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
     }
   };
 
+  const handleToggleVisibility = () => {
+    if (isProtected && !isUnlocked) {
+      setShowMasterPasswordDialog(true);
+    } else {
+      onToggleVisibility();
+    }
+  };
+
+  const handleCopy = () => {
+    if (isProtected && !isUnlocked) {
+      setShowMasterPasswordDialog(true);
+    } else {
+      onCopy(password.password_encrypted, 'Password');
+    }
+  };
+
+  const handleMasterPasswordVerified = () => {
+    setIsUnlocked(true);
+    setShowMasterPasswordDialog(false);
+    // Auto-show the password after successful verification
+    if (!isVisible) {
+      onToggleVisibility();
+    }
+    toast({
+      title: "Password unlocked",
+      description: "You can now view and copy this password."
+    });
+  };
+
+  const handleProtectionChanged = () => {
+    // Reset unlock state when protection changes
+    setIsUnlocked(false);
+  };
+
   const expiryStatus = getExpiryStatus();
   const breachStatus = getBreachStatus();
 
   return (
-    <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700 space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center space-x-2">
-            <h3 className="font-semibold text-slate-200">{password.name}</h3>
-            {password.is_favorite && (
-              <Heart className="h-4 w-4 text-red-400 fill-red-400" />
-            )}
-          </div>
-          {password.url && (
+    <>
+      <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
             <div className="flex items-center space-x-2">
-              <a
-                href={password.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-cyan-400 hover:text-cyan-300 flex items-center space-x-1"
-              >
-                <span>{password.url}</span>
-                <ExternalLink className="h-3 w-3" />
-              </a>
+              <h3 className="font-semibold text-slate-200">{password.name}</h3>
+              {password.is_favorite && (
+                <Heart className="h-4 w-4 text-red-400 fill-red-400" />
+              )}
+              {isProtected && (
+                <Shield className="h-4 w-4 text-amber-400" />
+              )}
             </div>
-          )}
-          
-          <div className="flex items-center space-x-2 flex-wrap">
-            {expiryStatus && (
-              <Badge variant="outline" className={`${expiryStatus.bg} ${expiryStatus.color} border-current text-xs`}>
-                <Clock className="h-3 w-3 mr-1" />
-                {expiryStatus.text}
-              </Badge>
+            {password.url && (
+              <div className="flex items-center space-x-2">
+                <a
+                  href={password.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-cyan-400 hover:text-cyan-300 flex items-center space-x-1"
+                >
+                  <span>{password.url}</span>
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
             )}
             
-            {breachStatus && (
-              <Badge variant="outline" className={`${breachStatus.bg} ${breachStatus.color} border-current text-xs`}>
-                {password.breach_status === 'breached' ? (
-                  <AlertTriangle className="h-3 w-3 mr-1" />
-                ) : password.breach_status === 'safe' ? (
-                  <Shield className="h-3 w-3 mr-1" />
-                ) : (
-                  <div className="h-3 w-3 mr-1 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                )}
-                {breachStatus.text}
-              </Badge>
-            )}
+            <div className="flex items-center space-x-2 flex-wrap">
+              {isProtected && (
+                <Badge variant="outline" className="bg-amber-950/50 text-amber-400 border-amber-400 text-xs">
+                  <Lock className="h-3 w-3 mr-1" />
+                  Protected
+                </Badge>
+              )}
+              
+              {expiryStatus && (
+                <Badge variant="outline" className={`${expiryStatus.bg} ${expiryStatus.color} border-current text-xs`}>
+                  <Clock className="h-3 w-3 mr-1" />
+                  {expiryStatus.text}
+                </Badge>
+              )}
+              
+              {breachStatus && (
+                <Badge variant="outline" className={`${breachStatus.bg} ${breachStatus.color} border-current text-xs`}>
+                  {password.breach_status === 'breached' ? (
+                    <AlertTriangle className="h-3 w-3 mr-1" />
+                  ) : password.breach_status === 'safe' ? (
+                    <Shield className="h-3 w-3 mr-1" />
+                  ) : (
+                    <div className="h-3 w-3 mr-1 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  )}
+                  {breachStatus.text}
+                </Badge>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowProtectionDialog(true)}
+              className="border-slate-600 hover:bg-slate-700 hover:border-amber-500"
+              title="Password Protection Settings"
+            >
+              <Shield className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onToggleFavorite}
+              className={`border-slate-600 hover:bg-slate-700 ${
+                password.is_favorite 
+                  ? 'hover:border-red-400 text-red-400' 
+                  : 'hover:border-red-500'
+              }`}
+            >
+              <Heart className={`h-4 w-4 ${password.is_favorite ? 'fill-red-400' : ''}`} />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onEdit}
+              className="border-slate-600 hover:bg-slate-700 hover:border-cyan-500"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onDelete}
+              className="border-slate-600 hover:bg-slate-700 hover:border-red-500"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </div>
         </div>
-        
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={onToggleFavorite}
-            className={`border-slate-600 hover:bg-slate-700 ${
-              password.is_favorite 
-                ? 'hover:border-red-400 text-red-400' 
-                : 'hover:border-red-500'
-            }`}
-          >
-            <Heart className={`h-4 w-4 ${password.is_favorite ? 'fill-red-400' : ''}`} />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={onEdit}
-            className="border-slate-600 hover:bg-slate-700 hover:border-cyan-500"
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={onDelete}
-            className="border-slate-600 hover:bg-slate-700 hover:border-red-500"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+
+        <div className="space-y-2">
+          <div className="flex space-x-2">
+            <Input
+              type={isVisible && (!isProtected || isUnlocked) ? "text" : "password"}
+              value={isProtected && !isUnlocked ? "••••••••••••••••" : password.password_encrypted}
+              readOnly
+              className="font-mono text-sm bg-slate-800/50 text-slate-200 border-slate-600"
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleToggleVisibility}
+              className="border-slate-600 hover:bg-slate-700 hover:border-cyan-500"
+            >
+              {isVisible && (!isProtected || isUnlocked) ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleCopy}
+              className="border-slate-600 hover:bg-slate-700 hover:border-emerald-500"
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <p className="text-xs text-slate-500">
+              Created: {new Date(password.created_at).toLocaleDateString()}
+              {password.updated_at !== password.created_at && (
+                <span> • Updated: {new Date(password.updated_at).toLocaleDateString()}</span>
+              )}
+              {password.expires_at && (
+                <span> • Expires: {new Date(password.expires_at).toLocaleDateString()}</span>
+              )}
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="space-y-2">
-        <div className="flex space-x-2">
-          <Input
-            type={isVisible ? "text" : "password"}
-            value={password.password_encrypted}
-            readOnly
-            className="font-mono text-sm bg-slate-800/50 text-slate-200 border-slate-600"
-          />
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={onToggleVisibility}
-            className="border-slate-600 hover:bg-slate-700 hover:border-cyan-500"
-          >
-            {isVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onCopy(password.password_encrypted, 'Password')}
-            className="border-slate-600 hover:bg-slate-700 hover:border-emerald-500"
-          >
-            <Copy className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        <div className="flex justify-between items-center">
-          <p className="text-xs text-slate-500">
-            Created: {new Date(password.created_at).toLocaleDateString()}
-            {password.updated_at !== password.created_at && (
-              <span> • Updated: {new Date(password.updated_at).toLocaleDateString()}</span>
-            )}
-            {password.expires_at && (
-              <span> • Expires: {new Date(password.expires_at).toLocaleDateString()}</span>
-            )}
-          </p>
-        </div>
-      </div>
-    </div>
+      <MasterPasswordDialog
+        isOpen={showMasterPasswordDialog}
+        onClose={() => setShowMasterPasswordDialog(false)}
+        onAuthenticated={handleMasterPasswordVerified}
+        mode="verify"
+        title="Enter Master Password"
+        description={`Enter your master password to access "${password.name}".`}
+      />
+
+      <PasswordProtectionDialog
+        isOpen={showProtectionDialog}
+        onClose={() => setShowProtectionDialog(false)}
+        password={password}
+        onProtectionChanged={handleProtectionChanged}
+      />
+    </>
   );
 };

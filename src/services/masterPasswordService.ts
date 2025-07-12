@@ -73,6 +73,41 @@ class MasterPasswordService {
     const bytes = CryptoJS.AES.decrypt(encryptedPassword, masterPassword);
     return bytes.toString(CryptoJS.enc.Utf8);
   }
+
+  static removeMasterPassword(): void {
+    localStorage.removeItem(this.MASTER_PASSWORD_KEY);
+    localStorage.removeItem(this.SESSION_KEY);
+  }
+
+  // Check if a specific password requires master password protection
+  static passwordRequiresMasterPassword(passwordId: string): boolean {
+    const protectedPasswords = localStorage.getItem('prism_vault_protected_passwords');
+    if (!protectedPasswords) return false;
+    
+    const protectedList = JSON.parse(protectedPasswords);
+    return protectedList.includes(passwordId);
+  }
+
+  // Add a password to master password protection
+  static protectPassword(passwordId: string): void {
+    const protectedPasswords = localStorage.getItem('prism_vault_protected_passwords');
+    const protectedList = protectedPasswords ? JSON.parse(protectedPasswords) : [];
+    
+    if (!protectedList.includes(passwordId)) {
+      protectedList.push(passwordId);
+      localStorage.setItem('prism_vault_protected_passwords', JSON.stringify(protectedList));
+    }
+  }
+
+  // Remove a password from master password protection
+  static unprotectPassword(passwordId: string): void {
+    const protectedPasswords = localStorage.getItem('prism_vault_protected_passwords');
+    if (!protectedPasswords) return;
+    
+    const protectedList = JSON.parse(protectedPasswords);
+    const updatedList = protectedList.filter((id: string) => id !== passwordId);
+    localStorage.setItem('prism_vault_protected_passwords', JSON.stringify(updatedList));
+  }
 }
 
 export default MasterPasswordService;
