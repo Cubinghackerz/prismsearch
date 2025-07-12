@@ -29,7 +29,7 @@ const App: React.FC = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <div className="bg-gradient-to-b from-prism-bg to-prism-surface text-prism-text min-h-screen font-inter">
+        <div className="bg-prism-bg text-prism-text min-h-screen font-inter">
           <Toaster />
           <SonnerToaster />
           <BrowserRouter>
