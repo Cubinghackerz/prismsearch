@@ -1,11 +1,8 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Home, Lock } from 'lucide-react';
-
 export const VaultHeader: React.FC = () => {
-  return (
-    <>
+  return <>
       {/* Navigation */}
       <div className="max-w-6xl mx-auto mb-8">
         <div className="flex items-center justify-between mb-4">
@@ -30,10 +27,9 @@ export const VaultHeader: React.FC = () => {
             Prism Vault
           </h1>
         </div>
-        <p className="text-xl text-slate-300 max-w-2xl mx-auto">
+        <p className="text-xl text-slate-300 max-w-2xl mx-auto py-[10px] my-0">
           Advanced password generation with military-grade encryption analysis
         </p>
       </div>
-    </>
-  );
+    </>;
 };
