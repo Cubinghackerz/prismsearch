@@ -116,12 +116,7 @@ const Home = () => {
           </div>
           
           {/* User Menu */}
-          <div className="flex items-center">
-            <Avatar>
-              
-              <AvatarFallback>AJ</AvatarFallback>
-            </Avatar>
-          </div>
+          
         </div>
       </header>
       
