@@ -301,9 +301,22 @@ const PrismVault = () => {
     );
   }
 
+  const clearVaultHistory = useCallback(() => {
+    // Clear stored passwords from localStorage
+    localStorage.removeItem('prism_vault_passwords');
+    localStorage.removeItem('prism_vault_protected_passwords');
+    
+    // Clear generated passwords from state
+    setPasswords([]);
+    setShowPasswords([]);
+    
+    // Refresh the stored passwords list
+    setRefreshKey(prev => prev + 1);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
-      <VaultHeader />
+      <VaultHeader onClearHistory={clearVaultHistory} />
 
       <div className="max-w-6xl mx-auto space-y-8">
         <SecurityScoreDashboard passwords={storedPasswords} />
