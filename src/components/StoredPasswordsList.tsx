@@ -3,10 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Database } from 'lucide-react';
+import { Plus, Database, Shield, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PasswordManagerDialog } from './PasswordManagerDialog';
 import { PasswordListItem } from './password-manager/PasswordListItem';
+import { PasswordSecurityDashboard } from './vault/PasswordSecurityDashboard';
+import { MasterPasswordDialog } from './vault/MasterPasswordDialog';
+import MasterPasswordService from '@/services/masterPasswordService';
 
 interface StoredPassword {
   id: string;
@@ -15,6 +18,10 @@ interface StoredPassword {
   password_encrypted: string;
   created_at: string;
   updated_at: string;
+  expires_at?: string;
+  is_favorite?: boolean;
+  breach_status?: 'safe' | 'breached' | 'checking';
+  breach_count?: number;
 }
 
 export const StoredPasswordsList: React.FC = () => {
@@ -23,7 +30,36 @@ export const StoredPasswordsList: React.FC = () => {
   const [showPasswords, setShowPasswords] = useState<{ [key: string]: boolean }>({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPassword, setEditingPassword] = useState<StoredPassword | null>(null);
+  const [isMasterPasswordOpen, setIsMasterPasswordOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [masterPasswordMode, setMasterPasswordMode] = useState<'setup' | 'verify'>('setup');
   const { toast } = useToast();
+
+  useEffect(() => {
+    checkAuthentication();
+  }, []);
+
+  const checkAuthentication = () => {
+    const hasMasterPassword = MasterPasswordService.hasMasterPassword();
+    const isSessionValid = MasterPasswordService.isSessionValid();
+
+    if (!hasMasterPassword) {
+      setMasterPasswordMode('setup');
+      setIsMasterPasswordOpen(true);
+    } else if (!isSessionValid) {
+      setMasterPasswordMode('verify');
+      setIsMasterPasswordOpen(true);
+    } else {
+      setIsAuthenticated(true);
+      fetchPasswords();
+    }
+  };
+
+  const handleAuthenticated = () => {
+    setIsAuthenticated(true);
+    setIsMasterPasswordOpen(false);
+    fetchPasswords();
+  };
 
   const fetchPasswords = () => {
     try {
@@ -42,12 +78,27 @@ export const StoredPasswordsList: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    fetchPasswords();
-  }, []);
+  const updatePassword = (id: string, updates: Partial<StoredPassword>) => {
+    setPasswords(prev => {
+      const updated = prev.map(p => p.id === id ? { ...p, ...updates } : p);
+      localStorage.setItem('prism_vault_passwords', JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   const togglePasswordVisibility = (id: string) => {
     setShowPasswords(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const toggleFavorite = (id: string) => {
+    const password = passwords.find(p => p.id === id);
+    if (password) {
+      updatePassword(id, { is_favorite: !password.is_favorite });
+      toast({
+        title: password.is_favorite ? "Removed from favorites" : "Added to favorites",
+        description: `"${password.name}" ${password.is_favorite ? 'removed from' : 'added to'} favorites.`
+      });
+    }
   };
 
   const copyToClipboard = async (text: string, type: string) => {
@@ -103,6 +154,38 @@ export const StoredPasswordsList: React.FC = () => {
     setEditingPassword(null);
   };
 
+  const handleLockVault = () => {
+    MasterPasswordService.clearSession();
+    setIsAuthenticated(false);
+    setMasterPasswordMode('verify');
+    setIsMasterPasswordOpen(true);
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+          <CardContent className="text-center py-12">
+            <div className="space-y-4">
+              <Lock className="h-12 w-12 text-slate-600 mx-auto" />
+              <div>
+                <h3 className="text-lg font-semibold text-slate-300">Vault Locked</h3>
+                <p className="text-slate-400">Enter your master password to access your passwords</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <MasterPasswordDialog
+          isOpen={isMasterPasswordOpen}
+          onClose={() => setIsMasterPasswordOpen(false)}
+          onAuthenticated={handleAuthenticated}
+          mode={masterPasswordMode}
+        />
+      </>
+    );
+  }
+
   if (loading) {
     return (
       <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
@@ -117,7 +200,12 @@ export const StoredPasswordsList: React.FC = () => {
   }
 
   return (
-    <>
+    <div className="space-y-6">
+      <PasswordSecurityDashboard 
+        passwords={passwords} 
+        onPasswordUpdate={updatePassword}
+      />
+
       <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm shadow-xl">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -128,14 +216,25 @@ export const StoredPasswordsList: React.FC = () => {
                 {passwords.length}/10
               </Badge>
             </CardTitle>
-            <Button
-              onClick={handleAddNew}
-              disabled={passwords.length >= 10}
-              className="bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-700 hover:to-emerald-700"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Password
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button
+                onClick={handleLockVault}
+                size="sm"
+                variant="outline"
+                className="border-slate-600 hover:bg-slate-700"
+              >
+                <Lock className="h-4 w-4 mr-2" />
+                Lock Vault
+              </Button>
+              <Button
+                onClick={handleAddNew}
+                disabled={passwords.length >= 10}
+                className="bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-700 hover:to-emerald-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Password
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -156,6 +255,7 @@ export const StoredPasswordsList: React.FC = () => {
                 password={password}
                 isVisible={showPasswords[password.id]}
                 onToggleVisibility={() => togglePasswordVisibility(password.id)}
+                onToggleFavorite={() => toggleFavorite(password.id)}
                 onCopy={copyToClipboard}
                 onEdit={() => handleEdit(password)}
                 onDelete={() => deletePassword(password.id, password.name)}
@@ -171,6 +271,6 @@ export const StoredPasswordsList: React.FC = () => {
         editingPassword={editingPassword}
         onPasswordSaved={handlePasswordSaved}
       />
-    </>
+    </div>
   );
 };

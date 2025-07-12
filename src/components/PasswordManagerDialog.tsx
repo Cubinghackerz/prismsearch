@@ -4,11 +4,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RefreshCw, Save, Wand2 } from 'lucide-react';
+import { RefreshCw, Save, Wand2, Calendar, Shield } from 'lucide-react';
 import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 import { SavePasswordAnimation } from './SavePasswordAnimation';
 import { PasswordGeneratorSettings } from './password-manager/PasswordGeneratorSettings';
 import { useToast } from '@/hooks/use-toast';
+import BreachDetectionService from '@/services/breachDetectionService';
 
 interface StoredPassword {
   id: string;
@@ -17,6 +18,10 @@ interface StoredPassword {
   password_encrypted: string;
   created_at: string;
   updated_at: string;
+  expires_at?: string;
+  is_favorite?: boolean;
+  breach_status?: 'safe' | 'breached' | 'checking';
+  breach_count?: number;
 }
 
 interface PasswordManagerDialogProps {
@@ -35,9 +40,12 @@ export const PasswordManagerDialog: React.FC<PasswordManagerDialogProps> = ({
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
   const [password, setPassword] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showSaveAnimation, setShowSaveAnimation] = useState(false);
+  const [isCheckingBreach, setIsCheckingBreach] = useState(false);
+  const [breachData, setBreachData] = useState<any>(null);
   const { toast } = useToast();
 
   // Password generation settings
@@ -52,12 +60,38 @@ export const PasswordManagerDialog: React.FC<PasswordManagerDialogProps> = ({
       setName(editingPassword.name);
       setUrl(editingPassword.url || '');
       setPassword(editingPassword.password_encrypted);
+      setExpiryDate(editingPassword.expires_at ? editingPassword.expires_at.split('T')[0] : '');
     } else {
       setName('');
       setUrl('');
       setPassword('');
+      setExpiryDate('');
     }
+    setBreachData(null);
   }, [editingPassword, isOpen]);
+
+  const checkBreach = async (passwordToCheck: string) => {
+    if (!passwordToCheck.trim()) return;
+    
+    setIsCheckingBreach(true);
+    try {
+      const result = await BreachDetectionService.checkPasswordBreach(passwordToCheck);
+      setBreachData(result);
+    } catch (error) {
+      console.error('Error checking breach:', error);
+    } finally {
+      setIsCheckingBreach(false);
+    }
+  };
+
+  useEffect(() => {
+    if (password && password.length > 0) {
+      const timeoutId = setTimeout(() => {
+        checkBreach(password);
+      }, 1000);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [password]);
 
   const generatePassword = () => {
     setIsGenerating(true);
@@ -117,6 +151,7 @@ export const PasswordManagerDialog: React.FC<PasswordManagerDialogProps> = ({
                 name: name.trim(),
                 url: url.trim() || undefined,
                 password_encrypted: password,
+                expires_at: expiryDate ? new Date(expiryDate).toISOString() : undefined,
                 updated_at: new Date().toISOString(),
               }
             : p
@@ -146,6 +181,8 @@ export const PasswordManagerDialog: React.FC<PasswordManagerDialogProps> = ({
           name: name.trim(),
           url: url.trim() || undefined,
           password_encrypted: password,
+          expires_at: expiryDate ? new Date(expiryDate).toISOString() : undefined,
+          is_favorite: false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
@@ -238,7 +275,48 @@ export const PasswordManagerDialog: React.FC<PasswordManagerDialogProps> = ({
                   </Button>
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="expiryDate" className="text-slate-200 font-medium">
+                  Expiry Date (optional)
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="expiryDate"
+                    type="date"
+                    value={expiryDate}
+                    onChange={(e) => setExpiryDate(e.target.value)}
+                    className="bg-slate-800/50 border-slate-600 text-slate-200"
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                  <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                </div>
+              </div>
             </div>
+
+            {/* Breach Detection Results */}
+            {(isCheckingBreach || breachData) && (
+              <div className="p-4 bg-slate-800/30 rounded-lg border border-slate-700">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Shield className="h-4 w-4 text-cyan-400" />
+                  <span className="text-slate-200 font-medium">Security Check</span>
+                </div>
+                {isCheckingBreach ? (
+                  <div className="flex items-center space-x-2 text-blue-400">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    <span className="text-sm">Checking for data breaches...</span>
+                  </div>
+                ) : breachData && (
+                  <div className={`text-sm ${breachData.isBreached ? 'text-red-400' : 'text-emerald-400'}`}>
+                    {breachData.isBreached ? (
+                      <>⚠️ This password has been found in {breachData.breachCount.toLocaleString()} data breaches. Consider using a different password.</>
+                    ) : (
+                      <>✅ This password has not been found in any known data breaches.</>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Password Generation Options */}
             <PasswordGeneratorSettings
