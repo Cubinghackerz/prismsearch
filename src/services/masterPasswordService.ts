@@ -1,3 +1,4 @@
+
 import CryptoJS from 'crypto-js';
 
 class MasterPasswordServiceClass {
@@ -5,6 +6,9 @@ class MasterPasswordServiceClass {
   private sessionCreatedAt: number | null = null;
   private readonly SESSION_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
   private autoLockTimer: NodeJS.Timeout | null = null;
+  private unlockedPasswordIds: Set<string> = new Set();
+  private passwordUnlockTimers: Map<string, NodeJS.Timeout> = new Map();
+  private readonly PASSWORD_UNLOCK_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
 
   constructor() {
     this.loadMasterPassword();
@@ -43,6 +47,15 @@ class MasterPasswordServiceClass {
     return this.masterPasswordHash === hashedPassword;
   }
 
+  changeMasterPassword(oldPassword: string, newPassword: string): boolean {
+    if (!this.verifyMasterPassword(oldPassword)) {
+      return false;
+    }
+    
+    this.setMasterPassword(newPassword);
+    return true;
+  }
+
   removeMasterPassword(): void {
     this.masterPasswordHash = null;
     localStorage.removeItem('prism_vault_master_password');
@@ -73,6 +86,8 @@ class MasterPasswordServiceClass {
     this.sessionCreatedAt = null;
     localStorage.removeItem('prism_vault_session');
     this.clearAutoLockTimer();
+    // Clear all unlocked passwords when session ends
+    this.lockAllPasswords();
     // Dispatch custom event to notify components about session clearing
     window.dispatchEvent(new CustomEvent('masterPasswordSessionCleared'));
   }
@@ -104,6 +119,9 @@ class MasterPasswordServiceClass {
     let passwordIds = protectedPasswords ? new Set(JSON.parse(protectedPasswords)) : new Set<string>();
     passwordIds.add(passwordId);
     localStorage.setItem('prism_vault_protected_passwords', JSON.stringify(Array.from(passwordIds)));
+    
+    // Automatically lock the password when protection is enabled
+    this.lockPassword(passwordId);
   }
 
   unprotectPassword(passwordId: string): void {
@@ -113,6 +131,9 @@ class MasterPasswordServiceClass {
       passwordIds.delete(passwordId);
       localStorage.setItem('prism_vault_protected_passwords', JSON.stringify(Array.from(passwordIds)));
     }
+    
+    // Remove from unlocked passwords if it was unlocked
+    this.lockPassword(passwordId);
   }
 
   passwordRequiresMasterPassword(passwordId: string): boolean {
@@ -120,6 +141,48 @@ class MasterPasswordServiceClass {
     if (!protectedPasswords) return false;
     const passwordIds = new Set(JSON.parse(protectedPasswords));
     return passwordIds.has(passwordId);
+  }
+
+  isPasswordUnlocked(passwordId: string): boolean {
+    return this.unlockedPasswordIds.has(passwordId);
+  }
+
+  unlockPassword(passwordId: string): void {
+    this.unlockedPasswordIds.add(passwordId);
+    
+    // Clear existing timer for this password
+    const existingTimer = this.passwordUnlockTimers.get(passwordId);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+    }
+    
+    // Set new timer to auto-lock after 10 minutes
+    const timer = setTimeout(() => {
+      this.lockPassword(passwordId);
+      window.dispatchEvent(new CustomEvent('passwordAutoLocked', { detail: { passwordId } }));
+    }, this.PASSWORD_UNLOCK_DURATION);
+    
+    this.passwordUnlockTimers.set(passwordId, timer);
+  }
+
+  lockPassword(passwordId: string): void {
+    this.unlockedPasswordIds.delete(passwordId);
+    
+    // Clear the timer for this password
+    const timer = this.passwordUnlockTimers.get(passwordId);
+    if (timer) {
+      clearTimeout(timer);
+      this.passwordUnlockTimers.delete(passwordId);
+    }
+  }
+
+  lockAllPasswords(): void {
+    // Clear all unlocked passwords
+    this.unlockedPasswordIds.clear();
+    
+    // Clear all timers
+    this.passwordUnlockTimers.forEach(timer => clearTimeout(timer));
+    this.passwordUnlockTimers.clear();
   }
 
   getPasswordUpdateSuggestion(createdAt: string, updatedAt: string): { shouldUpdate: boolean; urgency: 'low' | 'medium' | 'high'; message: string; daysOld: number } {
