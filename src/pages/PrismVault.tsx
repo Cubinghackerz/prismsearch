@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { VaultHeader } from '@/components/vault/VaultHeader';
@@ -8,7 +9,6 @@ import { AnimatingPasswordCard } from '@/components/vault/AnimatingPasswordCard'
 import { EmptyVaultCard } from '@/components/vault/EmptyVaultCard';
 import { StoredPasswordsList } from '@/components/StoredPasswordsList';
 import { PasswordManagerDialog } from '@/components/PasswordManagerDialog';
-import { SecurityScoreDashboard } from '@/components/vault/SecurityScoreDashboard';
 import zxcvbn from 'zxcvbn';
 
 interface PasswordData {
@@ -26,7 +26,6 @@ interface PasswordData {
 
 const PrismVault = () => {
   const [passwords, setPasswords] = useState<PasswordData[]>([]);
-  const [storedPasswords, setStoredPasswords] = useState<any[]>([]);
   const [passwordCount, setPasswordCount] = useState(1);
   const [passwordLength, setPasswordLength] = useState([16]);
   const [includeUppercase, setIncludeUppercase] = useState(true);
@@ -45,10 +44,6 @@ const PrismVault = () => {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const { toast } = useToast();
-
-  useEffect(() => {
-    loadStoredPasswords();
-  }, [refreshKey]);
 
   useEffect(() => {
     if (!isVaultLoading) return;
@@ -93,16 +88,6 @@ const PrismVault = () => {
       animateText();
     }, 500);
   }, []);
-
-  const loadStoredPasswords = () => {
-    try {
-      const storedData = localStorage.getItem('prism_vault_passwords');
-      const parsedData = storedData ? JSON.parse(storedData) : [];
-      setStoredPasswords(parsedData);
-    } catch (error) {
-      console.error('Error loading stored passwords:', error);
-    }
-  };
 
   const generatePasswords = async () => {
     setIsGenerating(true);
@@ -307,8 +292,6 @@ const PrismVault = () => {
       <VaultHeader />
 
       <div className="max-w-6xl mx-auto space-y-8">
-        <SecurityScoreDashboard passwords={storedPasswords} />
-        
         <StoredPasswordsList key={refreshKey} />
 
         <div className="grid gap-8 lg:grid-cols-2">

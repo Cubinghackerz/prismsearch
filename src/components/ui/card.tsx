@@ -10,10 +10,8 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-xl border border-prism-border bg-prism-surface/50 text-card-foreground shadow-xl backdrop-blur-md transition-all duration-300 hover:shadow-prism-primary/10 group relative overflow-hidden",
-      // Simplified gradient overlay with better contrast
+      "rounded-xl border border-prism-border bg-prism-surface/50 text-prism-text shadow-xl backdrop-blur-md transition-all duration-300 hover:shadow-prism-primary/10 group relative overflow-hidden",
       "before:absolute before:inset-0 before:bg-gradient-to-br before:from-prism-primary/5 before:to-transparent before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 before:pointer-events-none",
-      // Subtle hover effect
       "hover:translate-y-[-2px]",
       className
     )}
@@ -42,8 +40,6 @@ const CardTitle = React.forwardRef<
     ref={ref}
     className={cn(
       "text-xl font-semibold leading-tight tracking-tight font-inter text-prism-text",
-      // Removed background clip text for better readability
-      // Added subtle underline effect with improved spacing
       "relative after:absolute after:bottom-0 after:left-0 after:w-16 after:h-[1px] after:bg-gradient-to-r after:from-prism-primary-light after:to-transparent after:opacity-0 after:translate-y-1 group-hover:after:opacity-60 group-hover:after:translate-y-0 after:transition-all after:duration-500",
       className
     )}

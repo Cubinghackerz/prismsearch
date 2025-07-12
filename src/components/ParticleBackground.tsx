@@ -1,5 +1,5 @@
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 interface ParticleBackgroundProps {
   color?: string; 
@@ -7,6 +7,16 @@ interface ParticleBackgroundProps {
 
 const ParticleBackground = ({ color = '#00C2A8' }: ParticleBackgroundProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animationFrameRef = useRef<number>();
+  const particlesRef = useRef<Particle[]>([]);
+
+  const resizeCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -15,22 +25,11 @@ const ParticleBackground = ({ color = '#00C2A8' }: ParticleBackgroundProps) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Set canvas size
-    const resizeCanvas = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
     resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    // Particle settings
-    const particles: Particle[] = [];
-    const particleCount = 50;
+    
+    // Reduced particle count for better performance
+    const particleCount = 25; // Reduced from 50
     const particleColor = color;
-    // Determine glow color based on primary color
-    const particleGlowColor = color === '#00C2A8' ? '#1DD1B8' : 
-                             color === '#9B5DE5' ? '#B47EE8' : 
-                             '#1DD1B8'; // Default to teal glow
     
     class Particle {
       x: number;
@@ -38,13 +37,15 @@ const ParticleBackground = ({ color = '#00C2A8' }: ParticleBackgroundProps) => {
       speedX: number;
       speedY: number;
       size: number;
+      opacity: number;
 
       constructor() {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
-        this.speedX = Math.random() * 2 - 1;
-        this.speedY = Math.random() * 2 - 1;
-        this.size = Math.random() * 4 + 2; // Increased particle size
+        this.speedX = (Math.random() - 0.5) * 0.5; // Reduced speed
+        this.speedY = (Math.random() - 0.5) * 0.5;
+        this.size = Math.random() * 2 + 1; // Reduced size
+        this.opacity = Math.random() * 0.5 + 0.3;
       }
 
       update() {
@@ -59,50 +60,63 @@ const ParticleBackground = ({ color = '#00C2A8' }: ParticleBackgroundProps) => {
         if (!ctx) return;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fillStyle = particleColor;
+        ctx.fillStyle = `${particleColor}${Math.floor(this.opacity * 255).toString(16).padStart(2, '0')}`;
         ctx.fill();
-        
-        // Add glow effect
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = particleGlowColor;
-        ctx.strokeStyle = particleGlowColor;
-        ctx.stroke();
-        ctx.shadowBlur = 0; // Reset shadow for next particle
       }
     }
 
     // Create initial particles
+    particlesRef.current = [];
     for (let i = 0; i < particleCount; i++) {
-      particles.push(new Particle());
+      particlesRef.current.push(new Particle());
     }
 
-    // Animation loop
-    let animationFrameId: number;
-    const animate = () => {
-      // Clear background with higher opacity to remove trails
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.3)'; // Dark blue background
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    let lastTime = 0;
+    const targetFPS = 30; // Limit to 30 FPS for better performance
+    const frameInterval = 1000 / targetFPS;
 
-      particles.forEach(particle => {
-        particle.update();
-        particle.draw();
-      });
+    const animate = (currentTime: number) => {
+      if (currentTime - lastTime >= frameInterval) {
+        // Clear with solid background for better performance
+        ctx.fillStyle = 'rgba(13, 13, 13, 0.1)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      animationFrameId = requestAnimationFrame(animate);
+        particlesRef.current.forEach(particle => {
+          particle.update();
+          particle.draw();
+        });
+
+        lastTime = currentTime;
+      }
+
+      animationFrameRef.current = requestAnimationFrame(animate);
     };
-    animate();
 
-    // Cleanup
+    animationFrameRef.current = requestAnimationFrame(animate);
+
+    // Add resize listener with throttling
+    let resizeTimeout: NodeJS.Timeout;
+    const handleResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(resizeCanvas, 150);
+    };
+    
+    window.addEventListener('resize', handleResize);
+
     return () => {
-      window.removeEventListener('resize', resizeCanvas);
-      cancelAnimationFrame(animationFrameId);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(resizeTimeout);
     };
-  }, [color]);
+  }, [color, resizeCanvas]);
 
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 -z-10 bg-slate-900" // Dark blue background
+      className="fixed inset-0 -z-10 bg-prism-bg"
+      style={{ willChange: 'auto' }} // Optimize for performance
     />
   );
 };
