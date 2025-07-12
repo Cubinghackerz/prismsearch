@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, MessageSquare, BookmarkPlus, LogIn } from 'lucide-react';
+import { ArrowLeft, MessageSquare, BookmarkPlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
 import SearchResults from '../components/SearchResults';
@@ -16,8 +16,6 @@ import ScrollToTop from '../components/ScrollToTop';
 import Footer from '../components/Footer';
 import PopularSearches from '../components/search/PopularSearches';
 import BookmarksDrawer from '../components/BookmarksDrawer';
-import { UserProfile } from '../components/UserProfile';
-import { useAuth } from '@/contexts/AuthContext';
 
 // Search engine information with logo URLs
 const engineInfo = {
@@ -53,7 +51,6 @@ const Index = () => {
   const [isBookmarksOpen, setIsBookmarksOpen] = useState(false);
   const [bookmarksCount, setBookmarksCount] = useState<number>(0);
   const { toast } = useToast();
-  const { user, loading } = useAuth();
 
   // Load bookmarks count
   useState(() => {
@@ -211,20 +208,6 @@ const Index = () => {
                 <span className="hidden sm:inline">Chat Mode</span>
               </Button>
             </Link>
-
-            {/* Authentication section */}
-            {loading ? (
-              <div className="w-10 h-10 rounded-full bg-prism-primary/20 animate-pulse" />
-            ) : user ? (
-              <UserProfile />
-            ) : (
-              <Link to="/auth">
-                <Button variant="ghost" className="text-prism-text bg-prism-primary/20 hover:bg-prism-primary/30">
-                  <LogIn className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">Sign In</span>
-                </Button>
-              </Link>
-            )}
           </div>
         </motion.div>
       </header>
