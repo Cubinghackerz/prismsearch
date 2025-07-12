@@ -15,7 +15,7 @@ const Pricing: React.FC = () => {
 
   const basicPlanFeatures = [
     "Access to core features",
-    "Limited search queries",
+    "Limited search queries", 
     "Basic customer support",
   ];
 

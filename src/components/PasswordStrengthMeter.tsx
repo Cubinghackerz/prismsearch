@@ -80,8 +80,8 @@ export const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({
       }
     });
 
-    // Format crack time
-    const crackTime = formatCrackTime(zxcvbnResult.crack_times_display.offline_slow_hashing_1e4_per_second);
+    // Format crack time - ensure it's always a string
+    const crackTime = formatCrackTime(String(zxcvbnResult.crack_times_display.offline_slow_hashing_1e4_per_second));
 
     return {
       score: finalScore,

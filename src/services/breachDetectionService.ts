@@ -135,7 +135,7 @@ class BreachDetectionService {
     // Get zxcvbn analysis
     const zxcvbnResult = zxcvbn(data.password);
     const zxcvbnScore = zxcvbnResult.score;
-    const crackTime = zxcvbnResult.crack_times_display.offline_slow_hashing_1e4_per_second;
+    const crackTime = String(zxcvbnResult.crack_times_display.offline_slow_hashing_1e4_per_second);
 
     // Breach-based risk assessment
     if (data.isBreached) {

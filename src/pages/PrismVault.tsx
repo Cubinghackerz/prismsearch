@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { VaultHeader } from '@/components/vault/VaultHeader';
@@ -16,8 +17,8 @@ interface PasswordData {
     score: number;
     level: 'weak' | 'fair' | 'good' | 'strong' | 'very-strong';
     feedback: string[];
-    crackTime?: string;
-    entropy?: number;
+    crackTime: string;
+    entropy: number;
   };
   isEditing?: boolean;
   editedPassword?: string;
@@ -207,7 +208,7 @@ const PrismVault = () => {
       }
     });
 
-    const crackTime = zxcvbnResult.crack_times_display.offline_slow_hashing_1e4_per_second;
+    const crackTime = String(zxcvbnResult.crack_times_display.offline_slow_hashing_1e4_per_second);
     const entropy = Math.round(zxcvbnResult.guesses_log10 * 3.32);
 
     return {
