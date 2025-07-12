@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Copy, Eye, EyeOff, Edit, Trash2, ExternalLink, Plus, Database } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { PasswordManagerDialog } from './PasswordManagerDialog';
 
 interface StoredPassword {
@@ -26,29 +25,16 @@ export const StoredPasswordsList: React.FC = () => {
   const [editingPassword, setEditingPassword] = useState<StoredPassword | null>(null);
   const { toast } = useToast();
 
-  const fetchPasswords = async () => {
+  const fetchPasswords = () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        setPasswords([]);
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('stored_passwords')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      setPasswords(data || []);
-    } catch (error: any) {
+      const storedData = localStorage.getItem('prism_vault_passwords');
+      const parsedData = storedData ? JSON.parse(storedData) : [];
+      setPasswords(parsedData);
+    } catch (error) {
       console.error('Error fetching passwords:', error);
       toast({
         title: "Failed to load passwords",
-        description: error.message || "An unexpected error occurred.",
+        description: "An error occurred while loading your stored passwords.",
         variant: "destructive"
       });
     } finally {
@@ -80,27 +66,22 @@ export const StoredPasswordsList: React.FC = () => {
     }
   };
 
-  const deletePassword = async (id: string, name: string) => {
+  const deletePassword = (id: string, name: string) => {
     if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
 
     try {
-      const { error } = await supabase
-        .from('stored_passwords')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      setPasswords(prev => prev.filter(p => p.id !== id));
+      const updatedPasswords = passwords.filter(p => p.id !== id);
+      localStorage.setItem('prism_vault_passwords', JSON.stringify(updatedPasswords));
+      setPasswords(updatedPasswords);
       toast({
         title: "Password deleted",
         description: `"${name}" has been removed from your vault.`
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting password:', error);
       toast({
         title: "Failed to delete password",
-        description: error.message || "An unexpected error occurred.",
+        description: "An unexpected error occurred while deleting the password.",
         variant: "destructive"
       });
     }

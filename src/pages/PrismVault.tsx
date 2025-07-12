@@ -41,7 +41,6 @@ const PrismVault = () => {
   const [vaultText, setVaultText] = useState('');
   const [encryptionProgress, setEncryptionProgress] = useState(0);
   const [isPasswordManagerOpen, setIsPasswordManagerOpen] = useState(false);
-  const [selectedPasswordForSave, setSelectedPasswordForSave] = useState<string | null>(null);
 
   const { toast } = useToast();
 
@@ -252,7 +251,6 @@ const PrismVault = () => {
   };
 
   const savePasswordToManager = (password: string) => {
-    setSelectedPasswordForSave(password);
     setIsPasswordManagerOpen(true);
   };
 
@@ -641,15 +639,9 @@ const PrismVault = () => {
 
       <PasswordManagerDialog
         isOpen={isPasswordManagerOpen}
-        onClose={() => {
-          setIsPasswordManagerOpen(false);
-          setSelectedPasswordForSave(null);
-        }}
+        onClose={() => setIsPasswordManagerOpen(false)}
         editingPassword={null}
-        onPasswordSaved={() => {
-          setIsPasswordManagerOpen(false);
-          setSelectedPasswordForSave(null);
-        }}
+        onPasswordSaved={() => setIsPasswordManagerOpen(false)}
       />
     </div>
   );

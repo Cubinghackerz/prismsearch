@@ -8,7 +8,6 @@ import { RefreshCw, Save, Wand2 } from 'lucide-react';
 import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 import { SavePasswordAnimation } from './SavePasswordAnimation';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 interface StoredPassword {
   id: string;
@@ -104,51 +103,58 @@ export const PasswordManagerDialog: React.FC<PasswordManagerDialogProps> = ({
     setShowSaveAnimation(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast({
-          title: "Authentication required",
-          description: "Please sign in to save passwords.",
-          variant: "destructive"
-        });
-        return;
-      }
+      // Get existing passwords from localStorage
+      const storedData = localStorage.getItem('prism_vault_passwords');
+      const existingPasswords = storedData ? JSON.parse(storedData) : [];
 
       if (editingPassword) {
         // Update existing password
-        const { error } = await supabase
-          .from('stored_passwords')
-          .update({
-            name: name.trim(),
-            url: url.trim() || null,
-            password_encrypted: password,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', editingPassword.id);
-
-        if (error) throw error;
+        const updatedPasswords = existingPasswords.map((p: StoredPassword) =>
+          p.id === editingPassword.id
+            ? {
+                ...p,
+                name: name.trim(),
+                url: url.trim() || undefined,
+                password_encrypted: password,
+                updated_at: new Date().toISOString(),
+              }
+            : p
+        );
+        localStorage.setItem('prism_vault_passwords', JSON.stringify(updatedPasswords));
 
         toast({
           title: "Password updated",
           description: "Your password has been successfully updated.",
         });
       } else {
-        // Create new password
-        const { error } = await supabase
-          .from('stored_passwords')
-          .insert({
-            user_id: user.id,
-            name: name.trim(),
-            url: url.trim() || null,
-            password_encrypted: password,
+        // Check if we're at the limit
+        if (existingPasswords.length >= 10) {
+          toast({
+            title: "Password limit reached",
+            description: "You can only store up to 10 passwords.",
+            variant: "destructive"
           });
+          setShowSaveAnimation(false);
+          setIsSaving(false);
+          return;
+        }
 
-        if (error) throw error;
+        // Create new password
+        const newPassword: StoredPassword = {
+          id: crypto.randomUUID(),
+          name: name.trim(),
+          url: url.trim() || undefined,
+          password_encrypted: password,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        const updatedPasswords = [...existingPasswords, newPassword];
+        localStorage.setItem('prism_vault_passwords', JSON.stringify(updatedPasswords));
 
         toast({
           title: "Password saved",
-          description: "Your password has been securely stored.",
+          description: "Your password has been securely stored on this device.",
         });
       }
 
@@ -157,7 +163,7 @@ export const PasswordManagerDialog: React.FC<PasswordManagerDialogProps> = ({
       console.error('Error saving password:', error);
       toast({
         title: "Failed to save password",
-        description: error.message || "An unexpected error occurred.",
+        description: "An unexpected error occurred while saving the password.",
         variant: "destructive"
       });
       setShowSaveAnimation(false);
