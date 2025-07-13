@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,11 +24,13 @@ interface StoredPassword {
 interface PasswordSecurityDashboardProps {
   passwords: StoredPassword[];
   onPasswordUpdate: (id: string, updates: Partial<StoredPassword>) => void;
+  className?: string;
 }
 
 export const PasswordSecurityDashboard: React.FC<PasswordSecurityDashboardProps> = ({
   passwords,
-  onPasswordUpdate
+  onPasswordUpdate,
+  className
 }) => {
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
@@ -109,7 +110,7 @@ export const PasswordSecurityDashboard: React.FC<PasswordSecurityDashboardProps>
   };
 
   return (
-    <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm shadow-xl">
+    <Card className={`bg-slate-900/50 border-slate-700 backdrop-blur-sm shadow-xl ${className || ''}`}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2 text-cyan-300">
