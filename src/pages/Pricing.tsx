@@ -48,88 +48,88 @@ const Pricing: React.FC = () => {
   const plans = [
     {
       name: "Basic",
-      price: isMonthly ? "Free" : "Free",
+      price: "Coming Soon",
       currency: "USD",
-      period: "/month",
+      period: "",
       description: "For individuals and small teams getting started.",
       features: basicPlanFeatures,
       usage: "Up to 100 searches per month",
       support: "Community support",
-      available: true,
-      buttonText: "Get started",
+      available: false,
+      buttonText: "Coming Soon",
       buttonAction: () => {
         toast({
-          title: "Basic Plan Selected",
-          description: "Enjoy the core features with limited usage.",
+          title: "Coming Soon",
+          description: "This plan will be available soon. Stay tuned!",
         });
       },
     },
     {
       name: "Starter",
-      price: isMonthly ? "9" : "79",
+      price: "Coming Soon",
       currency: "USD",
-      period: isMonthly ? "/month" : "/year",
+      period: "",
       description: "Enhanced features for growing teams.",
       features: starterPlanFeatures,
       usage: "Up to 1,000 searches per month",
       support: "Email support",
-      available: true,
-      buttonText: "Start free trial",
+      available: false,
+      buttonText: "Coming Soon",
       buttonAction: () => {
         toast({
-          title: "Starter Plan Trial",
-          description: "Start your free trial to explore enhanced features.",
+          title: "Coming Soon",
+          description: "This plan will be available soon. Stay tuned!",
         });
       },
       popular: true,
     },
     {
       name: "Professional",
-      price: isMonthly ? "29" : "249",
+      price: "Coming Soon",
       currency: "USD",
-      period: isMonthly ? "/month" : "/year",
+      period: "",
       description: "Advanced tools for professionals.",
       features: professionalPlanFeatures,
       usage: "Unlimited searches",
       support: "Priority support",
-      available: true,
-      buttonText: "Subscribe now",
+      available: false,
+      buttonText: "Coming Soon",
       buttonAction: () => {
         toast({
-          title: "Professional Plan Active",
-          description: "Access advanced tools with unlimited usage.",
+          title: "Coming Soon",
+          description: "This plan will be available soon. Stay tuned!",
         });
       },
     },
     {
       name: "Enterprise",
-      price: "Contact us",
+      price: "Coming Soon",
       currency: "USD",
       description: "Custom solutions for large organizations.",
       features: enterprisePlanFeatures,
       usage: "Custom usage limits",
       support: "Dedicated support",
       available: false,
-      buttonText: "Contact us",
+      buttonText: "Coming Soon",
       buttonAction: () => {
         toast({
-          title: "Enterprise Inquiry",
-          description: "Contact us to discuss custom solutions.",
+          title: "Coming Soon",
+          description: "This plan will be available soon. Stay tuned!",
         });
       },
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-prism-bg to-prism-surface relative overflow-hidden">
-      <div className="relative z-10">
+    <div className="min-h-screen bg-gradient-to-b from-prism-bg to-prism-surface relative overflow-hidden flex flex-col">
+      <div className="relative z-10 flex-1 flex flex-col">
         <Navigation />
         
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="container mx-auto px-6 py-12"
+          className="container mx-auto px-6 py-12 flex-1"
         >
           <div className="mb-8 flex flex-col items-center justify-center text-center">
             <h2 className="text-3xl font-bold text-prism-text sm:text-5xl font-montserrat">
@@ -140,6 +140,10 @@ const Pricing: React.FC = () => {
               you're just starting out or managing a large organization, we have a
               plan that's right for you.
             </p>
+            <div className="mt-6 p-4 bg-prism-accent/20 rounded-lg border border-prism-accent/40">
+              <p className="text-prism-accent text-lg font-semibold">🚀 All plans coming soon!</p>
+              <p className="text-prism-text-muted text-sm mt-1">We're working hard to bring you amazing pricing options. Stay tuned!</p>
+            </div>
           </div>
 
           <PricingToggle isMonthly={isMonthly} togglePricing={togglePricing} />

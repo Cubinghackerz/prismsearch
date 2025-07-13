@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { BookmarkPlus, Maximize, Minimize } from 'lucide-react';
@@ -23,13 +22,13 @@ const Chat = () => {
   });
 
   return (
-    <div className={`${isFullscreen ? 'fixed inset-0 z-50' : 'min-h-screen'} bg-gradient-to-b from-prism-bg to-prism-surface relative overflow-hidden`}>
+    <div className={`${isFullscreen ? 'fixed inset-0 z-50' : 'min-h-screen'} bg-gradient-to-b from-prism-bg to-prism-surface relative overflow-hidden flex flex-col`}>
       <ScrollToTop />
       
-      <div className="relative z-10 h-full flex flex-col">
+      <div className="relative z-10 h-full flex flex-col flex-1">
         {!isFullscreen && <Navigation />}
         
-        <div className={`${isFullscreen ? 'flex-1' : 'container mx-auto px-6'}`}>
+        <div className={`${isFullscreen ? 'flex-1' : 'container mx-auto px-6 flex-1'}`}>
           <div className={`text-center ${isFullscreen ? 'p-4' : 'mb-8'}`}>
             <div className="flex items-center justify-center gap-2 mb-4">
               <img 
@@ -82,18 +81,14 @@ const Chat = () => {
             </div>
           </div>
 
-          <main className={`${isFullscreen ? 'h-full flex flex-col' : 'max-w-[98vw] pt-3 pb-6'}`}>
+          <main className={`${isFullscreen ? 'h-full flex flex-col flex-1' : 'max-w-[98vw] pt-3 pb-6 flex-1'}`}>
             <ChatProvider>
               <ChatInterface />
             </ChatProvider>
           </main>
         </div>
         
-        {!isFullscreen && (
-          <footer className="mt-2">
-            <Footer />
-          </footer>
-        )}
+        {!isFullscreen && <Footer />}
 
         <BookmarksDrawer 
           isOpen={isBookmarksOpen} 

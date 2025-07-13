@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, MessageSquare, BookmarkPlus } from 'lucide-react';
@@ -12,7 +11,6 @@ import { searchAcrossEngines } from '../services/searchService';
 import { useToast } from '@/hooks/use-toast';
 import SearchResultSummary from '../components/search/SearchResultSummary';
 import { Button } from '@/components/ui/button';
-import ParticleBackground from '../components/ParticleBackground';
 import ScrollToTop from '../components/ScrollToTop';
 import Footer from '../components/Footer';
 import PopularSearches from '../components/search/PopularSearches';
@@ -118,14 +116,13 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-prism-bg to-prism-surface relative overflow-hidden">
-      <ParticleBackground color="#00C2A8" />
+    <div className="min-h-screen bg-gradient-to-b from-prism-bg to-prism-surface relative overflow-hidden flex flex-col">
       <ScrollToTop />
       
-      <div className="relative z-10">
+      <div className="relative z-10 flex-1 flex flex-col">
         <Navigation />
         
-        <main className="container mx-auto px-6">
+        <main className="container mx-auto px-6 flex-1">
           {hasSearched && (
             <div className="mb-6">
               <Button 
@@ -303,9 +300,7 @@ const Index = () => {
           )}
         </main>
         
-        <footer className="mt-16">
-          <Footer />
-        </footer>
+        <Footer />
 
         <BookmarksDrawer 
           isOpen={isBookmarksOpen} 
