@@ -173,7 +173,7 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
   const passwordItems = useMemo(() => passwords.map(password => <PasswordListItem key={password.id} password={password} isVisible={showPasswords[password.id]} onToggleVisibility={() => togglePasswordVisibility(password.id)} onToggleFavorite={() => toggleFavorite(password.id)} onCopy={copyToClipboard} onEdit={() => handleEdit(password)} onDelete={() => deletePassword(password.id, password.name)} />), [passwords, showPasswords, deletePassword]);
   if (loading) {
     return <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
-        <CardContent className="text-center py-12">
+        <CardContent className="text-center py-[30px]">
           <div className="animate-pulse space-y-4">
             <Database className="h-12 w-12 text-slate-600 mx-auto" />
             <p className="text-slate-400">Loading your passwords...</p>
@@ -185,7 +185,7 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
       <PasswordSecurityDashboard passwords={passwords} onPasswordUpdate={updatePassword} />
 
       <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm shadow-xl">
-        <CardHeader className="py-0 mx-0">
+        <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center space-x-2 text-cyan-300">
               <Database className="h-5 w-5" />
