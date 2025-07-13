@@ -1,0 +1,56 @@
+
+{
+  "appId": "app.lovable.prismsearch",
+  "productName": "Prism Search",
+  "directories": {
+    "output": "dist-electron"
+  },
+  "files": [
+    "dist/**/*",
+    "public/electron.js",
+    "public/lovable-uploads/**/*"
+  ],
+  "extraResources": [
+    {
+      "from": "public/lovable-uploads",
+      "to": "lovable-uploads"
+    }
+  ],
+  "mac": {
+    "category": "public.app-category.productivity",
+    "icon": "public/lovable-uploads/3c38b6c8-23f1-4e72-bd31-5fcf258572d9.png",
+    "target": [
+      {
+        "target": "dmg",
+        "arch": ["x64", "arm64"]
+      }
+    ],
+    "artifactName": "Prism-Search-${version}-${arch}.${ext}"
+  },
+  "win": {
+    "icon": "public/lovable-uploads/3c38b6c8-23f1-4e72-bd31-5fcf258572d9.png",
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      }
+    ],
+    "artifactName": "Prism-Search-Setup-${version}.${ext}"
+  },
+  "linux": {
+    "icon": "public/lovable-uploads/3c38b6c8-23f1-4e72-bd31-5fcf258572d9.png",
+    "target": [
+      {
+        "target": "AppImage",
+        "arch": ["x64"]
+      }
+    ],
+    "artifactName": "Prism-Search-${version}.${ext}"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true
+  }
+}

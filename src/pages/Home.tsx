@@ -2,8 +2,10 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, MessageCircle, Shield, Zap, Brain, Lock, Palette, Calendar, Link2, Key } from "lucide-react";
+import { Search, MessageCircle, Shield, Zap, Brain, Lock, Key } from "lucide-react";
 import ParticleBackground from "@/components/ParticleBackground";
+import DesktopDownloads from "@/components/DesktopDownloads";
+
 const Home = () => {
   const navigate = useNavigate();
   const features = [{
@@ -98,6 +100,9 @@ const Home = () => {
             </div>
           </div>
 
+          {/* Desktop Downloads Section */}
+          <DesktopDownloads />
+
           {/* Featured: Prism Vault Spotlight */}
           <div className="mb-16">
             <Card className="bg-gradient-to-r from-prism-primary/10 to-prism-accent/10 border-prism-primary/20 hover:shadow-2xl transition-all duration-300">
@@ -190,4 +195,5 @@ const Home = () => {
       </div>
     </div>;
 };
+
 export default Home;
