@@ -1,8 +1,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, BookmarkPlus } from 'lucide-react';
+import { BookmarkPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ChatInterface from '../components/chat/ChatInterface';
 import ParticleBackground from '../components/ParticleBackground';
@@ -10,6 +9,7 @@ import Footer from '../components/Footer';
 import BookmarksDrawer from '../components/BookmarksDrawer';
 import ScrollToTop from '../components/ScrollToTop';
 import { ChatProvider } from '../context/ChatContext';
+import Navigation from '../components/Navigation';
 
 const Chat = () => {
   const [isBookmarksOpen, setIsBookmarksOpen] = useState(false);
@@ -23,55 +23,19 @@ const Chat = () => {
   });
 
   return (
-    <div className="min-h-screen flex flex-col bg-prism-bg">
+    <div className="min-h-screen bg-gradient-to-b from-prism-bg to-prism-surface relative overflow-hidden">
       <ParticleBackground color="#00C2A8" />
       <ScrollToTop />
       
-      <header className="py-3 px-4 relative z-10">
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }} 
-          animate={{ opacity: 1, y: 0 }} 
-          transition={{ duration: 0.5 }} 
-          className="text-center relative flex justify-between items-center max-w-7xl mx-auto"
-        >
-          <div className="flex items-center gap-3">
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }} 
-              animate={{ opacity: 1, x: 0 }}
-            >
-              <Link to="/">
-                <Button 
-                  variant="ghost" 
-                  className="text-prism-text bg-prism-primary/20 hover:bg-prism-primary/30"
-                  size="sm"
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Home
-                </Button>
-              </Link>
-            </motion.div>
-            
-            <Button 
-              variant="ghost" 
-              onClick={() => setIsBookmarksOpen(true)}
-              className="text-prism-text bg-prism-primary/20 hover:bg-prism-primary/30 relative"
-              size="sm"
-            >
-              <BookmarkPlus className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Bookmarks</span>
-              {bookmarksCount > 0 && (
-                <span className="absolute -top-2 -right-2 w-5 h-5 bg-prism-primary rounded-full text-xs flex items-center justify-center text-white">
-                  {bookmarksCount}
-                </span>
-              )}
-            </Button>
-          </div>
-          
-          <div className="flex justify-center items-center">
-            <Link to="/" className="flex items-center gap-2">
+      <div className="relative z-10">
+        <Navigation />
+        
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-2 mb-4">
               <img 
                 src="/lovable-uploads/aeaad4a8-0dc2-4d4b-b2b3-cb248e0843db.png" 
-                alt="Prism Search Logo" 
+                alt="Prism Chat Logo" 
                 className="h-8 w-8"
               />
               <motion.h1 
@@ -89,29 +53,42 @@ const Chat = () => {
               >
                 Prism Chat
               </motion.h1>
-            </Link>
+            </div>
+            
+            <div className="flex justify-center mb-6">
+              <Button 
+                variant="ghost" 
+                onClick={() => setIsBookmarksOpen(true)}
+                className="text-prism-text bg-prism-primary/20 hover:bg-prism-primary/30 relative"
+                size="sm"
+              >
+                <BookmarkPlus className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Bookmarks</span>
+                {bookmarksCount > 0 && (
+                  <span className="absolute -top-2 -right-2 w-5 h-5 bg-prism-primary rounded-full text-xs flex items-center justify-center text-white">
+                    {bookmarksCount}
+                  </span>
+                )}
+              </Button>
+            </div>
           </div>
 
-          <div className="w-[120px] flex justify-end">
-            {/* Azure test button removed */}
-          </div>
-        </motion.div>
-      </header>
+          <main className="max-w-[98vw] pt-3 pb-6">
+            <ChatProvider>
+              <ChatInterface />
+            </ChatProvider>
+          </main>
+        </div>
+        
+        <footer className="mt-2">
+          <Footer />
+        </footer>
 
-      <main className="flex-1 container mx-auto max-w-[98vw] px-4 pt-3 pb-6">
-        <ChatProvider>
-          <ChatInterface />
-        </ChatProvider>
-      </main>
-      
-      <footer className="mt-2">
-        <Footer />
-      </footer>
-
-      <BookmarksDrawer 
-        isOpen={isBookmarksOpen} 
-        onClose={() => setIsBookmarksOpen(false)} 
-      />
+        <BookmarksDrawer 
+          isOpen={isBookmarksOpen} 
+          onClose={() => setIsBookmarksOpen(false)} 
+        />
+      </div>
     </div>
   );
 };

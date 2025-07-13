@@ -1,9 +1,13 @@
+
 import React from 'react';
 import { PricingTable } from '@/components/pricing/PricingTable';
 import { PricingCard } from '@/components/pricing/PricingCard';
 import { PricingToggle } from '@/components/pricing/PricingToggle';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
+import Navigation from '@/components/Navigation';
+import ParticleBackground from '@/components/ParticleBackground';
+import Footer from '@/components/Footer';
 
 const Pricing: React.FC = () => {
   const [isMonthly, setIsMonthly] = React.useState(true);
@@ -118,33 +122,43 @@ const Pricing: React.FC = () => {
   ];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="container py-12 md:py-24"
-    >
-      <div className="mb-8 flex flex-col items-center justify-center text-center">
-        <h2 className="text-3xl font-bold text-prism-text sm:text-5xl font-montserrat">
-          Choose Your Perfect Plan
-        </h2>
-        <p className="max-w-[700px] text-prism-text-muted md:text-lg mt-4 font-inter">
-          Explore our flexible pricing plans tailored to fit your needs. Whether
-          you're just starting out or managing a large organization, we have a
-          plan that's right for you.
-        </p>
+    <div className="min-h-screen bg-gradient-to-b from-prism-bg to-prism-surface relative overflow-hidden">
+      <ParticleBackground />
+      
+      <div className="relative z-10">
+        <Navigation />
+        
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="container mx-auto px-6 py-12"
+        >
+          <div className="mb-8 flex flex-col items-center justify-center text-center">
+            <h2 className="text-3xl font-bold text-prism-text sm:text-5xl font-montserrat">
+              Choose Your Perfect Plan
+            </h2>
+            <p className="max-w-[700px] text-prism-text-muted md:text-lg mt-4 font-inter">
+              Explore our flexible pricing plans tailored to fit your needs. Whether
+              you're just starting out or managing a large organization, we have a
+              plan that's right for you.
+            </p>
+          </div>
+
+          <PricingToggle isMonthly={isMonthly} togglePricing={togglePricing} />
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+            {plans.map((plan) => (
+              <PricingCard key={plan.name} plan={plan} />
+            ))}
+          </div>
+
+          <PricingTable plans={plans} />
+        </motion.div>
+        
+        <Footer />
       </div>
-
-      <PricingToggle isMonthly={isMonthly} togglePricing={togglePricing} />
-
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
-        {plans.map((plan) => (
-          <PricingCard key={plan.name} plan={plan} />
-        ))}
-      </div>
-
-      <PricingTable plans={plans} />
-    </motion.div>
+    </div>
   );
 };
 
