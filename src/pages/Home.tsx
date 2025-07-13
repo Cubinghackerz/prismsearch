@@ -1,514 +1,265 @@
-import React, { useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { Search, MessageCircle, DollarSign, ArrowRight, ChevronRight, FileSearch, Zap, Lock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import Footer from '@/components/Footer';
-import ParticleBackground from '@/components/ParticleBackground';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, navigationMenuTriggerStyle } from '@/components/ui/navigation-menu';
-const container = {
-  hidden: {
-    opacity: 0
-  },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-};
-const item = {
-  hidden: {
-    opacity: 0,
-    y: 20
-  },
-  show: {
-    opacity: 1,
-    y: 0
-  }
-};
+
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  Search, 
+  MessageCircle, 
+  Shield, 
+  Zap, 
+  Brain, 
+  Lock,
+  FileText,
+  Palette,
+  Calendar,
+  Link2
+} from "lucide-react";
+import ParticleBackground from "@/components/ParticleBackground";
+
 const Home = () => {
-  // Scroll to top when component mounts
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  const navigate = useNavigate();
 
-  // Mock search results
-  const mockSearchResults = [{
-    title: "Machine Learning Applications in Healthcare",
-    snippet: "Recent advances in AI have revolutionized diagnostic procedures, with deep learning models achieving 96% accuracy in early disease detection..."
-  }, {
-    title: "Sustainable Energy Solutions for Urban Development",
-    snippet: "Smart grid technologies combined with renewable energy sources have demonstrated a 42% reduction in carbon emissions across pilot cities..."
-  }];
+  const features = [
+    {
+      icon: <Search className="w-8 h-8 text-prism-primary" />,
+      title: "AI-Powered Search",
+      description: "Experience next-generation search with intelligent results and contextual understanding.",
+      action: () => navigate("/search"),
+      buttonText: "Start Searching"
+    },
+    {
+      icon: <MessageCircle className="w-8 h-8 text-prism-primary" />,
+      title: "Intelligent Chat",
+      description: "Engage with advanced AI assistants for research, analysis, and creative tasks.",
+      action: () => navigate("/chat"),
+      buttonText: "Start Chatting"
+    },
+    {
+      icon: <Shield className="w-8 h-8 text-prism-primary" />,
+      title: "Secure Vault",
+      description: "Store and manage your passwords with military-grade encryption and advanced security.",
+      action: () => navigate("/vault"),
+      buttonText: "Access Vault"
+    },
+    {
+      icon: <FileText className="w-8 h-8 text-prism-primary" />,
+      title: "Prism Notes",
+      description: "Create encrypted notes with whiteboard functionality, auto-linking, and smart reminders.",
+      action: () => navigate("/notes"),
+      buttonText: "Open Notes",
+      isNew: true
+    }
+  ];
 
-  // Mock chat exchanges
-  const mockChatExchanges = [{
-    question: "How does quantum computing differ from classical computing?",
-    answer: "Quantum computing leverages quantum bits or qubits that can exist in multiple states simultaneously through superposition, unlike classical bits that are either 0 or 1..."
-  }, {
-    question: "What are the ethical implications of AI in healthcare?",
-    answer: "AI in healthcare raises concerns about data privacy, algorithm bias, and the changing doctor-patient relationship. For example, AI systems trained on non-diverse datasets may..."
-  }];
+  const notesFeatures = [
+    {
+      icon: <Lock className="w-5 h-5 text-prism-accent" />,
+      title: "Encrypted Notes",
+      description: "Your thoughts stay private with end-to-end encryption"
+    },
+    {
+      icon: <Palette className="w-5 h-5 text-prism-accent" />,
+      title: "Visual Whiteboard",
+      description: "Sketch, diagram, and wireframe with powerful drawing tools"
+    },
+    {
+      icon: <Link2 className="w-5 h-5 text-prism-accent" />,
+      title: "Smart Linking",
+      description: "Automatically connects notes with similar topics"
+    },
+    {
+      icon: <Calendar className="w-5 h-5 text-prism-accent" />,
+      title: "Smart Reminders",
+      description: "Never forget important ideas with intelligent reminders"
+    }
+  ];
 
-  // Pricing features
-  const pricingFeatures = {
-    free: ["1000 searches & 500 chat messages", "Basic chat assistance", "Standard response time"],
-    pro: ["Coming Soon - Unlimited searches", "Coming Soon - Advanced chat with file upload", "Coming Soon - Priority response time", "Coming Soon - Custom data integration"],
-    enterprise: ["All Pro features", "Dedicated support team", "Custom model training", "SLA guarantees"]
-  };
-  return <div className="min-h-screen flex flex-col bg-gradient-to-b from-prism-darkgray to-black text-white">
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-prism-bg to-prism-surface relative overflow-hidden">
       <ParticleBackground />
       
-      {/* Fixed Header with logo */}
-      <header className="sticky top-0 z-30 w-full backdrop-blur-lg bg-prism-darkgray/70 border-b border-gray-800">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          {/* Logo with prism image */}
-          <Link to="/" className="flex items-center gap-2">
-            <img src="/lovable-uploads/aeaad4a8-0dc2-4d4b-b2b3-cb248e0843db.png" alt="Prism Search Logo" className="h-9 w-9" />
-            <span className="font-montserrat font-bold text-2xl text-prism-teal">Prism</span>
-            <span className="font-montserrat font-medium text-2xl text-gray-300">Search</span>
-          </Link>
-          
-          {/* Navigation - Desktop */}
-          <div className="hidden md:flex">
-            <NavigationMenu>
-              <NavigationMenuList>
-                <NavigationMenuItem>
-                  <Link to="/">
-                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                      Home
-                    </NavigationMenuLink>
-                  </Link>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <Link to="/search">
-                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                      Search
-                    </NavigationMenuLink>
-                  </Link>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <Link to="/chat">
-                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                      Chat
-                    </NavigationMenuLink>
-                  </Link>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <Link to="/vault">
-                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                      Vault
-                    </NavigationMenuLink>
-                  </Link>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <Link to="/pricing">
-                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                      Pricing
-                    </NavigationMenuLink>
-                  </Link>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
-          </div>
-          
-          {/* User Menu */}
-          
-        </div>
-      </header>
-      
-      {/* Hero Section */}
-      <section className="relative py-20 px-4 overflow-hidden">
-        <motion.div className="container mx-auto text-center" initial="hidden" animate="show" variants={container}>
-          <motion.h1 className="text-4xl md:text-6xl lg:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-teal-400 mb-6" variants={item}>
-            Welcome to Prism Search!
-          </motion.h1>
-          
-          <motion.p className="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto mb-8" variants={item}>
-            Experience enhanced search with our AI-powered tools. Find what you need faster and get smarter, more comprehensive answers to your complex questions.
-          </motion.p>
-          
-          <motion.div className="flex flex-col md:flex-row gap-4 justify-center mt-8" variants={container}>
-            <motion.div variants={item}>
-              <Link to="/search">
-                <Button size="lg" className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 border-none shadow-lg shadow-blue-500/20 transition-all duration-300 hover:shadow-blue-500/40">
-                  <Search className="mr-2 h-5 w-5" /> Start Search
-                </Button>
-              </Link>
-            </motion.div>
-            
-            <motion.div variants={item}>
-              <Link to="/chat">
-                <Button size="lg" className="w-full md:w-auto bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 border-none shadow-lg shadow-teal-500/20 transition-all duration-300 hover:shadow-teal-500/40">
-                  <MessageCircle className="mr-2 h-5 w-5" /> Open Chat
-                </Button>
-              </Link>
-            </motion.div>
-
-            <motion.div variants={item}>
-              <Link to="/vault">
-                <Button size="lg" className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 border-none shadow-lg shadow-purple-500/20 transition-all duration-300 hover:shadow-purple-500/40">
-                  <Lock className="mr-2 h-5 w-5" /> Prism Vault
-                </Button>
-              </Link>
-            </motion.div>
-            
-            <motion.div variants={item}>
-              <Link to="/pricing">
-                <Button size="lg" className="w-full md:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 border-none shadow-lg shadow-purple-500/20 transition-all duration-300 hover:shadow-purple-500/40">
-                  <DollarSign className="mr-2 h-5 w-5" /> View Pricing
-                </Button>
-              </Link>
-            </motion.div>
-          </motion.div>
-        </motion.div>
-      </section>
-      
-      {/* Feature Cards with Mock Content */}
-      <section className="py-16 px-4 bg-gradient-to-b from-prism-darkgray/50 to-prism-darkgray/80">
-        <div className="container mx-auto">
-          <motion.h2 initial={{
-          opacity: 0,
-          y: 20
-        }} animate={{
-          opacity: 1,
-          y: 0
-        }} transition={{
-          delay: 0.2
-        }} className="font-bold text-center mb-12 text-blue-100 text-4xl">
-            Explore Our Features
-          </motion.h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {/* Search Feature Card */}
-            <motion.div initial={{
-            opacity: 0,
-            y: 30
-          }} animate={{
-            opacity: 1,
-            y: 0
-          }} transition={{
-            delay: 0.3
-          }} whileHover={{
-            y: -5,
-            transition: {
-              duration: 0.2
-            }
-          }} className="h-full">
-              <Card className="h-full bg-gradient-to-br from-gray-900 to-blue-900/50 border-t-2 border-blue-400 transition-all duration-300 shadow-xl hover:shadow-blue-500/20">
-                <CardHeader className="text-center pb-2">
-                  <div className="mx-auto bg-blue-900/40 p-4 rounded-full w-16 h-16 flex items-center justify-center mb-4">
-                    <Search className="h-8 w-8 text-blue-400" />
-                  </div>
-                  <CardTitle className="text-xl font-bold text-blue-100">Quick Search</CardTitle>
-                </CardHeader>
-                <CardContent className="text-center px-6">
-                  <p className="text-gray-300 mb-6">
-                    Find information across the web with our powerful AI-driven search engine that delivers accurate results instantly.
-                  </p>
-                  
-                  {/* Mock Search Results */}
-                  <div className="space-y-4 mt-6">
-                    <div className="bg-gradient-to-r from-blue-900/30 to-blue-800/30 p-4 rounded-lg text-left border border-blue-700/30">
-                      <h4 className="text-blue-300 font-semibold text-sm">{mockSearchResults[0].title}</h4>
-                      <p className="text-xs text-gray-400 mt-1">{mockSearchResults[0].snippet}</p>
-                    </div>
-                    <div className="bg-gradient-to-r from-blue-900/30 to-blue-800/30 p-4 rounded-lg text-left border border-blue-700/30">
-                      <h4 className="text-blue-300 font-semibold text-sm">{mockSearchResults[1].title}</h4>
-                      <p className="text-xs text-gray-400 mt-1">{mockSearchResults[1].snippet}</p>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="pt-2">
-                  <Link to="/search" className="w-full">
-                    <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 shadow-lg shadow-blue-600/10 hover:shadow-blue-600/20">
-                      Try Search <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                </CardFooter>
-              </Card>
-            </motion.div>
-            
-            {/* Chat Feature Card */}
-            <motion.div initial={{
-            opacity: 0,
-            y: 30
-          }} animate={{
-            opacity: 1,
-            y: 0
-          }} transition={{
-            delay: 0.4
-          }} whileHover={{
-            y: -5,
-            transition: {
-              duration: 0.2
-            }
-          }} className="h-full">
-              <Card className="h-full bg-gradient-to-br from-gray-900 to-teal-900/50 border-t-2 border-teal-400 transition-all duration-300 shadow-xl hover:shadow-teal-500/20">
-                <CardHeader className="text-center pb-2">
-                  <div className="mx-auto bg-teal-900/40 p-4 rounded-full w-16 h-16 flex items-center justify-center mb-4">
-                    <MessageCircle className="h-8 w-8 text-teal-400" />
-                  </div>
-                  <CardTitle className="text-xl font-bold text-teal-100">Interactive Chat</CardTitle>
-                </CardHeader>
-                <CardContent className="text-center px-6">
-                  <p className="text-gray-300 mb-6">
-                    Have natural conversations with our advanced AI assistants to get in-depth answers to your complex questions.
-                  </p>
-                  
-                  {/* Mock Chat Exchange */}
-                  <div className="space-y-4 mt-6">
-                    <div className="flex flex-col space-y-3">
-                      <div className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 p-3 rounded-lg ml-auto max-w-[80%] text-left border border-gray-700/50">
-                        <p className="text-xs text-gray-300">{mockChatExchanges[0].question}</p>
-                      </div>
-                      <div className="bg-gradient-to-r from-teal-900/30 to-teal-800/30 p-3 rounded-lg mr-auto max-w-[80%] text-left border border-teal-700/30">
-                        <p className="text-xs text-teal-100">{mockChatExchanges[0].answer}</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="pt-2">
-                  <Link to="/chat" className="w-full">
-                    <Button className="w-full bg-gradient-to-r from-teal-600 to-teal-800 hover:from-teal-700 hover:to-teal-900 shadow-lg shadow-teal-600/10 hover:shadow-teal-600/20">
-                      Start Chatting <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                </CardFooter>
-              </Card>
-            </motion.div>
-
-            {/* Prism Vault Feature Card */}
-            <motion.div initial={{
-            opacity: 0,
-            y: 30
-          }} animate={{
-            opacity: 1,
-            y: 0
-          }} transition={{
-            delay: 0.5
-          }} whileHover={{
-            y: -5,
-            transition: {
-              duration: 0.2
-            }
-          }} className="h-full">
-              <Card className="h-full bg-gradient-to-br from-gray-900 to-purple-900/50 border-t-2 border-purple-400 transition-all duration-300 shadow-xl hover:shadow-purple-500/20">
-                <CardHeader className="text-center pb-2">
-                  <div className="mx-auto bg-purple-900/40 p-4 rounded-full w-16 h-16 flex items-center justify-center mb-4">
-                    <Lock className="h-8 w-8 text-purple-400" />
-                  </div>
-                  <CardTitle className="text-xl font-bold text-purple-100">Prism Vault</CardTitle>
-                </CardHeader>
-                <CardContent className="text-center px-6">
-                  <p className="text-gray-300 mb-6">
-                    Generate strong, secure passwords with AI-powered strength assessment and customizable options.
-                  </p>
-                  
-                  {/* Mock Vault Features */}
-                  <div className="space-y-4 mt-6">
-                    <div className="bg-gradient-to-r from-purple-900/30 to-purple-800/30 p-3 rounded-lg text-left border border-purple-700/30">
-                      <h4 className="text-purple-300 font-semibold text-sm">Password Generator</h4>
-                      <p className="text-xs text-gray-400 mt-1">Create strong passwords with customizable length and character sets</p>
-                    </div>
-                    <div className="bg-gradient-to-r from-purple-900/30 to-purple-800/30 p-3 rounded-lg text-left border border-purple-700/30">
-                      <h4 className="text-purple-300 font-semibold text-sm">AI Strength Assessment</h4>
-                      <p className="text-xs text-gray-400 mt-1">Get real-time feedback on password security with improvement suggestions</p>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="pt-2">
-                  <Link to="/vault" className="w-full">
-                    <Button className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 shadow-lg shadow-purple-600/10 hover:shadow-purple-600/20">
-                      Generate Password <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                </CardFooter>
-              </Card>
-            </motion.div>
-            
-            {/* Pricing Feature Card */}
-            <motion.div initial={{
-            opacity: 0,
-            y: 30
-          }} animate={{
-            opacity: 1,
-            y: 0
-          }} transition={{
-            delay: 0.6
-          }} whileHover={{
-            y: -5,
-            transition: {
-              duration: 0.2
-            }
-          }} className="h-full">
-              <Card className="h-full bg-gradient-to-br from-gray-900 to-orange-900/50 border-t-2 border-orange-400 transition-all duration-300 shadow-xl hover:shadow-orange-500/20">
-                <CardHeader className="text-center pb-2">
-                  <div className="mx-auto bg-orange-900/40 p-4 rounded-full w-16 h-16 flex items-center justify-center mb-4">
-                    <DollarSign className="h-8 w-8 text-orange-400" />
-                  </div>
-                  <CardTitle className="text-xl font-bold text-orange-100">Flexible Plans</CardTitle>
-                </CardHeader>
-                <CardContent className="text-center px-6">
-                  <p className="text-gray-300 mb-6">
-                    Choose the perfect subscription plan to match your search and chat needs, from free trials to premium offerings.
-                  </p>
-                  
-                  {/* Pricing Tiers */}
-                  <div className="space-y-4 mt-6">
-                    <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 p-3 rounded-lg text-left border border-gray-700">
-                      <h4 className="text-gray-200 font-semibold">Free</h4>
-                      <ul className="text-xs text-gray-400 mt-2 list-disc pl-4">
-                        {pricingFeatures.free.map((feature, index) => <li key={index}>{feature}</li>)}
-                      </ul>
-                    </div>
-                    <div className="bg-gradient-to-r from-orange-900/30 to-orange-800/30 p-3 rounded-lg text-left border border-orange-700/30">
-                      <h4 className="text-orange-300 font-semibold">Pro <span className="text-xs font-normal ml-1 text-orange-400/80">(Coming Soon)</span></h4>
-                      <ul className="text-xs text-gray-400 mt-2 list-disc pl-4">
-                        {pricingFeatures.pro.map((feature, index) => <li key={index}>{feature}</li>)}
-                      </ul>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="pt-2">
-                  <Link to="/pricing" className="w-full">
-                    <Button className="w-full bg-gradient-to-r from-orange-600 to-orange-800 hover:from-orange-700 hover:to-orange-900 shadow-lg shadow-orange-600/10 hover:shadow-orange-600/20">
-                      View Plans <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                </CardFooter>
-              </Card>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-      
-      {/* Demo Preview Section */}
-      <section className="py-16 px-4 bg-gradient-to-b from-prism-darkgray/80 to-black">
-        <div className="container mx-auto">
-          <motion.h2 initial={{
-          opacity: 0,
-          y: 20
-        }} animate={{
-          opacity: 1,
-          y: 0
-        }} transition={{
-          delay: 0.2
-        }} className="font-bold text-center mb-12 bg-clip-text bg-gradient-to-r from-blue-300 to-teal-300 text-blue-300 text-4xl">
-            See Prism Search in Action
-          </motion.h2>
-          
-          <motion.div className="bg-gradient-to-br from-gray-900 to-blue-900/20 rounded-xl shadow-2xl overflow-hidden border border-blue-900/50" initial={{
-          opacity: 0,
-          y: 20
-        }} animate={{
-          opacity: 1,
-          y: 0
-        }} transition={{
-          delay: 0.3
-        }}>
-            <div className="p-6">
-              <h3 className="text-xl font-semibold mb-4 text-blue-100">Experience the Power of AI</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-4">
-                  <div className="p-4 border border-blue-800/50 rounded-lg bg-blue-900/20 hover:bg-blue-900/30 transition-colors">
-                    <div className="flex items-center mb-2">
-                      <FileSearch className="h-4 w-4 text-blue-400 mr-2" />
-                      <h4 className="text-blue-300 text-sm font-medium">Advanced Search Capabilities</h4>
-                    </div>
-                    <p className="text-xs text-gray-400">
-                      Natural language processing enables you to search using everyday language and questions rather than keywords.
-                    </p>
-                  </div>
-                  
-                  <div className="p-4 border border-teal-800/50 rounded-lg bg-teal-900/20 hover:bg-teal-900/30 transition-colors">
-                    <div className="flex items-center mb-2">
-                      <Zap className="h-4 w-4 text-teal-400 mr-2" />
-                      <h4 className="text-teal-300 text-sm font-medium">Instant, Accurate Responses</h4>
-                    </div>
-                    <p className="text-xs text-gray-400">
-                      Get comprehensive answers to complex questions with AI that understands context and can synthesize information from multiple sources.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  {/* Mock Chat Session Preview */}
-                  <div className="p-4 border border-purple-800/50 rounded-lg bg-purple-900/20 hover:bg-purple-900/30 transition-colors">
-                    <div className="flex items-center mb-2">
-                      <MessageCircle className="h-4 w-4 text-purple-400 mr-2" />
-                      <h4 className="text-purple-300 text-sm font-medium">Interactive AI Conversations</h4>
-                    </div>
-                    <div className="bg-gray-900/50 p-2 rounded mt-2 text-xs text-gray-300">
-                      <span className="font-semibold">User:</span> {mockChatExchanges[1].question}
-                    </div>
-                    <div className="bg-gray-800/50 p-2 rounded mt-1 text-xs text-gray-300">
-                      <span className="font-semibold">Prism AI:</span> {mockChatExchanges[1].answer}
-                    </div>
-                  </div>
-                </div>
+      <div className="relative z-10">
+        {/* Header */}
+        <header className="container mx-auto px-6 py-8">
+          <nav className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-r from-prism-primary to-prism-accent rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">P</span>
               </div>
-              
-              <div className="mt-8 text-center">
-                <Link to="/search">
-                  <Button variant="outline" size="sm" className="border-blue-500 transition-all hover:border-blue-400 text-cyan-400 bg-transparent">
-                    Try your own search <ChevronRight className="h-4 w-4 ml-1" />
+              <span className="text-2xl font-bold bg-gradient-to-r from-prism-primary to-prism-accent bg-clip-text text-transparent">
+                Prism
+              </span>
+            </div>
+            
+            <div className="hidden md:flex items-center space-x-6">
+              <Button variant="ghost" onClick={() => navigate("/search")}>
+                Search
+              </Button>
+              <Button variant="ghost" onClick={() => navigate("/chat")}>
+                Chat
+              </Button>
+              <Button variant="ghost" onClick={() => navigate("/vault")}>
+                Vault
+              </Button>
+              <Button variant="ghost" onClick={() => navigate("/notes")}>
+                Notes <span className="ml-1 px-1.5 py-0.5 text-xs bg-prism-primary text-white rounded-full">New</span>
+              </Button>
+              <Button variant="ghost" onClick={() => navigate("/pricing")}>
+                Pricing
+              </Button>
+            </div>
+          </nav>
+        </header>
+
+        {/* Hero Section */}
+        <main className="container mx-auto px-6 py-16">
+          <div className="text-center mb-16">
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-prism-primary via-prism-accent to-prism-primary-light bg-clip-text text-transparent leading-tight">
+              The Future of
+              <br />
+              Digital Intelligence
+            </h1>
+            <p className="text-xl md:text-2xl text-prism-text-muted mb-8 max-w-3xl mx-auto leading-relaxed">
+              Experience the next evolution of AI-powered tools. Search smarter, chat intelligently, 
+              store securely, and think visually with Prism's comprehensive suite.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                size="lg" 
+                className="bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary-dark hover:to-prism-accent-dark text-white px-8 py-3 text-lg font-semibold shadow-xl"
+                onClick={() => navigate("/search")}
+              >
+                <Zap className="w-5 h-5 mr-2" />
+                Get Started
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="border-2 border-prism-primary text-prism-primary hover:bg-prism-primary hover:text-white px-8 py-3 text-lg font-semibold"
+                onClick={() => navigate("/notes")}
+              >
+                <FileText className="w-5 h-5 mr-2" />
+                Try Prism Notes
+              </Button>
+            </div>
+          </div>
+
+          {/* New: Prism Notes Spotlight */}
+          <div className="mb-16">
+            <Card className="bg-gradient-to-r from-prism-primary/10 to-prism-accent/10 border-prism-primary/20 hover:shadow-2xl transition-all duration-300">
+              <CardHeader className="text-center pb-4">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-r from-prism-primary to-prism-accent rounded-xl flex items-center justify-center">
+                    <FileText className="w-6 h-6 text-white" />
+                  </div>
+                  <span className="ml-3 px-3 py-1 bg-prism-primary text-white text-sm font-semibold rounded-full">
+                    New Feature
+                  </span>
+                </div>
+                <CardTitle className="text-3xl font-bold text-prism-text mb-2">
+                  Introducing Prism Notes
+                </CardTitle>
+                <CardDescription className="text-lg text-prism-text-muted max-w-2xl mx-auto">
+                  The ultimate note-taking experience with encryption, visual whiteboards, and intelligent features
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                  {notesFeatures.map((feature, index) => (
+                    <div key={index} className="text-center p-4">
+                      <div className="flex justify-center mb-3">
+                        <div className="w-10 h-10 bg-prism-surface/50 rounded-lg flex items-center justify-center">
+                          {feature.icon}
+                        </div>
+                      </div>
+                      <h4 className="font-semibold text-prism-text mb-2">{feature.title}</h4>
+                      <p className="text-sm text-prism-text-muted">{feature.description}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="text-center">
+                  <Button
+                    size="lg"
+                    onClick={() => navigate("/notes")}
+                    className="bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary-dark hover:to-prism-accent-dark text-white px-8 py-3 font-semibold shadow-lg"
+                  >
+                    <FileText className="w-5 h-5 mr-2" />
+                    Explore Prism Notes
                   </Button>
-                </Link>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-      
-      {/* Footer */}
-      <footer className="bg-prism-darkgray/90 py-12 px-4 border-t border-gray-800">
-        <div className="container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="font-bold text-lg mb-4 text-blue-100">Prism Search</h3>
-              <p className="text-sm text-gray-400">
-                AI-powered search and chat platform for all your information needs.
-              </p>
-            </div>
-            
-            <div>
-              <h3 className="font-bold text-lg mb-4 text-blue-100">Resources</h3>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><span className="cursor-not-allowed opacity-60">About</span></li>
-                <li><span className="cursor-not-allowed opacity-60">Documentation</span></li>
-                <li><span className="cursor-not-allowed opacity-60">API</span></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="font-bold text-lg mb-4 text-blue-100">Legal</h3>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><span className="cursor-not-allowed opacity-60">Privacy Policy</span></li>
-                <li><span className="cursor-not-allowed opacity-60">Terms of Service</span></li>
-                <li><span className="cursor-not-allowed opacity-60">Cookie Policy</span></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="font-bold text-lg mb-4 text-blue-100">Connect</h3>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><span className="cursor-not-allowed opacity-60">Contact</span></li>
-                <li><span className="cursor-not-allowed opacity-60">Twitter</span></li>
-                <li><span className="cursor-not-allowed opacity-60">GitHub</span></li>
-              </ul>
-            </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          
-          <div className="mt-12 pt-6 border-t border-gray-800 text-center text-sm text-gray-400">
-            <Footer />
+
+          {/* Features Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+            {features.map((feature, index) => (
+              <Card 
+                key={index} 
+                className="group hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer border-prism-border/50 bg-prism-surface/30 backdrop-blur-sm relative overflow-hidden"
+                onClick={feature.action}
+              >
+                {feature.isNew && (
+                  <div className="absolute top-4 right-4 px-2 py-1 bg-prism-primary text-white text-xs font-semibold rounded-full">
+                    New
+                  </div>
+                )}
+                <CardHeader className="text-center pb-4">
+                  <div className="flex justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                    {feature.icon}
+                  </div>
+                  <CardTitle className="text-xl font-semibold text-prism-text group-hover:text-prism-primary transition-colors">
+                    {feature.title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <CardDescription className="text-prism-text-muted mb-6 leading-relaxed">
+                    {feature.description}
+                  </CardDescription>
+                  <Button 
+                    className="w-full bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary-dark hover:to-prism-accent-dark text-white font-semibold shadow-lg group-hover:shadow-xl transition-all duration-300"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      feature.action();
+                    }}
+                  >
+                    {feature.buttonText}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </div>
-      </footer>
-    </div>;
+
+          {/* CTA Section */}
+          <div className="text-center bg-gradient-to-r from-prism-surface/50 to-prism-surface/30 rounded-2xl p-12 backdrop-blur-sm border border-prism-border/30">
+            <Brain className="w-16 h-16 text-prism-primary mx-auto mb-6" />
+            <h2 className="text-3xl font-bold text-prism-text mb-4">
+              Ready to Transform Your Digital Experience?
+            </h2>
+            <p className="text-xl text-prism-text-muted mb-8 max-w-2xl mx-auto">
+              Join thousands of users who have already discovered the power of intelligent digital tools.
+            </p>
+            <Button 
+              size="lg" 
+              className="bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary-dark hover:to-prism-accent-dark text-white px-12 py-4 text-lg font-semibold shadow-2xl hover:shadow-prism-primary/25 transition-all duration-300"
+              onClick={() => navigate("/search")}
+            >
+              <Zap className="w-5 h-5 mr-2" />
+              Start Your Journey
+            </Button>
+          </div>
+        </main>
+
+        {/* Footer */}
+        <footer className="container mx-auto px-6 py-8 mt-16 border-t border-prism-border/30">
+          <div className="text-center text-prism-text-muted">
+            <p>&copy; 2024 Prism. Empowering intelligence, securing privacy.</p>
+          </div>
+        </footer>
+      </div>
+    </div>
+  );
 };
+
 export default Home;

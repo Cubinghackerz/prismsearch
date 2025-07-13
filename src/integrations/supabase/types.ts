@@ -44,6 +44,42 @@ export type Database = {
         }
         Relationships: []
       }
+      notes: {
+        Row: {
+          content_encrypted: string
+          created_at: string
+          id: string
+          linked_notes: string[] | null
+          title: string
+          topic_tags: string[] | null
+          updated_at: string
+          user_id: string
+          whiteboard_data: Json | null
+        }
+        Insert: {
+          content_encrypted: string
+          created_at?: string
+          id?: string
+          linked_notes?: string[] | null
+          title: string
+          topic_tags?: string[] | null
+          updated_at?: string
+          user_id: string
+          whiteboard_data?: Json | null
+        }
+        Update: {
+          content_encrypted?: string
+          created_at?: string
+          id?: string
+          linked_notes?: string[] | null
+          title?: string
+          topic_tags?: string[] | null
+          updated_at?: string
+          user_id?: string
+          whiteboard_data?: Json | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -70,6 +106,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      reminders: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_completed: boolean | null
+          note_id: string | null
+          reminder_time: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_completed?: boolean | null
+          note_id?: string | null
+          reminder_time: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_completed?: boolean | null
+          note_id?: string | null
+          reminder_time?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminders_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "notes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stored_passwords: {
         Row: {
@@ -115,6 +195,14 @@ export type Database = {
       delete_old_chat_messages: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      find_similar_notes: {
+        Args: {
+          note_tags: string[]
+          current_note_id: string
+          user_id_param: string
+        }
+        Returns: string[]
       }
     }
     Enums: {
