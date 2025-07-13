@@ -182,10 +182,10 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
       </Card>;
   }
   return <div className="space-y-6">
-      <PasswordSecurityDashboard passwords={passwords} onPasswordUpdate={updatePassword} className="py-[22px]" />
+      <PasswordSecurityDashboard passwords={passwords} onPasswordUpdate={updatePassword} />
 
       <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm shadow-xl">
-        <CardHeader>
+        <CardHeader className="py-0">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center space-x-2 text-cyan-300">
               <Database className="h-5 w-5" />
