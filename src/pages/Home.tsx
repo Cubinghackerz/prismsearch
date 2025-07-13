@@ -1,14 +1,11 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, MessageCircle, Shield, Zap, Brain, Lock, Palette, Calendar, Link2, Key } from "lucide-react";
 import ParticleBackground from "@/components/ParticleBackground";
-
 const Home = () => {
   const navigate = useNavigate();
-  
   const features = [{
     icon: <Search className="w-8 h-8 text-prism-primary" />,
     title: "AI-Powered Search",
@@ -29,7 +26,6 @@ const Home = () => {
     buttonText: "Access Vault",
     isNew: true
   }];
-
   const vaultFeatures = [{
     icon: <Lock className="w-5 h-5 text-prism-accent" />,
     title: "Military-Grade Encryption",
@@ -47,9 +43,7 @@ const Home = () => {
     title: "AI Security Analysis",
     description: "Smart breach detection and password health monitoring"
   }];
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-prism-bg to-prism-surface relative overflow-hidden">
+  return <div className="min-h-screen bg-gradient-to-b from-prism-bg to-prism-surface relative overflow-hidden">
       <ParticleBackground />
       
       <div className="relative z-10">
@@ -57,11 +51,7 @@ const Home = () => {
         <header className="container mx-auto px-6 py-8">
           <nav className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <img 
-                src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" 
-                alt="Prism Logo" 
-                className="w-8 h-8"
-              />
+              <img src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" alt="Prism Logo" className="w-8 h-8" />
               <span className="text-2xl font-bold bg-gradient-to-r from-prism-primary to-prism-accent bg-clip-text text-transparent">
                 Prism
               </span>
@@ -75,7 +65,7 @@ const Home = () => {
                 Chat
               </Button>
               <Button variant="ghost" onClick={() => navigate("/vault")}>
-                Vault <span className="ml-1 px-1.5 py-0.5 text-xs bg-prism-primary text-white rounded-full">Featured</span>
+                Vault <span className="ml-1 px-1.5 py-0.5 text-xs bg-prism-primary text-white rounded-full">New</span>
               </Button>
               <Button variant="ghost" onClick={() => navigate("/pricing")}>
                 Pricing
@@ -116,9 +106,7 @@ const Home = () => {
                   <div className="w-12 h-12 bg-gradient-to-r from-prism-primary to-prism-accent rounded-xl flex items-center justify-center">
                     <Shield className="w-6 h-6 text-white" />
                   </div>
-                  <span className="ml-3 px-3 py-1 bg-prism-primary text-white text-sm font-semibold rounded-full">
-                    Featured
-                  </span>
+                  <span className="ml-3 px-3 py-1 bg-prism-primary text-white text-sm font-semibold rounded-full">New</span>
                 </div>
                 <CardTitle className="text-3xl font-bold text-prism-text mb-2">
                   Prism Vault - Secure Password Manager
@@ -129,8 +117,7 @@ const Home = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                  {vaultFeatures.map((feature, index) => (
-                    <div key={index} className="text-center p-4">
+                  {vaultFeatures.map((feature, index) => <div key={index} className="text-center p-4">
                       <div className="flex justify-center mb-3">
                         <div className="w-10 h-10 bg-prism-surface/50 rounded-lg flex items-center justify-center">
                           {feature.icon}
@@ -138,8 +125,7 @@ const Home = () => {
                       </div>
                       <h4 className="font-semibold text-prism-text mb-2">{feature.title}</h4>
                       <p className="text-sm text-prism-text-muted">{feature.description}</p>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
                 <div className="text-center">
                   <Button size="lg" onClick={() => navigate("/vault")} className="bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary-dark hover:to-prism-accent-dark text-white px-8 py-3 font-semibold shadow-lg">
@@ -153,13 +139,10 @@ const Home = () => {
 
           {/* Features Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-            {features.map((feature, index) => (
-              <Card key={index} className="group hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer border-prism-border/50 bg-prism-surface/30 backdrop-blur-sm relative overflow-hidden" onClick={feature.action}>
-                {feature.isNew && (
-                  <div className="absolute top-4 right-4 px-2 py-1 bg-prism-primary text-white text-xs font-semibold rounded-full">
+            {features.map((feature, index) => <Card key={index} className="group hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer border-prism-border/50 bg-prism-surface/30 backdrop-blur-sm relative overflow-hidden" onClick={feature.action}>
+                {feature.isNew && <div className="absolute top-4 right-4 px-2 py-1 bg-prism-primary text-white text-xs font-semibold rounded-full">
                     Featured
-                  </div>
-                )}
+                  </div>}
                 <CardHeader className="text-center pb-4">
                   <div className="flex justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                     {feature.icon}
@@ -172,15 +155,14 @@ const Home = () => {
                   <CardDescription className="text-prism-text-muted mb-6 leading-relaxed">
                     {feature.description}
                   </CardDescription>
-                  <Button className="w-full bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary-dark hover:to-prism-accent-dark text-white font-semibold shadow-lg group-hover:shadow-xl transition-all duration-300" onClick={(e) => {
-                    e.stopPropagation();
-                    feature.action();
-                  }}>
+                  <Button className="w-full bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary-dark hover:to-prism-accent-dark text-white font-semibold shadow-lg group-hover:shadow-xl transition-all duration-300" onClick={e => {
+                e.stopPropagation();
+                feature.action();
+              }}>
                     {feature.buttonText}
                   </Button>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
 
           {/* CTA Section */}
@@ -206,8 +188,6 @@ const Home = () => {
           </div>
         </footer>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Home;
