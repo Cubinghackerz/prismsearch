@@ -41,7 +41,7 @@ const PopularSearches = ({
     y: 0
   }} transition={{
     duration: 0.5
-  }} className="w-full backdrop-blur-md rounded-xl border border-orange-500/30 p-5 shadow-lg mb-6 glass-card bg-black">
+  }} className="w-full backdrop-blur-md rounded-xl border border-orange-500/30 p-5 shadow-lg mb-6 glass-card bg-black my-[100px]">
       <div className="flex flex-wrap items-center justify-between mb-4 gap-3">
         <div className="flex items-center space-x-2">
           <TrendingUp className="h-5 w-5 text-orange-400" />
