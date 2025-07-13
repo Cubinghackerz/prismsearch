@@ -171,8 +171,9 @@ const Home = () => {
             <h2 className="text-3xl font-bold text-prism-text mb-4">
               Ready to Transform Your Digital Experience?
             </h2>
-            <p className="text-xl text-prism-text-muted mb-8 max-w-2xl mx-auto">Be among the first to experience the
-power of intelligent digital tools</p>
+            <p className="text-xl text-prism-text-muted mb-8 max-w-2xl mx-auto">
+              Join thousands of users who have already discovered the power of intelligent digital tools.
+            </p>
             <Button size="lg" className="bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary-dark hover:to-prism-accent-dark text-white px-12 py-4 text-lg font-semibold shadow-2xl hover:shadow-prism-primary/25 transition-all duration-300" onClick={() => navigate("/search")}>
               <Zap className="w-5 h-5 mr-2" />
               Start Your Journey
@@ -183,7 +184,7 @@ power of intelligent digital tools</p>
         {/* Footer */}
         <footer className="container mx-auto px-6 py-8 mt-16 border-t border-prism-border/30">
           <div className="text-center text-prism-text-muted">
-            <p>&copy; 2024 Prism. Empowering intelligence, securing privacy.</p>
+            <p>&copy; 2025 Prism. Empowering intelligence, securing privacy.</p>
           </div>
         </footer>
       </div>
