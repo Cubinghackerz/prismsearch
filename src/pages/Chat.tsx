@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { BookmarkPlus, Maximize, Minimize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ChatInterface from '../components/chat/ChatInterface';
-import ParticleBackground from '../components/ParticleBackground';
 import Footer from '../components/Footer';
 import BookmarksDrawer from '../components/BookmarksDrawer';
 import ScrollToTop from '../components/ScrollToTop';
@@ -25,7 +24,6 @@ const Chat = () => {
 
   return (
     <div className={`${isFullscreen ? 'fixed inset-0 z-50' : 'min-h-screen'} bg-gradient-to-b from-prism-bg to-prism-surface relative overflow-hidden`}>
-      <ParticleBackground color="#00C2A8" />
       <ScrollToTop />
       
       <div className="relative z-10 h-full flex flex-col">

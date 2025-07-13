@@ -6,7 +6,6 @@ import { PricingToggle } from '@/components/pricing/PricingToggle';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import Navigation from '@/components/Navigation';
-import ParticleBackground from '@/components/ParticleBackground';
 import Footer from '@/components/Footer';
 
 const Pricing: React.FC = () => {
@@ -123,8 +122,6 @@ const Pricing: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-prism-bg to-prism-surface relative overflow-hidden">
-      <ParticleBackground />
-      
       <div className="relative z-10">
         <Navigation />
         
