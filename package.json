@@ -1,21 +1,14 @@
 {
   "name": "vite_react_shadcn_ts",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "electron": "electron .",
-    "electron-dev": "concurrently \"npm run dev\" \"wait-on http://localhost:8080 && electron .\"",
-    "build-electron": "npm run build && electron-builder",
-    "build-electron-all": "npm run build && electron-builder --mac --win --linux",
-    "dist-mac": "npm run build && electron-builder --mac",
-    "dist-win": "npm run build && electron-builder --win",
-    "dist-linux": "npm run build && electron-builder --linux"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.2",
@@ -98,74 +91,6 @@
     "tailwindcss": "^3.4.11",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
-    "vite": "^5.4.1",
-    "electron": "^37.2.1",
-    "electron-builder": "^26.0.12",
-    "concurrently": "^9.2.0",
-    "wait-on": "^8.0.3"
-  },
-  "main": "public/electron.js",
-  "homepage": "./",
-  "build": {
-    "appId": "app.lovable.prismsearch",
-    "productName": "Prism Search",
-    "directories": {
-      "output": "dist-electron"
-    },
-    "files": [
-      "dist/**/*",
-      "public/electron.js",
-      "public/lovable-uploads/**/*"
-    ],
-    "extraResources": [
-      {
-        "from": "public/lovable-uploads",
-        "to": "lovable-uploads"
-      }
-    ],
-    "mac": {
-      "category": "public.app-category.productivity",
-      "icon": "public/lovable-uploads/3c38b6c8-23f1-4e72-bd31-5fcf258572d9.png",
-      "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
-      ],
-      "artifactName": "Prism-Search-${version}-${arch}.${ext}"
-    },
-    "win": {
-      "icon": "public/lovable-uploads/3c38b6c8-23f1-4e72-bd31-5fcf258572d9.png",
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "artifactName": "Prism-Search-Setup-${version}.${ext}"
-    },
-    "linux": {
-      "icon": "public/lovable-uploads/3c38b6c8-23f1-4e72-bd31-5fcf258572d9.png",
-      "target": [
-        {
-          "target": "AppImage",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "artifactName": "Prism-Search-${version}.${ext}"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
-    }
+    "vite": "^5.4.1"
   }
 }
