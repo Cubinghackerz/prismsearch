@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Monitor, Apple, HardDrive } from "lucide-react";
+import { Download, Monitor, Apple, HardDrive, ExternalLink } from "lucide-react";
 
 const DesktopDownloads = () => {
   const downloads = [
@@ -14,8 +14,8 @@ const DesktopDownloads = () => {
       fileName: "Prism-Search-1.0.0-arm64.dmg",
       size: "~85 MB",
       platform: "mac",
-      downloadUrl: "https://github.com/YOUR_USERNAME/YOUR_REPO_NAME/releases/latest/download/Prism-Search-1.0.0-arm64.dmg",
-      altDownloadUrl: "https://github.com/YOUR_USERNAME/YOUR_REPO_NAME/releases/latest/download/Prism-Search-1.0.0.dmg",
+      downloadUrl: "#",
+      altDownloadUrl: "#",
       altFileName: "Prism-Search-1.0.0.dmg"
     },
     {
@@ -26,7 +26,7 @@ const DesktopDownloads = () => {
       fileName: "Prism-Search-Setup-1.0.0.exe",
       size: "~92 MB",
       platform: "win",
-      downloadUrl: "https://github.com/YOUR_USERNAME/YOUR_REPO_NAME/releases/latest/download/Prism-Search-Setup-1.0.0.exe"
+      downloadUrl: "#"
     },
     {
       icon: <HardDrive className="w-6 h-6" />,
@@ -36,26 +36,32 @@ const DesktopDownloads = () => {
       fileName: "Prism-Search-1.0.0.AppImage",
       size: "~88 MB",
       platform: "linux",
-      downloadUrl: "https://github.com/YOUR_USERNAME/YOUR_REPO_NAME/releases/latest/download/Prism-Search-1.0.0.AppImage"
+      downloadUrl: "#"
     }
   ];
 
-  const handleDownload = (downloadUrl: string, fileName: string) => {
-    // Open download in new tab to trigger GitHub release download
-    window.open(downloadUrl, '_blank');
+  const handleDownload = (download: any) => {
+    // For now, show a notification that desktop apps are coming soon
+    alert(`Desktop app for ${download.platform === 'mac' ? 'macOS' : download.platform === 'win' ? 'Windows' : 'Linux'} is coming soon! 
+    
+To build your own desktop version:
+1. Connect this project to GitHub
+2. Follow the build instructions in the README
+3. Use the provided build scripts`);
   };
 
-  const handleMacDownload = (download: any) => {
-    // For Mac, show both Intel and Apple Silicon options
-    const userAgent = navigator.userAgent.toLowerCase();
-    const isAppleSilicon = userAgent.includes('mac') && (userAgent.includes('arm') || userAgent.includes('apple silicon'));
-    
-    if (isAppleSilicon) {
-      handleDownload(download.downloadUrl, download.fileName);
-    } else {
-      // Show both options or default to Intel version
-      handleDownload(download.altDownloadUrl || download.downloadUrl, download.altFileName || download.fileName);
-    }
+  const handleViewInstructions = () => {
+    // Show build instructions
+    alert(`To build desktop apps:
+
+1. Connect your project to GitHub
+2. Clone the repository locally  
+3. Run: node build-desktop.js
+4. Run: npm install
+5. Run: npm run build
+6. Run: npm run build-electron-all
+
+The built apps will be in the dist-electron/ folder.`);
   };
 
   return (
@@ -64,11 +70,11 @@ const DesktopDownloads = () => {
         <div className="flex items-center justify-center mb-4">
           <Download className="w-8 h-8 text-prism-primary mr-3" />
           <h2 className="text-3xl font-bold text-prism-text">
-            Download Desktop App
+            Desktop Apps
           </h2>
         </div>
         <p className="text-lg text-prism-text-muted max-w-2xl mx-auto">
-          Get the full Prism experience with our native desktop applications. 
+          Get the full Prism experience with native desktop applications. 
           All features work offline with enhanced performance.
         </p>
       </div>
@@ -103,27 +109,36 @@ const DesktopDownloads = () => {
               </div>
               <Button 
                 className="w-full bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary-dark hover:to-prism-accent-dark text-white font-semibold shadow-lg group-hover:shadow-xl transition-all duration-300"
-                onClick={() => download.platform === 'mac' ? handleMacDownload(download) : handleDownload(download.downloadUrl, download.fileName)}
+                onClick={() => handleDownload(download)}
               >
                 <Download className="w-4 h-4 mr-2" />
-                Download {download.fileType}
+                Coming Soon
               </Button>
-              {download.platform === 'mac' && download.altDownloadUrl && (
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  className="w-full mt-2 text-xs"
-                  onClick={() => handleDownload(download.altDownloadUrl!, download.altFileName!)}
-                >
-                  Intel Mac Version
-                </Button>
-              )}
             </CardContent>
           </Card>
         ))}
       </div>
 
       <div className="text-center mt-8">
+        <div className="bg-prism-surface/50 rounded-lg p-6 border border-prism-border/30">
+          <h3 className="text-lg font-semibold text-prism-text mb-4">
+            Build Your Own Desktop App
+          </h3>
+          <p className="text-prism-text-muted mb-4">
+            Ready to create your own desktop version? Follow our simple build process.
+          </p>
+          <Button 
+            variant="outline"
+            onClick={handleViewInstructions}
+            className="border-prism-primary text-prism-primary hover:bg-prism-primary hover:text-white"
+          >
+            <ExternalLink className="w-4 h-4 mr-2" />
+            View Build Instructions
+          </Button>
+        </div>
+      </div>
+
+      <div className="text-center mt-6">
         <div className="bg-prism-surface/50 rounded-lg p-6 border border-prism-border/30">
           <h3 className="text-lg font-semibold text-prism-text mb-2">
             System Requirements
@@ -140,21 +155,6 @@ const DesktopDownloads = () => {
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="text-center mt-6">
-        <p className="text-sm text-prism-text-muted">
-          Don't see your platform? Visit our{" "}
-          <a 
-            href="https://github.com/YOUR_USERNAME/YOUR_REPO_NAME/releases" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-prism-primary hover:underline"
-          >
-            GitHub Releases
-          </a>{" "}
-          page for all available downloads.
-        </p>
       </div>
     </div>
   );
