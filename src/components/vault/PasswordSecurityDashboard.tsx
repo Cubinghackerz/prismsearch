@@ -99,7 +99,7 @@ export const PasswordSecurityDashboard: React.FC<PasswordSecurityDashboardProps>
     }
   };
   return <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm shadow-xl">
-      <CardHeader className="py-0">
+      <CardHeader className="mx-[5px] my-[10px]">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2 text-cyan-300">
             <Shield className="h-5 w-5" />
