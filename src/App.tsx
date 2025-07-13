@@ -11,7 +11,6 @@ import Chat from "./pages/Chat";
 import Pricing from "./pages/Pricing";
 import Home from "./pages/Home";
 import PrismVault from "./pages/PrismVault";
-import PrismNotes from "./pages/PrismNotes";
 
 // Create QueryClient with optimized settings for better performance
 const queryClient = new QueryClient({
@@ -38,7 +37,6 @@ const App: React.FC = () => (
             <Route path="/chat" element={<Chat />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/vault" element={<PrismVault />} />
-            <Route path="/notes" element={<PrismNotes />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

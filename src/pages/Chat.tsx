@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BookmarkPlus } from 'lucide-react';
+import { BookmarkPlus, Maximize, Minimize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ChatInterface from '../components/chat/ChatInterface';
 import ParticleBackground from '../components/ParticleBackground';
@@ -13,6 +13,7 @@ import Navigation from '../components/Navigation';
 
 const Chat = () => {
   const [isBookmarksOpen, setIsBookmarksOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [bookmarksCount, setBookmarksCount] = useState<number>(() => {
     try {
       const bookmarks = JSON.parse(localStorage.getItem('prism_bookmarks') || '[]');
@@ -23,18 +24,18 @@ const Chat = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-prism-bg to-prism-surface relative overflow-hidden">
+    <div className={`${isFullscreen ? 'fixed inset-0 z-50' : 'min-h-screen'} bg-gradient-to-b from-prism-bg to-prism-surface relative overflow-hidden`}>
       <ParticleBackground color="#00C2A8" />
       <ScrollToTop />
       
-      <div className="relative z-10">
-        <Navigation />
+      <div className="relative z-10 h-full flex flex-col">
+        {!isFullscreen && <Navigation />}
         
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-8">
+        <div className={`${isFullscreen ? 'flex-1' : 'container mx-auto px-6'}`}>
+          <div className={`text-center ${isFullscreen ? 'p-4' : 'mb-8'}`}>
             <div className="flex items-center justify-center gap-2 mb-4">
               <img 
-                src="/lovable-uploads/aeaad4a8-0dc2-4d4b-b2b3-cb248e0843db.png" 
+                src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" 
                 alt="Prism Chat Logo" 
                 className="h-8 w-8"
               />
@@ -55,7 +56,7 @@ const Chat = () => {
               </motion.h1>
             </div>
             
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center gap-2 mb-6">
               <Button 
                 variant="ghost" 
                 onClick={() => setIsBookmarksOpen(true)}
@@ -70,19 +71,31 @@ const Chat = () => {
                   </span>
                 )}
               </Button>
+              
+              <Button 
+                variant="ghost" 
+                onClick={() => setIsFullscreen(!isFullscreen)}
+                className="text-prism-text bg-prism-primary/20 hover:bg-prism-primary/30"
+                size="sm"
+              >
+                {isFullscreen ? <Minimize className="mr-2 h-4 w-4" /> : <Maximize className="mr-2 h-4 w-4" />}
+                <span className="hidden sm:inline">{isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>
+              </Button>
             </div>
           </div>
 
-          <main className="max-w-[98vw] pt-3 pb-6">
+          <main className={`${isFullscreen ? 'h-full flex flex-col' : 'max-w-[98vw] pt-3 pb-6'}`}>
             <ChatProvider>
               <ChatInterface />
             </ChatProvider>
           </main>
         </div>
         
-        <footer className="mt-2">
-          <Footer />
-        </footer>
+        {!isFullscreen && (
+          <footer className="mt-2">
+            <Footer />
+          </footer>
+        )}
 
         <BookmarksDrawer 
           isOpen={isBookmarksOpen} 

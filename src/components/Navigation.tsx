@@ -13,9 +13,11 @@ const Navigation = () => {
     <header className="container mx-auto px-6 py-8">
       <nav className="flex items-center justify-between">
         <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate("/")}>
-          <div className="w-8 h-8 bg-gradient-to-r from-prism-primary to-prism-accent rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">P</span>
-          </div>
+          <img 
+            src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" 
+            alt="Prism Logo" 
+            className="w-8 h-8"
+          />
           <span className="text-2xl font-bold bg-gradient-to-r from-prism-primary to-prism-accent bg-clip-text text-transparent">
             Prism
           </span>
@@ -39,15 +41,6 @@ const Navigation = () => {
             onClick={() => navigate("/vault")}
           >
             Vault
-          </Button>
-          <Button 
-            variant={isActive("/notes") ? "default" : "ghost"} 
-            onClick={() => navigate("/notes")}
-          >
-            Notes 
-            {isActive("/notes") && (
-              <span className="ml-1 px-1.5 py-0.5 text-xs bg-prism-primary text-white rounded-full">New</span>
-            )}
           </Button>
           <Button 
             variant={isActive("/pricing") ? "default" : "ghost"} 

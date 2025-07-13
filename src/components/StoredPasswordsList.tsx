@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -194,7 +195,7 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
 
   if (loading) {
     return (
-      <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+      <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm mb-6">
         <CardContent className="text-center py-12">
           <div className="animate-pulse space-y-4">
             <Database className="h-12 w-12 text-slate-600 mx-auto" />
@@ -214,34 +215,40 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
 
       <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm shadow-xl">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <CardTitle className="flex items-center space-x-2 text-cyan-300">
               <Database className="h-5 w-5" />
               <span>Password Manager</span>
               <Badge variant="outline" className="text-slate-400 border-slate-600">
-                {passwords.length}/10
+                {passwords.length}/100
               </Badge>
             </CardTitle>
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 onClick={() => MasterPasswordService.hasMasterPassword() ? handleMasterPasswordSettings() : setShowMasterPasswordSetup(true)}
                 size="sm"
                 variant="outline"
-                className="border-slate-600 hover:bg-slate-700"
+                className="border-slate-600 hover:bg-slate-700 text-xs sm:text-sm"
               >
-                <Shield className="h-4 w-4 mr-2" />
-                {MasterPasswordService.hasMasterPassword() ? 'Master Password' : 'Set Master Password'}
+                <Shield className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">{MasterPasswordService.hasMasterPassword() ? 'Master Password' : 'Set Master Password'}</span>
+                <span className="sm:hidden">Master</span>
               </Button>
               <Button
                 onClick={handleAddNew}
-                disabled={passwords.length >= 10}
-                className="bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-700 hover:to-emerald-700"
+                disabled={passwords.length >= 100}
+                className="bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-700 hover:to-emerald-700 text-xs sm:text-sm"
+                size="sm"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Password
+                <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Add Password</span>
+                <span className="sm:hidden">Add</span>
               </Button>
             </div>
           </div>
+          <p className="text-xs text-slate-400 mt-2">
+            💡 <strong>Pro Tip:</strong> Maximum security scores ensure the strongest password protection. Aim for 90+ scores for optimal security.
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
           {passwords.length === 0 ? (
@@ -255,7 +262,9 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
               </div>
             </div>
           ) : (
-            passwordItems
+            <div className="space-y-3">
+              {passwordItems}
+            </div>
           )}
         </CardContent>
       </Card>
@@ -278,14 +287,14 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
 
       {/* Master Password Settings Modal */}
       {showMasterPasswordSettings && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowMasterPasswordSettings(false)}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowMasterPasswordSettings(false)}>
           <div className="bg-slate-900 p-6 rounded-lg border border-slate-700 max-w-md w-full mx-4" onClick={e => e.stopPropagation()}>
             <h3 className="text-xl font-semibold text-cyan-300 mb-4 flex items-center space-x-2">
               <Shield className="h-6 w-6" />
               <span>Master Password Settings</span>
             </h3>
             <div className="space-y-4">
-              <p className="text-slate-300">Master password is currently active. You can use it to protect individual passwords.</p>
+              <p className="text-slate-300 text-sm">Master password is currently active. You can use it to protect individual passwords.</p>
               
               <div className="space-y-3">
                 <Button
@@ -294,7 +303,7 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
                     setShowChangeMasterPassword(true);
                   }}
                   variant="outline"
-                  className="w-full border-cyan-600 text-cyan-400 hover:bg-cyan-950/50"
+                  className="w-full border-cyan-600 text-cyan-400 hover:bg-cyan-950/50 text-sm"
                 >
                   <Key className="h-4 w-4 mr-2" />
                   Change Master Password
@@ -303,7 +312,7 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
                 <Button
                   onClick={handleRemoveMasterPassword}
                   variant="outline"
-                  className="w-full border-red-600 text-red-400 hover:bg-red-950/50"
+                  className="w-full border-red-600 text-red-400 hover:bg-red-950/50 text-sm"
                 >
                   Remove Master Password
                 </Button>
@@ -311,7 +320,7 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
               
               <Button
                 onClick={() => setShowMasterPasswordSettings(false)}
-                className="w-full bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-700 hover:to-emerald-700"
+                className="w-full bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-700 hover:to-emerald-700 text-sm"
               >
                 Close
               </Button>

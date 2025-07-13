@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
-import { Fingerprint, RefreshCw } from 'lucide-react';
+import { Fingerprint, RefreshCw, Brain, Info } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import LoadingAnimation from '@/components/LoadingAnimation';
 
@@ -52,10 +52,27 @@ export const PasswordGenerator: React.FC<PasswordGeneratorProps> = ({
           <span>Secure Password Generator</span>
         </CardTitle>
         <CardDescription className="text-slate-400">
-          Configure your secure password parameters
+          Configure your secure password parameters with AI-powered strength assessment
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* AI Security Note */}
+        <div className="bg-gradient-to-r from-cyan-950/50 to-emerald-950/50 border border-cyan-600/30 rounded-lg p-4">
+          <div className="flex items-start space-x-3">
+            <Brain className="h-5 w-5 text-cyan-400 mt-0.5 flex-shrink-0" />
+            <div>
+              <h4 className="font-semibold text-cyan-300 mb-2">AI Security Analysis</h4>
+              <p className="text-sm text-slate-300 mb-2">
+                Our AI analyzes each generated password for maximum security strength.
+              </p>
+              <div className="flex items-center space-x-2 text-xs text-cyan-400">
+                <Info className="h-4 w-4" />
+                <span><strong>Pro Tip:</strong> Aim for 90+ security scores for optimal protection</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="space-y-2">
           <Label className="text-slate-200 font-medium">Number of Passwords: {passwordCount}</Label>
           <Slider
@@ -130,11 +147,11 @@ export const PasswordGenerator: React.FC<PasswordGeneratorProps> = ({
           <div className="space-y-3">
             <div className="flex items-center space-x-2">
               <LoadingAnimation variant="orbit" color="cyan" size="small" />
-              <Label className="text-cyan-300 font-medium">Generating secure passwords...</Label>
+              <Label className="text-cyan-300 font-medium">Generating secure passwords with AI analysis...</Label>
             </div>
             <Progress value={generationProgress} className="w-full h-2" />
             <p className="text-xs text-slate-400 text-center">
-              Applying encryption algorithms • {Math.round(generationProgress)}%
+              Applying encryption algorithms & AI security assessment • {Math.round(generationProgress)}%
             </p>
           </div>
         )}
@@ -147,12 +164,12 @@ export const PasswordGenerator: React.FC<PasswordGeneratorProps> = ({
           {isGenerating ? (
             <>
               <LoadingAnimation variant="dots" color="cyan" size="small" className="mr-2" />
-              Encrypting...
+              Encrypting with AI Analysis...
             </>
           ) : (
             <>
               <RefreshCw className="mr-2 h-4 w-4" />
-              Generate {passwordCount > 1 ? `${passwordCount} Passwords` : 'Password'}
+              Generate {passwordCount > 1 ? `${passwordCount} Passwords` : 'Password'} with AI
             </>
           )}
         </Button>
