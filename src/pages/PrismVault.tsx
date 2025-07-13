@@ -333,7 +333,7 @@ const PrismVault = () => {
               includeLowercase={includeLowercase}
               setIncludeLowercase={setIncludeLowercase}
               includeNumbers={includeNumbers}
-              setIncludeNumbers={includeNumbers}
+              setIncludeNumbers={setIncludeNumbers}
               includeSymbols={includeSymbols}
               setIncludeSymbols={setIncludeSymbols}
               isGenerating={isGenerating}
