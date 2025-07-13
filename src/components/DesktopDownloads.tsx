@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Monitor, Apple, HardDrive } from "lucide-react";
+import { Download, Monitor, Apple, HardDrive, Github, Code } from "lucide-react";
 
 const DesktopDownloads = () => {
   const downloads = [
@@ -36,9 +36,20 @@ const DesktopDownloads = () => {
   ];
 
   const handleDownload = (platform: string) => {
-    // In a real implementation, these would be actual download links
-    // For now, we'll show an alert with instructions
-    alert(`To build the ${platform} version:\n\n1. Export this project to GitHub\n2. Run 'npm install' in your local environment\n3. Run 'npm run dist-${platform}' to build the desktop app\n4. The installer will be created in the 'dist-electron' folder`);
+    const instructions = `To build the ${platform} desktop app:
+
+1. Export this project to GitHub (use the GitHub button in the top right)
+2. Clone the repository to your local machine
+3. Run: node build-desktop.js
+4. Run: npm install
+5. Run: npm run build
+6. Run: npm run dist-${platform}
+
+The installer will be created in the 'dist-electron' folder.
+
+For more details, check the README in your exported project.`;
+    
+    alert(instructions);
   };
 
   return (
@@ -54,6 +65,33 @@ const DesktopDownloads = () => {
           Get the full Prism experience with our native desktop applications. 
           All features work offline with enhanced performance.
         </p>
+      </div>
+
+      {/* Build Instructions Card */}
+      <div className="mb-8">
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <CardHeader className="text-center pb-4">
+            <div className="flex items-center justify-center mb-2">
+              <Github className="w-6 h-6 text-blue-600 mr-2" />
+              <Code className="w-6 h-6 text-blue-600" />
+            </div>
+            <CardTitle className="text-xl font-semibold text-blue-900">
+              How to Build Desktop Apps
+            </CardTitle>
+            <CardDescription className="text-blue-700">
+              Export to GitHub and build locally for the best experience
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-sm text-blue-800">
+            <div className="space-y-2">
+              <p><strong>1.</strong> Export this project to GitHub (button in top right)</p>
+              <p><strong>2.</strong> Clone to your local machine</p>
+              <p><strong>3.</strong> Run: <code className="bg-blue-100 px-2 py-1 rounded">node build-desktop.js</code></p>
+              <p><strong>4.</strong> Run: <code className="bg-blue-100 px-2 py-1 rounded">npm install && npm run build</code></p>
+              <p><strong>5.</strong> Build for your platform using the buttons below</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
@@ -89,7 +127,7 @@ const DesktopDownloads = () => {
                 onClick={() => handleDownload(download.platform)}
               >
                 <Download className="w-4 h-4 mr-2" />
-                Download {download.fileType}
+                Build {download.fileType}
               </Button>
             </CardContent>
           </Card>
