@@ -1,45 +1,38 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download, Monitor, Apple, HardDrive, ExternalLink } from "lucide-react";
-
 const DesktopDownloads = () => {
-  const downloads = [
-    {
-      icon: <Apple className="w-6 h-6" />,
-      title: "Download for macOS",
-      description: "Compatible with Intel and Apple Silicon Macs",
-      fileType: "DMG",
-      fileName: "Prism-Search-1.0.0-arm64.dmg",
-      size: "~85 MB",
-      platform: "mac",
-      downloadUrl: "#",
-      altDownloadUrl: "#",
-      altFileName: "Prism-Search-1.0.0.dmg"
-    },
-    {
-      icon: <Monitor className="w-6 h-6" />,
-      title: "Download for Windows",
-      description: "Windows 10 and 11 compatible",
-      fileType: "EXE",
-      fileName: "Prism-Search-Setup-1.0.0.exe",
-      size: "~92 MB",
-      platform: "win",
-      downloadUrl: "#"
-    },
-    {
-      icon: <HardDrive className="w-6 h-6" />,
-      title: "Download for Linux",
-      description: "Universal AppImage for all distributions",
-      fileType: "AppImage",
-      fileName: "Prism-Search-1.0.0.AppImage",
-      size: "~88 MB",
-      platform: "linux",
-      downloadUrl: "#"
-    }
-  ];
-
+  const downloads = [{
+    icon: <Apple className="w-6 h-6" />,
+    title: "Download for macOS",
+    description: "Compatible with Intel and Apple Silicon Macs",
+    fileType: "DMG",
+    fileName: "Prism-Search-1.0.0-arm64.dmg",
+    size: "~85 MB",
+    platform: "mac",
+    downloadUrl: "#",
+    altDownloadUrl: "#",
+    altFileName: "Prism-Search-1.0.0.dmg"
+  }, {
+    icon: <Monitor className="w-6 h-6" />,
+    title: "Download for Windows",
+    description: "Windows 10 and 11 compatible",
+    fileType: "EXE",
+    fileName: "Prism-Search-Setup-1.0.0.exe",
+    size: "~92 MB",
+    platform: "win",
+    downloadUrl: "#"
+  }, {
+    icon: <HardDrive className="w-6 h-6" />,
+    title: "Download for Linux",
+    description: "Universal AppImage for all distributions",
+    fileType: "AppImage",
+    fileName: "Prism-Search-1.0.0.AppImage",
+    size: "~88 MB",
+    platform: "linux",
+    downloadUrl: "#"
+  }];
   const handleDownload = (download: any) => {
     // For now, show a notification that desktop apps are coming soon
     alert(`Desktop app for ${download.platform === 'mac' ? 'macOS' : download.platform === 'win' ? 'Windows' : 'Linux'} is coming soon! 
@@ -49,7 +42,6 @@ To build your own desktop version:
 2. Follow the build instructions in the README
 3. Use the provided build scripts`);
   };
-
   const handleViewInstructions = () => {
     // Show build instructions
     alert(`To build desktop apps:
@@ -63,15 +55,11 @@ To build your own desktop version:
 
 The built apps will be in the dist-electron/ folder.`);
   };
-
-  return (
-    <div className="mb-16">
+  return <div className="mb-16">
       <div className="text-center mb-8">
         <div className="flex items-center justify-center mb-4">
           <Download className="w-8 h-8 text-prism-primary mr-3" />
-          <h2 className="text-3xl font-bold text-prism-text">
-            Desktop Apps
-          </h2>
+          <h2 className="text-3xl font-bold text-prism-text">Desktop Apps (Coming Soon)</h2>
         </div>
         <p className="text-lg text-prism-text-muted max-w-2xl mx-auto">
           Get the full Prism experience with native desktop applications. 
@@ -80,11 +68,7 @@ The built apps will be in the dist-electron/ folder.`);
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
-        {downloads.map((download, index) => (
-          <Card 
-            key={index} 
-            className="group hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer border-prism-border/50 bg-prism-surface/30 backdrop-blur-sm"
-          >
+        {downloads.map((download, index) => <Card key={index} className="group hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer border-prism-border/50 bg-prism-surface/30 backdrop-blur-sm">
             <CardHeader className="text-center pb-4">
               <div className="flex justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                 <div className="w-12 h-12 bg-gradient-to-r from-prism-primary to-prism-accent rounded-xl flex items-center justify-center text-white">
@@ -107,35 +91,16 @@ The built apps will be in the dist-electron/ folder.`);
                   Size: {download.size}
                 </div>
               </div>
-              <Button 
-                className="w-full bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary-dark hover:to-prism-accent-dark text-white font-semibold shadow-lg group-hover:shadow-xl transition-all duration-300"
-                onClick={() => handleDownload(download)}
-              >
+              <Button className="w-full bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary-dark hover:to-prism-accent-dark text-white font-semibold shadow-lg group-hover:shadow-xl transition-all duration-300" onClick={() => handleDownload(download)}>
                 <Download className="w-4 h-4 mr-2" />
                 Coming Soon
               </Button>
             </CardContent>
-          </Card>
-        ))}
+          </Card>)}
       </div>
 
       <div className="text-center mt-8">
-        <div className="bg-prism-surface/50 rounded-lg p-6 border border-prism-border/30">
-          <h3 className="text-lg font-semibold text-prism-text mb-4">
-            Build Your Own Desktop App
-          </h3>
-          <p className="text-prism-text-muted mb-4">
-            Ready to create your own desktop version? Follow our simple build process.
-          </p>
-          <Button 
-            variant="outline"
-            onClick={handleViewInstructions}
-            className="border-prism-primary text-prism-primary hover:bg-prism-primary hover:text-white"
-          >
-            <ExternalLink className="w-4 h-4 mr-2" />
-            View Build Instructions
-          </Button>
-        </div>
+        
       </div>
 
       <div className="text-center mt-6">
@@ -156,8 +121,6 @@ The built apps will be in the dist-electron/ folder.`);
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default DesktopDownloads;
