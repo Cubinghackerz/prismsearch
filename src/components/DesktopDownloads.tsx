@@ -2,8 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Monitor, Apple, HardDrive, Github, Code, AlertCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Download, Monitor, Apple, HardDrive } from "lucide-react";
 
 const DesktopDownloads = () => {
   const downloads = [
@@ -12,10 +11,12 @@ const DesktopDownloads = () => {
       title: "Download for macOS",
       description: "Compatible with Intel and Apple Silicon Macs",
       fileType: "DMG",
-      fileName: "Prism-Search-1.0.0.dmg",
+      fileName: "Prism-Search-1.0.0-arm64.dmg",
       size: "~85 MB",
       platform: "mac",
-      downloadUrl: "/downloads/Prism-Search-1.0.0.dmg" // You'll need to upload this file
+      downloadUrl: "https://github.com/YOUR_USERNAME/YOUR_REPO_NAME/releases/latest/download/Prism-Search-1.0.0-arm64.dmg",
+      altDownloadUrl: "https://github.com/YOUR_USERNAME/YOUR_REPO_NAME/releases/latest/download/Prism-Search-1.0.0.dmg",
+      altFileName: "Prism-Search-1.0.0.dmg"
     },
     {
       icon: <Monitor className="w-6 h-6" />,
@@ -25,7 +26,7 @@ const DesktopDownloads = () => {
       fileName: "Prism-Search-Setup-1.0.0.exe",
       size: "~92 MB",
       platform: "win",
-      downloadUrl: "/downloads/Prism-Search-Setup-1.0.0.exe" // You'll need to upload this file
+      downloadUrl: "https://github.com/YOUR_USERNAME/YOUR_REPO_NAME/releases/latest/download/Prism-Search-Setup-1.0.0.exe"
     },
     {
       icon: <HardDrive className="w-6 h-6" />,
@@ -35,18 +36,26 @@ const DesktopDownloads = () => {
       fileName: "Prism-Search-1.0.0.AppImage",
       size: "~88 MB",
       platform: "linux",
-      downloadUrl: "/downloads/Prism-Search-1.0.0.AppImage" // You'll need to upload this file
+      downloadUrl: "https://github.com/YOUR_USERNAME/YOUR_REPO_NAME/releases/latest/download/Prism-Search-1.0.0.AppImage"
     }
   ];
 
   const handleDownload = (downloadUrl: string, fileName: string) => {
-    // Create a temporary link element to trigger download
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Open download in new tab to trigger GitHub release download
+    window.open(downloadUrl, '_blank');
+  };
+
+  const handleMacDownload = (download: any) => {
+    // For Mac, show both Intel and Apple Silicon options
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isAppleSilicon = userAgent.includes('mac') && (userAgent.includes('arm') || userAgent.includes('apple silicon'));
+    
+    if (isAppleSilicon) {
+      handleDownload(download.downloadUrl, download.fileName);
+    } else {
+      // Show both options or default to Intel version
+      handleDownload(download.altDownloadUrl || download.downloadUrl, download.altFileName || download.fileName);
+    }
   };
 
   return (
@@ -62,43 +71,6 @@ const DesktopDownloads = () => {
           Get the full Prism experience with our native desktop applications. 
           All features work offline with enhanced performance.
         </p>
-      </div>
-
-      {/* Setup Instructions Alert */}
-      <Alert className="mb-8 bg-blue-50 border-blue-200">
-        <AlertCircle className="h-4 w-4 text-blue-600" />
-        <AlertDescription className="text-blue-800">
-          <strong>Setup Required:</strong> To enable direct downloads, you need to build the desktop apps locally and upload them to the <code className="bg-blue-100 px-1 rounded">/public/downloads/</code> folder. 
-          Use the build scripts provided in your project, then upload the generated DMG, EXE, and AppImage files.
-        </AlertDescription>
-      </Alert>
-
-      {/* Build Instructions Card - Collapsible */}
-      <div className="mb-8">
-        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-          <CardHeader className="text-center pb-4">
-            <div className="flex items-center justify-center mb-2">
-              <Github className="w-6 h-6 text-blue-600 mr-2" />
-              <Code className="w-6 h-6 text-blue-600" />
-            </div>
-            <CardTitle className="text-xl font-semibold text-blue-900">
-              How to Build Desktop Apps (For Hosting)
-            </CardTitle>
-            <CardDescription className="text-blue-700">
-              Follow these steps to create the downloadable files
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm text-blue-800">
-            <div className="space-y-2">
-              <p><strong>1.</strong> Export this project to GitHub (button in top right)</p>
-              <p><strong>2.</strong> Clone to your local machine</p>
-              <p><strong>3.</strong> Run: <code className="bg-blue-100 px-2 py-1 rounded">node build-desktop.js</code></p>
-              <p><strong>4.</strong> Run: <code className="bg-blue-100 px-2 py-1 rounded">npm install && npm run build</code></p>
-              <p><strong>5.</strong> Build apps: <code className="bg-blue-100 px-2 py-1 rounded">npm run build-electron-all</code></p>
-              <p><strong>6.</strong> Upload files from <code className="bg-blue-100 px-2 py-1 rounded">dist-electron/</code> to <code className="bg-blue-100 px-2 py-1 rounded">public/downloads/</code></p>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
@@ -131,11 +103,21 @@ const DesktopDownloads = () => {
               </div>
               <Button 
                 className="w-full bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary-dark hover:to-prism-accent-dark text-white font-semibold shadow-lg group-hover:shadow-xl transition-all duration-300"
-                onClick={() => handleDownload(download.downloadUrl, download.fileName)}
+                onClick={() => download.platform === 'mac' ? handleMacDownload(download) : handleDownload(download.downloadUrl, download.fileName)}
               >
                 <Download className="w-4 h-4 mr-2" />
                 Download {download.fileType}
               </Button>
+              {download.platform === 'mac' && download.altDownloadUrl && (
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  className="w-full mt-2 text-xs"
+                  onClick={() => handleDownload(download.altDownloadUrl!, download.altFileName!)}
+                >
+                  Intel Mac Version
+                </Button>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -158,6 +140,21 @@ const DesktopDownloads = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="text-center mt-6">
+        <p className="text-sm text-prism-text-muted">
+          Don't see your platform? Visit our{" "}
+          <a 
+            href="https://github.com/YOUR_USERNAME/YOUR_REPO_NAME/releases" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-prism-primary hover:underline"
+          >
+            GitHub Releases
+          </a>{" "}
+          page for all available downloads.
+        </p>
       </div>
     </div>
   );
