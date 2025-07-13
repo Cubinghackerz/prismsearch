@@ -2,7 +2,8 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Monitor, Apple, HardDrive, Github, Code } from "lucide-react";
+import { Download, Monitor, Apple, HardDrive, Github, Code, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const DesktopDownloads = () => {
   const downloads = [
@@ -13,7 +14,8 @@ const DesktopDownloads = () => {
       fileType: "DMG",
       fileName: "Prism-Search-1.0.0.dmg",
       size: "~85 MB",
-      platform: "mac"
+      platform: "mac",
+      downloadUrl: "/downloads/Prism-Search-1.0.0.dmg" // You'll need to upload this file
     },
     {
       icon: <Monitor className="w-6 h-6" />,
@@ -22,7 +24,8 @@ const DesktopDownloads = () => {
       fileType: "EXE",
       fileName: "Prism-Search-Setup-1.0.0.exe",
       size: "~92 MB",
-      platform: "win"
+      platform: "win",
+      downloadUrl: "/downloads/Prism-Search-Setup-1.0.0.exe" // You'll need to upload this file
     },
     {
       icon: <HardDrive className="w-6 h-6" />,
@@ -31,25 +34,19 @@ const DesktopDownloads = () => {
       fileType: "AppImage",
       fileName: "Prism-Search-1.0.0.AppImage",
       size: "~88 MB",
-      platform: "linux"
+      platform: "linux",
+      downloadUrl: "/downloads/Prism-Search-1.0.0.AppImage" // You'll need to upload this file
     }
   ];
 
-  const handleDownload = (platform: string) => {
-    const instructions = `To build the ${platform} desktop app:
-
-1. Export this project to GitHub (use the GitHub button in the top right)
-2. Clone the repository to your local machine
-3. Run: node build-desktop.js
-4. Run: npm install
-5. Run: npm run build
-6. Run: npm run dist-${platform}
-
-The installer will be created in the 'dist-electron' folder.
-
-For more details, check the README in your exported project.`;
-    
-    alert(instructions);
+  const handleDownload = (downloadUrl: string, fileName: string) => {
+    // Create a temporary link element to trigger download
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -67,7 +64,16 @@ For more details, check the README in your exported project.`;
         </p>
       </div>
 
-      {/* Build Instructions Card */}
+      {/* Setup Instructions Alert */}
+      <Alert className="mb-8 bg-blue-50 border-blue-200">
+        <AlertCircle className="h-4 w-4 text-blue-600" />
+        <AlertDescription className="text-blue-800">
+          <strong>Setup Required:</strong> To enable direct downloads, you need to build the desktop apps locally and upload them to the <code className="bg-blue-100 px-1 rounded">/public/downloads/</code> folder. 
+          Use the build scripts provided in your project, then upload the generated DMG, EXE, and AppImage files.
+        </AlertDescription>
+      </Alert>
+
+      {/* Build Instructions Card - Collapsible */}
       <div className="mb-8">
         <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
           <CardHeader className="text-center pb-4">
@@ -76,10 +82,10 @@ For more details, check the README in your exported project.`;
               <Code className="w-6 h-6 text-blue-600" />
             </div>
             <CardTitle className="text-xl font-semibold text-blue-900">
-              How to Build Desktop Apps
+              How to Build Desktop Apps (For Hosting)
             </CardTitle>
             <CardDescription className="text-blue-700">
-              Export to GitHub and build locally for the best experience
+              Follow these steps to create the downloadable files
             </CardDescription>
           </CardHeader>
           <CardContent className="text-sm text-blue-800">
@@ -88,7 +94,8 @@ For more details, check the README in your exported project.`;
               <p><strong>2.</strong> Clone to your local machine</p>
               <p><strong>3.</strong> Run: <code className="bg-blue-100 px-2 py-1 rounded">node build-desktop.js</code></p>
               <p><strong>4.</strong> Run: <code className="bg-blue-100 px-2 py-1 rounded">npm install && npm run build</code></p>
-              <p><strong>5.</strong> Build for your platform using the buttons below</p>
+              <p><strong>5.</strong> Build apps: <code className="bg-blue-100 px-2 py-1 rounded">npm run build-electron-all</code></p>
+              <p><strong>6.</strong> Upload files from <code className="bg-blue-100 px-2 py-1 rounded">dist-electron/</code> to <code className="bg-blue-100 px-2 py-1 rounded">public/downloads/</code></p>
             </div>
           </CardContent>
         </Card>
@@ -124,10 +131,10 @@ For more details, check the README in your exported project.`;
               </div>
               <Button 
                 className="w-full bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary-dark hover:to-prism-accent-dark text-white font-semibold shadow-lg group-hover:shadow-xl transition-all duration-300"
-                onClick={() => handleDownload(download.platform)}
+                onClick={() => handleDownload(download.downloadUrl, download.fileName)}
               >
                 <Download className="w-4 h-4 mr-2" />
-                Build {download.fileType}
+                Download {download.fileType}
               </Button>
             </CardContent>
           </Card>
