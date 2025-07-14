@@ -13,25 +13,46 @@ export const VaultLoadingScreen: React.FC<VaultLoadingScreenProps> = ({
   encryptionProgress
 }) => {
   const [isGlitching, setIsGlitching] = useState(false);
-  const [isShaking, setIsShaking] = useState(false);
   const [showUnlock, setShowUnlock] = useState(false);
-  const [lockPhase, setLockPhase] = useState<'locked' | 'glitching' | 'shaking' | 'unlocked'>('locked');
+  const [lockPhase, setLockPhase] = useState<'locked' | 'glitching' | 'unlocking' | 'unlocked'>('locked');
+  const [glitchPixels, setGlitchPixels] = useState<Array<{x: number, y: number, color: string}>>([]);
 
   useEffect(() => {
     if (encryptionProgress >= 30 && lockPhase === 'locked') {
       setLockPhase('glitching');
       setIsGlitching(true);
+      
+      // Generate random glitch pixels
+      const generateGlitchPixels = () => {
+        const pixels = [];
+        for (let i = 0; i < 15; i++) {
+          pixels.push({
+            x: Math.random() * 96, // 96px is the icon size (h-24 w-24)
+            y: Math.random() * 96,
+            color: Math.random() > 0.5 ? '#ef4444' : '#3b82f6' // red or blue
+          });
+        }
+        setGlitchPixels(pixels);
+      };
+
+      // Update glitch pixels every 100ms
+      const glitchInterval = setInterval(generateGlitchPixels, 100);
+      
+      // Clean up interval when glitching ends
+      setTimeout(() => {
+        clearInterval(glitchInterval);
+      }, (70 - 30) / 100 * 2000); // Duration until next phase
+      
     } else if (encryptionProgress >= 70 && lockPhase === 'glitching') {
       setIsGlitching(false);
-      setLockPhase('shaking');
-      setIsShaking(true);
+      setGlitchPixels([]);
+      setLockPhase('unlocking');
+      setShowUnlock(true);
       
-      // After shaking, unlock
+      // Show unlocking animation for 2.5 seconds before marking as unlocked
       setTimeout(() => {
-        setIsShaking(false);
         setLockPhase('unlocked');
-        setShowUnlock(true);
-      }, 1500);
+      }, 2500);
     }
   }, [encryptionProgress, lockPhase]);
 
@@ -40,28 +61,38 @@ export const VaultLoadingScreen: React.FC<VaultLoadingScreenProps> = ({
       <div className="text-center space-y-8 z-10">
         {/* Main vault opening animation */}
         <div className="relative">
-          <div className={`p-8 rounded-full bg-gradient-to-br from-cyan-500/20 to-emerald-500/20 border border-cyan-400/30 backdrop-blur-sm transition-all duration-300 ${
-            isShaking ? 'animate-bounce' : ''
-          }`}>
-            <div className={`relative ${isGlitching ? 'animate-pulse' : ''}`}>
+          <div className="p-8 rounded-full bg-gradient-to-br from-cyan-500/20 to-emerald-500/20 border border-cyan-400/30 backdrop-blur-sm transition-all duration-300">
+            <div className="relative">
               {showUnlock ? (
-                <Unlock className="h-24 w-24 text-emerald-400 mx-auto animate-pulse" />
+                <Unlock className={`h-24 w-24 text-emerald-400 mx-auto ${
+                  lockPhase === 'unlocking' ? 'animate-pulse' : ''
+                }`} />
               ) : (
                 <Lock 
-                  className={`h-24 w-24 text-cyan-400 mx-auto transition-all duration-200 ${
-                    isGlitching ? 'animate-ping opacity-70' : 'animate-pulse'
-                  }`} 
+                  className="h-24 w-24 text-cyan-400 mx-auto animate-pulse" 
                 />
               )}
               
-              {/* Glitch overlay effect */}
+              {/* Random pixel glitch overlay */}
               {isGlitching && (
-                <>
-                  <div className="absolute inset-0 bg-red-500/20 animate-pulse mix-blend-multiply" />
-                  <div className="absolute inset-0 bg-blue-500/20 animate-pulse mix-blend-screen" />
-                  <Lock className="absolute inset-0 h-24 w-24 text-red-400 mx-auto animate-ping opacity-30" />
-                  <Lock className="absolute inset-0 h-24 w-24 text-blue-400 mx-auto animate-pulse opacity-20" />
-                </>
+                <div className="absolute inset-0 w-24 h-24 mx-auto">
+                  {glitchPixels.map((pixel, index) => (
+                    <div
+                      key={index}
+                      className="absolute w-1 h-1 animate-pulse"
+                      style={{
+                        left: `${pixel.x}px`,
+                        top: `${pixel.y}px`,
+                        backgroundColor: pixel.color,
+                        boxShadow: `0 0 4px ${pixel.color}`,
+                      }}
+                    />
+                  ))}
+                  
+                  {/* Additional glitch effects */}
+                  <div className="absolute inset-0 bg-red-500/10 animate-pulse mix-blend-multiply" />
+                  <div className="absolute inset-0 bg-blue-500/10 animate-pulse mix-blend-screen" />
+                </div>
               )}
             </div>
           </div>
@@ -75,7 +106,11 @@ export const VaultLoadingScreen: React.FC<VaultLoadingScreenProps> = ({
             {vaultText}
           </h2>
           <p className="text-slate-400">
-            {showUnlock ? 'Vault unlocked successfully!' : 'Decrypting secure environment...'}
+            {lockPhase === 'unlocked' 
+              ? 'Vault unlocked successfully!' 
+              : lockPhase === 'unlocking' 
+                ? 'Unlocking vault...' 
+                : 'Decrypting secure environment...'}
           </p>
         </div>
 
