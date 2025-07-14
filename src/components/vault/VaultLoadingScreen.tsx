@@ -12,40 +12,11 @@ export const VaultLoadingScreen: React.FC<VaultLoadingScreenProps> = ({
   vaultText,
   encryptionProgress
 }) => {
-  const [isGlitching, setIsGlitching] = useState(false);
   const [showUnlock, setShowUnlock] = useState(false);
-  const [lockPhase, setLockPhase] = useState<'locked' | 'glitching' | 'unlocking' | 'unlocked'>('locked');
-  const [glitchPixels, setGlitchPixels] = useState<Array<{x: number, y: number, color: string}>>([]);
+  const [lockPhase, setLockPhase] = useState<'locked' | 'unlocking' | 'unlocked'>('locked');
 
   useEffect(() => {
-    if (encryptionProgress >= 30 && lockPhase === 'locked') {
-      setLockPhase('glitching');
-      setIsGlitching(true);
-      
-      // Generate random glitch pixels
-      const generateGlitchPixels = () => {
-        const pixels = [];
-        for (let i = 0; i < 15; i++) {
-          pixels.push({
-            x: Math.random() * 96, // 96px is the icon size (h-24 w-24)
-            y: Math.random() * 96,
-            color: Math.random() > 0.5 ? '#ef4444' : '#3b82f6' // red or blue
-          });
-        }
-        setGlitchPixels(pixels);
-      };
-
-      // Update glitch pixels every 100ms
-      const glitchInterval = setInterval(generateGlitchPixels, 100);
-      
-      // Clean up interval when glitching ends
-      setTimeout(() => {
-        clearInterval(glitchInterval);
-      }, (70 - 30) / 100 * 2000); // Duration until next phase
-      
-    } else if (encryptionProgress >= 70 && lockPhase === 'glitching') {
-      setIsGlitching(false);
-      setGlitchPixels([]);
+    if (encryptionProgress >= 70 && lockPhase === 'locked') {
       setLockPhase('unlocking');
       setShowUnlock(true);
       
@@ -71,28 +42,6 @@ export const VaultLoadingScreen: React.FC<VaultLoadingScreenProps> = ({
                 <Lock 
                   className="h-24 w-24 text-cyan-400 mx-auto animate-pulse" 
                 />
-              )}
-              
-              {/* Random pixel glitch overlay */}
-              {isGlitching && (
-                <div className="absolute inset-0 w-24 h-24 mx-auto">
-                  {glitchPixels.map((pixel, index) => (
-                    <div
-                      key={index}
-                      className="absolute w-1 h-1 animate-pulse"
-                      style={{
-                        left: `${pixel.x}px`,
-                        top: `${pixel.y}px`,
-                        backgroundColor: pixel.color,
-                        boxShadow: `0 0 4px ${pixel.color}`,
-                      }}
-                    />
-                  ))}
-                  
-                  {/* Additional glitch effects */}
-                  <div className="absolute inset-0 bg-red-500/10 animate-pulse mix-blend-multiply" />
-                  <div className="absolute inset-0 bg-blue-500/10 animate-pulse mix-blend-screen" />
-                </div>
               )}
             </div>
           </div>
@@ -131,15 +80,11 @@ export const VaultLoadingScreen: React.FC<VaultLoadingScreenProps> = ({
             <span>AES-256 Encryption</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className={`w-2 h-2 rounded-full animate-pulse ${
-              isGlitching ? 'bg-red-400' : 'bg-cyan-400'
-            }`}></div>
+            <div className="w-2 h-2 rounded-full animate-pulse bg-cyan-400"></div>
             <span>Secure Protocol</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className={`w-2 h-2 rounded-full animate-pulse ${
-              showUnlock ? 'bg-emerald-400' : 'bg-emerald-400'
-            }`}></div>
+            <div className="w-2 h-2 rounded-full animate-pulse bg-emerald-400"></div>
             <span>Quantum Resistant</span>
           </div>
         </div>
