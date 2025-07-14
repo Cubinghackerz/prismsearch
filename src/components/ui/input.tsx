@@ -3,18 +3,16 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
+export interface InputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {}
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, ...props }, ref) => {
     return (
       <input
         type={type}
         className={cn(
-          "flex h-11 w-full rounded-lg border border-prism-border bg-prism-surface/20 px-4 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-prism-text-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-prism-primary focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm font-inter text-prism-text transition-all duration-300 shadow-inner shadow-prism-bg/10",
-          // Enhanced states with improved readability
-          "hover:border-prism-primary/50 hover:bg-prism-surface/25",
-          // Improved focus state with refined glow effect and better contrast
-          "relative focus-visible:shadow-[0_0_0_1px_rgba(0,194,168,0.35),0_0_8px_rgba(0,194,168,0.25)]",
-          // Removed pulse animation for better readability
+          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
           className
         )}
         ref={ref}

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Search, MessageCircle, Shield, Zap, Brain, Lock, Key } from "lucide-react";
 import ParticleBackground from "@/components/ParticleBackground";
 import DesktopDownloads from "@/components/DesktopDownloads";
+import AIAssistantWidget from "@/components/AIAssistantWidget";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -193,6 +194,9 @@ const Home = () => {
           </div>
         </footer>
       </div>
+
+      {/* AI Assistant Widget */}
+      <AIAssistantWidget />
     </div>;
 };
 
