@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, MessageCircle, Shield, Zap, Brain, Lock, Key } from "lucide-react";
-import ParticleBackground from "@/components/ParticleBackground";
 import DesktopDownloads from "@/components/DesktopDownloads";
 import PrismAssistant from "@/components/PrismAssistant";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -47,9 +46,8 @@ const Home = () => {
     title: "AI Security Analysis",
     description: "Smart breach detection and password health monitoring"
   }];
-  return <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10 relative overflow-hidden">
-      <ParticleBackground />
-      
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10 relative overflow-hidden">
       <div className="relative z-10">
         {/* Header */}
         <header className="container mx-auto px-6 py-8">
@@ -205,7 +203,8 @@ const Home = () => {
 
       {/* Prism Assistant Widget */}
       <PrismAssistant />
-    </div>;
+    </div>
+  );
 };
 
 export default Home;
