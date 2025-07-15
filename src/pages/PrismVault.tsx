@@ -13,6 +13,7 @@ import Navigation from '@/components/Navigation';
 import ParticleBackground from '@/components/ParticleBackground';
 import Footer from '@/components/Footer';
 import zxcvbn from 'zxcvbn';
+
 interface PasswordData {
   password: string;
   strengthAssessment: {
@@ -25,6 +26,7 @@ interface PasswordData {
   isEditing?: boolean;
   editedPassword?: string;
 }
+
 const PrismVault = () => {
   const [passwords, setPasswords] = useState<PasswordData[]>([]);
   const [passwordCount, setPasswordCount] = useState(1);
@@ -57,6 +59,7 @@ const PrismVault = () => {
       return [];
     }
   }, [refreshKey]);
+
   useEffect(() => {
     if (!isVaultLoading) return;
     const targetText = "OPENING VAULT";
@@ -136,6 +139,7 @@ const PrismVault = () => {
       entropy
     };
   }, []);
+
   const generatePasswords = useCallback(async () => {
     setIsGenerating(true);
     setGenerationProgress(0);
@@ -192,6 +196,7 @@ const PrismVault = () => {
     setIsGenerating(false);
     setGenerationProgress(0);
   }, [passwordCount, passwordLength, includeUppercase, includeLowercase, includeNumbers, includeSymbols, assessPasswordStrengthWithZxcvbn, toast]);
+
   const copyToClipboard = async (password: string, index: number) => {
     try {
       await navigator.clipboard.writeText(password);
@@ -207,11 +212,13 @@ const PrismVault = () => {
       });
     }
   };
+
   const togglePasswordVisibility = (index: number) => {
     const newShowPasswords = [...showPasswords];
     newShowPasswords[index] = !newShowPasswords[index];
     setShowPasswords(newShowPasswords);
   };
+
   const togglePasswordEdit = (index: number) => {
     const newPasswords = [...passwords];
     if (newPasswords[index].isEditing) {
@@ -226,23 +233,28 @@ const PrismVault = () => {
     }
     setPasswords(newPasswords);
   };
+
   const handlePasswordEdit = (index: number, value: string) => {
     const newPasswords = [...passwords];
     newPasswords[index].editedPassword = value;
     setPasswords(newPasswords);
   };
+
   const savePasswordToManager = (password: string) => {
     setPrefilledPassword(password);
     setIsPasswordManagerOpen(true);
   };
+
   const handlePasswordManagerClose = () => {
     setIsPasswordManagerOpen(false);
     setPrefilledPassword('');
     setRefreshKey(prev => prev + 1);
   };
+
   const handlePasswordSaved = () => {
     handlePasswordManagerClose();
   };
+
   const clearVaultHistory = useCallback(() => {
     localStorage.removeItem('prism_vault_passwords');
     localStorage.removeItem('prism_vault_protected_passwords');
@@ -250,10 +262,13 @@ const PrismVault = () => {
     setShowPasswords([]);
     setRefreshKey(prev => prev + 1);
   }, []);
+
   if (isVaultLoading) {
     return <VaultLoadingScreen vaultText={vaultText} encryptionProgress={encryptionProgress} />;
   }
-  return <div className="min-h-screen bg-gradient-to-b from-prism-bg to-prism-surface relative overflow-hidden">
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-prism-bg to-prism-surface relative overflow-hidden">
       <ParticleBackground />
       
       <div className="relative z-10">
@@ -265,18 +280,65 @@ const PrismVault = () => {
           <StoredPasswordsList key={refreshKey} />
 
           <div className="grid gap-8 lg:grid-cols-2 py-[22px]">
-            <PasswordGenerator passwordCount={passwordCount} setPasswordCount={setPasswordCount} passwordLength={passwordLength} setPasswordLength={setPasswordLength} includeUppercase={includeUppercase} setIncludeUppercase={setIncludeUppercase} includeLowercase={includeLowercase} setIncludeLowercase={setIncludeLowercase} includeNumbers={includeNumbers} setIncludeNumbers={setIncludeNumbers} includeSymbols={includeSymbols} setIncludeSymbols={setIncludeSymbols} isGenerating={isGenerating} generationProgress={generationProgress} onGenerate={generatePasswords} />
+            <PasswordGenerator 
+              passwordCount={passwordCount} 
+              setPasswordCount={setPasswordCount} 
+              passwordLength={passwordLength} 
+              setPasswordLength={setPasswordLength} 
+              includeUppercase={includeUppercase} 
+              setIncludeUppercase={setIncludeUppercase} 
+              includeLowercase={includeLowercase} 
+              setIncludeLowercase={setIncludeLowercase} 
+              includeNumbers={includeNumbers} 
+              setIncludeNumbers={setIncludeNumbers} 
+              includeSymbols={includeSymbols} 
+              setIncludeSymbols={setIncludeSymbols} 
+              isGenerating={isGenerating} 
+              generationProgress={generationProgress} 
+              onGenerate={generatePasswords} 
+            />
 
             <div className="space-y-4">
-              {isGenerating && animatingPasswords.some(p => p) ? animatingPasswords.map((animPassword, index) => animPassword && <AnimatingPasswordCard key={`animating-${index}`} animPassword={animPassword} index={index} />) : passwords.length > 0 ? passwords.map((passwordData, index) => <GeneratedPasswordCard key={index} passwordData={passwordData} index={index} showPassword={showPasswords[index]} onToggleVisibility={() => togglePasswordVisibility(index)} onToggleEdit={() => togglePasswordEdit(index)} onPasswordEdit={value => handlePasswordEdit(index, value)} onCopy={() => copyToClipboard(passwordData.password, index)} onSaveToManager={() => savePasswordToManager(passwordData.password)} />) : <EmptyVaultCard />}
+              {isGenerating && animatingPasswords.some(p => p) ? 
+                animatingPasswords.map((animPassword, index) => 
+                  animPassword && <AnimatingPasswordCard 
+                    key={`animating-${index}`} 
+                    animPassword={animPassword} 
+                    index={index} 
+                  />
+                ) : 
+                passwords.length > 0 ? 
+                  passwords.map((passwordData, index) => 
+                    <GeneratedPasswordCard 
+                      key={index} 
+                      passwordData={passwordData} 
+                      index={index} 
+                      showPassword={showPasswords[index]} 
+                      onToggleVisibility={() => togglePasswordVisibility(index)} 
+                      onToggleEdit={() => togglePasswordEdit(index)} 
+                      onPasswordEdit={value => handlePasswordEdit(index, value)} 
+                      onCopy={() => copyToClipboard(passwordData.password, index)} 
+                      onSaveToManager={() => savePasswordToManager(passwordData.password)} 
+                    />
+                  ) : 
+                  <EmptyVaultCard />
+              }
             </div>
           </div>
         </div>
 
         <Footer />
 
-        <PasswordManagerDialog isOpen={isPasswordManagerOpen} onClose={handlePasswordManagerClose} editingPassword={null} onPasswordSaved={handlePasswordSaved} prefilledPassword={prefilledPassword} />
+        <PasswordManagerDialog 
+          isOpen={isPasswordManagerOpen} 
+          onClose={handlePasswordManagerClose} 
+          editingPassword={null} 
+          onPasswordSaved={handlePasswordSaved} 
+          prefilledPassword={prefilledPassword} 
+        />
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default PrismVault;

@@ -45,27 +45,27 @@ export const PasswordGenerator: React.FC<PasswordGeneratorProps> = ({
   onGenerate
 }) => {
   return (
-    <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm shadow-xl">
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2 text-cyan-300">
-          <Fingerprint className="h-5 w-5" />
+    <Card className="bg-prism-surface/50 border-prism-border backdrop-blur-sm shadow-xl">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center space-x-3 text-xl font-bold text-prism-primary">
+          <Fingerprint className="h-6 w-6" />
           <span>Secure Password Generator</span>
         </CardTitle>
-        <CardDescription className="text-slate-400">
+        <CardDescription className="text-prism-text-muted font-medium">
           Configure your secure password parameters with AI-powered strength assessment
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-8">
         {/* AI Security Note */}
-        <div className="bg-gradient-to-r from-cyan-950/50 to-emerald-950/50 border border-cyan-600/30 rounded-lg p-4">
-          <div className="flex items-start space-x-3">
-            <Brain className="h-5 w-5 text-cyan-400 mt-0.5 flex-shrink-0" />
+        <div className="bg-gradient-to-r from-prism-primary/10 to-prism-accent/10 border border-prism-primary/20 rounded-xl p-5">
+          <div className="flex items-start space-x-4">
+            <Brain className="h-6 w-6 text-prism-primary mt-0.5 flex-shrink-0" />
             <div>
-              <h4 className="font-semibold text-cyan-300 mb-2">AI Security Analysis</h4>
-              <p className="text-sm text-slate-300 mb-2">
+              <h4 className="font-bold text-prism-primary mb-3 text-lg">AI Security Analysis</h4>
+              <p className="text-prism-text-muted mb-3 leading-relaxed">
                 Our AI analyzes each generated password for maximum security strength.
               </p>
-              <div className="flex items-center space-x-2 text-xs text-cyan-400">
+              <div className="flex items-center space-x-2 text-sm text-prism-primary font-medium">
                 <Info className="h-4 w-4" />
                 <span><strong>Pro Tip:</strong> Aim for 90+ security scores for optimal protection</span>
               </div>
@@ -73,84 +73,92 @@ export const PasswordGenerator: React.FC<PasswordGeneratorProps> = ({
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-slate-200 font-medium">Number of Passwords: {passwordCount}</Label>
-          <Slider
-            value={[passwordCount]}
-            onValueChange={(value) => setPasswordCount(value[0])}
-            max={3}
-            min={1}
-            step={1}
-            className="w-full"
-          />
-          <div className="flex justify-between text-xs text-slate-400">
-            <span>Single</span>
-            <span>Triple</span>
+        <div className="space-y-4">
+          <Label className="text-prism-text font-bold text-lg">Number of Passwords: {passwordCount}</Label>
+          <div className="px-2">
+            <Slider
+              value={[passwordCount]}
+              onValueChange={(value) => setPasswordCount(value[0])}
+              max={10}
+              min={1}
+              step={1}
+              className="w-full"
+            />
+          </div>
+          <div className="flex justify-between text-sm text-prism-text-muted font-medium px-2">
+            <span>Single Password</span>
+            <span>Bulk Generation (10)</span>
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-slate-200 font-medium">Password Length: {passwordLength[0]}</Label>
-          <Slider
-            value={passwordLength}
-            onValueChange={setPasswordLength}
-            max={64}
-            min={4}
-            step={1}
-            className="w-full"
-          />
-          <div className="flex justify-between text-xs text-slate-400">
+        <div className="space-y-4">
+          <Label className="text-prism-text font-bold text-lg">Password Length: {passwordLength[0]}</Label>
+          <div className="px-2">
+            <Slider
+              value={passwordLength}
+              onValueChange={setPasswordLength}
+              max={64}
+              min={4}
+              step={1}
+              className="w-full"
+            />
+          </div>
+          <div className="flex justify-between text-sm text-prism-text-muted font-medium px-2">
             <span>Weak (4)</span>
             <span>Ultra Secure (64)</span>
           </div>
         </div>
 
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700">
-            <Label htmlFor="uppercase" className="text-slate-200 font-medium">Uppercase Letters (A-Z)</Label>
-            <Switch
-              id="uppercase"
-              checked={includeUppercase}
-              onCheckedChange={setIncludeUppercase}
-            />
-          </div>
+          <Label className="text-prism-text font-bold text-lg mb-4 block">Character Types</Label>
           
-          <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700">
-            <Label htmlFor="lowercase" className="text-slate-200 font-medium">Lowercase Letters (a-z)</Label>
-            <Switch
-              id="lowercase"
-              checked={includeLowercase}
-              onCheckedChange={setIncludeLowercase}
-            />
-          </div>
-          
-          <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700">
-            <Label htmlFor="numbers" className="text-slate-200 font-medium">Numbers (0-9)</Label>
-            <Switch
-              id="numbers"
-              checked={includeNumbers}
-              onCheckedChange={setIncludeNumbers}
-            />
-          </div>
-          
-          <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700">
-            <Label htmlFor="symbols" className="text-slate-200 font-medium">Symbols (!@#$%)</Label>
-            <Switch
-              id="symbols"
-              checked={includeSymbols}
-              onCheckedChange={setIncludeSymbols}
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex items-center justify-between p-4 bg-prism-surface/70 rounded-xl border border-prism-border hover:bg-prism-surface/90 transition-colors">
+              <Label htmlFor="uppercase" className="text-prism-text font-semibold cursor-pointer">Uppercase (A-Z)</Label>
+              <Switch
+                id="uppercase"
+                checked={includeUppercase}
+                onCheckedChange={setIncludeUppercase}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between p-4 bg-prism-surface/70 rounded-xl border border-prism-border hover:bg-prism-surface/90 transition-colors">
+              <Label htmlFor="lowercase" className="text-prism-text font-semibold cursor-pointer">Lowercase (a-z)</Label>
+              <Switch
+                id="lowercase"
+                checked={includeLowercase}
+                onCheckedChange={setIncludeLowercase}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between p-4 bg-prism-surface/70 rounded-xl border border-prism-border hover:bg-prism-surface/90 transition-colors">
+              <Label htmlFor="numbers" className="text-prism-text font-semibold cursor-pointer">Numbers (0-9)</Label>
+              <Switch
+                id="numbers"
+                checked={includeNumbers}
+                onCheckedChange={setIncludeNumbers}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between p-4 bg-prism-surface/70 rounded-xl border border-prism-border hover:bg-prism-surface/90 transition-colors">
+              <Label htmlFor="symbols" className="text-prism-text font-semibold cursor-pointer">Symbols (!@#$%)</Label>
+              <Switch
+                id="symbols"
+                checked={includeSymbols}
+                onCheckedChange={setIncludeSymbols}
+              />
+            </div>
           </div>
         </div>
 
         {isGenerating && (
-          <div className="space-y-3">
-            <div className="flex items-center space-x-2">
+          <div className="space-y-4 p-4 bg-prism-surface/50 rounded-xl border border-prism-border">
+            <div className="flex items-center space-x-3">
               <LoadingAnimation variant="orbit" color="cyan" size="small" />
-              <Label className="text-cyan-300 font-medium">Generating secure passwords with AI analysis...</Label>
+              <Label className="text-prism-primary font-bold text-lg">Generating secure passwords with AI analysis...</Label>
             </div>
-            <Progress value={generationProgress} className="w-full h-2" />
-            <p className="text-xs text-slate-400 text-center">
+            <Progress value={generationProgress} className="w-full h-3 rounded-full" />
+            <p className="text-sm text-prism-text-muted text-center font-medium">
               Applying encryption algorithms & AI security assessment • {Math.round(generationProgress)}%
             </p>
           </div>
@@ -159,16 +167,16 @@ export const PasswordGenerator: React.FC<PasswordGeneratorProps> = ({
         <Button
           onClick={onGenerate}
           disabled={isGenerating}
-          className="w-full bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-700 hover:to-emerald-700 text-white font-semibold py-3 transition-all duration-200"
+          className="w-full bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary/90 hover:to-prism-accent/90 text-white font-bold py-4 text-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
         >
           {isGenerating ? (
             <>
-              <LoadingAnimation variant="dots" color="cyan" size="small" className="mr-2" />
+              <LoadingAnimation variant="dots" color="cyan" size="small" className="mr-3" />
               Encrypting with AI Analysis...
             </>
           ) : (
             <>
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <RefreshCw className="mr-3 h-5 w-5" />
               Generate {passwordCount > 1 ? `${passwordCount} Passwords` : 'Password'} with AI
             </>
           )}

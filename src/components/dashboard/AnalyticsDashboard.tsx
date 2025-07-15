@@ -1,11 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { TrendingUp, Users, Search, Eye, Clock, Globe } from 'lucide-react';
+import { TrendingUp, Users, Search, Eye, Clock, Globe, Settings } from 'lucide-react';
+import { DashboardSettings } from './DashboardSettings';
 
 const AnalyticsDashboard = () => {
+  const [showSettings, setShowSettings] = useState(false);
+
   // Mock data for charts
   const searchData = [
     { month: 'Jan', searches: 1200, users: 450 },
@@ -48,14 +52,25 @@ const AnalyticsDashboard = () => {
   ];
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-8 p-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
+        className="flex items-center justify-between"
       >
-        <h2 className="text-3xl font-bold text-prism-text mb-2">Analytics Dashboard</h2>
-        <p className="text-prism-text-muted">Comprehensive insights into your application performance</p>
+        <div>
+          <h2 className="text-4xl font-bold text-prism-text mb-3">Analytics Dashboard</h2>
+          <p className="text-prism-text-muted text-lg">Comprehensive insights into your application performance</p>
+        </div>
+        <Button
+          onClick={() => setShowSettings(true)}
+          variant="outline"
+          className="border-prism-border hover:bg-prism-surface/80 text-prism-text"
+        >
+          <Settings className="h-4 w-4 mr-2" />
+          Customize
+        </Button>
       </motion.div>
 
       {/* Stats Grid */}
@@ -67,15 +82,15 @@ const AnalyticsDashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
           >
-            <Card className="bg-prism-surface/50 border-prism-border backdrop-blur-md">
+            <Card className="bg-prism-surface/60 border-prism-border backdrop-blur-md hover:bg-prism-surface/80 transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-prism-text-muted">{stat.title}</p>
-                    <p className="text-2xl font-bold text-prism-text">{stat.value}</p>
-                    <p className={`text-sm ${stat.color}`}>{stat.change}</p>
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold text-prism-text-muted uppercase tracking-wide">{stat.title}</p>
+                    <p className="text-3xl font-bold text-prism-text">{stat.value}</p>
+                    <p className={`text-sm font-semibold ${stat.color}`}>{stat.change}</p>
                   </div>
-                  <stat.icon className={`h-8 w-8 ${stat.color}`} />
+                  <stat.icon className={`h-10 w-10 ${stat.color}`} />
                 </div>
               </CardContent>
             </Card>
@@ -84,31 +99,32 @@ const AnalyticsDashboard = () => {
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Search Trends */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
-          <Card className="bg-prism-surface/50 border-prism-border backdrop-blur-md">
-            <CardHeader>
-              <CardTitle className="text-prism-text">Search Trends</CardTitle>
+          <Card className="bg-prism-surface/60 border-prism-border backdrop-blur-md shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-prism-text text-xl font-bold">Search Trends</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={320}>
                 <AreaChart data={searchData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="month" stroke="#9CA3AF" />
-                  <YAxis stroke="#9CA3AF" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--prism-border))" />
+                  <XAxis dataKey="month" stroke="hsl(var(--prism-text-muted))" fontSize={12} fontWeight="600" />
+                  <YAxis stroke="hsl(var(--prism-text-muted))" fontSize={12} fontWeight="600" />
                   <Tooltip 
                     contentStyle={{
-                      backgroundColor: '#1F2937',
-                      border: '1px solid #374151',
-                      borderRadius: '8px'
+                      backgroundColor: 'hsl(var(--prism-surface))',
+                      border: '1px solid hsl(var(--prism-border))',
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
                     }}
                   />
-                  <Area type="monotone" dataKey="searches" stroke="#00C2A8" fill="#00C2A8" fillOpacity={0.3} />
+                  <Area type="monotone" dataKey="searches" stroke="hsl(var(--prism-primary))" fill="hsl(var(--prism-primary))" fillOpacity={0.3} strokeWidth={3} />
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>
@@ -121,26 +137,35 @@ const AnalyticsDashboard = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.5 }}
         >
-          <Card className="bg-prism-surface/50 border-prism-border backdrop-blur-md">
-            <CardHeader>
-              <CardTitle className="text-prism-text">Traffic Sources</CardTitle>
+          <Card className="bg-prism-surface/60 border-prism-border backdrop-blur-md shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-prism-text text-xl font-bold">Traffic Sources</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={320}>
                 <PieChart>
                   <Pie
                     data={trafficSources}
                     cx="50%"
                     cy="50%"
-                    outerRadius={80}
+                    outerRadius={100}
                     dataKey="value"
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    labelLine={false}
+                    fontSize={12}
+                    fontWeight="600"
                   >
                     {trafficSources.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--prism-surface))',
+                      border: '1px solid hsl(var(--prism-border))',
+                      borderRadius: '12px'
+                    }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </CardContent>
@@ -153,24 +178,24 @@ const AnalyticsDashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
         >
-          <Card className="bg-prism-surface/50 border-prism-border backdrop-blur-md">
-            <CardHeader>
-              <CardTitle className="text-prism-text">Top Search Queries</CardTitle>
+          <Card className="bg-prism-surface/60 border-prism-border backdrop-blur-md shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-prism-text text-xl font-bold">Top Search Queries</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={320}>
                 <BarChart data={topSearches} layout="horizontal">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis type="number" stroke="#9CA3AF" />
-                  <YAxis type="category" dataKey="query" stroke="#9CA3AF" width={120} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--prism-border))" />
+                  <XAxis type="number" stroke="hsl(var(--prism-text-muted))" fontSize={12} fontWeight="600" />
+                  <YAxis type="category" dataKey="query" stroke="hsl(var(--prism-text-muted))" width={120} fontSize={12} fontWeight="600" />
                   <Tooltip 
                     contentStyle={{
-                      backgroundColor: '#1F2937',
-                      border: '1px solid #374151',
-                      borderRadius: '8px'
+                      backgroundColor: 'hsl(var(--prism-surface))',
+                      border: '1px solid hsl(var(--prism-border))',
+                      borderRadius: '12px'
                     }}
                   />
-                  <Bar dataKey="count" fill="#9B5DE5" />
+                  <Bar dataKey="count" fill="hsl(var(--prism-accent))" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -183,32 +208,34 @@ const AnalyticsDashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.7 }}
         >
-          <Card className="bg-prism-surface/50 border-prism-border backdrop-blur-md">
-            <CardHeader>
-              <CardTitle className="text-prism-text">Performance Metrics</CardTitle>
+          <Card className="bg-prism-surface/60 border-prism-border backdrop-blur-md shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-prism-text text-xl font-bold">Performance Metrics</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={320}>
                 <LineChart data={performanceData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="time" stroke="#9CA3AF" />
-                  <YAxis stroke="#9CA3AF" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--prism-border))" />
+                  <XAxis dataKey="time" stroke="hsl(var(--prism-text-muted))" fontSize={12} fontWeight="600" />
+                  <YAxis stroke="hsl(var(--prism-text-muted))" fontSize={12} fontWeight="600" />
                   <Tooltip 
                     contentStyle={{
-                      backgroundColor: '#1F2937',
-                      border: '1px solid #374151',
-                      borderRadius: '8px'
+                      backgroundColor: 'hsl(var(--prism-surface))',
+                      border: '1px solid hsl(var(--prism-border))',
+                      borderRadius: '12px'
                     }}
                   />
                   <Legend />
-                  <Line type="monotone" dataKey="responseTime" stroke="#F97316" name="Response Time (ms)" />
-                  <Line type="monotone" dataKey="uptime" stroke="#10B981" name="Uptime %" />
+                  <Line type="monotone" dataKey="responseTime" stroke="#F97316" name="Response Time (ms)" strokeWidth={3} />
+                  <Line type="monotone" dataKey="uptime" stroke="#10B981" name="Uptime %" strokeWidth={3} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
         </motion.div>
       </div>
+
+      <DashboardSettings isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </div>
   );
 };
