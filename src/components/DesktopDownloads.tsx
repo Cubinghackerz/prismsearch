@@ -75,7 +75,7 @@ const DesktopDownloads = () => {
               Click the install button in your Chrome address bar or use the menu to "Install Prism"
             </p>
             <div className="flex justify-center space-x-4 text-sm text-prism-text-muted">
-              <span>• Offline access</span>
+              <span>• Quick access</span>
               <span>• Native notifications</span>
               <span>• Desktop shortcuts</span>
             </div>
