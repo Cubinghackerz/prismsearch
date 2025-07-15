@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { ChatMessage } from '@/context/ChatContext';
 import TypingIndicator from '@/components/chat/TypingIndicator';
+import ChatMessageSkeleton from '@/components/skeletons/ChatMessageSkeleton';
 import ReactMarkdown from 'react-markdown';
 
 interface MessageListProps {
@@ -25,7 +26,7 @@ const MessageList: React.FC<MessageListProps> = ({
 
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
-      {messages.length === 0 && (
+      {messages.length === 0 && !typingIndicator && (
         <div className="text-center text-orange-300/60 py-8">
           <p>Start a conversation by typing a message below.</p>
         </div>
@@ -78,7 +79,7 @@ const MessageList: React.FC<MessageListProps> = ({
         </motion.div>
       ))}
       
-      {typingIndicator && <TypingIndicator />}
+      {typingIndicator && <ChatMessageSkeleton isUser={false} count={1} />}
       <div ref={messagesEndRef} />
     </div>
   );

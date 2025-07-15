@@ -9,7 +9,9 @@ import { PasswordListItem } from './password-manager/PasswordListItem';
 import { PasswordSecurityDashboard } from './vault/PasswordSecurityDashboard';
 import { MasterPasswordDialog } from './vault/MasterPasswordDialog';
 import { ChangeMasterPasswordDialog } from './vault/ChangeMasterPasswordDialog';
+import VaultItemSkeleton from '@/components/skeletons/VaultItemSkeleton';
 import MasterPasswordService from '@/services/masterPasswordService';
+
 interface StoredPassword {
   id: string;
   name: string;
@@ -22,6 +24,7 @@ interface StoredPassword {
   breach_status?: 'safe' | 'breached' | 'checking';
   breach_count?: number;
 }
+
 export const StoredPasswordsList: React.FC = React.memo(() => {
   const [passwords, setPasswords] = useState<StoredPassword[]>([]);
   const [loading, setLoading] = useState(true);
@@ -171,16 +174,28 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
 
   // Memoize rendered password items
   const passwordItems = useMemo(() => passwords.map(password => <PasswordListItem key={password.id} password={password} isVisible={showPasswords[password.id]} onToggleVisibility={() => togglePasswordVisibility(password.id)} onToggleFavorite={() => toggleFavorite(password.id)} onCopy={copyToClipboard} onEdit={() => handleEdit(password)} onDelete={() => deletePassword(password.id, password.name)} />), [passwords, showPasswords, deletePassword]);
+
   if (loading) {
-    return <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
-        <CardContent className="text-center py-12">
-          <div className="animate-pulse space-y-4">
-            <Database className="h-12 w-12 text-slate-600 mx-auto" />
-            <p className="text-slate-400">Loading your passwords...</p>
+    return (
+      <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+        <CardHeader className="py-0 mx-0">
+          <div className="flex items-center justify-between py-[10px]">
+            <CardTitle className="flex items-center space-x-2 text-cyan-300">
+              <Database className="h-5 w-5" />
+              <span>Password Manager</span>
+              <Badge variant="outline" className="text-slate-400 border-slate-600">
+                Loading...
+              </Badge>
+            </CardTitle>
           </div>
+        </CardHeader>
+        <CardContent>
+          <VaultItemSkeleton count={3} variant="list" />
         </CardContent>
-      </Card>;
+      </Card>
+    );
   }
+
   return <div className="space-y-6">
       <PasswordSecurityDashboard passwords={passwords} onPasswordUpdate={updatePassword} />
 
@@ -257,4 +272,5 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
       <ChangeMasterPasswordDialog isOpen={showChangeMasterPassword} onClose={() => setShowChangeMasterPassword(false)} onPasswordChanged={handlePasswordChanged} />
     </div>;
 });
+
 StoredPasswordsList.displayName = 'StoredPasswordsList';
