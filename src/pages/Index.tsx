@@ -40,7 +40,6 @@ const engineInfo = {
     logo: 'https://you.com/favicon.ico'
   }
 };
-
 const Index = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -50,7 +49,9 @@ const Index = () => {
   const [showResults, setShowResults] = useState(false);
   const [isBookmarksOpen, setIsBookmarksOpen] = useState(false);
   const [bookmarksCount, setBookmarksCount] = useState<number>(0);
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
 
   // Load bookmarks count
   useState(() => {
@@ -64,21 +65,19 @@ const Index = () => {
       }
     }
   });
-
   const handleSearch = async (searchQuery: string) => {
     try {
       setQuery(searchQuery);
       setIsSearching(true);
       setHasSearched(true);
       setShowResults(false);
-      
+
       // Show transition animation
       setShowTransitionAnimation(true);
-      
+
       // Fetch results in the background
       const searchResults = await searchAcrossEngines(searchQuery);
       setResults(searchResults);
-      
     } catch (error) {
       console.error('Search failed:', error);
       toast({
@@ -91,17 +90,14 @@ const Index = () => {
       setIsSearching(false);
     }
   };
-  
   const handleAnimationComplete = () => {
     setShowTransitionAnimation(false);
     setShowResults(true);
     setIsSearching(false);
   };
-
   const handleViewBookmarks = () => {
     setIsBookmarksOpen(true);
   };
-
   const handleCloseBookmarks = () => {
     setIsBookmarksOpen(false);
     const storedBookmarks = localStorage.getItem('prism_bookmarks');
@@ -114,201 +110,149 @@ const Index = () => {
       }
     }
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-prism-bg to-prism-surface relative overflow-hidden flex flex-col">
+  return <div className="min-h-screen bg-gradient-to-b from-prism-bg to-prism-surface relative overflow-hidden flex flex-col">
       <ScrollToTop />
       
       <div className="relative z-10 flex-1 flex flex-col">
         <Navigation />
         
         <main className="container mx-auto px-6 flex-1">
-          {hasSearched && (
-            <div className="mb-6">
-              <Button 
-                variant="ghost" 
-                onClick={() => {
-                  setHasSearched(false);
-                  setResults([]);
-                  setQuery('');
-                  setShowResults(false);
-                }}
-                className="text-prism-text bg-prism-primary/20 hover:bg-prism-primary/30"
-              >
+          {hasSearched && <div className="mb-6">
+              <Button variant="ghost" onClick={() => {
+            setHasSearched(false);
+            setResults([]);
+            setQuery('');
+            setShowResults(false);
+          }} className="text-prism-text bg-prism-primary/20 hover:bg-prism-primary/30">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 New Search
               </Button>
-            </div>
-          )}
+            </div>}
 
           <div className="text-center mb-16">
             <div className="flex items-center justify-center gap-2 mb-6">
-              <img 
-                src="/lovable-uploads/aeaad4a8-0dc2-4d4b-b2b3-cb248e0843db.png" 
-                alt="Prism Search Logo" 
-                className={`transition-all duration-300 ${hasSearched ? 'h-8 w-8' : 'h-10 w-10'}`}
-              />
-              <motion.h1 
-                className={`font-bold bg-clip-text text-transparent 
+              <img src="/lovable-uploads/aeaad4a8-0dc2-4d4b-b2b3-cb248e0843db.png" alt="Prism Search Logo" className={`transition-all duration-300 ${hasSearched ? 'h-8 w-8' : 'h-10 w-10'}`} />
+              <motion.h1 className={`font-bold bg-clip-text text-transparent 
                   bg-gradient-to-r from-prism-primary-light via-prism-primary to-prism-accent 
-                  animate-gradient-text ${hasSearched ? 'text-2xl' : 'text-4xl'}`} 
-                animate={{
-                  backgroundPosition: ['0% 50%', '100% 50%']
-                }} 
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  repeatType: 'reverse'
-                }}
-              >
+                  animate-gradient-text ${hasSearched ? 'text-2xl' : 'text-4xl'}`} animate={{
+              backgroundPosition: ['0% 50%', '100% 50%']
+            }} transition={{
+              duration: 3,
+              repeat: Infinity,
+              repeatType: 'reverse'
+            }}>
                 Prism Search
               </motion.h1>
             </div>
             
-            {!hasSearched && (
-              <motion.p 
-                initial={{ opacity: 0 }} 
-                animate={{ opacity: 1 }} 
-                transition={{ delay: 0.2 }} 
-                className="text-prism-text-muted max-w-lg mx-auto text-center mb-8"
-              >
+            {!hasSearched && <motion.p initial={{
+            opacity: 0
+          }} animate={{
+            opacity: 1
+          }} transition={{
+            delay: 0.2
+          }} className="text-prism-text-muted max-w-lg mx-auto text-center mb-8">
                 Search across the web's top engines for comprehensive results in one place
-              </motion.p>
-            )}
+              </motion.p>}
 
             <div className="flex items-center justify-center gap-4 mb-8">
-              <Button 
-                variant="ghost" 
-                onClick={handleViewBookmarks}
-                className="text-prism-text bg-prism-primary/20 hover:bg-prism-primary/30 relative"
-              >
+              <Button variant="ghost" onClick={handleViewBookmarks} className="text-prism-text bg-prism-primary/20 hover:bg-prism-primary/30 relative">
                 <BookmarkPlus className="mr-2 h-4 w-4" />
-                {bookmarksCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-prism-primary rounded-full text-xs flex items-center justify-center">
+                {bookmarksCount > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 bg-prism-primary rounded-full text-xs flex items-center justify-center">
                     {bookmarksCount}
-                  </span>
-                )}
+                  </span>}
                 <span className="hidden sm:inline">Bookmarks</span>
               </Button>
             </div>
           </div>
 
-          <motion.div 
-            className={`transition-all duration-500 ${hasSearched ? 'mt-4' : 'mt-8'}`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
+          <motion.div className={`transition-all duration-500 ${hasSearched ? 'mt-4' : 'mt-8'}`} initial={{
+          opacity: 0,
+          y: 20
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} transition={{
+          duration: 0.5
+        }}>
             <SearchBar onSearch={handleSearch} isSearching={isSearching} expanded={hasSearched} />
           </motion.div>
 
           {/* Transition animation */}
           <AnimatePresence>
-            {showTransitionAnimation && (
-              <SearchTransitionAnimation 
-                query={query} 
-                onComplete={handleAnimationComplete} 
-              />
-            )}
+            {showTransitionAnimation && <SearchTransitionAnimation query={query} onComplete={handleAnimationComplete} />}
           </AnimatePresence>
           
           {/* Search results */}
           <AnimatePresence>
-            {hasSearched && showResults && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="mt-4 backdrop-blur-md bg-prism-primary/5 p-6 rounded-xl border border-prism-border 
+            {hasSearched && showResults && <motion.div initial={{
+            opacity: 0
+          }} animate={{
+            opacity: 1
+          }} transition={{
+            duration: 0.5
+          }} className="mt-4 backdrop-blur-md bg-prism-primary/5 p-6 rounded-xl border border-prism-border 
                   shadow-[0_8px_32px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_32px_rgba(0,194,168,0.15)] 
-                  transition-all duration-300"
-              >
-                <SearchResultSummary 
-                  results={results} 
-                  query={query} 
-                  isVisible={showResults && results.length > 0} 
-                />
+                  transition-all duration-300">
+                <SearchResultSummary results={results} query={query} isVisible={showResults && results.length > 0} />
                 <AISearchResponse query={query} />
                 <SearchResults results={results} isLoading={false} query={query} />
-              </motion.div>
-            )}
+              </motion.div>}
           </AnimatePresence>
 
-          {!hasSearched && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.5 }}
-              className="mt-6 text-center"
-            >
+          {!hasSearched && <motion.div initial={{
+          opacity: 0
+        }} animate={{
+          opacity: 1
+        }} transition={{
+          delay: 0.5,
+          duration: 0.5
+        }} className="mt-6 text-center">
               <PopularSearches onSelectSearch={handleSearch} />
               
               <div className="flex justify-center space-x-6 mt-8">
-                {Object.entries(engineInfo).map(([engine, info]) => (
-                  <motion.a
-                    key={engine}
-                    href={info.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-center cursor-pointer"
-                    whileHover={{ scale: 1.1, y: -5 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                  >
-                    <div
-                      className={`w-14 h-14 rounded-full mx-auto mb-3 flex items-center justify-center 
+                {Object.entries(engineInfo).map(([engine, info]) => <motion.a key={engine} href={info.url} target="_blank" rel="noopener noreferrer" className="text-center cursor-pointer" whileHover={{
+              scale: 1.1,
+              y: -5
+            }} transition={{
+              type: "spring",
+              stiffness: 400,
+              damping: 10
+            }}>
+                    <div className={`w-14 h-14 rounded-full mx-auto mb-3 flex items-center justify-center 
                         backdrop-blur-md border border-prism-border/30
-                        ${
-                          engine === 'Google'
-                            ? 'bg-prism-primary/80'
-                            : engine === 'Bing'
-                            ? 'bg-prism-primary-dark/80'
-                            : engine === 'DuckDuckGo'
-                            ? 'bg-prism-accent/80'
-                            : engine === 'Brave'
-                            ? 'bg-prism-accent-dark/80'
-                            : 'bg-prism-primary/80'
-                        } 
+                        ${engine === 'Google' ? 'bg-prism-primary/80' : engine === 'Bing' ? 'bg-prism-primary-dark/80' : engine === 'DuckDuckGo' ? 'bg-prism-accent/80' : engine === 'Brave' ? 'bg-prism-accent-dark/80' : 'bg-prism-primary/80'} 
                         hover:border-prism-primary-light/20 transition-all duration-300
-                        shadow-lg shadow-prism-bg/10 hover:shadow-xl hover:shadow-prism-primary/20`}
-                    >
-                      <img
-                        src={info.logo}
-                        alt={`${engine} logo`}
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          target.parentElement!.innerHTML += `<span class="text-xl font-bold text-white">${engine[0]}</span>`;
-                        }}
-                        className="w-8 h-8 object-contain"
-                      />
+                        shadow-lg shadow-prism-bg/10 hover:shadow-xl hover:shadow-prism-primary/20`}>
+                      <img src={info.logo} alt={`${engine} logo`} onError={e => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  target.parentElement!.innerHTML += `<span class="text-xl font-bold text-white">${engine[0]}</span>`;
+                }} className="w-8 h-8 object-contain" />
                     </div>
                     <span className="text-sm font-medium text-prism-text opacity-90 hover:opacity-100 transition-opacity">
                       {engine}
                     </span>
-                  </motion.a>
-                ))}
+                  </motion.a>)}
               </div>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 }}
-                className="mt-12 text-prism-text/70"
-              >
+              <motion.p initial={{
+            opacity: 0,
+            y: 20
+          }} animate={{
+            opacity: 1,
+            y: 0
+          }} transition={{
+            delay: 0.7
+          }} className="mt-12 text-prism-text/70 my-[38px]">
                 Type your query above to search across all engines simultaneously
               </motion.p>
-            </motion.div>
-          )}
+            </motion.div>}
         </main>
         
         <Footer />
 
-        <BookmarksDrawer 
-          isOpen={isBookmarksOpen} 
-          onClose={handleCloseBookmarks} 
-        />
+        <BookmarksDrawer isOpen={isBookmarksOpen} onClose={handleCloseBookmarks} />
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
