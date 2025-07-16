@@ -7,6 +7,11 @@ const ThemeToggle = () => {
     theme,
     toggleTheme
   } = useTheme();
-  return;
+  return (
+    <Button variant="ghost" onClick={toggleTheme} aria-label="Toggle theme">
+      {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+    </Button>
+  );
 };
 export default ThemeToggle;
+
