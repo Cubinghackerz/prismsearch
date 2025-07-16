@@ -10,6 +10,8 @@ import { SavePasswordAnimation } from './SavePasswordAnimation';
 import { PasswordGeneratorSettings } from './password-manager/PasswordGeneratorSettings';
 import { useToast } from '@/hooks/use-toast';
 import BreachDetectionService from '@/services/breachDetectionService';
+import passwordVaultService from '@/services/passwordVaultService';
+import { supabase } from '@/integrations/supabase/client';
 
 interface StoredPassword {
   id: string;
@@ -139,6 +141,7 @@ export const PasswordManagerDialog: React.FC<PasswordManagerDialogProps> = ({
       // Get existing passwords from localStorage
       const storedData = localStorage.getItem('prism_vault_passwords');
       const existingPasswords = storedData ? JSON.parse(storedData) : [];
+      const { data: { session } } = await supabase.auth.getSession();
 
       if (editingPassword) {
         // Update existing password
@@ -154,6 +157,16 @@ export const PasswordManagerDialog: React.FC<PasswordManagerDialogProps> = ({
             : p
         );
         localStorage.setItem('prism_vault_passwords', JSON.stringify(updatedPasswords));
+
+        if (session) {
+          await passwordVaultService.update(editingPassword.id, {
+            name: name.trim(),
+            url: url.trim() || null,
+            password_encrypted: password,
+            updated_at: new Date().toISOString(),
+            user_id: session.user.id
+          });
+        }
 
         toast({
           title: "Password updated",
@@ -185,6 +198,20 @@ export const PasswordManagerDialog: React.FC<PasswordManagerDialogProps> = ({
 
         const updatedPasswords = [...existingPasswords, newPassword];
         localStorage.setItem('prism_vault_passwords', JSON.stringify(updatedPasswords));
+
+        if (session) {
+          await passwordVaultService.add({
+            id: newPassword.id,
+            name: newPassword.name,
+            url: newPassword.url || null,
+            password_encrypted: newPassword.password_encrypted,
+            created_at: newPassword.created_at,
+            updated_at: newPassword.updated_at,
+            user_id: session.user.id,
+            device_id: null,
+            synced_at: null
+          });
+        }
 
         toast({
           title: "Password saved",

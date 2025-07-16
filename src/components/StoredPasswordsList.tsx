@@ -11,6 +11,8 @@ import { MasterPasswordDialog } from './vault/MasterPasswordDialog';
 import { ChangeMasterPasswordDialog } from './vault/ChangeMasterPasswordDialog';
 import VaultItemSkeleton from '@/components/skeletons/VaultItemSkeleton';
 import MasterPasswordService from '@/services/masterPasswordService';
+import passwordVaultService from '@/services/passwordVaultService';
+import { supabase } from '@/integrations/supabase/client';
 
 interface StoredPassword {
   id: string;
@@ -41,11 +43,18 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
   } = useToast();
 
   // Memoize password fetch function
-  const fetchPasswords = useCallback(() => {
+  const fetchPasswords = useCallback(async () => {
     try {
-      const storedData = localStorage.getItem('prism_vault_passwords');
-      const parsedData = storedData ? JSON.parse(storedData) : [];
-      setPasswords(parsedData);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const data = await passwordVaultService.list(session.user.id);
+        setPasswords(data);
+        localStorage.setItem('prism_vault_passwords', JSON.stringify(data));
+      } else {
+        const storedData = localStorage.getItem('prism_vault_passwords');
+        const parsedData = storedData ? JSON.parse(storedData) : [];
+        setPasswords(parsedData);
+      }
     } catch (error) {
       console.error('Error fetching passwords:', error);
       toast({
@@ -62,15 +71,21 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
   }, [fetchPasswords]);
 
   // Memoize update function to prevent unnecessary re-renders
-  const updatePassword = useCallback((id: string, updates: Partial<StoredPassword>) => {
+  const updatePassword = useCallback(async (id: string, updates: Partial<StoredPassword>) => {
     setPasswords(prev => {
-      const updated = prev.map(p => p.id === id ? {
-        ...p,
-        ...updates
-      } : p);
+      const updated = prev.map(p => p.id === id ? { ...p, ...updates } : p);
       localStorage.setItem('prism_vault_passwords', JSON.stringify(updated));
       return updated;
     });
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      try {
+        await passwordVaultService.update(id, { ...updates, user_id: session.user.id });
+      } catch (err) {
+        console.error('Error updating password in supabase:', err);
+      }
+    }
   }, []);
   const togglePasswordVisibility = (id: string) => {
     setShowPasswords(prev => ({
@@ -105,13 +120,23 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
       });
     }
   };
-  const deletePassword = useCallback((id: string, name: string) => {
+  const deletePassword = useCallback(async (id: string, name: string) => {
     if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
     try {
       const updatedPasswords = passwords.filter(p => p.id !== id);
       localStorage.setItem('prism_vault_passwords', JSON.stringify(updatedPasswords));
       MasterPasswordService.unprotectPassword(id);
       setPasswords(updatedPasswords);
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        try {
+          await passwordVaultService.remove(id);
+        } catch (err) {
+          console.error('Error deleting password from supabase:', err);
+        }
+      }
+
       toast({
         title: "Password deleted",
         description: `"${name}" has been removed from your vault.`
