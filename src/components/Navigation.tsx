@@ -42,11 +42,17 @@ const Navigation = () => {
           >
             Vault
           </Button>
-          <Button 
-            variant={isActive("/pricing") ? "default" : "ghost"} 
+          <Button
+            variant={isActive("/pricing") ? "default" : "ghost"}
             onClick={() => navigate("/pricing")}
           >
             Pricing
+          </Button>
+          <Button
+            variant={isActive("/auth") ? "default" : "ghost"}
+            onClick={() => navigate("/auth")}
+          >
+            Sign In
           </Button>
         </div>
       </nav>
