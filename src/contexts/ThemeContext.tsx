@@ -1,11 +1,11 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
-type Theme = 'dark';
+type Theme = 'light' | 'dark';
 
 interface ThemeContextType {
   theme: Theme;
-  toggleTheme: () => void; // Keep for API compatibility but won't do anything
+  toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -23,19 +23,31 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [theme] = useState<Theme>('dark');
+  const [theme, setTheme] = useState<Theme>('dark');
 
   useEffect(() => {
-    // Always apply dark theme
-    document.documentElement.classList.remove('light', 'dark');
-    document.documentElement.classList.add('dark');
-    
-    // Save to localStorage
-    localStorage.setItem('prism-theme', 'dark');
+    // Check for saved theme preference or default to dark
+    const savedTheme = localStorage.getItem('prism-theme') as Theme;
+    if (savedTheme) {
+      setTheme(savedTheme);
+    } else {
+      // Check system preference
+      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setTheme(systemPrefersDark ? 'dark' : 'light');
+    }
   }, []);
 
+  useEffect(() => {
+    // Apply theme to document
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(theme);
+    
+    // Save to localStorage
+    localStorage.setItem('prism-theme', theme);
+  }, [theme]);
+
   const toggleTheme = () => {
-    // No-op since we only support dark mode
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
   return (
