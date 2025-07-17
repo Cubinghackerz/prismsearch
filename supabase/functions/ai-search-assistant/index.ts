@@ -15,6 +15,14 @@ const availableModels = {
   groq: !!GROQ_API_KEY,
   'groq-qwen-qwq': !!GROQ_API_KEY,
   'groq-llama4-scout': !!GROQ_API_KEY,
+  'meta-llama/llama-4-maverick-17b-128e-instruct': !!GROQ_API_KEY,
+  'meta-llama/llama-4-scout-17b-16e-instruct': !!GROQ_API_KEY,
+  'meta-llama/llama-guard-4-12b': !!GROQ_API_KEY,
+  'mistral-saba-24b': !!GROQ_API_KEY,
+  'llama3-70b-8192': !!GROQ_API_KEY,
+  'llama-3.3-70b-versatile': !!GROQ_API_KEY,
+  'llama-3.1-8b-instant': !!GROQ_API_KEY,
+  'llama3-8b-8192': !!GROQ_API_KEY,
   'azure-gpt4-nano': !!AZURE_OPENAI_KEY,
   'azure-o4-mini': !!AZURE_OPENAI_KEY
 };
@@ -57,13 +65,23 @@ class DeepResearchAgent {
       case 'groq':
       case 'groq-qwen-qwq':
       case 'groq-llama4-scout':
+      case 'meta-llama/llama-4-maverick-17b-128e-instruct':
+      case 'meta-llama/llama-4-scout-17b-16e-instruct':
+      case 'meta-llama/llama-guard-4-12b':
+      case 'mistral-saba-24b':
+      case 'llama3-70b-8192':
+      case 'llama-3.3-70b-versatile':
+      case 'llama-3.1-8b-instant':
+      case 'llama3-8b-8192':
         this.apiKey = GROQ_API_KEY || '';
         if (model === 'groq-qwen-qwq') {
           this.modelId = 'qwen2.5-72b-instruct';
         } else if (model === 'groq-llama4-scout') {
           this.modelId = 'llama-3.3-70b-versatile';
-        } else {
+        } else if (model === 'groq') {
           this.modelId = 'llama-3.1-70b-versatile';
+        } else {
+          this.modelId = model;
         }
         break;
       case 'azure-gpt4-nano':
@@ -93,6 +111,14 @@ class DeepResearchAgent {
         case 'groq':
         case 'groq-qwen-qwq':
         case 'groq-llama4-scout':
+        case 'meta-llama/llama-4-maverick-17b-128e-instruct':
+        case 'meta-llama/llama-4-scout-17b-16e-instruct':
+        case 'meta-llama/llama-guard-4-12b':
+        case 'mistral-saba-24b':
+        case 'llama3-70b-8192':
+        case 'llama-3.3-70b-versatile':
+        case 'llama-3.1-8b-instant':
+        case 'llama3-8b-8192':
           return await this.sendGroqPrompt(promptText);
         case 'azure-gpt4-nano':
         case 'azure-o4-mini':
