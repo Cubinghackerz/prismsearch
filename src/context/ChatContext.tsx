@@ -19,14 +19,6 @@ export interface ChatMessage {
 
 export type ChatModel =
   | 'gemini'
-  | 'llama-4-maverick-17b'
-  | 'llama-4-scout-17b'
-  | 'llama-guard-4-12b'
-  | 'mistral-saba-24b'
-  | 'llama3-70b'
-  | 'llama-3.3-70b'
-  | 'llama-3.1-8b'
-  | 'llama3-8b'
   | 'mistral'
   | 'mistral-medium-3'
   | 'groq'
@@ -61,7 +53,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isTyping, setIsTyping] = useState<boolean>(false);
-  const [selectedModel, setSelectedModel] = useState<ChatModel>('llama3-70b');
+  const [selectedModel, setSelectedModel] = useState<ChatModel>('gemini');
   const [chatId, setChatId] = useState<string | null>(null);
 
   const sendMessage = async (content: string, parentMessageId?: string) => {
@@ -148,8 +140,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const selectModel = (model: ChatModel) => {
-    // Allow selecting any model
-    setSelectedModel(model);
+    // Force Gemini model only
+    setSelectedModel('gemini');
   };
 
   const runDeepResearch = async (topic: string) => {
@@ -236,7 +228,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isTyping,
       startNewChat,
       selectModel,
-      selectedModel, // Return the actual selected model
+      selectedModel: 'gemini', // Always return Gemini
       chatId,
       runDeepResearch
     }}>

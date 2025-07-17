@@ -10,14 +10,6 @@ const AZURE_OPENAI_KEY = Deno.env.get('AZURE_OPENAI_KEY');
 // Check which API keys are available
 const availableModels = {
   gemini: !!GEMINI_API_KEY,
-  'llama-4-maverick-17b': !!GROQ_API_KEY,
-  'llama-4-scout-17b': !!GROQ_API_KEY,
-  'llama-guard-4-12b': !!GROQ_API_KEY,
-  'mistral-saba-24b': !!GROQ_API_KEY,
-  'llama3-70b': !!GROQ_API_KEY,
-  'llama-3.3-70b': !!GROQ_API_KEY,
-  'llama-3.1-8b': !!GROQ_API_KEY,
-  'llama3-8b': !!GROQ_API_KEY,
   mistral: !!MISTRAL_API_KEY,
   'mistral-medium-3': !!MISTRAL_API_KEY,
   groq: !!GROQ_API_KEY,
@@ -65,32 +57,8 @@ class DeepResearchAgent {
       case 'groq':
       case 'groq-qwen-qwq':
       case 'groq-llama4-scout':
-      case 'llama-4-maverick-17b':
-      case 'llama-4-scout-17b':
-      case 'llama-guard-4-12b':
-      case 'mistral-saba-24b':
-      case 'llama3-70b':
-      case 'llama-3.3-70b':
-      case 'llama-3.1-8b':
-      case 'llama3-8b':
         this.apiKey = GROQ_API_KEY || '';
-        if (model === 'llama-4-maverick-17b') {
-          this.modelId = 'meta-llama/llama-4-maverick-17b-128e-instruct';
-        } else if (model === 'llama-4-scout-17b') {
-          this.modelId = 'meta-llama/llama-4-scout-17b-16e-instruct';
-        } else if (model === 'llama-guard-4-12b') {
-          this.modelId = 'meta-llama/llama-guard-4-12b';
-        } else if (model === 'mistral-saba-24b') {
-          this.modelId = 'mistral-saba-24b';
-        } else if (model === 'llama3-70b') {
-          this.modelId = 'llama3-70b-8192';
-        } else if (model === 'llama-3.3-70b') {
-          this.modelId = 'llama-3.3-70b-versatile';
-        } else if (model === 'llama-3.1-8b') {
-          this.modelId = 'llama-3.1-8b-instant';
-        } else if (model === 'llama3-8b') {
-          this.modelId = 'llama3-8b-8192';
-        } else if (model === 'groq-qwen-qwq') {
+        if (model === 'groq-qwen-qwq') {
           this.modelId = 'qwen2.5-72b-instruct';
         } else if (model === 'groq-llama4-scout') {
           this.modelId = 'llama-3.3-70b-versatile';

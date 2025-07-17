@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Search, MessageCircle, Shield, Zap, Brain, Lock, Key } from "lucide-react";
 import DesktopDownloads from "@/components/DesktopDownloads";
 import PrismAssistant from "@/components/PrismAssistant";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -71,6 +72,7 @@ const Home = () => {
               <Button variant="ghost" onClick={() => navigate("/pricing")}>
                 Pricing
               </Button>
+              <ThemeToggle />
             </div>
           </nav>
         </header>
