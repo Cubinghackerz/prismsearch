@@ -12,29 +12,95 @@ interface ModelSelectorProps {
   onNewChat: () => void;
 }
 
-const ModelSelector: React.FC<ModelSelectorProps> = ({ 
-  selectedModel, 
-  onModelChange, 
-  onNewChat 
+const ModelSelector: React.FC<ModelSelectorProps> = ({
+  selectedModel,
+  onModelChange,
+  onNewChat
 }) => {
   return (
     <div className="p-3 border-b border-prism-border bg-prism-primary/5">
-      <Alert className="mb-3 py-2 bg-prism-primary/10 border-prism-border text-prism-text-muted text-xs">
-        <p>AI Model: Gemini 2.5</p>
-      </Alert>
-      
       <RadioGroup 
         defaultValue={selectedModel} 
         value={selectedModel} 
         onValueChange={onModelChange} 
-        className="grid grid-cols-1 gap-2"
+        className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-1"
       >
         <ModelOption 
           value="gemini" 
           name="Gemini 2.5" 
           description="Google's latest AI model" 
-          badge={{ text: "Active", color: "green" }} 
+          badge={{ text: "Google", color: "green" }} 
           isSelected={selectedModel === 'gemini'}
+        />
+        <ModelOption 
+          value="llama-4-maverick-17b" 
+          name="Llama 4 Maverick 17B" 
+          description="Meta's advanced reasoning model" 
+          badge={{ text: "Groq", color: "orange" }} 
+          isSelected={selectedModel === 'llama-4-maverick-17b'}
+        />
+        <ModelOption 
+          value="llama-4-scout-17b" 
+          name="Llama 4 Scout 17B" 
+          description="Meta's efficient instruction model" 
+          badge={{ text: "Groq", color: "orange" }} 
+          isSelected={selectedModel === 'llama-4-scout-17b'}
+        />
+        <ModelOption 
+          value="llama-guard-4-12b" 
+          name="Llama Guard 4 12B" 
+          description="Meta's content safety model" 
+          badge={{ text: "Groq", color: "orange" }} 
+          isSelected={selectedModel === 'llama-guard-4-12b'}
+        />
+        <ModelOption 
+          value="mistral-saba-24b" 
+          name="Mistral Saba 24B" 
+          description="Mistral's powerful 24B model" 
+          badge={{ text: "Groq", color: "orange" }} 
+          isSelected={selectedModel === 'mistral-saba-24b'}
+        />
+        <ModelOption 
+          value="llama3-70b" 
+          name="Llama 3 70B" 
+          description="Meta's flagship 70B model" 
+          badge={{ text: "Groq", color: "orange" }} 
+          isSelected={selectedModel === 'llama3-70b'}
+        />
+        <ModelOption 
+          value="llama-3.3-70b" 
+          name="Llama 3.3 70B" 
+          description="Meta's versatile 70B model" 
+          badge={{ text: "Groq", color: "orange" }} 
+          isSelected={selectedModel === 'llama-3.3-70b'}
+        />
+        <ModelOption 
+          value="llama-3.1-8b" 
+          name="Llama 3.1 8B" 
+          description="Meta's efficient 8B model" 
+          badge={{ text: "Groq", color: "orange" }} 
+          isSelected={selectedModel === 'llama-3.1-8b'}
+        />
+        <ModelOption 
+          value="llama3-8b" 
+          name="Llama 3 8B" 
+          description="Meta's compact 8B model" 
+          badge={{ text: "Groq", color: "orange" }} 
+          isSelected={selectedModel === 'llama3-8b'}
+        />
+        <ModelOption 
+          value="mistral" 
+          name="Mistral" 
+          description="Mistral's base model" 
+          badge={{ text: "Mistral", color: "blue" }} 
+          isSelected={selectedModel === 'mistral'}
+        />
+        <ModelOption 
+          value="mistral-medium-3" 
+          name="Mistral Medium 3" 
+          description="Mistral's enhanced model" 
+          badge={{ text: "Mistral", color: "blue" }} 
+          isSelected={selectedModel === 'mistral-medium-3'}
         />
       </RadioGroup>
 

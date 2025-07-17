@@ -5,7 +5,6 @@ import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "@/contexts/ThemeContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Chat from "./pages/Chat";
@@ -27,24 +26,22 @@ const queryClient = new QueryClient({
 
 const App: React.FC = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <TooltipProvider>
-        <div className="bg-gradient-to-b from-background to-secondary/10 text-foreground min-h-screen font-inter">
-          <Toaster />
-          <SonnerToaster />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/search" element={<Index />} />
-              <Route path="/chat" element={<Chat />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/vault" element={<PrismVault />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </div>
-      </TooltipProvider>
-    </ThemeProvider>
+    <TooltipProvider>
+      <div className="bg-gradient-to-b from-background to-secondary/10 text-foreground min-h-screen font-inter dark">
+        <Toaster />
+        <SonnerToaster />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/search" element={<Index />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/vault" element={<PrismVault />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </div>
+    </TooltipProvider>
   </QueryClientProvider>
 );
 

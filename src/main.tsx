@@ -5,6 +5,9 @@ import App from './App.tsx'
 import './index.css'
 import './components/search/searchStyles.css'
 
+// Force dark mode
+document.documentElement.classList.add('dark');
+
 // Add Google Fonts for Montserrat and Inter with optimized weights
 const fontLinks = document.createElement('link');
 fontLinks.rel = 'stylesheet';
