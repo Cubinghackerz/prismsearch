@@ -25,7 +25,15 @@ export type ChatModel =
   | 'groq-qwen-qwq'
   | 'groq-llama4-scout'
   | 'azure-gpt4-nano'
-  | 'azure-o4-mini';
+  | 'azure-o4-mini'
+  | 'groq-llama4-maverick'
+  | 'groq-llama4-scout-17b'
+  | 'groq-llama-guard-4'
+  | 'groq-mistral-saba'
+  | 'groq-llama3-70b'
+  | 'groq-llama3-3-70b'
+  | 'groq-llama3-1-8b'
+  | 'groq-llama3-8b';
 
 interface ChatContextType {
   messages: ChatMessage[];
@@ -88,7 +96,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           query: content,
           chatId: chatId,
           chatHistory: messages,
-          model: 'gemini' // Force Gemini model
+          model: selectedModel
         }
       });
       
@@ -140,8 +148,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const selectModel = (model: ChatModel) => {
-    // Force Gemini model only
-    setSelectedModel('gemini');
+    setSelectedModel(model);
   };
 
   const runDeepResearch = async (topic: string) => {
@@ -176,7 +183,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           query: topic,
           chatId: chatId,
           chatHistory: messages,
-          model: 'gemini', // Force Gemini model
+          model: selectedModel,
           deepResearch: true
         }
       });
@@ -228,7 +235,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isTyping,
       startNewChat,
       selectModel,
-      selectedModel: 'gemini', // Always return Gemini
+      selectedModel,
       chatId,
       runDeepResearch
     }}>
