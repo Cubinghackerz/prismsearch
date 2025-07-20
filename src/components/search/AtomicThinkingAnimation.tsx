@@ -46,9 +46,6 @@ const AtomicThinkingAnimation = () => {
               repeat: Infinity,
               ease: "linear"
             }}
-            style={{
-              borderRightColor: 'transparent'
-            }}
           >
             {/* Electron 1 */}
             <motion.div
@@ -73,7 +70,6 @@ const AtomicThinkingAnimation = () => {
           {/* Electron orbit 2 */}
           <motion.div
             className="absolute w-24 h-12 rounded-full border-2 border-prism-primary-light/60"
-            style={{ transform: 'rotate(60deg)' }}
             animate={{
               rotate: [60, 420],
               borderColor: [
@@ -89,8 +85,7 @@ const AtomicThinkingAnimation = () => {
               delay: -0.66
             }}
             style={{
-              transform: 'rotate(60deg)',
-              borderBottomColor: 'transparent'
+              transform: 'rotate(60deg)'
             }}
           >
             {/* Electron 2 */}
@@ -117,7 +112,6 @@ const AtomicThinkingAnimation = () => {
           {/* Electron orbit 3 */}
           <motion.div
             className="absolute w-24 h-12 rounded-full border-2 border-prism-accent-light/60"
-            style={{ transform: 'rotate(-60deg)' }}
             animate={{
               rotate: [-60, 300],
               borderColor: [
@@ -132,8 +126,7 @@ const AtomicThinkingAnimation = () => {
               ease: "linear"
             }}
             style={{
-              transform: 'rotate(-60deg)',
-              borderLeftColor: 'transparent'
+              transform: 'rotate(-60deg)'
             }}
           >
             {/* Electron 3 */}

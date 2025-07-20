@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -5,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Shield, AlertTriangle, Heart, Clock, RefreshCw, Info, TrendingUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import BreachDetectionService from '@/services/breachDetectionService';
+
 interface StoredPassword {
   id: string;
   name: string;
@@ -19,10 +21,12 @@ interface StoredPassword {
   risk_level?: 'low' | 'medium' | 'high' | 'critical';
   breach_recommendations?: string[];
 }
+
 interface PasswordSecurityDashboardProps {
   passwords: StoredPassword[];
   onPasswordUpdate: (id: string, updates: Partial<StoredPassword>) => void;
 }
+
 export const PasswordSecurityDashboard: React.FC<PasswordSecurityDashboardProps> = ({
   passwords,
   onPasswordUpdate
@@ -30,9 +34,8 @@ export const PasswordSecurityDashboard: React.FC<PasswordSecurityDashboardProps>
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
   const [showBreachDetails, setShowBreachDetails] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+
   const expiredPasswords = passwords.filter(p => p.expires_at && new Date(p.expires_at) < new Date());
   const expiringSoonPasswords = passwords.filter(p => {
     if (!p.expires_at) return false;
@@ -41,28 +44,33 @@ export const PasswordSecurityDashboard: React.FC<PasswordSecurityDashboardProps>
     const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     return expiryDate > now && expiryDate <= thirtyDaysFromNow;
   });
+
   const breachedPasswords = passwords.filter(p => p.breach_status === 'breached');
   const criticalRiskPasswords = passwords.filter(p => p.risk_level === 'critical');
   const highRiskPasswords = passwords.filter(p => p.risk_level === 'high');
   const favoritePasswords = passwords.filter(p => p.is_favorite);
+
   const runEnhancedSecurityScan = async () => {
     setIsScanning(true);
     setScanProgress(0);
+    
     const stats = BreachDetectionService.getBreachStatistics();
     console.log('Starting enhanced security scan with stats:', stats);
+
     for (let i = 0; i < passwords.length; i++) {
       const password = passwords[i];
       try {
-        onPasswordUpdate(password.id, {
-          breach_status: 'checking'
-        });
+        onPasswordUpdate(password.id, { breach_status: 'checking' });
+
         const breachData = await BreachDetectionService.checkPasswordBreach(password.password_encrypted);
+        
         onPasswordUpdate(password.id, {
           breach_status: breachData.isBreached ? 'breached' : 'safe',
           breach_count: breachData.breachCount,
           risk_level: breachData.riskLevel,
           breach_recommendations: breachData.recommendations
         });
+
         setScanProgress((i + 1) / passwords.length * 100);
 
         // Add small delay to avoid overwhelming the API
@@ -71,19 +79,20 @@ export const PasswordSecurityDashboard: React.FC<PasswordSecurityDashboardProps>
         }
       } catch (error) {
         console.error('Error checking password breach:', error);
-        onPasswordUpdate(password.id, {
-          breach_status: 'safe'
-        });
+        onPasswordUpdate(password.id, { breach_status: 'safe' });
       }
     }
+
     setIsScanning(false);
     setScanProgress(0);
+    
     const finalStats = BreachDetectionService.getBreachStatistics();
     toast({
       title: "Enhanced security scan completed",
       description: `Scanned ${passwords.length} passwords. Found ${breachedPasswords.length} breached passwords with detailed risk analysis.`
     });
   };
+
   const getRiskBadgeColor = (riskLevel: string) => {
     switch (riskLevel) {
       case 'critical':
@@ -98,5 +107,55 @@ export const PasswordSecurityDashboard: React.FC<PasswordSecurityDashboardProps>
         return 'bg-gray-600 text-white';
     }
   };
-  return;
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Security Dashboard
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-500">{expiredPasswords.length}</div>
+              <div className="text-sm text-muted-foreground">Expired</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-yellow-500">{expiringSoonPasswords.length}</div>
+              <div className="text-sm text-muted-foreground">Expiring Soon</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-600">{breachedPasswords.length}</div>
+              <div className="text-sm text-muted-foreground">Breached</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-500">{favoritePasswords.length}</div>
+              <div className="text-sm text-muted-foreground">Favorites</div>
+            </div>
+          </div>
+
+          <Button 
+            onClick={runEnhancedSecurityScan}
+            disabled={isScanning}
+            className="w-full"
+          >
+            {isScanning ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Scanning... {Math.round(scanProgress)}%
+              </>
+            ) : (
+              <>
+                <Shield className="h-4 w-4 mr-2" />
+                Run Security Scan
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
 };
