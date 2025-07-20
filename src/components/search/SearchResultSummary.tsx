@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import LoadingAnimation from '../LoadingAnimation';
+import AtomicThinkingAnimation from './AtomicThinkingAnimation';
 
 interface SearchResultSummaryProps {
   results: SearchResult[];
@@ -282,16 +282,14 @@ Related Topics: ${summary.relatedTopics.join(', ')}
               >
                 <CardContent className="pt-0">
                   {isLoading && (
-                    <div className="flex items-center justify-center py-8">
-                      <div className="flex flex-col items-center gap-3" style={{ willChange: 'transform' }}>
-                        <LoadingAnimation color="indigo" size="medium" variant="prism" />
-                        <p className="text-prism-accent-light/70 text-sm">Analyzing search results...</p>
-                      </div>
+                    <div className="flex flex-col items-center gap-3">
+                      <AtomicThinkingAnimation />
+                      <p className="text-prism-accent-light/70 text-sm">Analyzing search results...</p>
                     </div>
                   )}
 
                   {error && (
-                    <div className="p-4 rounded-lg bg-red-900/20 border border-red-500/30 text-red-300" style={{ willChange: 'transform' }}>
+                    <div className="p-4 rounded-lg bg-red-900/20 border border-red-500/30 text-red-300">
                       <p className="text-sm">{error}</p>
                       <Button
                         variant="outline"
