@@ -6,7 +6,6 @@ import { Search, MessageCircle, Shield, Zap, Brain, Lock, Key } from "lucide-rea
 import DesktopDownloads from "@/components/DesktopDownloads";
 import PrismAssistant from "@/components/PrismAssistant";
 import ThemeToggle from "@/components/ThemeToggle";
-import AnimatedHeadline from "@/components/AnimatedHeadline";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -81,9 +80,11 @@ const Home = () => {
         {/* Hero Section */}
         <main className="container mx-auto px-6 py-16">
           <div className="text-center mb-16">
-            <div className="mb-6">
-              <AnimatedHeadline />
-            </div>
+            <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent leading-tight py-0 md:text-7xl">
+              The Future of
+              <br />
+              Digital Intelligence
+            </h1>
             <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
               Experience the next evolution of AI-powered tools. Search smarter, chat intelligently, 
               and store securely with Prism's comprehensive suite.
