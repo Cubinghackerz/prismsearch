@@ -46,23 +46,17 @@ export const VaultLoadingScreen: React.FC<VaultLoadingScreenProps> = ({
       </div>
 
       <div className="text-center space-y-8 z-10">
-        {/* Atomic loader animation */}
+        {/* New atomic loader animation */}
         <div className="relative mb-8">
-          <div className="relative w-60 h-60 mx-auto">
-            {/* Central nucleus */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-9 h-9 bg-gradient-to-br from-cyan-400 to-emerald-400 rounded-full animate-pulse shadow-lg shadow-cyan-400/50"></div>
-            
-            {/* Electron orbits */}
-            <div className="absolute inset-0 border border-cyan-400/30 rounded-full animate-spin" style={{ animationDuration: '4s' }}>
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-cyan-400 rounded-full shadow-lg shadow-cyan-400/50"></div>
-            </div>
-            
-            <div className="absolute inset-4 border border-emerald-400/30 rounded-full animate-spin" style={{ animationDuration: '3s', animationDirection: 'reverse' }}>
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-emerald-400 rounded-full shadow-lg shadow-emerald-400/50"></div>
-            </div>
-            
-            <div className="absolute inset-8 border border-cyan-300/25 rounded-full animate-spin" style={{ animationDuration: '5s' }}>
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-cyan-300 rounded-full shadow-lg shadow-cyan-300/40"></div>
+          <div className="h-80 w-80 bg-slate-800/30 flex justify-center items-center mx-auto rounded-full backdrop-blur-sm">
+            <div className="relative w-60 h-60 flex justify-center items-center animate-atomic-rotate">
+              {/* Central nucleus */}
+              <div className="absolute transform -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-blue-600 to-cyan-400 h-8 w-8 animate-atomic-nucleus"></div>
+              
+              {/* Electron orbits */}
+              <div className="absolute w-60 h-24 rounded-full border-[0.3rem] border-cyan-400 animate-atomic-revolve electron-orbit"></div>
+              <div className="absolute w-60 h-24 rounded-full border-[0.3rem] border-cyan-400 animate-atomic-revolve electron-orbit transform rotate-60" style={{ animationDelay: '-0.66s' }}></div>
+              <div className="absolute w-60 h-24 rounded-full border-[0.3rem] border-cyan-400 animate-atomic-revolve electron-orbit transform -rotate-60"></div>
             </div>
           </div>
         </div>
