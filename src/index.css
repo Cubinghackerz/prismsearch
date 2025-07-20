@@ -247,3 +247,17 @@
     transform: translate(-50%, -50%) scale(1.4);
   }
 }
+
+/* Vault Loading Animations */
+@keyframes scroll-status {
+  0%, 15% { transform: translateY(0); }
+  20%, 35% { transform: translateY(-2rem); }
+  40%, 55% { transform: translateY(-4rem); }
+  60%, 75% { transform: translateY(-6rem); }
+  80%, 95% { transform: translateY(-8rem); }
+  100% { transform: translateY(0); }
+}
+
+.animate-scroll-status {
+  animation: scroll-status 12s linear infinite;
+}
