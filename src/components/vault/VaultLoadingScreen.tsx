@@ -32,6 +32,7 @@ export const VaultLoadingScreen: React.FC<VaultLoadingScreenProps> = ({
         .atomic-loader {
           height: 20rem;
           width: 20rem;
+         margin: 0 auto;
           display: flex;
           justify-content: center;
           align-items: center;
@@ -44,11 +45,14 @@ export const VaultLoadingScreen: React.FC<VaultLoadingScreenProps> = ({
           justify-content: center;
           align-items: center;
           height: 15rem;
+         margin: 0 auto;
           animation: rotate 3s infinite;
         }
 
         .nucleus {
           position: absolute;
+         left: 50%;
+         top: 50%;
           transform: translate(-50%, -50%);
           border-radius: 50%;
           background: linear-gradient(45deg, #00C2A8, #1DD1B8);

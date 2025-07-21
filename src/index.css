@@ -41,6 +41,19 @@
   }
   body {
     @apply bg-background text-foreground;
+    line-height: 1.6;
+  }
+  
+  /* Fix text clipping issues */
+  h1, h2, h3, h4, h5, h6 {
+    line-height: 1.2;
+    padding-bottom: 0.125rem;
+  }
+  
+  /* Ensure proper text rendering */
+  .text-5xl, .text-7xl {
+    line-height: 1.1;
+    padding-bottom: 0.25rem;
   }
 }
 
