@@ -54,11 +54,11 @@ const AnimatedHeadline = () => {
         .words {
           display: flex;
           flex-direction: column;
-          animation: scrollWords 10s infinite;
+          animation: scrollWords 15s infinite;
         }
 
         .word {
-          height: 3rem;
+          height: 3.2rem;
           background: linear-gradient(to right, #8B5CF6, #A855F7, #8B5CF6);
           background-clip: text;
           -webkit-background-clip: text;
@@ -70,28 +70,31 @@ const AnimatedHeadline = () => {
           align-items: center;
           justify-content: center;
           text-align: center;
+          line-height: 1.1;
         }
 
         @media (min-width: 768px) {
           .animated-headline-wrapper {
             font-size: 4.5rem;
+            gap: 0.2rem;
           }
           
           .words-container {
-            height: 5rem;
+            height: 5.2rem;
           }
           
           .word {
-            height: 5rem;
+            height: 5.2rem;
+            line-height: 1.1;
           }
         }
 
         @keyframes scrollWords {
-          0%, 15%   { transform: translateY(0%); }
-          20%, 35%  { transform: translateY(-100%); }
-          40%, 55%  { transform: translateY(-200%); }
-          60%, 75%  { transform: translateY(-300%); }
-          80%, 95%  { transform: translateY(-400%); }
+          0%, 18%   { transform: translateY(0%); }
+          20%, 38%  { transform: translateY(-100%); }
+          40%, 58%  { transform: translateY(-200%); }
+          60%, 78%  { transform: translateY(-300%); }
+          80%, 98%  { transform: translateY(-400%); }
           100%      { transform: translateY(0%); }
         }
 
