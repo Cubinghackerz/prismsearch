@@ -1,17 +1,24 @@
+
 import React from 'react';
+
 const words = ["Digital Intelligence", "Smart Search", "AI Conversations", "Secure Storage", "Password Protection"];
+
 const AnimatedHeadline = () => {
-  return <div className="animated-headline-wrapper">
+  return (
+    <div className="animated-headline-wrapper">
       <span className="static-text">The Future of
 Digital Intelligence</span>
       <br />
       <div className="words-container">
         <div className="words">
-          {words.map((word, index) => {})}
+          {words.map((word, index) => (
+            <div key={index} className="word">{word}</div>
+          ))}
         </div>
       </div>
       
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .animated-headline-wrapper {
           font-size: 2.5rem;
           font-weight: 700;
@@ -20,7 +27,7 @@ Digital Intelligence</span>
           align-items: center;
           gap: 0.4rem;
           line-height: 1.2;
-          margin-bottom: 1.5rem;
+          margin-bottom: 0.75rem;
         }
 
         .static-text {
@@ -67,6 +74,7 @@ Digital Intelligence</span>
           .animated-headline-wrapper {
             font-size: 4.5rem;
             gap: 0.2rem;
+            margin-bottom: 1rem;
           }
           
           .words-container {
@@ -92,7 +100,10 @@ Digital Intelligence</span>
           0%, 100% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
         }
-      `}</style>
-    </div>;
+        `
+      }} />
+    </div>
+  );
 };
+
 export default AnimatedHeadline;
