@@ -1,23 +1,13 @@
 import React from 'react';
-
-const words = [
-  "Digital Intelligence",
-  "Smart Search", 
-  "AI Conversations",
-  "Secure Storage",
-  "Password Protection",
-];
-
+const words = ["Digital Intelligence", "Smart Search", "AI Conversations", "Secure Storage", "Password Protection"];
 const AnimatedHeadline = () => {
-  return (
-    <div className="animated-headline-wrapper">
-      <span className="static-text">The Future of</span>
+  return <div className="animated-headline-wrapper">
+      <span className="static-text">The Future of
+Digital Intelligence</span>
       <br />
       <div className="words-container">
         <div className="words">
-          {words.map((word, index) => (
-            <span className="word" key={index}>{word}</span>
-          ))}
+          {words.map((word, index) => {})}
         </div>
       </div>
       
@@ -103,8 +93,6 @@ const AnimatedHeadline = () => {
           50% { background-position: 100% 50%; }
         }
       `}</style>
-    </div>
-  );
+    </div>;
 };
-
 export default AnimatedHeadline;
