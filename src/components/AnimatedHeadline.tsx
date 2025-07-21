@@ -1,13 +1,11 @@
-
 import React from 'react';
-
 const AnimatedHeadline = () => {
-  return (
-    <div className="animated-headline-wrapper">
-      <span className="static-text">The Future of Digital Intelligence</span>
+  return <div className="animated-headline-wrapper">
+      <span className="static-text">The Future of
+ Digital Intelligence</span>
       
       <style dangerouslySetInnerHTML={{
-        __html: `
+      __html: `
         .animated-headline-wrapper {
           font-size: 2.5rem;
           font-weight: 700;
@@ -40,9 +38,7 @@ const AnimatedHeadline = () => {
           50% { background-position: 100% 50%; }
         }
         `
-      }} />
-    </div>
-  );
+    }} />
+    </div>;
 };
-
 export default AnimatedHeadline;
