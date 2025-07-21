@@ -1,8 +1,7 @@
 import React from 'react';
 const AnimatedHeadline = () => {
   return <div className="animated-headline-wrapper">
-      <span className="static-text">The Future of
- Digital Intelligence</span>
+      <span className="static-text">The Future of Digital Intelligence</span>
       
       <style dangerouslySetInnerHTML={{
       __html: `
