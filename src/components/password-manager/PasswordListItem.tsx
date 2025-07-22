@@ -118,6 +118,24 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
     return `Enter your master password to unlock "${password.name}".`;
   };
 
+  // Fix URL handling to ensure proper external link behavior
+  const formatUrl = (url: string) => {
+    if (!url) return '';
+    
+    // If URL doesn't start with http:// or https://, add https://
+    if (!url.match(/^https?:\/\//)) {
+      return `https://${url}`;
+    }
+    
+    return url;
+  };
+
+  const handleUrlClick = (e: React.MouseEvent, url: string) => {
+    e.preventDefault();
+    const formattedUrl = formatUrl(url);
+    window.open(formattedUrl, '_blank', 'noopener,noreferrer');
+  };
+
   const updateStatus = getUpdateSuggestionStatus();
   const breachStatus = getBreachStatus();
 
@@ -140,15 +158,13 @@ export const PasswordListItem: React.FC<PasswordListItemProps> = ({
             </div>
             {password.url && (
               <div className="flex items-center space-x-2">
-                <a
-                  href={password.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-cyan-400 hover:text-cyan-300 flex items-center space-x-1"
+                <button
+                  onClick={(e) => handleUrlClick(e, password.url!)}
+                  className="text-sm text-cyan-400 hover:text-cyan-300 flex items-center space-x-1 cursor-pointer"
                 >
                   <span>{password.url}</span>
                   <ExternalLink className="h-3 w-3" />
-                </a>
+                </button>
               </div>
             )}
             
