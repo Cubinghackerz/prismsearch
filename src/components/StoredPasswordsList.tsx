@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { PasswordManagerDialog } from './PasswordManagerDialog';
 import { PasswordListItem } from './password-manager/PasswordListItem';
 import { PasswordSecurityDashboard } from './vault/PasswordSecurityDashboard';
+import { SecurityScoreDashboard } from './vault/SecurityScoreDashboard';
 import { MasterPasswordDialog } from './vault/MasterPasswordDialog';
 import { ChangeMasterPasswordDialog } from './vault/ChangeMasterPasswordDialog';
 import VaultItemSkeleton from '@/components/skeletons/VaultItemSkeleton';
@@ -36,7 +37,7 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
   const [showMasterPasswordSetup, setShowMasterPasswordSetup] = useState(false);
   const [showMasterPasswordSettings, setShowMasterPasswordSettings] = useState(false);
   const [showChangeMasterPassword, setShowChangeMasterPassword] = useState(false);
-  const [dashboardRefreshKey, setDashboardRefreshKey] = useState(0);
+  const [securityDashboardRefreshKey, setSecurityDashboardRefreshKey] = useState(0);
   const { toast } = useToast();
 
   // Memoize password fetch function
@@ -45,8 +46,8 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
       const storedData = localStorage.getItem('prism_vault_passwords');
       const parsedData = storedData ? JSON.parse(storedData) : [];
       setPasswords(parsedData);
-      // Trigger dashboard refresh when passwords are fetched
-      setDashboardRefreshKey(prev => prev + 1);
+      // Trigger security dashboard refresh when passwords are fetched
+      setSecurityDashboardRefreshKey(prev => prev + 1);
     } catch (error) {
       console.error('Error fetching passwords:', error);
       toast({
@@ -73,8 +74,8 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
       localStorage.setItem('prism_vault_passwords', JSON.stringify(updated));
       return updated;
     });
-    // Trigger dashboard refresh when password is updated
-    setDashboardRefreshKey(prev => prev + 1);
+    // Trigger security dashboard refresh when password is updated
+    setSecurityDashboardRefreshKey(prev => prev + 1);
   }, []);
 
   const togglePasswordVisibility = (id: string) => {
@@ -120,8 +121,8 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
       localStorage.setItem('prism_vault_passwords', JSON.stringify(updatedPasswords));
       MasterPasswordService.unprotectPassword(id);
       setPasswords(updatedPasswords);
-      // Trigger dashboard refresh when password is deleted
-      setDashboardRefreshKey(prev => prev + 1);
+      // Trigger security dashboard refresh when password is deleted
+      setSecurityDashboardRefreshKey(prev => prev + 1);
       toast({
         title: "Password deleted",
         description: `"${name}" has been removed from your vault.`
@@ -150,7 +151,7 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
     fetchPasswords();
     setIsDialogOpen(false);
     setEditingPassword(null);
-    // Dashboard will refresh automatically via fetchPasswords
+    // Security dashboard will refresh automatically via fetchPasswords
   };
 
   const handleSetupMasterPassword = () => {
@@ -215,8 +216,12 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
   }
 
   return <div className="space-y-6">
+      <SecurityScoreDashboard 
+        passwords={passwords} 
+        refreshKey={securityDashboardRefreshKey}
+      />
+
       <PasswordSecurityDashboard 
-        key={dashboardRefreshKey}
         passwords={passwords} 
         onPasswordUpdate={updatePassword} 
       />

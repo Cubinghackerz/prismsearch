@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Shield, TrendingUp, Clock, Eye, EyeOff, Lock, Key, CheckCircle, AlertTriangle, History, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import zxcvbn from 'zxcvbn';
+
 interface PasswordAnalysis {
   password: string;
   score: number;
@@ -16,6 +17,7 @@ interface PasswordAnalysis {
   crackTime: string;
   timestamp: string;
 }
+
 interface EncryptedNote {
   id: string;
   title: string;
@@ -23,6 +25,7 @@ interface EncryptedNote {
   encrypted: boolean;
   created_at: string;
 }
+
 interface SecurityScoreDashboardProps {
   passwords: Array<{
     id: string;
@@ -33,9 +36,12 @@ interface SecurityScoreDashboardProps {
     is_favorite?: boolean;
     breach_status?: 'safe' | 'breached' | 'checking';
   }>;
+  refreshKey?: number;
 }
+
 export const SecurityScoreDashboard: React.FC<SecurityScoreDashboardProps> = ({
-  passwords
+  passwords,
+  refreshKey = 0
 }) => {
   const [overallScore, setOverallScore] = useState(0);
   const [passwordHistory, setPasswordHistory] = useState<PasswordAnalysis[]>([]);
@@ -51,11 +57,13 @@ export const SecurityScoreDashboard: React.FC<SecurityScoreDashboardProps> = ({
   const {
     toast
   } = useToast();
+
   useEffect(() => {
     calculateOverallScore();
     loadPasswordHistory();
     loadEncryptedNotes();
-  }, [passwords]);
+  }, [passwords, refreshKey]);
+
   const calculateOverallScore = () => {
     if (passwords.length === 0) {
       setOverallScore(0);
@@ -86,6 +94,7 @@ export const SecurityScoreDashboard: React.FC<SecurityScoreDashboardProps> = ({
     const avgScore = validPasswords > 0 ? Math.round(totalScore / validPasswords) : 0;
     setOverallScore(avgScore);
   };
+
   const analyzePasswordStrengths = (password: string): string[] => {
     const strengths = [];
     if (password.length >= 16) strengths.push('Excellent length (16+ characters)');else if (password.length >= 12) strengths.push('Good length (12+ characters)');
@@ -97,6 +106,7 @@ export const SecurityScoreDashboard: React.FC<SecurityScoreDashboardProps> = ({
     if (charTypes >= 4) strengths.push('Uses all character types');
     return strengths;
   };
+
   const loadPasswordHistory = () => {
     try {
       const history = localStorage.getItem('password_history');
@@ -107,6 +117,7 @@ export const SecurityScoreDashboard: React.FC<SecurityScoreDashboardProps> = ({
       console.error('Error loading password history:', error);
     }
   };
+
   const loadEncryptedNotes = () => {
     try {
       const notes = localStorage.getItem('encrypted_notes');
@@ -117,6 +128,7 @@ export const SecurityScoreDashboard: React.FC<SecurityScoreDashboardProps> = ({
       console.error('Error loading encrypted notes:', error);
     }
   };
+
   const addEncryptedNote = () => {
     if (!newNote.title.trim() || !newNote.content.trim()) {
       toast({
@@ -145,6 +157,7 @@ export const SecurityScoreDashboard: React.FC<SecurityScoreDashboardProps> = ({
       description: "Your encrypted note has been saved securely."
     });
   };
+
   const deleteNote = (id: string) => {
     const updatedNotes = encryptedNotes.filter(note => note.id !== id);
     setEncryptedNotes(updatedNotes);
@@ -154,12 +167,14 @@ export const SecurityScoreDashboard: React.FC<SecurityScoreDashboardProps> = ({
       description: "The encrypted note has been removed."
     });
   };
+
   const toggleNoteVisibility = (id: string) => {
     setShowNoteContent(prev => ({
       ...prev,
       [id]: !prev[id]
     }));
   };
+
   const getScoreColor = (score: number) => {
     if (score >= 90) return 'text-emerald-400';
     if (score >= 75) return 'text-green-400';
@@ -167,6 +182,7 @@ export const SecurityScoreDashboard: React.FC<SecurityScoreDashboardProps> = ({
     if (score >= 40) return 'text-amber-400';
     return 'text-red-400';
   };
+
   const getScoreBadge = (score: number) => {
     if (score >= 90) return {
       label: 'EXCELLENT',
@@ -189,8 +205,10 @@ export const SecurityScoreDashboard: React.FC<SecurityScoreDashboardProps> = ({
       color: 'bg-red-600'
     };
   };
+
   const scoreBadge = getScoreBadge(overallScore);
   const recentPasswords = passwords.slice(0, 5);
+
   return <div className="space-y-6">
       <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm shadow-xl py-0 my-[20px]">
         <CardHeader>
