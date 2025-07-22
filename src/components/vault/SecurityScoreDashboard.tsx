@@ -261,7 +261,7 @@ export const SecurityScoreDashboard: React.FC<SecurityScoreDashboardProps> = ({
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-slate-200">Password Strengths Analysis</h3>
+                
                 {recentPasswords.map((password, index) => {
               const strengths = analyzePasswordStrengths(password.password_encrypted);
               return <div key={password.id} className="bg-slate-800/30 rounded-lg p-4">
