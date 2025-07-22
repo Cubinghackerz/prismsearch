@@ -36,9 +36,8 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
   const [showMasterPasswordSetup, setShowMasterPasswordSetup] = useState(false);
   const [showMasterPasswordSettings, setShowMasterPasswordSettings] = useState(false);
   const [showChangeMasterPassword, setShowChangeMasterPassword] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const [dashboardRefreshKey, setDashboardRefreshKey] = useState(0);
+  const { toast } = useToast();
 
   // Memoize password fetch function
   const fetchPasswords = useCallback(() => {
@@ -46,6 +45,8 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
       const storedData = localStorage.getItem('prism_vault_passwords');
       const parsedData = storedData ? JSON.parse(storedData) : [];
       setPasswords(parsedData);
+      // Trigger dashboard refresh when passwords are fetched
+      setDashboardRefreshKey(prev => prev + 1);
     } catch (error) {
       console.error('Error fetching passwords:', error);
       toast({
@@ -57,6 +58,7 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
       setLoading(false);
     }
   }, [toast]);
+
   useEffect(() => {
     fetchPasswords();
   }, [fetchPasswords]);
@@ -71,13 +73,17 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
       localStorage.setItem('prism_vault_passwords', JSON.stringify(updated));
       return updated;
     });
+    // Trigger dashboard refresh when password is updated
+    setDashboardRefreshKey(prev => prev + 1);
   }, []);
+
   const togglePasswordVisibility = (id: string) => {
     setShowPasswords(prev => ({
       ...prev,
       [id]: !prev[id]
     }));
   };
+
   const toggleFavorite = (id: string) => {
     const password = passwords.find(p => p.id === id);
     if (password) {
@@ -90,6 +96,7 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
       });
     }
   };
+
   const copyToClipboard = async (text: string, type: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -105,6 +112,7 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
       });
     }
   };
+
   const deletePassword = useCallback((id: string, name: string) => {
     if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
     try {
@@ -112,6 +120,8 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
       localStorage.setItem('prism_vault_passwords', JSON.stringify(updatedPasswords));
       MasterPasswordService.unprotectPassword(id);
       setPasswords(updatedPasswords);
+      // Trigger dashboard refresh when password is deleted
+      setDashboardRefreshKey(prev => prev + 1);
       toast({
         title: "Password deleted",
         description: `"${name}" has been removed from your vault.`
@@ -125,19 +135,24 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
       });
     }
   }, [passwords, toast]);
+
   const handleEdit = (password: StoredPassword) => {
     setEditingPassword(password);
     setIsDialogOpen(true);
   };
+
   const handleAddNew = () => {
     setEditingPassword(null);
     setIsDialogOpen(true);
   };
+
   const handlePasswordSaved = () => {
     fetchPasswords();
     setIsDialogOpen(false);
     setEditingPassword(null);
+    // Dashboard will refresh automatically via fetchPasswords
   };
+
   const handleSetupMasterPassword = () => {
     setShowMasterPasswordSetup(false);
     toast({
@@ -145,9 +160,11 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
       description: "You can now protect individual passwords with master password."
     });
   };
+
   const handleMasterPasswordSettings = () => {
     setShowMasterPasswordSettings(true);
   };
+
   const handleRemoveMasterPassword = () => {
     if (!confirm("Are you sure you want to remove the master password? This will remove protection from all protected passwords.")) {
       return;
@@ -164,6 +181,7 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
       description: "Master password protection has been disabled for all passwords."
     });
   };
+
   const handlePasswordChanged = () => {
     setShowChangeMasterPassword(false);
     toast({
@@ -197,7 +215,11 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
   }
 
   return <div className="space-y-6">
-      <PasswordSecurityDashboard passwords={passwords} onPasswordUpdate={updatePassword} />
+      <PasswordSecurityDashboard 
+        key={dashboardRefreshKey}
+        passwords={passwords} 
+        onPasswordUpdate={updatePassword} 
+      />
 
       <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm shadow-xl">
         <CardHeader className="py-0 mx-0">
