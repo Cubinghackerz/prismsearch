@@ -5,6 +5,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
 const MISTRAL_API_KEY = Deno.env.get('MISTRAL_API_KEY');
 const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY');
+const FALLBACK_GROQ_API_KEY = Deno.env.get('FALLBACK_GROQ_API_KEY');
 const AZURE_OPENAI_KEY = Deno.env.get('AZURE_OPENAI_KEY');
 
 // Check which API keys are available
@@ -12,13 +13,13 @@ const availableModels = {
   gemini: !!GEMINI_API_KEY,
   mistral: !!MISTRAL_API_KEY,
   'mistral-medium-3': !!MISTRAL_API_KEY,
-  groq: !!GROQ_API_KEY,
-  'groq-qwen-qwq': !!GROQ_API_KEY,
-  'groq-llama4-scout': !!GROQ_API_KEY,
-  'groq-llama4-maverick': !!GROQ_API_KEY,
-  'groq-llama-guard': !!GROQ_API_KEY,
-  'groq-llama31-8b-instant': !!GROQ_API_KEY,
-  'groq-llama3-8b': !!GROQ_API_KEY,
+  groq: !!(GROQ_API_KEY || FALLBACK_GROQ_API_KEY),
+  'groq-qwen-qwq': !!(GROQ_API_KEY || FALLBACK_GROQ_API_KEY),
+  'groq-llama4-scout': !!(GROQ_API_KEY || FALLBACK_GROQ_API_KEY),
+  'groq-llama4-maverick': !!(GROQ_API_KEY || FALLBACK_GROQ_API_KEY),
+  'groq-llama-guard': !!(GROQ_API_KEY || FALLBACK_GROQ_API_KEY),
+  'groq-llama31-8b-instant': !!(GROQ_API_KEY || FALLBACK_GROQ_API_KEY),
+  'groq-llama3-8b': !!(GROQ_API_KEY || FALLBACK_GROQ_API_KEY),
   'azure-gpt4-nano': !!AZURE_OPENAI_KEY,
   'azure-o4-mini': !!AZURE_OPENAI_KEY
 };
@@ -37,6 +38,7 @@ class DeepResearchAgent {
   private apiKey: string;
   private modelId: string;
   private model: string;
+  private isUsingFallback: boolean = false;
 
   constructor(model: string) {
     // Default to gemini if the requested model is not available
@@ -195,34 +197,73 @@ class DeepResearchAgent {
   }
 
   private async sendGroqPrompt(promptText: string): Promise<string> {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: this.modelId,
-        messages: [{ role: 'user', content: promptText }],
-        temperature: 0.7,
-        max_tokens: 8192,
-      })
-    });
+    // Try with primary API key first
+    let currentApiKey = this.apiKey;
+    let attempts = 0;
+    const maxAttempts = 2;
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Groq API error:', response.status, errorText);
-      throw new Error(`Groq API request failed: ${response.status} - ${errorText}`);
+    while (attempts < maxAttempts) {
+      try {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${currentApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: this.modelId,
+            messages: [{ role: 'user', content: promptText }],
+            temperature: 0.7,
+            max_tokens: 8192,
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Groq API error (attempt ${attempts + 1}):`, response.status, errorText);
+          
+          // If primary key fails and we haven't tried fallback yet
+          if (attempts === 0 && FALLBACK_GROQ_API_KEY && !this.isUsingFallback) {
+            console.log('Primary Groq API key failed, trying fallback...');
+            currentApiKey = FALLBACK_GROQ_API_KEY;
+            this.isUsingFallback = true;
+            attempts++;
+            continue;
+          }
+          
+          throw new Error(`Groq API request failed: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content;
+        
+        if (!content) {
+          throw new Error('No content received from Groq API');
+        }
+
+        if (this.isUsingFallback) {
+          console.log('Successfully used fallback Groq API key');
+        }
+
+        return content.trim();
+      } catch (error) {
+        console.error(`Groq API attempt ${attempts + 1} failed:`, error);
+        
+        // If primary key fails and we haven't tried fallback yet
+        if (attempts === 0 && FALLBACK_GROQ_API_KEY && !this.isUsingFallback) {
+          console.log('Primary Groq API key failed, trying fallback...');
+          currentApiKey = FALLBACK_GROQ_API_KEY;
+          this.isUsingFallback = true;
+          attempts++;
+          continue;
+        }
+        
+        // If we've exhausted all attempts, throw the error
+        throw error;
+      }
     }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
-    
-    if (!content) {
-      throw new Error('No content received from Groq API');
-    }
-
-    return content.trim();
+    throw new Error('All Groq API attempts failed');
   }
 
   private async sendAzurePrompt(promptText: string): Promise<string> {
