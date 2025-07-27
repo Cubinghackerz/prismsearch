@@ -73,11 +73,14 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      // First, send OTP for email verification
+      const { error } = await supabase.auth.signInWithOtp({
         email,
-        password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth`,
+          shouldCreateUser: true,
+          data: {
+            password: password
+          }
         }
       });
       
@@ -154,10 +157,21 @@ const Auth = () => {
       const { error } = await supabase.auth.verifyOtp({
         email,
         token: verificationCode,
-        type: 'signup'
+        type: 'email'
       });
       
       if (error) throw error;
+      
+      // After successful OTP verification, create the user account with password
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth`,
+        }
+      });
+      
+      if (signUpError) throw signUpError;
       
       toast({
         title: "Account verified!",
@@ -188,9 +202,14 @@ const Auth = () => {
     setLoading(true);
     
     try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
+      const { error } = await supabase.auth.signInWithOtp({
         email,
+        options: {
+          shouldCreateUser: true,
+          data: {
+            password: password
+          }
+        }
       });
       
       if (error) throw error;
