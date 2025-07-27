@@ -4,20 +4,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, ArrowLeft, Shield } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, Shield, CheckCircle } from 'lucide-react';
 
-type AuthMode = 'signin' | 'signup' | 'verify';
+type AuthMode = 'signin' | 'signup' | 'check-email';
 
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [verificationCode, setVerificationCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -26,13 +24,13 @@ const Auth = () => {
   useEffect(() => {
     // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user?.email_confirmed_at) {
+      if (session?.user) {
         navigate('/');
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
+      if (event === 'SIGNED_IN' && session?.user) {
         navigate('/');
       }
     });
@@ -73,21 +71,21 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      // Send OTP email with 6-digit code
-      const { error } = await supabase.auth.signInWithOtp({
-        email: email,
+      // Send magic link for signup
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth`,
-          shouldCreateUser: true
         }
       });
       
       if (error) throw error;
       
-      setMode('verify');
+      setMode('check-email');
       toast({
-        title: "Verification email sent",
-        description: `A 6-digit verification code has been sent to ${email}`
+        title: "Check your email",
+        description: `A magic link has been sent to ${email}. Click the link to complete your signup.`
       });
     } catch (error: any) {
       toast({
@@ -137,32 +135,12 @@ const Auth = () => {
     }
   };
 
-  const handleVerification = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!verificationCode || verificationCode.length !== 6) {
-      toast({
-        title: "Invalid code",
-        description: "Please enter the complete 6-digit verification code",
-        variant: "destructive"
-      });
-      return;
-    }
-
+  const resendMagicLink = async () => {
     setLoading(true);
-
+    
     try {
-      // Verify the OTP code
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token: verificationCode,
-        type: 'email'
-      });
-      
-      if (error) throw error;
-      
-      // After OTP verification, sign up the user with their password
-      const { error: signUpError } = await supabase.auth.signUp({
+      // Resend magic link
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -170,56 +148,16 @@ const Auth = () => {
         }
       });
       
-      if (signUpError) throw signUpError;
-      
-      toast({
-        title: "Account verified!",
-        description: "Your account has been successfully created and verified"
-      });
-      
-      navigate('/');
-    } catch (error: any) {
-      if (error.message?.includes('otp_expired') || error.message?.includes('expired') || error.message?.includes('invalid')) {
-        toast({
-          title: "Verification code expired",
-          description: "Your verification code has expired. Please request a new one and try again.",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Verification failed",
-          description: "The verification code is incorrect. Please check your email and try again.",
-          variant: "destructive"
-        });
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const resendVerificationCode = async () => {
-    setLoading(true);
-    
-    try {
-      // Resend OTP email
-      const { error } = await supabase.auth.signInWithOtp({
-        email: email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth`,
-          shouldCreateUser: true
-        }
-      });
-      
       if (error) throw error;
       
       toast({
-        title: "Code resent",
-        description: `A new 6-digit verification code has been sent to ${email}`
+        title: "Magic link resent",
+        description: `A new magic link has been sent to ${email}`
       });
     } catch (error: any) {
       toast({
         title: "Resend failed",
-        description: error.message || "Failed to resend verification code",
+        description: error.message || "Failed to resend magic link",
         variant: "destructive"
       });
     } finally {
@@ -345,52 +283,27 @@ const Auth = () => {
     </form>
   );
 
-  const renderVerificationForm = () => (
-    <form onSubmit={handleVerification} className="space-y-6">
+  const renderCheckEmailForm = () => (
+    <div className="space-y-6">
       <div className="text-center space-y-2">
-        <Shield className="h-12 w-12 mx-auto text-prism-primary" />
-        <h3 className="text-lg font-semibold text-prism-text">Verify Your Email</h3>
+        <CheckCircle className="h-12 w-12 mx-auto text-prism-primary" />
+        <h3 className="text-lg font-semibold text-prism-text">Check Your Email</h3>
         <p className="text-sm text-prism-text-muted">
-          We've sent a 6-digit verification code to <span className="font-medium text-prism-primary">{email}</span>
+          We've sent a magic link to <span className="font-medium text-prism-primary">{email}</span>
+        </p>
+        <p className="text-sm text-prism-text-muted">
+          Click the link in your email to complete your account setup. You can close this tab.
         </p>
       </div>
-
-      <div className="space-y-4">
-        <Label className="text-prism-text text-center block">Enter Verification Code</Label>
-        <div className="flex justify-center">
-          <InputOTP
-            value={verificationCode}
-            onChange={(value) => setVerificationCode(value)}
-            maxLength={6}
-          >
-            <InputOTPGroup>
-              <InputOTPSlot index={0} className="bg-prism-bg/50 border-prism-border text-prism-text" />
-              <InputOTPSlot index={1} className="bg-prism-bg/50 border-prism-border text-prism-text" />
-              <InputOTPSlot index={2} className="bg-prism-bg/50 border-prism-border text-prism-text" />
-              <InputOTPSlot index={3} className="bg-prism-bg/50 border-prism-border text-prism-text" />
-              <InputOTPSlot index={4} className="bg-prism-bg/50 border-prism-border text-prism-text" />
-              <InputOTPSlot index={5} className="bg-prism-bg/50 border-prism-border text-prism-text" />
-            </InputOTPGroup>
-          </InputOTP>
-        </div>
-      </div>
-
-      <Button
-        type="submit"
-        disabled={loading || verificationCode.length !== 6}
-        className="w-full bg-prism-primary hover:bg-prism-primary-dark text-white"
-      >
-        {loading ? 'Verifying...' : 'Verify Account'}
-      </Button>
 
       <div className="text-center">
         <button
           type="button"
-          onClick={resendVerificationCode}
+          onClick={resendMagicLink}
           disabled={loading}
           className="text-sm text-prism-primary hover:text-prism-primary-light underline"
         >
-          Didn't receive the code? Resend
+          Didn't receive the email? Resend magic link
         </button>
       </div>
 
@@ -403,7 +316,7 @@ const Auth = () => {
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back to Sign Up
       </Button>
-    </form>
+    </div>
   );
 
   return (
@@ -429,15 +342,15 @@ const Auth = () => {
             <CardTitle className="text-prism-text">
               {mode === 'signin' ? 'Welcome Back' : 
                mode === 'signup' ? 'Create Account' : 
-               'Verify Your Email'}
+               'Check Your Email'}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {mode === 'signin' && renderSignInForm()}
             {mode === 'signup' && renderSignUpForm()}
-            {mode === 'verify' && renderVerificationForm()}
+            {mode === 'check-email' && renderCheckEmailForm()}
 
-            {mode !== 'verify' && (
+            {mode !== 'check-email' && (
               <div className="mt-6 text-center">
                 <button
                   onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
