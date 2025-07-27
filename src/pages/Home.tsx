@@ -73,7 +73,12 @@ const Home = () => {
               <Button variant="ghost" onClick={() => navigate("/pricing")}>
                 Pricing
               </Button>
-              <ThemeToggle />
+              <Button 
+                onClick={() => navigate("/auth")}
+                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground font-semibold"
+              >
+                Sign In
+              </Button>
             </div>
           </nav>
         </header>
