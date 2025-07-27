@@ -1,14 +1,15 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import VaultLoadingScreen from '@/components/vault/VaultLoadingScreen';
-import MasterPasswordDialog from '@/components/vault/MasterPasswordDialog';
-import VaultHeader from '@/components/vault/VaultHeader';
-import PasswordGenerator from '@/components/vault/PasswordGenerator';
-import StoredPasswordsList from '@/components/StoredPasswordsList';
-import SecurityScoreDashboard from '@/components/vault/SecurityScoreDashboard';
-import EmptyVaultCard from '@/components/vault/EmptyVaultCard';
+import { MasterPasswordDialog } from '@/components/vault/MasterPasswordDialog';
+import { VaultHeader } from '@/components/vault/VaultHeader';
+import { PasswordGenerator } from '@/components/vault/PasswordGenerator';
+import { StoredPasswordsList } from '@/components/StoredPasswordsList';
+import { SecurityScoreDashboard } from '@/components/vault/SecurityScoreDashboard';
+import { EmptyVaultCard } from '@/components/vault/EmptyVaultCard';
 import Navigation from '@/components/Navigation';
 
 interface PrismVaultProps {
@@ -80,7 +81,7 @@ const PrismVault: React.FC<PrismVaultProps> = () => {
   }
 
   if (!isMasterPasswordSet) {
-    return <MasterPasswordDialog onSubmit={handleMasterPasswordSubmit} />;
+    return <MasterPasswordDialog isOpen={true} onClose={() => {}} onAuthenticated={handleMasterPasswordSubmit} mode="setup" />;
   }
 
   return (
@@ -88,13 +89,12 @@ const PrismVault: React.FC<PrismVaultProps> = () => {
       <Navigation />
       <VaultHeader />
       <div className="container mx-auto py-8 px-4">
-        <SecurityScoreDashboard score={securityScore} />
+        <SecurityScoreDashboard passwords={storedPasswords} score={securityScore} />
         {storedPasswords.length > 0 ? (
-          <StoredPasswordsList passwords={storedPasswords} />
+          <StoredPasswordsList />
         ) : (
           <EmptyVaultCard />
         )}
-        <PasswordGenerator isOpen={isPasswordGeneratorOpen} onClose={() => setIsPasswordGeneratorOpen(false)} onPasswordGenerated={handlePasswordGenerated} />
       </div>
     </div>
   );
