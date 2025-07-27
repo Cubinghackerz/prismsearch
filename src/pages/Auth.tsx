@@ -66,6 +66,9 @@ const Auth = () => {
         title: "Success",
         description: "Logged in successfully!"
       });
+      
+      // Redirect to home page
+      navigate('/');
     } catch (error: any) {
       toast({
         title: "Error",
@@ -112,7 +115,7 @@ const Auth = () => {
       
       toast({
         title: "Verification Code Sent",
-        description: `A 6-digit verification code has been sent to ${email}. Check your console for the code (in development).`
+        description: `A 6-digit verification code has been sent to ${email}. Check your console for the code in development mode.`
       });
     } catch (error: any) {
       toast({
@@ -143,15 +146,17 @@ const Auth = () => {
       
       toast({
         title: "Success",
-        description: "Account created successfully! You can now log in."
+        description: "Account created successfully! Redirecting to home page..."
       });
       
-      // Reset form and switch to login
+      // Reset form and redirect to home
       setEmail('');
       setPassword('');
       setShowVerification(false);
       setPendingSignupData(null);
-      setIsLogin(true);
+      
+      // Redirect to home page
+      navigate('/');
     } catch (error: any) {
       toast({
         title: "Error",

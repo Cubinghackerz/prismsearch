@@ -76,7 +76,7 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
       
       toast({
         title: "Code Sent",
-        description: `A new verification code has been sent to ${email}. Check your console for the code (in development).`
+        description: `A new verification code has been sent to ${email}. Check your console for the code in development mode.`
       });
     } catch (error) {
       toast({
@@ -98,6 +98,9 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
         <CardTitle className="text-prism-text">Verify Your Email</CardTitle>
         <p className="text-prism-text-muted text-sm">
           We sent a 6-digit verification code to <strong>{email}</strong>
+        </p>
+        <p className="text-prism-text-muted text-xs mt-2">
+          Check your browser console for the verification code (development mode)
         </p>
       </CardHeader>
       <CardContent>

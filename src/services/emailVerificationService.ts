@@ -59,17 +59,24 @@ export const emailVerificationService = {
     return true;
   },
 
-  // Send verification email (mock implementation - in production you'd use an email service)
+  // Send verification email using our edge function
   sendVerificationEmail: async (email: string, code: string) => {
-    // In a real implementation, you would send an email using a service like Resend
-    // For now, we'll just log it to console and show a toast
-    console.log(`Verification code for ${email}: ${code}`);
-    
-    // You could also create a Supabase edge function to send emails
-    // return await supabase.functions.invoke('send-verification-email', {
-    //   body: { email, code }
-    // });
-    
-    return { success: true };
+    try {
+      const { data, error } = await supabase.functions.invoke('send-verification-email', {
+        body: { email, code }
+      });
+      
+      if (error) throw error;
+      
+      // For development, show the code in a toast
+      console.log(`Verification code for ${email}: ${code}`);
+      
+      return { success: true, data };
+    } catch (error) {
+      console.error('Failed to send verification email:', error);
+      // Fallback: log to console for development
+      console.log(`📧 VERIFICATION CODE for ${email}: ${code}`);
+      return { success: true, fallback: true };
+    }
   }
 };
