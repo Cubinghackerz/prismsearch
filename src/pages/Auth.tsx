@@ -166,11 +166,19 @@ const Auth = () => {
       
       navigate('/');
     } catch (error: any) {
-      toast({
-        title: "Verification failed",
-        description: "The verification code is incorrect. Please check your email and try again.",
-        variant: "destructive"
-      });
+      if (error.message?.includes('otp_expired') || error.message?.includes('expired') || error.message?.includes('invalid')) {
+        toast({
+          title: "Verification code expired",
+          description: "Your verification code has expired. Please request a new one and try again.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Verification failed",
+          description: "The verification code is incorrect. Please check your email and try again.",
+          variant: "destructive"
+        });
+      }
     } finally {
       setLoading(false);
     }
