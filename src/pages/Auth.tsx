@@ -41,28 +41,10 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password || !confirmPassword) {
+    if (!email) {
       toast({
         title: "Missing fields",
-        description: "Please fill in all fields",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast({
-        title: "Passwords don't match",
-        description: "Please ensure both passwords are identical",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (password.length < 6) {
-      toast({
-        title: "Password too short",
-        description: "Password must be at least 6 characters long",
+        description: "Please enter your email address",
         variant: "destructive"
       });
       return;
@@ -71,12 +53,12 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      // Send magic link for signup
-      const { error } = await supabase.auth.signUp({
+      // Send magic link for authentication
+      const { error } = await supabase.auth.signInWithOtp({
         email,
-        password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth`,
+          shouldCreateUser: true,
         }
       });
       
@@ -85,12 +67,12 @@ const Auth = () => {
       setMode('check-email');
       toast({
         title: "Check your email",
-        description: `A magic link has been sent to ${email}. Click the link to complete your signup.`
+        description: `A magic link has been sent to ${email}. Click the link to complete your authentication.`
       });
     } catch (error: any) {
       toast({
-        title: "Sign up failed",
-        description: error.message || "An error occurred during sign up",
+        title: "Magic link failed",
+        description: error.message || "An error occurred while sending the magic link",
         variant: "destructive"
       });
     } finally {
@@ -139,12 +121,12 @@ const Auth = () => {
     setLoading(true);
     
     try {
-      // Resend magic link
-      const { error } = await supabase.auth.signUp({
+      // Resend magic link for authentication
+      const { error } = await supabase.auth.signInWithOtp({
         email,
-        password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth`,
+          shouldCreateUser: true,
         }
       });
       
@@ -234,43 +216,10 @@ const Auth = () => {
         </div>
       </div>
       
-      <div className="space-y-2">
-        <Label htmlFor="password" className="text-prism-text">Password</Label>
-        <div className="relative">
-          <Lock className="absolute left-3 top-3 h-4 w-4 text-prism-text-muted" />
-          <Input
-            id="password"
-            type={showPassword ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Create a password"
-            className="pl-10 pr-10 bg-prism-bg/50 border-prism-border text-prism-text"
-            required
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-3 text-prism-text-muted hover:text-prism-text"
-          >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="confirmPassword" className="text-prism-text">Confirm Password</Label>
-        <div className="relative">
-          <Lock className="absolute left-3 top-3 h-4 w-4 text-prism-text-muted" />
-          <Input
-            id="confirmPassword"
-            type={showPassword ? "text" : "password"}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Confirm your password"
-            className="pl-10 bg-prism-bg/50 border-prism-border text-prism-text"
-            required
-          />
-        </div>
+      <div className="bg-prism-primary/10 border border-prism-primary/20 rounded-lg p-3">
+        <p className="text-sm text-prism-text-muted">
+          We'll send you a secure magic link to complete your authentication. No password required!
+        </p>
       </div>
 
       <Button
@@ -278,7 +227,7 @@ const Auth = () => {
         disabled={loading}
         className="w-full bg-prism-primary hover:bg-prism-primary-dark text-white"
       >
-        {loading ? 'Creating account...' : 'Create Account'}
+        {loading ? 'Sending magic link...' : 'Send Magic Link'}
       </Button>
     </form>
   );
@@ -341,7 +290,7 @@ const Auth = () => {
             </div>
             <CardTitle className="text-prism-text">
               {mode === 'signin' ? 'Welcome Back' : 
-               mode === 'signup' ? 'Create Account' : 
+               mode === 'signup' ? 'Get Started' : 
                'Check Your Email'}
             </CardTitle>
           </CardHeader>
@@ -357,8 +306,8 @@ const Auth = () => {
                   className="text-prism-primary hover:text-prism-primary-light text-sm"
                 >
                   {mode === 'signin' 
-                    ? "Don't have an account? Sign up" 
-                    : "Already have an account? Sign in"}
+                    ? "Don't have an account? Get magic link" 
+                    : "Have an account? Sign in with password"}
                 </button>
               </div>
             )}
