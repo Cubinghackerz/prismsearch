@@ -73,14 +73,12 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      // First, send OTP for email verification
+      // Send OTP email with 6-digit code
       const { error } = await supabase.auth.signInWithOtp({
-        email,
+        email: email,
         options: {
-          shouldCreateUser: true,
-          data: {
-            password: password
-          }
+          emailRedirectTo: `${window.location.origin}/auth`,
+          shouldCreateUser: true
         }
       });
       
@@ -89,7 +87,7 @@ const Auth = () => {
       setMode('verify');
       toast({
         title: "Verification email sent",
-        description: "Please check your email for a 6-digit verification code"
+        description: `A 6-digit verification code has been sent to ${email}`
       });
     } catch (error: any) {
       toast({
@@ -154,6 +152,7 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      // Verify the OTP code
       const { error } = await supabase.auth.verifyOtp({
         email,
         token: verificationCode,
@@ -162,7 +161,7 @@ const Auth = () => {
       
       if (error) throw error;
       
-      // After successful OTP verification, create the user account with password
+      // After OTP verification, sign up the user with their password
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -202,13 +201,12 @@ const Auth = () => {
     setLoading(true);
     
     try {
+      // Resend OTP email
       const { error } = await supabase.auth.signInWithOtp({
-        email,
+        email: email,
         options: {
-          shouldCreateUser: true,
-          data: {
-            password: password
-          }
+          emailRedirectTo: `${window.location.origin}/auth`,
+          shouldCreateUser: true
         }
       });
       
@@ -216,7 +214,7 @@ const Auth = () => {
       
       toast({
         title: "Code resent",
-        description: "A new verification code has been sent to your email"
+        description: `A new 6-digit verification code has been sent to ${email}`
       });
     } catch (error: any) {
       toast({
