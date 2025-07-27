@@ -9,8 +9,6 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import EmailVerification from '@/components/EmailVerification';
-import { emailVerificationService } from '@/services/emailVerificationService';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -18,8 +16,6 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showVerification, setShowVerification] = useState(false);
-  const [pendingSignupData, setPendingSignupData] = useState<{email: string, password: string} | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -40,7 +36,7 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {
@@ -55,142 +51,44 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Success",
-        description: "Logged in successfully!"
-      });
-      
-      // Redirect to home page
-      navigate('/');
+      if (isLogin) {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Success",
+          description: "Logged in successfully!"
+        });
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`
+          }
+        });
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Success",
+          description: "Account created! Please check your email for verification."
+        });
+      }
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "An error occurred during login",
+        description: error.message || "An error occurred",
         variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
-
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (password.length < 6) {
-      toast({
-        title: "Error",
-        description: "Password must be at least 6 characters long",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      // Generate and store verification code
-      const code = emailVerificationService.generateCode();
-      await emailVerificationService.storeVerificationCode(email, code);
-      await emailVerificationService.sendVerificationEmail(email, code);
-      
-      // Store signup data for after verification
-      setPendingSignupData({ email, password });
-      setShowVerification(true);
-      
-      toast({
-        title: "Verification Code Sent",
-        description: `A 6-digit verification code has been sent to ${email}. Check your console for the code in development mode.`
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "An error occurred during signup",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerificationComplete = async () => {
-    if (!pendingSignupData) return;
-
-    setLoading(true);
-    
-    try {
-      const { error } = await supabase.auth.signUp({
-        email: pendingSignupData.email,
-        password: pendingSignupData.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`
-        }
-      });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Success",
-        description: "Account created successfully! Redirecting to home page..."
-      });
-      
-      // Reset form and redirect to home
-      setEmail('');
-      setPassword('');
-      setShowVerification(false);
-      setPendingSignupData(null);
-      
-      // Redirect to home page
-      navigate('/');
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "An error occurred creating your account",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleBackToSignup = () => {
-    setShowVerification(false);
-    setPendingSignupData(null);
-  };
-
-  if (showVerification && pendingSignupData) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-prism-bg to-prism-surface flex items-center justify-center px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md"
-        >
-          <EmailVerification
-            email={pendingSignupData.email}
-            onVerificationComplete={handleVerificationComplete}
-            onBack={handleBackToSignup}
-          />
-        </motion.div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-prism-bg to-prism-surface flex items-center justify-center px-6">
@@ -217,7 +115,7 @@ const Auth = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={isLogin ? handleLogin : handleSignup} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-prism-text">Email</Label>
                 <div className="relative">

@@ -44,33 +44,6 @@ export type Database = {
         }
         Relationships: []
       }
-      email_verification_codes: {
-        Row: {
-          code: string
-          created_at: string
-          email: string
-          expires_at: string
-          id: string
-          is_used: boolean
-        }
-        Insert: {
-          code: string
-          created_at?: string
-          email: string
-          expires_at?: string
-          id?: string
-          is_used?: boolean
-        }
-        Update: {
-          code?: string
-          created_at?: string
-          email?: string
-          expires_at?: string
-          id?: string
-          is_used?: boolean
-        }
-        Relationships: []
-      }
       notes: {
         Row: {
           content_encrypted: string
@@ -219,10 +192,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      cleanup_expired_verification_codes: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
       delete_old_chat_messages: {
         Args: Record<PropertyKey, never>
         Returns: undefined

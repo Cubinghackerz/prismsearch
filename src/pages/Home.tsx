@@ -1,36 +1,15 @@
-
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, MessageCircle, Shield, Zap, Brain, Lock, Key, User } from "lucide-react";
+import { Search, MessageCircle, Shield, Zap, Brain, Lock, Key } from "lucide-react";
 import DesktopDownloads from "@/components/DesktopDownloads";
 import PrismAssistant from "@/components/PrismAssistant";
 import AnimatedHeadline from "@/components/AnimatedHeadline";
 import ThemeToggle from "@/components/ThemeToggle";
-import UserProfile from "@/components/UserProfile";
-import { supabase } from "@/integrations/supabase/client";
 
 const Home = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
   const features = [{
     icon: <Search className="w-8 h-8 text-primary" />,
     title: "AI-Powered Search",
@@ -51,7 +30,6 @@ const Home = () => {
     buttonText: "Access Vault",
     isNew: true
   }];
-
   const vaultFeatures = [{
     icon: <Lock className="w-5 h-5 text-accent" />,
     title: "Military-Grade Encryption",
@@ -69,7 +47,6 @@ const Home = () => {
     title: "AI Security Analysis",
     description: "Smart breach detection and password health monitoring"
   }];
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10 relative overflow-hidden">
       <div className="relative z-10">
@@ -97,19 +74,6 @@ const Home = () => {
                 Pricing
               </Button>
               <ThemeToggle />
-              {!loading && (
-                user ? (
-                  <UserProfile user={user} />
-                ) : (
-                  <Button 
-                    onClick={() => navigate("/auth")}
-                    className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground"
-                  >
-                    <User className="w-4 h-4 mr-2" />
-                    Sign In
-                  </Button>
-                )
-              )}
             </div>
           </nav>
         </header>
@@ -123,12 +87,10 @@ const Home = () => {
               and store securely with Prism's comprehensive suite.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              {!user && (
-                <Button size="lg" className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground px-8 py-3 text-lg font-semibold shadow-xl" onClick={() => navigate("/auth")}>
-                  <User className="w-5 h-5 mr-2" />
-                  Get Started
-                </Button>
-              )}
+              <Button size="lg" className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground px-8 py-3 text-lg font-semibold shadow-xl" onClick={() => navigate("/search")}>
+                <Zap className="w-5 h-5 mr-2" />
+                Get Started
+              </Button>
               <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-3 text-lg font-semibold" onClick={() => navigate("/vault")}>
                 <Shield className="w-5 h-5 mr-2" />
                 Try Prism Vault
