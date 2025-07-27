@@ -22,7 +22,7 @@ const PrismVault: React.FC<PrismVaultProps> = ({ passwords = [] }) => {
   const [storedPasswords, setStoredPasswords] = useState<any[]>(passwords);
   const [isMasterPasswordSet, setIsMasterPasswordSet] = useState(false);
   const [isPasswordGeneratorOpen, setIsPasswordGeneratorOpen] = useState(false);
-  const [securityScore, setSecurityScore] = useState(85);
+  const [refreshKey, setRefreshKey] = useState(0);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -50,11 +50,11 @@ const PrismVault: React.FC<PrismVaultProps> = ({ passwords = [] }) => {
         const mockPasswords = [
           {
             id: '1',
-            website: 'example.com',
-            email: 'user@example.com',
-            password: '••••••••',
-            lastUsed: new Date(),
-            strength: 'strong'
+            name: 'Example Account',
+            password_encrypted: 'SecurePassword123!',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            breach_status: 'safe' as const
           }
         ];
         setStoredPasswords(mockPasswords);
@@ -92,6 +92,15 @@ const PrismVault: React.FC<PrismVaultProps> = ({ passwords = [] }) => {
     setIsPasswordGeneratorOpen(false);
   };
 
+  const handlePasswordUpdate = (id: string, updates: any) => {
+    setStoredPasswords(prev => 
+      prev.map(password => 
+        password.id === id ? { ...password, ...updates } : password
+      )
+    );
+    setRefreshKey(prev => prev + 1);
+  };
+
   if (loading) {
     return <VaultLoadingScreen />;
   }
@@ -112,7 +121,10 @@ const PrismVault: React.FC<PrismVaultProps> = ({ passwords = [] }) => {
       <Navigation />
       <VaultHeader />
       <div className="container mx-auto py-8 px-4">
-        <SecurityScoreDashboard score={securityScore} />
+        <SecurityScoreDashboard 
+          passwords={storedPasswords} 
+          refreshKey={refreshKey}
+        />
         {storedPasswords.length > 0 ? (
           <StoredPasswordsList />
         ) : (
