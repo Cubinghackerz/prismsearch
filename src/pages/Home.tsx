@@ -7,7 +7,6 @@ import DesktopDownloads from "@/components/DesktopDownloads";
 import PrismAssistant from "@/components/PrismAssistant";
 import AnimatedHeadline from "@/components/AnimatedHeadline";
 import ThemeToggle from "@/components/ThemeToggle";
-
 const Home = () => {
   const navigate = useNavigate();
   const features = [{
@@ -47,8 +46,7 @@ const Home = () => {
     title: "AI Security Analysis",
     description: "Smart breach detection and password health monitoring"
   }];
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10 relative overflow-hidden">
+  return <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10 relative overflow-hidden">
       <div className="relative z-10">
         {/* Header */}
         <header className="container mx-auto px-6 py-8">
@@ -73,12 +71,7 @@ const Home = () => {
               <Button variant="ghost" onClick={() => navigate("/pricing")}>
                 Pricing
               </Button>
-              <Button 
-                onClick={() => navigate("/auth")}
-                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground font-semibold"
-              >
-                Sign In
-              </Button>
+              
             </div>
           </nav>
         </header>
@@ -125,8 +118,7 @@ const Home = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                  {vaultFeatures.map((feature, index) => (
-                    <div key={index} className="text-center p-4">
+                  {vaultFeatures.map((feature, index) => <div key={index} className="text-center p-4">
                       <div className="flex justify-center mb-3">
                         <div className="w-10 h-10 bg-secondary/50 rounded-lg flex items-center justify-center">
                           {feature.icon}
@@ -134,8 +126,7 @@ const Home = () => {
                       </div>
                       <h4 className="font-semibold text-foreground mb-2">{feature.title}</h4>
                       <p className="text-sm text-muted-foreground">{feature.description}</p>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
                 <div className="text-center">
                   <Button size="lg" onClick={() => navigate("/vault")} className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground px-8 py-3 font-semibold shadow-lg">
@@ -149,13 +140,10 @@ const Home = () => {
 
           {/* Features Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-            {features.map((feature, index) => (
-              <Card key={index} className="group hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer border-border/50 bg-card/30 backdrop-blur-sm relative overflow-hidden" onClick={feature.action}>
-                {feature.isNew && (
-                  <div className="absolute top-4 right-4 px-2 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded-full">
+            {features.map((feature, index) => <Card key={index} className="group hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer border-border/50 bg-card/30 backdrop-blur-sm relative overflow-hidden" onClick={feature.action}>
+                {feature.isNew && <div className="absolute top-4 right-4 px-2 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded-full">
                     Featured
-                  </div>
-                )}
+                  </div>}
                 <CardHeader className="text-center pb-4">
                   <div className="flex justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                     {feature.icon}
@@ -168,15 +156,14 @@ const Home = () => {
                   <CardDescription className="text-muted-foreground mb-6 leading-relaxed">
                     {feature.description}
                   </CardDescription>
-                  <Button className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground font-semibold shadow-lg group-hover:shadow-xl transition-all duration-300" onClick={(e) => {
-                    e.stopPropagation();
-                    feature.action();
-                  }}>
+                  <Button className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground font-semibold shadow-lg group-hover:shadow-xl transition-all duration-300" onClick={e => {
+                e.stopPropagation();
+                feature.action();
+              }}>
                     {feature.buttonText}
                   </Button>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
 
           {/* CTA Section */}
@@ -205,8 +192,6 @@ const Home = () => {
 
       {/* Prism Assistant Widget */}
       <PrismAssistant />
-    </div>
-  );
+    </div>;
 };
-
 export default Home;
