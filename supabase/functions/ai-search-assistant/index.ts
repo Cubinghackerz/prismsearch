@@ -15,6 +15,10 @@ const availableModels = {
   groq: !!GROQ_API_KEY,
   'groq-qwen-qwq': !!GROQ_API_KEY,
   'groq-llama4-scout': !!GROQ_API_KEY,
+  'groq-llama4-maverick': !!GROQ_API_KEY,
+  'groq-llama-guard': !!GROQ_API_KEY,
+  'groq-llama31-8b-instant': !!GROQ_API_KEY,
+  'groq-llama3-8b': !!GROQ_API_KEY,
   'azure-gpt4-nano': !!AZURE_OPENAI_KEY,
   'azure-o4-mini': !!AZURE_OPENAI_KEY
 };
@@ -57,11 +61,23 @@ class DeepResearchAgent {
       case 'groq':
       case 'groq-qwen-qwq':
       case 'groq-llama4-scout':
+      case 'groq-llama4-maverick':
+      case 'groq-llama-guard':
+      case 'groq-llama31-8b-instant':
+      case 'groq-llama3-8b':
         this.apiKey = GROQ_API_KEY || '';
         if (model === 'groq-qwen-qwq') {
           this.modelId = 'qwen2.5-72b-instruct';
         } else if (model === 'groq-llama4-scout') {
           this.modelId = 'llama-3.3-70b-versatile';
+        } else if (model === 'groq-llama4-maverick') {
+          this.modelId = 'meta-llama/llama-4-maverick-17b-128e-instruct';
+        } else if (model === 'groq-llama-guard') {
+          this.modelId = 'meta-llama/llama-guard-4-12b';
+        } else if (model === 'groq-llama31-8b-instant') {
+          this.modelId = 'llama-3.1-8b-instant';
+        } else if (model === 'groq-llama3-8b') {
+          this.modelId = 'llama3-8b-8192';
         } else {
           this.modelId = 'llama-3.1-70b-versatile';
         }
@@ -93,6 +109,10 @@ class DeepResearchAgent {
         case 'groq':
         case 'groq-qwen-qwq':
         case 'groq-llama4-scout':
+        case 'groq-llama4-maverick':
+        case 'groq-llama-guard':
+        case 'groq-llama31-8b-instant':
+        case 'groq-llama3-8b':
           return await this.sendGroqPrompt(promptText);
         case 'azure-gpt4-nano':
         case 'azure-o4-mini':

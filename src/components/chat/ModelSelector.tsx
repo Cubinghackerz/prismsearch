@@ -20,7 +20,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
   return (
     <div className="p-3 border-b border-prism-border bg-prism-primary/5">
       <Alert className="mb-3 py-2 bg-prism-primary/10 border-prism-border text-prism-text-muted text-xs">
-        <p>AI Model: Gemini 2.5</p>
+        <p>AI Models: Multiple models available</p>
       </Alert>
       
       <RadioGroup 
@@ -35,6 +35,41 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
           description="Google's latest AI model" 
           badge={{ text: "Active", color: "green" }} 
           isSelected={selectedModel === 'gemini'}
+        />
+        <ModelOption 
+          value="groq-llama4-maverick" 
+          name="Llama 4 Maverick 17B" 
+          description="Meta's Llama 4 Maverick model" 
+          badge={{ text: "New", color: "orange" }} 
+          isSelected={selectedModel === 'groq-llama4-maverick'}
+        />
+        <ModelOption 
+          value="groq-llama4-scout" 
+          name="Llama 4 Scout 17B" 
+          description="Meta's Llama 4 Scout model" 
+          badge={{ text: "New", color: "orange" }} 
+          isSelected={selectedModel === 'groq-llama4-scout'}
+        />
+        <ModelOption 
+          value="groq-llama-guard" 
+          name="Llama Guard 4 12B" 
+          description="Meta's content moderation model" 
+          badge={{ text: "Guard", color: "yellow" }} 
+          isSelected={selectedModel === 'groq-llama-guard'}
+        />
+        <ModelOption 
+          value="groq-llama31-8b-instant" 
+          name="Llama 3.1 8B Instant" 
+          description="Fast Llama 3.1 model" 
+          badge={{ text: "Fast", color: "green" }} 
+          isSelected={selectedModel === 'groq-llama31-8b-instant'}
+        />
+        <ModelOption 
+          value="groq-llama3-8b" 
+          name="Llama 3 8B" 
+          description="Llama 3 8B model" 
+          badge={{ text: "Classic", color: "yellow" }} 
+          isSelected={selectedModel === 'groq-llama3-8b'}
         />
       </RadioGroup>
 

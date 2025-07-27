@@ -24,6 +24,10 @@ export type ChatModel =
   | 'groq'
   | 'groq-qwen-qwq'
   | 'groq-llama4-scout'
+  | 'groq-llama4-maverick'
+  | 'groq-llama-guard'
+  | 'groq-llama31-8b-instant'
+  | 'groq-llama3-8b'
   | 'azure-gpt4-nano'
   | 'azure-o4-mini';
 
@@ -88,7 +92,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           query: content,
           chatId: chatId,
           chatHistory: messages,
-          model: 'gemini' // Force Gemini model
+          model: selectedModel // Use selected model instead of forcing Gemini
         }
       });
       
@@ -140,8 +144,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const selectModel = (model: ChatModel) => {
-    // Force Gemini model only
-    setSelectedModel('gemini');
+    setSelectedModel(model);
   };
 
   const runDeepResearch = async (topic: string) => {
@@ -176,7 +179,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           query: topic,
           chatId: chatId,
           chatHistory: messages,
-          model: 'gemini', // Force Gemini model
+          model: selectedModel, // Use selected model instead of forcing Gemini
           deepResearch: true
         }
       });
@@ -228,7 +231,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isTyping,
       startNewChat,
       selectModel,
-      selectedModel: 'gemini', // Always return Gemini
+      selectedModel,
       chatId,
       runDeepResearch
     }}>
