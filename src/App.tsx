@@ -40,6 +40,7 @@ const App: React.FC = () => (
               <Route path="/chat" element={<Chat />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/vault" element={<PrismVault />} />
+              <Route path="/auth" element={<Auth />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
