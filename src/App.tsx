@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
@@ -5,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import AuthPromptDialog from "@/components/AuthPromptDialog";
+import useAuthPrompt from "@/hooks/useAuthPrompt";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Chat from "./pages/Chat";
@@ -26,26 +29,35 @@ const queryClient = new QueryClient({
   },
 });
 
+const AppContent: React.FC = () => {
+  const { showPrompt, closePrompt } = useAuthPrompt();
+
+  return (
+    <div className="bg-gradient-to-b from-background to-secondary/10 text-foreground min-h-screen font-inter">
+      <Toaster />
+      <SonnerToaster />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/search" element={<Index />} />
+        <Route path="/chat" element={<Chat />} />
+        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/vault" element={<PrismVault />} />
+        <Route path="/auth" element={<ClerkAuth />} />
+        <Route path="/secure-redirect" element={<SecureRedirect />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <AuthPromptDialog isOpen={showPrompt} onClose={closePrompt} />
+    </div>
+  );
+};
+
 const App: React.FC = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <TooltipProvider>
-        <div className="bg-gradient-to-b from-background to-secondary/10 text-foreground min-h-screen font-inter">
-          <Toaster />
-          <SonnerToaster />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/search" element={<Index />} />
-              <Route path="/chat" element={<Chat />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/vault" element={<PrismVault />} />
-              <Route path="/auth" element={<ClerkAuth />} />
-              <Route path="/secure-redirect" element={<SecureRedirect />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </div>
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
