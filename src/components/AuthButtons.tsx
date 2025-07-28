@@ -36,7 +36,7 @@ const AuthButtons = () => {
             Welcome, {user?.firstName || user?.emailAddresses[0]?.emailAddress}
           </span>
           <UserButton 
-            afterSignOutUrl="/"
+            afterSignOutUrl="/secure-redirect?message=Securely signing you out"
             appearance={{
               elements: {
                 avatarBox: "w-8 h-8"

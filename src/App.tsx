@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
@@ -13,6 +12,7 @@ import Pricing from "./pages/Pricing";
 import Home from "./pages/Home";
 import PrismVault from "./pages/PrismVault";
 import ClerkAuth from "./pages/ClerkAuth";
+import SecureRedirect from "./pages/SecureRedirect";
 
 // Create QueryClient with optimized settings for better performance
 const queryClient = new QueryClient({
@@ -41,6 +41,7 @@ const App: React.FC = () => (
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/vault" element={<PrismVault />} />
               <Route path="/auth" element={<ClerkAuth />} />
+              <Route path="/secure-redirect" element={<SecureRedirect />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
