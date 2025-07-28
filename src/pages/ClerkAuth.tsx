@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSignUp, useSignIn } from '@clerk/clerk-react';
@@ -102,8 +101,8 @@ const ClerkAuth = () => {
     } catch (error: any) {
       console.error('Verification error:', error);
       toast({
-        title: "Verification failed",
-        description: error.errors?.[0]?.message || "Invalid verification code. Please try again.",
+        title: "Error: Verification code is incorrect.",
+        description: "Please check the code and try again.",
         variant: "destructive"
       });
     } finally {
