@@ -7,6 +7,7 @@ import DesktopDownloads from "@/components/DesktopDownloads";
 import PrismAssistant from "@/components/PrismAssistant";
 import AnimatedHeadline from "@/components/AnimatedHeadline";
 import ThemeToggle from "@/components/ThemeToggle";
+import AuthButtons from "@/components/AuthButtons";
 const Home = () => {
   const navigate = useNavigate();
   const features = [{
@@ -71,7 +72,7 @@ const Home = () => {
               <Button variant="ghost" onClick={() => navigate("/pricing")}>
                 Pricing
               </Button>
-              
+              <AuthButtons />
             </div>
           </nav>
         </header>

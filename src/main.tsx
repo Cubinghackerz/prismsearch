@@ -1,9 +1,16 @@
 
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { ClerkProvider } from '@clerk/clerk-react'
 import App from './App.tsx'
 import './index.css'
 import './components/search/searchStyles.css'
+
+const PUBLISHABLE_KEY = "pk_test_bWFnaWNhbC1maXJlZmx5LTExLmNsZXJrLmFjY291bnRzLmRldiQ";
+
+if (!PUBLISHABLE_KEY) {
+  throw new Error("Missing Clerk Publishable Key");
+}
 
 // Add Google Fonts for Montserrat and Inter with optimized weights
 const fontLinks = document.createElement('link');
@@ -53,6 +60,8 @@ if ('serviceWorker' in navigator) {
 const root = ReactDOM.createRoot(document.getElementById('root')!);
 root.render(
   <React.StrictMode>
-    <App />
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+      <App />
+    </ClerkProvider>
   </React.StrictMode>
 );
