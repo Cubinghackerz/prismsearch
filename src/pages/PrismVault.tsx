@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { VaultHeader } from '@/components/vault/VaultHeader';
-import { VaultLoadingScreen } from '@/components/vault/VaultLoadingScreen';
+import VaultLoadingScreen from '@/components/vault/VaultLoadingScreen';
 import { PasswordGenerator } from '@/components/vault/PasswordGenerator';
 import { GeneratedPasswordCard } from '@/components/vault/GeneratedPasswordCard';
 import { AnimatingPasswordCard } from '@/components/vault/AnimatingPasswordCard';
@@ -264,7 +264,7 @@ const PrismVault = () => {
   }, []);
 
   if (isVaultLoading) {
-    return <VaultLoadingScreen vaultText={vaultText} encryptionProgress={encryptionProgress} />;
+    return <VaultLoadingScreen />;
   }
 
   return (
