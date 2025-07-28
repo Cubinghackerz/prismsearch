@@ -12,11 +12,20 @@ const useAuthPrompt = () => {
     // Only show prompt if user is not signed in and auth is loaded
     if (!isLoaded) return;
     
+    // Don't show prompt if user is already signed in
+    if (isSignedIn) {
+      setShowPrompt(false);
+      return;
+    }
+    
     // Don't show on auth page, home page, or secure redirect
     const skipPromptRoutes = ['/', '/auth', '/secure-redirect'];
-    if (skipPromptRoutes.includes(location.pathname)) return;
+    if (skipPromptRoutes.includes(location.pathname)) {
+      setShowPrompt(false);
+      return;
+    }
     
-    // Show prompt if user is not signed in
+    // Show prompt only if user is not signed in
     if (!isSignedIn) {
       // Add a small delay to ensure smooth page transition
       const timer = setTimeout(() => {
