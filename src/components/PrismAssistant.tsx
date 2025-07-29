@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Bot, X, Minimize2, Maximize2, HelpCircle, Search, Shield, User, Sparkles } from 'lucide-react';
+import { X, Minimize2, Maximize2, HelpCircle, Search, Shield, User, Sparkles } from 'lucide-react';
 
 interface FAQ {
   id: string;
@@ -156,9 +156,13 @@ const PrismAssistant = () => {
       <div className="fixed bottom-6 right-6 z-50">
         <Button 
           onClick={() => setIsOpen(true)} 
-          className="w-14 h-14 rounded-full bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary-dark hover:to-prism-accent-dark text-white shadow-2xl hover:shadow-prism-primary/25 transition-all duration-300 group"
+          className="w-14 h-14 rounded-full bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary-dark hover:to-prism-accent-dark text-white shadow-2xl hover:shadow-prism-primary/25 transition-all duration-300 group p-0"
         >
-          <Bot className="w-6 h-6 group-hover:scale-110 transition-transform duration-300" />
+          <img 
+            src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" 
+            alt="Prism Logo" 
+            className="w-6 h-6 group-hover:scale-110 transition-transform duration-300"
+          />
           <div className="absolute -top-2 -right-2 w-4 h-4 bg-prism-accent rounded-full animate-pulse">
             <Sparkles className="w-3 h-3 text-white absolute top-0.5 left-0.5" />
           </div>
@@ -172,7 +176,7 @@ const PrismAssistant = () => {
       <Card className={`w-96 shadow-2xl border-prism-border/50 bg-prism-surface/95 backdrop-blur-md transition-all duration-300 ${isMinimized ? 'h-16' : 'h-[500px]'}`}>
         <CardHeader className="flex flex-row items-center space-y-0 pb-2 px-4 py-3 border-b border-prism-border/30">
           <div className="flex items-center space-x-2 flex-1">
-            <div className="w-8 h-8 bg-gradient-to-r from-prism-primary to-prism-accent rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center">
               <img 
                 src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" 
                 alt="Prism Logo" 
