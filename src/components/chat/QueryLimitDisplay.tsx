@@ -44,7 +44,7 @@ export const QueryLimitDisplay: React.FC = () => {
       
       {!isSignedIn && (
         <div className="text-xs text-prism-text-muted">
-          • Sign up for {maxQueries - 30} more daily queries
+          • Sign up for 70 more daily queries
         </div>
       )}
     </motion.div>
