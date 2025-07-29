@@ -1,15 +1,14 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Bot, X, Minimize2, Maximize2, HelpCircle, Search, Shield, Sparkles } from 'lucide-react';
+import { Bot, X, Minimize2, Maximize2, HelpCircle, Search, Shield, User, Sparkles } from 'lucide-react';
 
 interface FAQ {
   id: string;
   question: string;
   answer: string;
-  category: 'search' | 'vault' | 'general';
+  category: 'search' | 'vault' | 'account' | 'general';
 }
 
 interface Message {
@@ -58,12 +57,36 @@ const PrismAssistant = () => {
     },
     {
       id: '5',
+      question: 'How do I create a Prism account?',
+      answer: 'Click the sign-up button on any page and follow the prompts. You can sign up with email or use social login options. A strong password is required for security.',
+      category: 'account'
+    },
+    {
+      id: '6',
+      question: 'How do I reset my password?',
+      answer: 'On the login page, click "Forgot Password" and enter your email address. You\'ll receive a reset link via email. Follow the instructions to create a new secure password.',
+      category: 'account'
+    },
+    {
+      id: '7',
+      question: 'How do I change my account settings?',
+      answer: 'Once logged in, access your account settings through the user menu. You can update your profile, change passwords, manage subscriptions, and adjust privacy settings.',
+      category: 'account'
+    },
+    {
+      id: '8',
+      question: 'What are the daily query limits?',
+      answer: 'Free accounts have 30 daily queries, while registered users get 100 queries per day. Queries reset daily at midnight. Premium plans offer unlimited queries.',
+      category: 'account'
+    },
+    {
+      id: '9',
       question: 'Can I sync my data across devices?',
       answer: 'Yes! Your bookmarks, passwords, and preferences sync securely across all your devices when you\'re signed in to your Prism account.',
       category: 'general'
     },
     {
-      id: '6',
+      id: '10',
       question: 'Is Prism free to use?',
       answer: 'Prism offers both free and premium plans. The free plan includes basic search and limited vault storage. Premium plans offer unlimited storage, advanced features, and priority support.',
       category: 'general'
@@ -73,6 +96,7 @@ const PrismAssistant = () => {
   const categories = [
     { id: 'search', name: 'Search Features', icon: Search, color: 'text-prism-primary' },
     { id: 'vault', name: 'Prism Vault', icon: Shield, color: 'text-prism-accent' },
+    { id: 'account', name: 'Account & Settings', icon: User, color: 'text-blue-500' },
     { id: 'general', name: 'General', icon: HelpCircle, color: 'text-prism-text' }
   ];
 
@@ -149,7 +173,11 @@ const PrismAssistant = () => {
         <CardHeader className="flex flex-row items-center space-y-0 pb-2 px-4 py-3 border-b border-prism-border/30">
           <div className="flex items-center space-x-2 flex-1">
             <div className="w-8 h-8 bg-gradient-to-r from-prism-primary to-prism-accent rounded-full flex items-center justify-center">
-              <Bot className="w-4 h-4 text-white" />
+              <img 
+                src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" 
+                alt="Prism Logo" 
+                className="w-5 h-5"
+              />
             </div>
             <CardTitle className="text-sm font-semibold text-prism-text">Prism Assistant</CardTitle>
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />

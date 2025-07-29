@@ -7,7 +7,7 @@ import { useDailyQueryLimit } from '@/hooks/useDailyQueryLimit';
 
 export const QueryLimitDisplay: React.FC = () => {
   const { isSignedIn } = useUser();
-  const { queriesLeft, maxQueries, isLimitReached, isLoaded } = useDailyQueryLimit();
+  const { queriesLeft, maxQueries, isLimitReached, isLoaded, updateTrigger } = useDailyQueryLimit();
 
   if (!isLoaded) return null;
 
@@ -25,7 +25,7 @@ export const QueryLimitDisplay: React.FC = () => {
 
   return (
     <motion.div
-      key={queriesLeft} // This will trigger re-animation when count changes
+      key={`${queriesLeft}-${updateTrigger}`} // Use both values to trigger re-animation
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       className="flex items-center justify-center space-x-2 py-2 px-4 bg-prism-bg/50 border-b border-prism-border/30"

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useUser } from '@clerk/clerk-react';
 
 interface DailyQueryData {
@@ -10,6 +10,7 @@ export const useDailyQueryLimit = () => {
   const { isSignedIn, isLoaded } = useUser();
   const [queriesUsed, setQueriesUsed] = useState(0);
   const [isLimitReached, setIsLimitReached] = useState(false);
+  const [updateTrigger, setUpdateTrigger] = useState(0);
 
   // Get limits based on user status
   const maxQueries = isSignedIn ? 100 : 30;
@@ -20,7 +21,7 @@ export const useDailyQueryLimit = () => {
     return `prism_queries_${today.toDateString()}`;
   };
 
-  const loadTodaysQueries = () => {
+  const loadTodaysQueries = useCallback(() => {
     if (!isLoaded) return;
 
     const todayKey = getTodayKey();
@@ -39,9 +40,9 @@ export const useDailyQueryLimit = () => {
       setQueriesUsed(0);
       setIsLimitReached(false);
     }
-  };
+  }, [isLoaded, maxQueries]);
 
-  const incrementQueryCount = () => {
+  const incrementQueryCount = useCallback(() => {
     if (!isLoaded) return false;
 
     const todayKey = getTodayKey();
@@ -60,13 +61,14 @@ export const useDailyQueryLimit = () => {
     localStorage.setItem(todayKey, JSON.stringify(data));
     setQueriesUsed(newCount);
     setIsLimitReached(newCount >= maxQueries);
+    setUpdateTrigger(prev => prev + 1); // Force re-render
 
     return true;
-  };
+  }, [isLoaded, queriesUsed, maxQueries]);
 
   useEffect(() => {
     loadTodaysQueries();
-  }, [isLoaded, isSignedIn]);
+  }, [loadTodaysQueries]);
 
   // Clean up old query data (keep only last 7 days)
   useEffect(() => {
@@ -94,6 +96,7 @@ export const useDailyQueryLimit = () => {
     maxQueries,
     isLimitReached,
     incrementQueryCount,
-    isLoaded
+    isLoaded,
+    updateTrigger // Include this to force re-renders
   };
 };

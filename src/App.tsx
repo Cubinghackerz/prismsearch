@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
@@ -8,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import AuthPromptDialog from "@/components/AuthPromptDialog";
 import useAuthPrompt from "@/hooks/useAuthPrompt";
+import PrismAssistant from "@/components/PrismAssistant";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Chat from "./pages/Chat";
@@ -23,8 +23,8 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
-      staleTime: 60000, // Increased stale time to reduce refetches
-      gcTime: 300000, // 5 minutes cache time
+      staleTime: 60000,
+      gcTime: 300000,
     },
   },
 });
@@ -47,6 +47,7 @@ const AppContent: React.FC = () => {
         <Route path="*" element={<NotFound />} />
       </Routes>
       <AuthPromptDialog isOpen={showPrompt} onClose={closePrompt} />
+      <PrismAssistant />
     </div>
   );
 };
