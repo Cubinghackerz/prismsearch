@@ -83,9 +83,15 @@ class BiometricAuthServiceClass {
       }
 
       const response = credential.response as AuthenticatorAttestationResponse;
+      const publicKey = response.getPublicKey();
+      
+      if (!publicKey) {
+        return { success: false, error: 'Failed to retrieve public key from credential' };
+      }
+
       const credentialData: BiometricCredential = {
         id: credential.id,
-        publicKey: this.arrayBufferToBase64(response.publicKey!),
+        publicKey: this.arrayBufferToBase64(publicKey),
         counter: response.getPublicKeyAlgorithm?.() || 0,
         createdAt: new Date().toISOString(),
       };
