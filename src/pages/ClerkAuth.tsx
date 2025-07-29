@@ -1,15 +1,16 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useSignUp, useSignIn } from '@clerk/clerk-react';
+import { useSignUp, useSignIn, useUser } from '@clerk/clerk-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, ArrowLeft, Shield, CheckCircle } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, Shield, CheckCircle, Fingerprint } from 'lucide-react';
 import { PasswordStrengthMeter } from '@/components/PasswordStrengthMeter';
+import BiometricAuthService from '@/services/biometricAuthService';
+import { BiometricAuthDialog } from '@/components/auth/BiometricAuthDialog';
 
 type AuthMode = 'signin' | 'signup' | 'verify-email';
 
@@ -20,10 +21,12 @@ const ClerkAuth = () => {
   const [verificationCode, setVerificationCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showBiometricDialog, setShowBiometricDialog] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { signUp, setActive } = useSignUp();
   const { signIn } = useSignIn();
+  const { user } = useUser();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -171,6 +174,44 @@ const ClerkAuth = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleBiometricAuth = async () => {
+    if (!user) return;
+    
+    const result = await BiometricAuthService.authenticateBiometric(user.id);
+    
+    if (result.success) {
+      toast({
+        title: "Biometric authentication successful",
+        description: "Welcome back!"
+      });
+      navigate('/');
+    } else {
+      toast({
+        title: "Biometric authentication failed",
+        description: result.error || "Authentication failed",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const renderBiometricOption = () => {
+    if (!BiometricAuthService.isAvailable()) return null;
+
+    return (
+      <div className="mt-4 pt-4 border-t border-border">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setShowBiometricDialog(true)}
+          className="w-full flex items-center gap-2"
+        >
+          <Fingerprint className="h-4 w-4" />
+          Use Biometric Authentication
+        </Button>
+      </div>
+    );
   };
 
   const renderSignInForm = () => (
@@ -368,6 +409,8 @@ const ClerkAuth = () => {
             {mode === 'signup' && renderSignUpForm()}
             {mode === 'verify-email' && renderVerifyEmailForm()}
 
+            {(mode === 'signin' || mode === 'signup') && renderBiometricOption()}
+
             {mode !== 'verify-email' && (
               <div className="mt-6 text-center">
                 <button
@@ -383,6 +426,23 @@ const ClerkAuth = () => {
           </CardContent>
         </Card>
       </motion.div>
+
+      {user && (
+        <BiometricAuthDialog
+          isOpen={showBiometricDialog}
+          onClose={() => setShowBiometricDialog(false)}
+          onAuthenticated={() => {
+            toast({
+              title: "Biometric authentication successful",
+              description: "Welcome back!"
+            });
+            navigate('/');
+          }}
+          mode={BiometricAuthService.hasBiometricCredential(user.id) ? 'authenticate' : 'setup'}
+          userId={user.id}
+          displayName={user.firstName || user.emailAddresses[0]?.emailAddress || 'User'}
+        />
+      )}
     </div>
   );
 };
