@@ -156,7 +156,7 @@ const PrismAssistant = () => {
       <div className="fixed bottom-6 right-6 z-50">
         <Button 
           onClick={() => setIsOpen(true)} 
-          className="w-14 h-14 rounded-full bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary-dark hover:to-prism-accent-dark text-white shadow-2xl hover:shadow-prism-primary/25 transition-all duration-300 group p-0"
+          className="w-14 h-14 rounded-full bg-prism-surface hover:bg-prism-surface/80 text-white shadow-2xl hover:shadow-prism-primary/25 transition-all duration-300 group p-0"
         >
           <img 
             src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" 
