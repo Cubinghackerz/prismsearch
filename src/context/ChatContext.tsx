@@ -7,6 +7,8 @@ import React, {
 } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
+import { useDailyQueryLimit } from '@/hooks/useDailyQueryLimit';
+import { useToast } from '@/hooks/use-toast';
 
 export interface ChatMessage {
   id: string;
@@ -59,8 +61,30 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [selectedModel, setSelectedModel] = useState<ChatModel>('gemini');
   const [chatId, setChatId] = useState<string | null>(null);
+  const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
+  const { toast } = useToast();
 
   const sendMessage = async (content: string, parentMessageId?: string) => {
+    // Check query limit before processing
+    if (isLimitReached) {
+      toast({
+        title: "Daily limit reached",
+        description: "You've reached your daily query limit. Please try again tomorrow or sign up for more queries.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Increment query count
+    if (!incrementQueryCount()) {
+      toast({
+        title: "Daily limit reached",
+        description: "You've reached your daily query limit. Please try again tomorrow.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!chatId) {
       console.warn('No chatId available. Starting a new chat.');
       await startNewChat();
@@ -149,6 +173,26 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const runDeepResearch = async (topic: string) => {
     if (isLoading) return;
+    
+    // Check query limit before processing
+    if (isLimitReached) {
+      toast({
+        title: "Daily limit reached",
+        description: "You've reached your daily query limit. Please try again tomorrow or sign up for more queries.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Increment query count
+    if (!incrementQueryCount()) {
+      toast({
+        title: "Daily limit reached",
+        description: "You've reached your daily query limit. Please try again tomorrow.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     if (!chatId) {
       startNewChat();

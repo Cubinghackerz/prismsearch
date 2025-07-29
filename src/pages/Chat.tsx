@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { BookmarkPlus, Maximize, Minimize } from 'lucide-react';
@@ -8,6 +9,7 @@ import BookmarksDrawer from '../components/BookmarksDrawer';
 import ScrollToTop from '../components/ScrollToTop';
 import { ChatProvider } from '../context/ChatContext';
 import Navigation from '../components/Navigation';
+import { QueryLimitDisplay } from '../components/chat/QueryLimitDisplay';
 
 const Chat = () => {
   const [isBookmarksOpen, setIsBookmarksOpen] = useState(false);
@@ -83,6 +85,7 @@ const Chat = () => {
 
           <main className={`${isFullscreen ? 'h-full flex flex-col flex-1' : 'max-w-[98vw] pt-3 pb-6 flex-1'}`}>
             <ChatProvider>
+              <QueryLimitDisplay />
               <ChatInterface />
             </ChatProvider>
           </main>

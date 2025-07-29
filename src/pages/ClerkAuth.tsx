@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSignUp, useSignIn } from '@clerk/clerk-react';
@@ -8,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, Shield, CheckCircle } from 'lucide-react';
+import { PasswordStrengthMeter } from '@/components/PasswordStrengthMeter';
 
 type AuthMode = 'signin' | 'signup' | 'verify-email';
 
@@ -262,6 +264,13 @@ const ClerkAuth = () => {
           </button>
         </div>
       </div>
+
+      {/* Password Strength Meter */}
+      {password && (
+        <div className="mt-4">
+          <PasswordStrengthMeter password={password} />
+        </div>
+      )}
 
       <Button
         type="submit"
