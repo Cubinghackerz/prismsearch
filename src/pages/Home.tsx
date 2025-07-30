@@ -67,14 +67,14 @@ const Home = () => {
     title: "AI Security Analysis",
     description: "Smart breach detection and password health monitoring"
   }];
-  return <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10 relative overflow-hidden">
+  return <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10 relative overflow-hidden font-fira-code">
       <div className="relative z-10">
         {/* Header */}
         <header className="container mx-auto px-6 py-8">
           <nav className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <img src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" alt="Prism Logo" className="w-8 h-8" />
-              <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-inter">
+              <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-fira-code">
                 Prism
               </span>
             </div>
@@ -101,16 +101,16 @@ const Home = () => {
         <main className="container mx-auto px-6 py-16">
           <div className="text-center mb-16">
             <AnimatedHeadline />
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed font-fira-code">
               Experience the next evolution of AI-powered tools. Search smarter, chat intelligently, 
               and store securely with Prism's comprehensive suite.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground px-8 py-3 text-lg font-semibold shadow-xl" onClick={handleGetStarted}>
+              <Button size="lg" className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground px-8 py-3 text-lg font-semibold shadow-xl font-fira-code" onClick={handleGetStarted}>
                 <Zap className="w-5 h-5 mr-2" />
                 Get Started
               </Button>
-              <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-3 text-lg font-semibold" onClick={() => navigate("/vault")}>
+              <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-3 text-lg font-semibold font-fira-code" onClick={() => navigate("/vault")}>
                 <Shield className="w-5 h-5 mr-2" />
                 Try Prism Vault
               </Button>
@@ -128,12 +128,12 @@ const Home = () => {
                   <div className="w-12 h-12 bg-gradient-to-r from-primary to-accent rounded-xl flex items-center justify-center">
                     <Shield className="w-6 h-6 text-primary-foreground" />
                   </div>
-                  <span className="ml-3 px-3 py-1 bg-primary text-primary-foreground text-sm font-semibold rounded-full">New</span>
+                  <span className="ml-3 px-3 py-1 bg-primary text-primary-foreground text-sm font-semibold rounded-full font-fira-code">New</span>
                 </div>
-                <CardTitle className="text-3xl font-bold text-foreground mb-2">
+                <CardTitle className="text-3xl font-bold text-foreground mb-2 font-fira-code">
                   Prism Vault - Secure Password Manager
                 </CardTitle>
-                <CardDescription className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                <CardDescription className="text-lg text-muted-foreground max-w-2xl mx-auto font-fira-code">
                   The ultimate password management experience with military-grade encryption and AI-powered security
                 </CardDescription>
               </CardHeader>
@@ -145,12 +145,12 @@ const Home = () => {
                           {feature.icon}
                         </div>
                       </div>
-                      <h4 className="font-semibold text-foreground mb-2">{feature.title}</h4>
-                      <p className="text-sm text-muted-foreground">{feature.description}</p>
+                      <h4 className="font-semibold text-foreground mb-2 font-fira-code">{feature.title}</h4>
+                      <p className="text-sm text-muted-foreground font-fira-code">{feature.description}</p>
                     </div>)}
                 </div>
                 <div className="text-center">
-                  <Button size="lg" onClick={() => navigate("/vault")} className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground px-8 py-3 font-semibold shadow-lg">
+                  <Button size="lg" onClick={() => navigate("/vault")} className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground px-8 py-3 font-semibold shadow-lg font-fira-code">
                     <Shield className="w-5 h-5 mr-2" />
                     Explore Prism Vault
                   </Button>
@@ -162,22 +162,22 @@ const Home = () => {
           {/* Features Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
             {features.map((feature, index) => <Card key={index} className="group hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer border-border/50 bg-card/30 backdrop-blur-sm relative overflow-hidden" onClick={feature.action}>
-                {feature.isNew && <div className="absolute top-4 right-4 px-2 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded-full">
+                {feature.isNew && <div className="absolute top-4 right-4 px-2 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded-full font-fira-code">
                     Featured
                   </div>}
                 <CardHeader className="text-center pb-4">
                   <div className="flex justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                     {feature.icon}
                   </div>
-                  <CardTitle className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
+                  <CardTitle className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors font-fira-code">
                     {feature.title}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-center">
-                  <CardDescription className="text-muted-foreground mb-6 leading-relaxed">
+                  <CardDescription className="text-muted-foreground mb-6 leading-relaxed font-fira-code">
                     {feature.description}
                   </CardDescription>
-                  <Button className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground font-semibold shadow-lg group-hover:shadow-xl transition-all duration-300" onClick={e => {
+                  <Button className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground font-semibold shadow-lg group-hover:shadow-xl transition-all duration-300 font-fira-code" onClick={e => {
                 e.stopPropagation();
                 feature.action();
               }}>
@@ -190,13 +190,13 @@ const Home = () => {
           {/* CTA Section */}
           <div className="text-center bg-gradient-to-r from-secondary/50 to-secondary/30 rounded-2xl p-12 backdrop-blur-sm border border-border/30">
             <Brain className="w-16 h-16 text-primary mx-auto mb-6" />
-            <h2 className="text-3xl font-bold text-foreground mb-4">
+            <h2 className="text-3xl font-bold text-foreground mb-4 font-fira-code">
               Ready to Transform Your Digital Experience?
             </h2>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto font-fira-code">
               Join thousands of users who have already discovered the power of intelligent digital tools.
             </p>
-            <Button size="lg" className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground px-12 py-4 text-lg font-semibold shadow-2xl hover:shadow-primary/25 transition-all duration-300" onClick={handleStartJourney}>
+            <Button size="lg" className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground px-12 py-4 text-lg font-semibold shadow-2xl hover:shadow-primary/25 transition-all duration-300 font-fira-code" onClick={handleStartJourney}>
               <Zap className="w-5 h-5 mr-2" />
               Start Your Journey
             </Button>
@@ -206,7 +206,7 @@ const Home = () => {
         {/* Footer */}
         <footer className="container mx-auto px-6 py-8 mt-16 border-t border-border/30">
           <div className="text-center text-muted-foreground">
-            <p className="font-inter">&copy; 2025 Prism. Empowering intelligence, securing privacy.</p>
+            <p className="font-fira-code">&copy; 2025 Prism. Empowering intelligence, securing privacy.</p>
           </div>
         </footer>
       </div>

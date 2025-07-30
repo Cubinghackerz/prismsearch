@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 
 interface FooterProps {
@@ -10,7 +11,7 @@ const Footer = ({
 }: FooterProps) => {
   return (
     <div className="mt-auto py-6 text-center border-t border-prism-border backdrop-blur-md bg-gradient-to-b from-prism-bg/10 to-prism-surface/30">
-      <p className="text-prism-text-muted opacity-90 text-base font-inter">
+      <p className="text-prism-text-muted opacity-90 text-base font-fira-code">
         &copy; 2025 Prism. Empowering intelligence, securing privacy.
       </p>
     </div>
@@ -18,3 +19,4 @@ const Footer = ({
 };
 
 export default Footer;
+

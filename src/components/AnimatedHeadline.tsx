@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 
 const AnimatedHeadline = () => {
@@ -16,7 +17,7 @@ const AnimatedHeadline = () => {
             align-items: center;
             line-height: 1.2;
             margin-bottom: 0.5rem;
-            font-family: Inter, sans-serif;
+            font-family: 'Fira Code', monospace;
           }
 
           .static-text {
@@ -27,7 +28,7 @@ const AnimatedHeadline = () => {
             background-size: 200% 200%;
             animation: gradientShift 4s ease infinite;
             text-align: center;
-            font-family: Inter, sans-serif;
+            font-family: 'Fira Code', monospace;
           }
 
           @media (min-width: 768px) {
@@ -48,3 +49,4 @@ const AnimatedHeadline = () => {
 };
 
 export default AnimatedHeadline;
+
