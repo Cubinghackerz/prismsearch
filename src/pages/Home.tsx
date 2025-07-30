@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Search, MessageCircle, Lock, ArrowRight, Shield, FileType, AlertTriangle } from 'lucide-react';
 import AnimatedHeadline from '@/components/AnimatedHeadline';
 import Footer from '@/components/Footer';
+import AuthButtons from '@/components/AuthButtons';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -95,6 +96,7 @@ const Home = () => {
             <Button variant="ghost" onClick={() => navigate('/pricing')} className="font-fira-code">
               Pricing
             </Button>
+            <AuthButtons />
           </div>
         </nav>
       </header>
