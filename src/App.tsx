@@ -14,6 +14,8 @@ import Chat from "./pages/Chat";
 import Pricing from "./pages/Pricing";
 import Home from "./pages/Home";
 import PrismVault from "./pages/PrismVault";
+import PrismConversions from "./pages/PrismConversions";
+import PrismDetector from "./pages/PrismDetector";
 import ClerkAuth from "./pages/ClerkAuth";
 import SecureRedirect from "./pages/SecureRedirect";
 
@@ -42,6 +44,8 @@ const AppContent: React.FC = () => {
         <Route path="/chat" element={<Chat />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/vault" element={<PrismVault />} />
+        <Route path="/conversions" element={<PrismConversions />} />
+        <Route path="/detector" element={<PrismDetector />} />
         <Route path="/auth" element={<ClerkAuth />} />
         <Route path="/secure-redirect" element={<SecureRedirect />} />
         <Route path="*" element={<NotFound />} />

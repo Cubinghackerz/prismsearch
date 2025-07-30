@@ -43,6 +43,22 @@ const Navigation = () => {
             Vault
           </Button>
           <Button 
+            variant={isActive("/conversions") ? "default" : "ghost"} 
+            onClick={() => navigate("/conversions")}
+            className="relative"
+          >
+            Conversions
+            <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30">Beta</span>
+          </Button>
+          <Button 
+            variant={isActive("/detector") ? "default" : "ghost"} 
+            onClick={() => navigate("/detector")}
+            className="relative"
+          >
+            Detector
+            <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30">Beta</span>
+          </Button>
+          <Button 
             variant={isActive("/pricing") ? "default" : "ghost"} 
             onClick={() => navigate("/pricing")}
           >
