@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useUser } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, MessageCircle, Shield, Zap, Brain, Lock, Key } from "lucide-react";
@@ -11,6 +12,24 @@ import AuthButtons from "@/components/AuthButtons";
 
 const Home = () => {
   const navigate = useNavigate();
+  const { isSignedIn } = useUser();
+  
+  const handleGetStarted = () => {
+    if (isSignedIn) {
+      navigate("/search");
+    } else {
+      navigate("/auth");
+    }
+  };
+
+  const handleStartJourney = () => {
+    if (isSignedIn) {
+      navigate("/search");
+    } else {
+      navigate("/auth");
+    }
+  };
+
   const features = [{
     icon: <Search className="w-8 h-8 text-primary" />,
     title: "AI-Powered Search",
@@ -87,7 +106,7 @@ const Home = () => {
               and store securely with Prism's comprehensive suite.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground px-8 py-3 text-lg font-semibold shadow-xl" onClick={() => navigate("/auth")}>
+              <Button size="lg" className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground px-8 py-3 text-lg font-semibold shadow-xl" onClick={handleGetStarted}>
                 <Zap className="w-5 h-5 mr-2" />
                 Get Started
               </Button>
@@ -177,7 +196,7 @@ const Home = () => {
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
               Join thousands of users who have already discovered the power of intelligent digital tools.
             </p>
-            <Button size="lg" className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground px-12 py-4 text-lg font-semibold shadow-2xl hover:shadow-primary/25 transition-all duration-300" onClick={() => navigate("/auth")}>
+            <Button size="lg" className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground px-12 py-4 text-lg font-semibold shadow-2xl hover:shadow-primary/25 transition-all duration-300" onClick={handleStartJourney}>
               <Zap className="w-5 h-5 mr-2" />
               Start Your Journey
             </Button>
