@@ -12,10 +12,10 @@ if (!PUBLISHABLE_KEY) {
   throw new Error("Missing Clerk Publishable Key");
 }
 
-// Add Google Fonts for Montserrat and Inter with optimized weights
+// Add Google Fonts for Montserrat, Inter, and Fira Code with optimized weights
 const fontLinks = document.createElement('link');
 fontLinks.rel = 'stylesheet';
-fontLinks.href = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap';
+fontLinks.href = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Fira+Code:wght@300;400;500;600;700&display=swap';
 document.head.appendChild(fontLinks);
 
 // Add meta tag for improved font rendering

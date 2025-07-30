@@ -67,7 +67,7 @@ const Home = () => {
     title: "AI Security Analysis",
     description: "Smart breach detection and password health monitoring"
   }];
-  return <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10 relative overflow-hidden">
+  return <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10 relative overflow-hidden font-fira-code">
       <div className="relative z-10">
         {/* Header */}
         <header className="container mx-auto px-6 py-8">

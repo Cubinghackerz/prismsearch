@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -106,6 +105,7 @@ export default {
 				'montserrat': ['Montserrat', 'sans-serif'],
 				'inter': ['Inter', 'sans-serif'],
 				'helvetica': ['Helvetica', 'Arial', 'sans-serif'],
+				'fira-code': ['Fira Code', 'monospace'],
 			},
 			keyframes: {
 				"accordion-down": {
