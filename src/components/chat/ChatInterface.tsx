@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useChat, ChatModel } from '@/context/ChatContext';
 import { useToast } from '@/hooks/use-toast';
@@ -7,6 +8,7 @@ import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import RecentChats from './RecentChats';
 import '../search/searchStyles.css';
+
 const ChatInterface = () => {
   const {
     messages,
@@ -18,100 +20,118 @@ const ChatInterface = () => {
     selectedModel,
     chatId
   } = useChat();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
   const handleSubmit = async (content: string, parentMessageId: string | null = null) => {
     if (!content.trim() || isLoading) return;
     await sendMessage(content, parentMessageId || undefined);
   };
+
   const handleModelChange = (value: string) => {
     selectModel(value as ChatModel);
   };
+
   const handleReplyClick = (messageId: string) => {
     setReplyingTo(messageId);
   };
+
   const toggleMobileSidebar = () => {
     setMobileSidebarOpen(prev => !prev);
   };
-  return <div className="flex flex-col h-[calc(100vh-12rem)] bg-prism-surface/20 backdrop-blur-md rounded-xl border border-prism-border shadow-lg">
+
+  return (
+    <div className="flex flex-col h-[calc(100vh-12rem)] bg-prism-surface/20 backdrop-blur-md rounded-xl border border-prism-border shadow-lg font-fira-code">
       <div className="flex flex-1 overflow-hidden">
         {/* Left sidebar with recent chats - desktop */}
         <AnimatePresence>
-          <motion.div className="w-64 p-2 border-r border-prism-border bg-prism-primary/5 hidden md:block overflow-y-auto" initial={{
-          opacity: 0,
-          x: -20
-        }} animate={{
-          opacity: 1,
-          x: 0
-        }} transition={{
-          duration: 0.3
-        }}>
+          <motion.div 
+            className="w-64 p-2 border-r border-prism-border bg-prism-primary/5 hidden md:block overflow-y-auto font-fira-code" 
+            initial={{ opacity: 0, x: -20 }} 
+            animate={{ opacity: 1, x: 0 }} 
+            transition={{ duration: 0.3 }}
+          >
             <RecentChats />
             
             <div className="mt-3">
-              <ModelSelector selectedModel={selectedModel} onModelChange={handleModelChange} onNewChat={startNewChat} />
+              <ModelSelector 
+                selectedModel={selectedModel} 
+                onModelChange={handleModelChange} 
+                onNewChat={startNewChat} 
+              />
             </div>
           </motion.div>
         </AnimatePresence>
         
         {/* Main chat area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden font-fira-code">
           {/* Mobile-only sidebar toggle and model selector */}
-          <div className="md:hidden border-b border-prism-border bg-prism-primary/5">
-            <ModelSelector selectedModel={selectedModel} onModelChange={handleModelChange} onNewChat={startNewChat} />
+          <div className="md:hidden border-b border-prism-border bg-prism-primary/5 font-fira-code">
+            <ModelSelector 
+              selectedModel={selectedModel} 
+              onModelChange={handleModelChange} 
+              onNewChat={startNewChat} 
+            />
             <div className="px-3 pb-2">
-              <button className="w-full px-3 py-2 flex items-center justify-center text-sm rounded-lg bg-prism-primary/20 text-prism-text-muted hover:bg-prism-primary/30 transition-colors" onClick={toggleMobileSidebar}>
+              <button 
+                className="w-full px-3 py-2 flex items-center justify-center text-sm rounded-lg bg-prism-primary/20 text-prism-text-muted hover:bg-prism-primary/30 transition-colors font-fira-code" 
+                onClick={toggleMobileSidebar}
+              >
                 Recent Chats {mobileSidebarOpen ? '▲' : '▼'}
               </button>
             </div>
             <AnimatePresence>
-              {mobileSidebarOpen && <motion.div initial={{
-              height: 0,
-              opacity: 0
-            }} animate={{
-              height: 'auto',
-              opacity: 1
-            }} exit={{
-              height: 0,
-              opacity: 0
-            }} className="px-2 overflow-hidden" transition={{
-              duration: 0.3
-            }}>
+              {mobileSidebarOpen && (
+                <motion.div 
+                  initial={{ height: 0, opacity: 0 }} 
+                  animate={{ height: 'auto', opacity: 1 }} 
+                  exit={{ height: 0, opacity: 0 }} 
+                  className="px-2 overflow-hidden font-fira-code" 
+                  transition={{ duration: 0.3 }}
+                >
                   <RecentChats />
-                </motion.div>}
+                </motion.div>
+              )}
             </AnimatePresence>
           </div>
 
-          {chatId ? <>
+          {chatId ? (
+            <>
               <MessageList messages={messages} typingIndicator={isTyping} onReply={handleReplyClick} />
-
-              <MessageInput onSendMessage={handleSubmit} isLoading={isLoading} messages={messages} replyingTo={replyingTo} setReplyingTo={setReplyingTo} />
-            </> : <motion.div className="flex-1 flex items-center justify-center p-5" initial={{
-          opacity: 0,
-          y: 20
-        }} animate={{
-          opacity: 1,
-          y: 0
-        }} transition={{
-          duration: 0.5
-        }}>
-              <div className="text-center max-w-md mx-auto p-6 rounded-lg bg-orange-950/20 border border-orange-500/20 shadow-lg">
-                <h3 className="text-xl font-semibold text-orange-100 mb-3">Welcome to Prism Chat</h3>
-                <p className="text-orange-200 mb-4">Choose your AI model from the sidebar and start a new conversation to begin.</p>
-                <motion.button onClick={startNewChat} className="px-4 py-2 bg-orange-600/60 hover:bg-orange-600/80 text-white rounded-md transition-colors" whileHover={{
-              scale: 1.03
-            }} whileTap={{
-              scale: 0.98
-            }}>
+              <MessageInput 
+                onSendMessage={handleSubmit} 
+                isLoading={isLoading} 
+                messages={messages} 
+                replyingTo={replyingTo} 
+                setReplyingTo={setReplyingTo} 
+              />
+            </>
+          ) : (
+            <motion.div 
+              className="flex-1 flex items-center justify-center p-5" 
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              transition={{ duration: 0.5 }}
+            >
+              <div className="text-center max-w-md mx-auto p-6 rounded-lg bg-orange-950/20 border border-orange-500/20 shadow-lg font-fira-code">
+                <h3 className="text-xl font-semibold text-orange-100 mb-3 font-fira-code">Welcome to Prism Chat</h3>
+                <p className="text-orange-200 mb-4 font-fira-code">Choose your AI model from the sidebar and start a new conversation to begin.</p>
+                <motion.button 
+                  onClick={startNewChat} 
+                  className="px-4 py-2 bg-orange-600/60 hover:bg-orange-600/80 text-white rounded-md transition-colors font-fira-code" 
+                  whileHover={{ scale: 1.03 }} 
+                  whileTap={{ scale: 0.98 }}
+                >
                   Start New Chat
                 </motion.button>
               </div>
-            </motion.div>}
+            </motion.div>
+          )}
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default ChatInterface;

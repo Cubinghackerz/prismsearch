@@ -24,7 +24,7 @@ const Chat = () => {
   });
 
   return (
-    <div className={`${isFullscreen ? 'fixed inset-0 z-50' : 'min-h-screen'} bg-gradient-to-b from-prism-bg to-prism-surface relative overflow-hidden flex flex-col`}>
+    <div className={`${isFullscreen ? 'fixed inset-0 z-50' : 'min-h-screen'} bg-gradient-to-b from-prism-bg to-prism-surface relative overflow-hidden flex flex-col font-fira-code`}>
       <ScrollToTop />
       
       <div className="relative z-10 h-full flex flex-col flex-1">
@@ -39,7 +39,7 @@ const Chat = () => {
                 className="h-8 w-8"
               />
               <motion.h1 
-                className="text-2xl font-bold bg-clip-text text-transparent 
+                className="text-2xl font-bold font-fira-code bg-clip-text text-transparent 
                   bg-gradient-to-r from-prism-primary-light via-prism-primary to-prism-accent 
                   animate-gradient-text"
                 animate={{
@@ -59,13 +59,13 @@ const Chat = () => {
               <Button 
                 variant="ghost" 
                 onClick={() => setIsBookmarksOpen(true)}
-                className="text-prism-text bg-prism-primary/20 hover:bg-prism-primary/30 relative"
+                className="text-prism-text bg-prism-primary/20 hover:bg-prism-primary/30 relative font-fira-code"
                 size="sm"
               >
                 <BookmarkPlus className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">Bookmarks</span>
+                <span className="hidden sm:inline font-fira-code">Bookmarks</span>
                 {bookmarksCount > 0 && (
-                  <span className="absolute -top-2 -right-2 w-5 h-5 bg-prism-primary rounded-full text-xs flex items-center justify-center text-white">
+                  <span className="absolute -top-2 -right-2 w-5 h-5 bg-prism-primary rounded-full text-xs flex items-center justify-center text-white font-fira-code">
                     {bookmarksCount}
                   </span>
                 )}
@@ -74,11 +74,11 @@ const Chat = () => {
               <Button 
                 variant="ghost" 
                 onClick={() => setIsFullscreen(!isFullscreen)}
-                className="text-prism-text bg-prism-primary/20 hover:bg-prism-primary/30"
+                className="text-prism-text bg-prism-primary/20 hover:bg-prism-primary/30 font-fira-code"
                 size="sm"
               >
                 {isFullscreen ? <Minimize className="mr-2 h-4 w-4" /> : <Maximize className="mr-2 h-4 w-4" />}
-                <span className="hidden sm:inline">{isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>
+                <span className="hidden sm:inline font-fira-code">{isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>
               </Button>
             </div>
           </div>
