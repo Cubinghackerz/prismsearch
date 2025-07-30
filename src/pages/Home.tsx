@@ -83,7 +83,7 @@ const Home = () => {
               className="relative font-fira-code"
             >
               Conversions
-              <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30">Beta</span>
+              <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
             </Button>
             <Button 
               variant="ghost" 
@@ -91,7 +91,7 @@ const Home = () => {
               className="relative font-fira-code"
             >
               Detector
-              <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30">Beta</span>
+              <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
             </Button>
             <Button variant="ghost" onClick={() => navigate('/pricing')} className="font-fira-code">
               Pricing
@@ -148,7 +148,7 @@ const Home = () => {
                   <div className="flex items-center space-x-2">
                     <CardTitle className="font-fira-code">{feature.title}</CardTitle>
                     {feature.beta && (
-                      <span className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs font-semibold rounded-full border border-orange-500/30">
+                      <span className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs font-semibold rounded-full border border-orange-500/30 font-fira-code">
                         Beta
                       </span>
                     )}

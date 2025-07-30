@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
@@ -101,59 +102,59 @@ const PrismConversions = () => {
         <div className="text-center mb-12">
           <div className="flex items-center justify-center space-x-3 mb-4">
             <FileType className="h-12 w-12 text-primary" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-fira-code">
               Prism Conversions
             </h1>
-            <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-sm font-semibold rounded-full border border-orange-500/30">
+            <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-sm font-semibold rounded-full border border-orange-500/30 font-fira-code">
               Beta
             </span>
           </div>
-          <p className="text-xl text-muted-foreground mb-4 max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground mb-4 max-w-2xl mx-auto font-fira-code">
             Convert between different file formats while maintaining quality
           </p>
           <div className="flex items-center justify-center space-x-2 text-yellow-500">
             <AlertTriangle className="h-5 w-5" />
-            <p className="text-sm">This tool is in beta and may not work as expected</p>
+            <p className="text-sm font-fira-code">This tool is in beta and may not work as expected</p>
           </div>
         </div>
 
         <div className="max-w-2xl mx-auto">
           <Card className="bg-card/30 backdrop-blur-sm border-border/50">
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="flex items-center space-x-2 font-fira-code">
                 <Upload className="h-5 w-5" />
                 <span>File Conversion</span>
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="font-fira-code">
                 Upload your file and select the target format for conversion
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <label className="block text-sm font-medium mb-2">Select File</label>
+                <label className="block text-sm font-medium mb-2 font-fira-code">Select File</label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleFileSelect}
-                  className="w-full p-3 border border-border rounded-md bg-background/50 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                  className="w-full p-3 border border-border rounded-md bg-background/50 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 font-fira-code"
                 />
                 {selectedFile && (
-                  <p className="mt-2 text-sm text-muted-foreground">
+                  <p className="mt-2 text-sm text-muted-foreground font-fira-code">
                     Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
                   </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Target Format</label>
+                <label className="block text-sm font-medium mb-2 font-fira-code">Target Format</label>
                 <select
                   value={targetFormat}
                   onChange={(e) => setTargetFormat(e.target.value)}
-                  className="w-full p-3 border border-border rounded-md bg-background/50"
+                  className="w-full p-3 border border-border rounded-md bg-background/50 font-fira-code"
                 >
-                  <option value="">Select format...</option>
+                  <option value="" className="font-fira-code">Select format...</option>
                   {supportedFormats.map((format) => (
-                    <option key={format.value} value={format.value}>
+                    <option key={format.value} value={format.value} className="font-fira-code">
                       {format.label}
                     </option>
                   ))}
@@ -163,7 +164,7 @@ const PrismConversions = () => {
               <Button 
                 onClick={handleConvert} 
                 disabled={!selectedFile || !targetFormat || isConverting}
-                className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 font-fira-code"
               >
                 {isConverting ? (
                   <>
@@ -183,13 +184,13 @@ const PrismConversions = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Download className="h-5 w-5 text-green-400" />
-                      <span className="text-green-400 font-medium">Conversion Complete</span>
+                      <span className="text-green-400 font-medium font-fira-code">Conversion Complete</span>
                     </div>
                     <Button 
                       onClick={handleDownload}
                       variant="outline" 
                       size="sm" 
-                      className="border-green-500/30 text-green-400 hover:bg-green-500/10"
+                      className="border-green-500/30 text-green-400 hover:bg-green-500/10 font-fira-code"
                     >
                       Download {convertedFileName}
                     </Button>

@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 
 interface FooterProps {
@@ -19,4 +18,3 @@ const Footer = ({
 };
 
 export default Footer;
-

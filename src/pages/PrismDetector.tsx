@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
@@ -162,43 +163,43 @@ const PrismDetector = () => {
         <div className="text-center mb-12">
           <div className="flex items-center justify-center space-x-3 mb-4">
             <Shield className="h-12 w-12 text-primary" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-fira-code">
               Prism Detector
             </h1>
-            <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-sm font-semibold rounded-full border border-orange-500/30">
+            <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-sm font-semibold rounded-full border border-orange-500/30 font-fira-code">
               Beta
             </span>
           </div>
-          <p className="text-xl text-muted-foreground mb-4 max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground mb-4 max-w-2xl mx-auto font-fira-code">
             Detect suspicious content and potential threats in uploaded files
           </p>
           <div className="flex items-center justify-center space-x-2 text-yellow-500">
             <AlertTriangle className="h-5 w-5" />
-            <p className="text-sm">This tool is in beta and may not work as expected</p>
+            <p className="text-sm font-fira-code">This tool is in beta and may not work as expected</p>
           </div>
         </div>
 
         <div className="max-w-2xl mx-auto space-y-6">
           <Card className="bg-card/30 backdrop-blur-sm border-border/50">
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle className="flex items-center space-x-2 font-fira-code">
                 <Eye className="h-5 w-5" />
                 <span>File Security Scan</span>
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="font-fira-code">
                 Upload a file to scan for potential threats and suspicious content
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <label className="block text-sm font-medium mb-2">Select File to Scan</label>
+                <label className="block text-sm font-medium mb-2 font-fira-code">Select File to Scan</label>
                 <input
                   type="file"
                   onChange={handleFileSelect}
-                  className="w-full p-3 border border-border rounded-md bg-background/50 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                  className="w-full p-3 border border-border rounded-md bg-background/50 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 font-fira-code"
                 />
                 {selectedFile && (
-                  <p className="mt-2 text-sm text-muted-foreground">
+                  <p className="mt-2 text-sm text-muted-foreground font-fira-code">
                     Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
                   </p>
                 )}
@@ -207,7 +208,7 @@ const PrismDetector = () => {
               <Button 
                 onClick={handleScan} 
                 disabled={!selectedFile || isScanning}
-                className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 font-fira-code"
               >
                 {isScanning ? (
                   <>
@@ -227,18 +228,18 @@ const PrismDetector = () => {
           {scanResult && (
             <Card className={`backdrop-blur-sm ${getStatusColor(scanResult.status)}`}>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
+                <CardTitle className="flex items-center space-x-2 font-fira-code">
                   {getStatusIcon(scanResult.status)}
                   <span>{getStatusTitle(scanResult.status)}</span>
-                  <span className="text-sm font-normal">({scanResult.confidence}% confidence)</span>
+                  <span className="text-sm font-normal font-fira-code">({scanResult.confidence}% confidence)</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <h4 className="font-semibold">Scan Details:</h4>
+                  <h4 className="font-semibold font-fira-code">Scan Details:</h4>
                   <ul className="space-y-1">
                     {scanResult.details.map((detail, index) => (
-                      <li key={index} className="flex items-center space-x-2 text-sm">
+                      <li key={index} className="flex items-center space-x-2 text-sm font-fira-code">
                         <div className="w-2 h-2 bg-current rounded-full opacity-50" />
                         <span>{detail}</span>
                       </li>
