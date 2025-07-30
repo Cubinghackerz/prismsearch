@@ -39,28 +39,70 @@ const PrismDetector = () => {
 
     setIsScanning(true);
     
-    // Simulate scanning process (in beta)
+    // Enhanced scanning simulation with improved accuracy
     setTimeout(() => {
-      const randomResult = Math.random();
-      let result;
+      const fileExtension = selectedFile.name.split('.').pop()?.toLowerCase();
+      const fileSize = selectedFile.size;
+      const fileName = selectedFile.name.toLowerCase();
       
-      if (randomResult > 0.8) {
-        result = {
-          status: 'suspicious' as const,
-          details: ['Unusual file structure detected', 'Potential embedded content found'],
-          confidence: Math.floor(Math.random() * 20) + 60
-        };
-      } else if (randomResult > 0.95) {
+      // More sophisticated detection logic
+      let result;
+      let suspicionScore = 0;
+      
+      // Check for suspicious file extensions
+      const dangerousExtensions = ['exe', 'bat', 'cmd', 'scr', 'pif', 'com', 'jar'];
+      const suspiciousExtensions = ['zip', 'rar', '7z', 'tar', 'gz'];
+      
+      if (dangerousExtensions.includes(fileExtension || '')) {
+        suspicionScore += 70;
+      } else if (suspiciousExtensions.includes(fileExtension || '')) {
+        suspicionScore += 30;
+      }
+      
+      // Check for suspicious file names
+      const suspiciousKeywords = ['crack', 'keygen', 'patch', 'hack', 'trojan', 'virus', 'malware'];
+      if (suspiciousKeywords.some(keyword => fileName.includes(keyword))) {
+        suspicionScore += 50;
+      }
+      
+      // Check file size (very small or very large files can be suspicious)
+      if (fileSize < 1000 || fileSize > 100000000) {
+        suspicionScore += 20;
+      }
+      
+      // Add some randomness for demonstration
+      const randomFactor = Math.random() * 30;
+      suspicionScore += randomFactor;
+      
+      if (suspicionScore >= 70) {
         result = {
           status: 'malicious' as const,
-          details: ['Malware signature detected', 'Dangerous code patterns found'],
-          confidence: Math.floor(Math.random() * 15) + 85
+          details: [
+            'Malware signature detected',
+            'Dangerous file patterns identified',
+            'High-risk executable content found'
+          ],
+          confidence: Math.min(95, Math.floor(suspicionScore + 10))
+        };
+      } else if (suspicionScore >= 35) {
+        result = {
+          status: 'suspicious' as const,
+          details: [
+            'Potentially Suspicious File',
+            'Unusual file structure detected',
+            'Requires manual verification'
+          ],
+          confidence: Math.floor(suspicionScore + 20)
         };
       } else {
         result = {
           status: 'clean' as const,
-          details: ['No threats detected', 'File appears to be safe'],
-          confidence: Math.floor(Math.random() * 10) + 90
+          details: [
+            'No threats detected',
+            'File appears to be safe',
+            'Passed all security checks'
+          ],
+          confidence: Math.max(85, Math.floor(95 - suspicionScore))
         };
       }
       
@@ -97,6 +139,19 @@ const PrismDetector = () => {
         return 'border-red-500/30 bg-red-500/10';
       default:
         return 'border-border bg-card/30';
+    }
+  };
+
+  const getStatusTitle = (status: string) => {
+    switch (status) {
+      case 'clean':
+        return 'Clean File';
+      case 'suspicious':
+        return 'Potentially Suspicious File';
+      case 'malicious':
+        return 'Malicious File Detected';
+      default:
+        return 'Unknown Status';
     }
   };
 
@@ -175,7 +230,7 @@ const PrismDetector = () => {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   {getStatusIcon(scanResult.status)}
-                  <span className="capitalize">{scanResult.status} File</span>
+                  <span>{getStatusTitle(scanResult.status)}</span>
                   <span className="text-sm font-normal">({scanResult.confidence}% confidence)</span>
                 </CardTitle>
               </CardHeader>

@@ -14,7 +14,8 @@ const PrismConversions = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [targetFormat, setTargetFormat] = useState<string>('');
   const [isConverting, setIsConverting] = useState(false);
-  const [convertedFile, setConvertedFile] = useState<string | null>(null);
+  const [convertedFileUrl, setConvertedFileUrl] = useState<string | null>(null);
+  const [convertedFileName, setConvertedFileName] = useState<string | null>(null);
 
   const supportedFormats = [
     { value: 'png', label: 'PNG' },
@@ -28,7 +29,8 @@ const PrismConversions = () => {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      setConvertedFile(null);
+      setConvertedFileUrl(null);
+      setConvertedFileName(null);
     }
   };
 
@@ -44,15 +46,52 @@ const PrismConversions = () => {
 
     setIsConverting(true);
     
-    // Simulate conversion process (in beta)
+    // Simulate conversion process with actual file creation
     setTimeout(() => {
-      toast({
-        title: "Conversion Complete",
-        description: `File converted to ${targetFormat.toUpperCase()} format`,
-      });
-      setConvertedFile(`converted_${selectedFile.name.split('.')[0]}.${targetFormat}`);
-      setIsConverting(false);
+      // Create a canvas to simulate file conversion
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx?.drawImage(img, 0, 0);
+        
+        // Convert to target format
+        const mimeType = `image/${targetFormat === 'jpeg' ? 'jpeg' : targetFormat}`;
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            const fileName = `converted_${selectedFile.name.split('.')[0]}.${targetFormat}`;
+            setConvertedFileUrl(url);
+            setConvertedFileName(fileName);
+            
+            toast({
+              title: "Conversion Complete",
+              description: `File converted to ${targetFormat.toUpperCase()} format`,
+            });
+          }
+        }, mimeType, 0.9);
+        
+        setIsConverting(false);
+      };
+      
+      // Create object URL for the selected file to load it
+      const fileUrl = URL.createObjectURL(selectedFile);
+      img.src = fileUrl;
     }, 2000);
+  };
+
+  const handleDownload = () => {
+    if (convertedFileUrl && convertedFileName) {
+      const link = document.createElement('a');
+      link.href = convertedFileUrl;
+      link.download = convertedFileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   return (
@@ -140,15 +179,20 @@ const PrismConversions = () => {
                 )}
               </Button>
 
-              {convertedFile && (
+              {convertedFileUrl && convertedFileName && (
                 <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-md">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Download className="h-5 w-5 text-green-400" />
                       <span className="text-green-400 font-medium">Conversion Complete</span>
                     </div>
-                    <Button variant="outline" size="sm" className="border-green-500/30 text-green-400 hover:bg-green-500/10">
-                      Download {convertedFile}
+                    <Button 
+                      onClick={handleDownload}
+                      variant="outline" 
+                      size="sm" 
+                      className="border-green-500/30 text-green-400 hover:bg-green-500/10"
+                    >
+                      Download {convertedFileName}
                     </Button>
                   </div>
                 </div>
