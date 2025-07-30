@@ -1,43 +1,50 @@
+
 import React from 'react';
+
 const AnimatedHeadline = () => {
-  return <div className="animated-headline-wrapper">
+  return (
+    <div className="animated-headline-wrapper">
       <span className="static-text">The Future of Digital Intelligence</span>
       
       <style dangerouslySetInnerHTML={{
-      __html: `
-        .animated-headline-wrapper {
-          font-size: 2.5rem;
-          font-weight: 700;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          line-height: 1.2;
-          margin-bottom: 0.5rem;
-        }
-
-        .static-text {
-          background: linear-gradient(to right, #8B5CF6, #A855F7, #8B5CF6);
-          background-clip: text;
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-size: 200% 200%;
-          animation: gradientShift 4s ease infinite;
-          text-align: center;
-        }
-
-        @media (min-width: 768px) {
+        __html: `
           .animated-headline-wrapper {
-            font-size: 4.5rem;
-            margin-bottom: 0.75rem;
+            font-size: 2.5rem;
+            font-weight: 700;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+            font-family: Inter, sans-serif;
           }
-        }
 
-        @keyframes gradientShift {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-        }
+          .static-text {
+            background: linear-gradient(to right, #8B5CF6, #A855F7, #8B5CF6);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% 200%;
+            animation: gradientShift 4s ease infinite;
+            text-align: center;
+            font-family: Inter, sans-serif;
+          }
+
+          @media (min-width: 768px) {
+            .animated-headline-wrapper {
+              font-size: 4.5rem;
+              margin-bottom: 0.75rem;
+            }
+          }
+
+          @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+          }
         `
-    }} />
-    </div>;
+      }} />
+    </div>
+  );
 };
+
 export default AnimatedHeadline;

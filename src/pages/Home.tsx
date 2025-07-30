@@ -67,14 +67,14 @@ const Home = () => {
     title: "AI Security Analysis",
     description: "Smart breach detection and password health monitoring"
   }];
-  return <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10 relative overflow-hidden font-fira-code">
+  return <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10 relative overflow-hidden">
       <div className="relative z-10">
         {/* Header */}
         <header className="container mx-auto px-6 py-8">
           <nav className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <img src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" alt="Prism Logo" className="w-8 h-8" />
-              <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-inter">
                 Prism
               </span>
             </div>
@@ -206,7 +206,7 @@ const Home = () => {
         {/* Footer */}
         <footer className="container mx-auto px-6 py-8 mt-16 border-t border-border/30">
           <div className="text-center text-muted-foreground">
-            <p>&copy; 2025 Prism. Empowering intelligence, securing privacy.</p>
+            <p className="font-inter">&copy; 2025 Prism. Empowering intelligence, securing privacy.</p>
           </div>
         </footer>
       </div>
