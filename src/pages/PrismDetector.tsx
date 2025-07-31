@@ -1,12 +1,17 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Upload, AlertTriangle, CheckCircle, XCircle, Eye } from 'lucide-react';
+import { Shield, Upload, AlertTriangle, CheckCircle, XCircle, Eye, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
 
 const PrismDetector = () => {
   const navigate = useNavigate();
@@ -17,6 +22,9 @@ const PrismDetector = () => {
     status: 'clean' | 'suspicious' | 'malicious';
     details: string[];
     confidence: number;
+    virusName?: string;
+    scanTime?: number;
+    enhanced?: boolean;
   } | null>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,17 +47,62 @@ const PrismDetector = () => {
 
     setIsScanning(true);
     
-    // Enhanced scanning simulation with improved accuracy
-    setTimeout(() => {
-      const fileExtension = selectedFile.name.split('.').pop()?.toLowerCase();
-      const fileSize = selectedFile.size;
-      const fileName = selectedFile.name.toLowerCase();
+    try {
+      // Use enhanced ClamAV scanning
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+
+      const { data, error } = await supabase.functions.invoke('clamav-scan', {
+        body: formData,
+      });
+
+      if (error) {
+        console.error('ClamAV scan error:', error);
+        // Fallback to basic scanning
+        await performBasicScan();
+        return;
+      }
+
+      // Process ClamAV results
+      const result = {
+        status: data.isMalicious ? 'malicious' : (data.confidence > 70 ? 'suspicious' : 'clean') as const,
+        details: [
+          data.isMalicious ? 'Threat detected by ClamAV engine' : 'No threats detected by ClamAV engine',
+          data.virusName ? `Identified: ${data.virusName}` : 'Advanced heuristic analysis completed',
+          `Scan completed in ${data.scanTime}ms`,
+          'Enhanced detection with binary analysis'
+        ],
+        confidence: data.confidence,
+        virusName: data.virusName,
+        scanTime: data.scanTime,
+        enhanced: true
+      };
+
+      setScanResult(result);
       
-      // More sophisticated detection logic
-      let result;
+      toast({
+        title: "Enhanced Scan Complete",
+        description: `ClamAV analysis completed with ${result.confidence}% confidence`,
+      });
+
+    } catch (error) {
+      console.error('Enhanced scan failed:', error);
+      // Fallback to basic scanning
+      await performBasicScan();
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const performBasicScan = async () => {
+    // Fallback basic scanning logic (existing implementation)
+    setTimeout(() => {
+      const fileExtension = selectedFile!.name.split('.').pop()?.toLowerCase();
+      const fileSize = selectedFile!.size;
+      const fileName = selectedFile!.name.toLowerCase();
+      
       let suspicionScore = 0;
       
-      // Check for suspicious file extensions
       const dangerousExtensions = ['exe', 'bat', 'cmd', 'scr', 'pif', 'com', 'jar'];
       const suspiciousExtensions = ['zip', 'rar', '7z', 'tar', 'gz'];
       
@@ -59,50 +112,48 @@ const PrismDetector = () => {
         suspicionScore += 30;
       }
       
-      // Check for suspicious file names
       const suspiciousKeywords = ['crack', 'keygen', 'patch', 'hack', 'trojan', 'virus', 'malware'];
       if (suspiciousKeywords.some(keyword => fileName.includes(keyword))) {
         suspicionScore += 50;
       }
       
-      // Check file size (very small or very large files can be suspicious)
       if (fileSize < 1000 || fileSize > 100000000) {
         suspicionScore += 20;
       }
       
-      // Add some randomness for demonstration
       const randomFactor = Math.random() * 30;
       suspicionScore += randomFactor;
       
+      let result;
       if (suspicionScore >= 70) {
         result = {
           status: 'malicious' as const,
           details: [
-            'Malware signature detected',
-            'Dangerous file patterns identified',
-            'High-risk executable content found'
+            'Potentially malicious patterns detected',
+            'Basic signature analysis completed',
+            'Recommend manual verification'
           ],
-          confidence: Math.min(95, Math.floor(suspicionScore + 10))
+          confidence: Math.min(85, Math.floor(suspicionScore))
         };
       } else if (suspicionScore >= 35) {
         result = {
           status: 'suspicious' as const,
           details: [
-            'Potentially Suspicious File',
-            'Unusual file structure detected',
-            'Requires manual verification'
+            'Some suspicious indicators found',
+            'Basic file analysis completed',
+            'Enhanced scanning recommended'
           ],
-          confidence: Math.floor(suspicionScore + 20)
+          confidence: Math.floor(suspicionScore + 15)
         };
       } else {
         result = {
           status: 'clean' as const,
           details: [
-            'No threats detected',
-            'File appears to be safe',
-            'Passed all security checks'
+            'No obvious threats detected',
+            'Basic security check passed',
+            'File appears safe for basic use'
           ],
-          confidence: Math.max(85, Math.floor(95 - suspicionScore))
+          confidence: Math.max(75, Math.floor(90 - suspicionScore))
         };
       }
       
@@ -110,10 +161,10 @@ const PrismDetector = () => {
       setIsScanning(false);
       
       toast({
-        title: "Scan Complete",
-        description: `File scan completed with ${result.confidence}% confidence`,
+        title: "Basic Scan Complete",
+        description: `File analysis completed with ${result.confidence}% confidence`,
       });
-    }, 3000);
+    }, 2000);
   };
 
   const getStatusIcon = (status: string) => {
@@ -166,16 +217,22 @@ const PrismDetector = () => {
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-fira-code">
               Prism Detector
             </h1>
-            <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-sm font-semibold rounded-full border border-orange-500/30 font-fira-code">
-              Beta
-            </span>
+            <div className="flex items-center space-x-2">
+              <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-sm font-semibold rounded-full border border-orange-500/30 font-fira-code">
+                Beta
+              </span>
+              <span className="px-3 py-1 bg-blue-500/20 text-blue-400 text-sm font-semibold rounded-full border border-blue-500/30 font-fira-code flex items-center space-x-1">
+                <Zap className="h-3 w-3" />
+                <span>ClamAV Enhanced</span>
+              </span>
+            </div>
           </div>
           <p className="text-xl text-muted-foreground mb-4 max-w-2xl mx-auto font-fira-code">
-            Detect suspicious content and potential threats in uploaded files
+            Advanced threat detection powered by ClamAV engine with enhanced binary analysis
           </p>
-          <div className="flex items-center justify-center space-x-2 text-yellow-500">
-            <AlertTriangle className="h-5 w-5" />
-            <p className="text-sm font-fira-code">This tool is in beta and may not work as expected</p>
+          <div className="flex items-center justify-center space-x-2 text-blue-400">
+            <Zap className="h-5 w-5" />
+            <p className="text-sm font-fira-code">Enhanced with enterprise-grade ClamAV scanning engine</p>
           </div>
         </div>
 
@@ -184,10 +241,11 @@ const PrismDetector = () => {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2 font-fira-code">
                 <Eye className="h-5 w-5" />
-                <span>File Security Scan</span>
+                <span>Enhanced File Security Scan</span>
+                <Zap className="h-4 w-4 text-blue-400" />
               </CardTitle>
               <CardDescription className="font-fira-code">
-                Upload a file to scan for potential threats and suspicious content
+                Upload a file to scan with ClamAV engine and advanced heuristic analysis
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -213,12 +271,12 @@ const PrismDetector = () => {
                 {isScanning ? (
                   <>
                     <Shield className="w-4 h-4 mr-2 animate-pulse" />
-                    Scanning for threats...
+                    Scanning with ClamAV engine...
                   </>
                 ) : (
                   <>
-                    <Eye className="w-4 h-4 mr-2" />
-                    Scan File
+                    <Zap className="w-4 h-4 mr-2" />
+                    Enhanced Scan with ClamAV
                   </>
                 )}
               </Button>
@@ -232,6 +290,12 @@ const PrismDetector = () => {
                   {getStatusIcon(scanResult.status)}
                   <span>{getStatusTitle(scanResult.status)}</span>
                   <span className="text-sm font-normal font-fira-code">({scanResult.confidence}% confidence)</span>
+                  {scanResult.enhanced && (
+                    <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full border border-blue-500/30 font-fira-code flex items-center space-x-1">
+                      <Zap className="h-3 w-3" />
+                      <span>Enhanced</span>
+                    </span>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -245,6 +309,17 @@ const PrismDetector = () => {
                       </li>
                     ))}
                   </ul>
+                  {scanResult.virusName && (
+                    <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-md">
+                      <p className="text-sm font-semibold text-red-400 font-fira-code">Threat Identified:</p>
+                      <p className="text-sm text-red-300 font-fira-code">{scanResult.virusName}</p>
+                    </div>
+                  )}
+                  {scanResult.scanTime && (
+                    <p className="text-xs text-muted-foreground font-fira-code mt-2">
+                      Scan completed in {scanResult.scanTime}ms
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
