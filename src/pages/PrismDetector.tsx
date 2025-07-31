@@ -214,9 +214,7 @@ const PrismDetector = () => {
                 <Eye className="h-5 w-5" />
                 <span>Advanced File Security Scan</span>
               </CardTitle>
-              <CardDescription className="font-fira-code">
-                Upload a file to scan with ClamAV engine and advanced heuristic analysis
-              </CardDescription>
+              <CardDescription className="font-fira-code">Upload a file to scan using binary analysis and Ultra-Fast advanced detection</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
