@@ -37,3 +37,6 @@ verify_jwt = false
 
 [edge_functions."setup-storage-bucket"]
 verify_jwt = false
+
+[edge_functions."clamav-scan"]
+verify_jwt = false
