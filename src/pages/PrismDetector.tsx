@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
@@ -6,12 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, Upload, AlertTriangle, CheckCircle, XCircle, Eye, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+import { supabase } from '@/integrations/supabase/client';
 
 const PrismDetector = () => {
   const navigate = useNavigate();
@@ -63,16 +59,20 @@ const PrismDetector = () => {
         return;
       }
 
-      // Process ClamAV results
+      // Process ClamAV results with proper typing
+      const status: 'clean' | 'suspicious' | 'malicious' = data.isMalicious 
+        ? 'malicious' 
+        : (data.confidence > 70 ? 'suspicious' : 'clean');
+
       const result = {
-        status: data.isMalicious ? 'malicious' : (data.confidence > 70 ? 'suspicious' : 'clean') as const,
+        status,
         details: [
           data.isMalicious ? 'Threat detected by ClamAV engine' : 'No threats detected by ClamAV engine',
           data.virusName ? `Identified: ${data.virusName}` : 'Advanced heuristic analysis completed',
           `Scan completed in ${data.scanTime}ms`,
           'Enhanced detection with binary analysis'
         ],
-        confidence: data.confidence,
+        confidence: data.confidence || 75,
         virusName: data.virusName,
         scanTime: data.scanTime,
         enhanced: true
