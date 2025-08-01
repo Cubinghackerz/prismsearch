@@ -6,15 +6,16 @@ import { useToast } from '@/hooks/use-toast';
 interface VaultHeaderProps {
   onClearHistory?: () => void;
 }
-
-export const VaultHeader: React.FC<VaultHeaderProps> = ({ onClearHistory }) => {
-  const { toast } = useToast();
-
+export const VaultHeader: React.FC<VaultHeaderProps> = ({
+  onClearHistory
+}) => {
+  const {
+    toast
+  } = useToast();
   const handleClearHistory = () => {
     if (!confirm('Are you sure you want to clear all vault history? This will remove all stored passwords and generated passwords. This action cannot be undone.')) {
       return;
     }
-    
     onClearHistory?.();
     toast({
       title: "Vault history cleared",
@@ -25,25 +26,8 @@ export const VaultHeader: React.FC<VaultHeaderProps> = ({ onClearHistory }) => {
       {/* Navigation */}
       <div className="max-w-6xl mx-auto mb-8">
         <div className="flex items-center justify-between mb-4">
-          <Link to="/" className="flex items-center text-cyan-400 hover:text-cyan-300 transition-colors group">
-            <ArrowLeft className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform" />
-            <span>Back to Home</span>
-          </Link>
-          <div className="flex items-center space-x-4">
-            <Button
-              onClick={handleClearHistory}
-              variant="outline"
-              size="sm"
-              className="border-red-600 text-red-400 hover:bg-red-950/50 hover:text-red-300"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Clear History
-            </Button>
-            <Link to="/" className="flex items-center text-slate-400 hover:text-slate-300 transition-colors">
-              <Home className="h-5 w-5 mr-2" />
-              <span>Home</span>
-            </Link>
-          </div>
+          
+          
         </div>
       </div>
 
