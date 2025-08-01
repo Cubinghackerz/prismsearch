@@ -45,9 +45,27 @@ const ClerkAuth = () => {
       footerActionLink: "text-prism-primary hover:text-prism-primary-light text-sm transition-colors duration-300 font-inter",
       footerActionText: "text-prism-text-muted text-sm font-inter",
       
-      // Identity preview and other elements
+      // Identity preview and other elements - Fixed for better readability
       identityPreviewText: "text-prism-text font-inter",
       identityPreviewEditButtonIcon: "text-prism-primary",
+      
+      // User button and profile elements - Enhanced visibility
+      userButtonAvatarBox: "w-8 h-8 border border-prism-border",
+      userButtonPopoverCard: "bg-prism-surface border border-prism-border shadow-xl backdrop-blur-md",
+      userButtonPopoverMain: "bg-prism-surface",
+      userButtonPopoverFooter: "bg-prism-surface border-t border-prism-border",
+      userButtonPopoverActionButton: "text-prism-text hover:bg-prism-hover hover:text-prism-primary transition-colors duration-200 rounded-lg font-inter",
+      userButtonPopoverActionButtonText: "text-prism-text font-inter",
+      userButtonPopoverActionButtonIcon: "text-prism-primary",
+      
+      // Profile page elements - Enhanced for better readability
+      profileSectionPrimaryButton: "bg-prism-primary hover:bg-prism-primary-dark text-white font-inter",
+      profileSectionTitle: "text-prism-text font-inter text-lg font-semibold",
+      profileSectionContent: "text-prism-text font-inter",
+      
+      // Account management elements
+      accordionTriggerButton: "text-prism-text hover:bg-prism-hover hover:text-prism-primary transition-colors duration-200 font-inter",
+      accordionContent: "text-prism-text bg-prism-surface font-inter",
       
       // Verification and resend links
       formResendCodeLink: "text-prism-primary hover:text-prism-primary-light text-sm transition-colors duration-300 font-inter",
@@ -76,9 +94,25 @@ const ClerkAuth = () => {
       
       // Terms and conditions
       formFieldInfoText: "text-prism-text-muted text-xs font-inter",
+      
+      // Additional profile page elements for better visibility
+      userPreviewMainIdentifier: "text-prism-text font-inter font-semibold",
+      userPreviewSecondaryIdentifier: "text-prism-text-muted font-inter",
+      menuButton: "text-prism-text hover:bg-prism-hover hover:text-prism-primary transition-colors duration-200 font-inter",
+      menuList: "bg-prism-surface border border-prism-border shadow-xl",
+      menuItem: "text-prism-text hover:bg-prism-hover hover:text-prism-primary transition-colors duration-200 font-inter",
+      
+      // Page elements
+      pageScrollBox: "bg-prism-bg",
+      page: "bg-prism-bg text-prism-text font-inter",
+      
+      // Navbar elements
+      navbar: "bg-prism-surface border-b border-prism-border",
+      navbarButton: "text-prism-text hover:text-prism-primary font-inter",
+      navbarMobileMenuButton: "text-prism-text hover:text-prism-primary",
     },
     layout: {
-      socialButtonsPlacement: "top",
+      socialButtonsPlacement: "top" as const,
       showOptionalFields: false,
     },
     variables: {
