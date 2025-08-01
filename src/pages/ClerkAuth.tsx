@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { SignIn, SignUp } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -33,6 +32,9 @@ const ClerkAuth = () => {
     setIsTransitioning(true);
     navigate(`/auth?mode=${newMode}`);
   };
+
+  // Get the current origin for redirect URLs
+  const redirectUrl = window.location.origin;
 
   // Clean Prism theme appearance configuration matching the reference image
   const prismAppearance = {
@@ -163,13 +165,15 @@ const ClerkAuth = () => {
                   {currentMode === 'sign-in' ? (
                     <SignIn 
                       appearance={prismAppearance}
-                      redirectUrl={window.location.origin}
+                      forceRedirectUrl={redirectUrl}
+                      fallbackRedirectUrl={redirectUrl}
                       signUpUrl="/auth?mode=sign-up"
                     />
                   ) : (
                     <SignUp 
                       appearance={prismAppearance}
-                      redirectUrl={window.location.origin}
+                      forceRedirectUrl={redirectUrl}
+                      fallbackRedirectUrl={redirectUrl}
                       signInUrl="/auth?mode=sign-in"
                     />
                   )}

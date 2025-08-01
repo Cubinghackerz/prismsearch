@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useUser, SignedIn, SignedOut, useClerk } from '@clerk/clerk-react';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,9 @@ const AuthButtons = () => {
     await signOut();
     navigate('/secure-redirect?message=Securely signing you out&redirectTo=/');
   };
+
+  // Get the current origin for redirect URLs
+  const redirectUrl = window.location.origin;
 
   // Consistent Prism theme for UserButton
   const userButtonAppearance = {
@@ -103,7 +105,7 @@ const AuthButtons = () => {
             Welcome, {user?.firstName || user?.emailAddresses[0]?.emailAddress}
           </span>
           <UserButton 
-            afterSignOutUrl="/secure-redirect?message=Securely signing you out&redirectTo=/"
+            afterSignOutUrl={redirectUrl}
             appearance={userButtonAppearance}
           />
           <Button 
