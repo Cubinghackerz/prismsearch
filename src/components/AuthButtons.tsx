@@ -21,14 +21,14 @@ const AuthButtons = () => {
       <SignedOut>
         <Button 
           variant="outline" 
-          onClick={() => navigate('/auth')}
+          onClick={() => navigate('/auth?mode=sign-in')}
           className="flex items-center gap-2"
         >
           <LogIn className="w-4 h-4" />
           Sign In
         </Button>
         <Button 
-          onClick={() => navigate('/auth')}
+          onClick={() => navigate('/auth?mode=sign-up')}
           className="flex items-center gap-2"
         >
           <User className="w-4 h-4" />
@@ -45,7 +45,12 @@ const AuthButtons = () => {
             afterSignOutUrl="/secure-redirect?message=Securely signing you out&redirectTo=/"
             appearance={{
               elements: {
-                avatarBox: "w-8 h-8"
+                avatarBox: "w-8 h-8",
+                userButtonPopoverCard: "bg-card border border-border shadow-lg",
+                userButtonPopoverMain: "bg-card",
+                userButtonPopoverFooter: "bg-card",
+                userButtonPopoverActionButton: "text-foreground hover:bg-accent",
+                userButtonPopoverActionButtonText: "text-foreground"
               }
             }}
           />
