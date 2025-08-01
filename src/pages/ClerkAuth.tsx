@@ -115,7 +115,7 @@ const ClerkAuth = () => {
       navbarMobileMenuButton: "text-prism-text hover:text-prism-primary transition-colors duration-200",
     },
     layout: {
-      socialButtonsPlacement: "top",
+      socialButtonsPlacement: "top" as const,
       showOptionalFields: false,
     },
     variables: {
