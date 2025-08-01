@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { SignIn, SignUp } from '@clerk/clerk-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SignUpPasswordStrength } from '@/components/auth/SignUpPasswordStrength';
 
@@ -11,9 +12,25 @@ const ClerkAuth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode') || 'sign-in';
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [currentMode, setCurrentMode] = useState(mode);
+
+  // Handle mode changes with smooth transitions
+  useEffect(() => {
+    if (mode !== currentMode) {
+      setIsTransitioning(true);
+      // Add a small delay to make the transition feel more natural
+      const timer = setTimeout(() => {
+        setCurrentMode(mode);
+        setIsTransitioning(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [mode, currentMode]);
 
   const toggleMode = () => {
     const newMode = mode === 'sign-in' ? 'sign-up' : 'sign-in';
+    setIsTransitioning(true);
     navigate(`/auth?mode=${newMode}`);
   };
 
@@ -96,6 +113,12 @@ const ClerkAuth = () => {
     }
   };
 
+  const fadeVariants = {
+    initial: { opacity: 0, y: 10 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -10 }
+  };
+
   return (
     <div className="min-h-screen bg-prism-bg flex items-center justify-center px-6">
       <motion.div
@@ -117,41 +140,74 @@ const ClerkAuth = () => {
               </h1>
             </div>
             <CardTitle className="text-prism-text font-inter text-xl">
-              {mode === 'sign-in' ? 'Welcome Back' : 'Create Account'}
+              {currentMode === 'sign-in' ? 'Welcome Back' : 'Create Account'}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex items-center justify-center">
-              {mode === 'sign-in' ? (
-                <SignIn 
-                  appearance={prismAppearance}
-                  redirectUrl={window.location.origin}
-                  signUpUrl="/auth?mode=sign-up"
-                />
-              ) : (
-                <SignUp 
-                  appearance={prismAppearance}
-                  redirectUrl={window.location.origin}
-                  signInUrl="/auth?mode=sign-in"
-                />
-              )}
-            </div>
-
-            {/* Password Strength Analysis for Sign Up */}
-            {mode === 'sign-up' && (
-              <SignUpPasswordStrength 
-                onPasswordChange={(password, isStrong) => {
-                  console.log('Password strength update:', { password: password.length > 0 ? '[REDACTED]' : '', isStrong });
-                }}
-              />
+            {/* Loading state during transitions */}
+            {isTransitioning ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-prism-primary" />
+              </div>
+            ) : (
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentMode}
+                  variants={fadeVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                  className="flex items-center justify-center"
+                >
+                  {currentMode === 'sign-in' ? (
+                    <SignIn 
+                      appearance={prismAppearance}
+                      redirectUrl={window.location.origin}
+                      signUpUrl="/auth?mode=sign-up"
+                    />
+                  ) : (
+                    <SignUp 
+                      appearance={prismAppearance}
+                      redirectUrl={window.location.origin}
+                      signInUrl="/auth?mode=sign-in"
+                    />
+                  )}
+                </motion.div>
+              </AnimatePresence>
             )}
 
-            <div className="flex items-center justify-center gap-4 pt-4 border-t border-prism-border">
+            {/* Password Strength Analysis for Sign Up - only show when not transitioning */}
+            {currentMode === 'sign-up' && !isTransitioning && (
+              <motion.div
+                variants={fadeVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.3, delay: 0.2 }}
+              >
+                <SignUpPasswordStrength 
+                  onPasswordChange={(password, isStrong) => {
+                    console.log('Password strength update:', { password: password.length > 0 ? '[REDACTED]' : '', isStrong });
+                  }}
+                />
+              </motion.div>
+            )}
+
+            <motion.div 
+              className="flex items-center justify-center gap-4 pt-4 border-t border-prism-border"
+              variants={fadeVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.3, delay: 0.1 }}
+            >
               <Button
                 type="button"
                 onClick={() => navigate('/')}
                 variant="outline"
                 className="flex items-center gap-2"
+                disabled={isTransitioning}
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back to Home
@@ -162,12 +218,17 @@ const ClerkAuth = () => {
                 onClick={toggleMode}
                 variant="ghost"
                 className="text-sm"
+                disabled={isTransitioning}
               >
-                {mode === 'sign-in' 
-                  ? "Don't have an account? Sign up" 
-                  : "Have an account? Sign in"}
+                {isTransitioning ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  currentMode === 'sign-in' 
+                    ? "Don't have an account? Sign up" 
+                    : "Have an account? Sign in"
+                )}
               </Button>
-            </div>
+            </motion.div>
           </CardContent>
         </Card>
       </motion.div>
