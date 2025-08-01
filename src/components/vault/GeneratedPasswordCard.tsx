@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,8 +17,6 @@ interface PasswordData {
     crackTime: string;
     entropy: number;
   };
-  isEditing?: boolean;
-  editedPassword?: string;
 }
 
 interface GeneratedPasswordCardProps {
@@ -37,6 +35,8 @@ export const GeneratedPasswordCard: React.FC<GeneratedPasswordCardProps> = ({
   onEdit
 }) => {
   const { toast } = useToast();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedPassword, setEditedPassword] = useState(passwordData.password);
 
   const getStrengthColor = (level: string) => {
     switch (level) {
@@ -84,11 +84,23 @@ export const GeneratedPasswordCard: React.FC<GeneratedPasswordCardProps> = ({
     }
   };
 
-  const handleEdit = () => {
-    if (passwordData.isEditing && passwordData.editedPassword) {
-      onEdit(passwordData.editedPassword);
+  const handleEditToggle = () => {
+    if (isEditing) {
+      // Save the edited password
+      onEdit(editedPassword);
+      setIsEditing(false);
+      toast({
+        title: "Password updated",
+        description: "Your password has been successfully updated."
+      });
+    } else {
+      // Start editing
+      setEditedPassword(passwordData.password);
+      setIsEditing(true);
     }
   };
+
+  const displayPassword = isEditing ? editedPassword : passwordData.password;
 
   return (
     <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm shadow-xl">
@@ -104,11 +116,11 @@ export const GeneratedPasswordCard: React.FC<GeneratedPasswordCardProps> = ({
           <div className="flex space-x-2">
             <Input
               type={isVisible ? "text" : "password"}
-              value={passwordData.isEditing ? (passwordData.editedPassword || '') : passwordData.password}
-              readOnly={!passwordData.isEditing}
-              onChange={(e) => passwordData.isEditing && onEdit(e.target.value)}
+              value={displayPassword}
+              readOnly={!isEditing}
+              onChange={(e) => isEditing && setEditedPassword(e.target.value)}
               className={`font-mono text-sm bg-slate-800/50 text-slate-200 border-slate-600 focus:border-cyan-500 ${
-                passwordData.isEditing ? 'border-cyan-500' : ''
+                isEditing ? 'border-cyan-500' : ''
               }`}
             />
             <Button
@@ -122,10 +134,10 @@ export const GeneratedPasswordCard: React.FC<GeneratedPasswordCardProps> = ({
             <Button
               variant="outline"
               size="icon"
-              onClick={handleEdit}
+              onClick={handleEditToggle}
               className="border-slate-600 hover:bg-slate-700 hover:border-amber-500"
             >
-              {passwordData.isEditing ? <Save className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
+              {isEditing ? <Save className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
             </Button>
             <Button
               variant="outline"

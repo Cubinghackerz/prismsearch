@@ -268,7 +268,6 @@ const PrismVault = () => {
                         setPasswords(prev => prev.map((p, i) => 
                           i === index 
                             ? { 
-                                ...p, 
                                 password: editedPassword,
                                 strengthAssessment: assessPasswordStrengthWithZxcvbn(editedPassword)
                               }
