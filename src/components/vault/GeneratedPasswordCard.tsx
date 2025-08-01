@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Shield, Eye, EyeOff, Edit, Save, Copy, Key, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface PasswordData {
   password: string;
@@ -13,6 +14,8 @@ interface PasswordData {
     score: number;
     level: 'weak' | 'fair' | 'good' | 'strong' | 'very-strong';
     feedback: string[];
+    crackTime: string;
+    entropy: number;
   };
   isEditing?: boolean;
   editedPassword?: string;
@@ -20,25 +23,21 @@ interface PasswordData {
 
 interface GeneratedPasswordCardProps {
   passwordData: PasswordData;
-  index: number;
-  showPassword: boolean;
+  isVisible: boolean;
   onToggleVisibility: () => void;
-  onToggleEdit: () => void;
-  onPasswordEdit: (value: string) => void;
-  onCopy: () => void;
-  onSaveToManager: () => void;
+  onSave: () => void;
+  onEdit: (editedPassword: string) => void;
 }
 
 export const GeneratedPasswordCard: React.FC<GeneratedPasswordCardProps> = ({
   passwordData,
-  index,
-  showPassword,
+  isVisible,
   onToggleVisibility,
-  onToggleEdit,
-  onPasswordEdit,
-  onCopy,
-  onSaveToManager
+  onSave,
+  onEdit
 }) => {
+  const { toast } = useToast();
+
   const getStrengthColor = (level: string) => {
     switch (level) {
       case 'very-strong': return 'text-emerald-300 bg-emerald-950/50 border-emerald-600';
@@ -69,12 +68,34 @@ export const GeneratedPasswordCard: React.FC<GeneratedPasswordCardProps> = ({
     return 'bg-gradient-to-r from-red-500 to-red-400';
   };
 
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(passwordData.password);
+      toast({
+        title: "Password copied!",
+        description: "The password has been copied to your clipboard."
+      });
+    } catch (error) {
+      toast({
+        title: "Copy failed",
+        description: "Unable to copy password to clipboard.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleEdit = () => {
+    if (passwordData.isEditing && passwordData.editedPassword) {
+      onEdit(passwordData.editedPassword);
+    }
+  };
+
   return (
     <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm shadow-xl">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center space-x-2 text-cyan-300">
           <Shield className="h-5 w-5" />
-          <span>Encrypted Password {index + 1}</span>
+          <span>Encrypted Password</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -82,10 +103,10 @@ export const GeneratedPasswordCard: React.FC<GeneratedPasswordCardProps> = ({
           <Label className="text-slate-200 font-medium">Password</Label>
           <div className="flex space-x-2">
             <Input
-              type={showPassword ? "text" : "password"}
+              type={isVisible ? "text" : "password"}
               value={passwordData.isEditing ? (passwordData.editedPassword || '') : passwordData.password}
               readOnly={!passwordData.isEditing}
-              onChange={(e) => passwordData.isEditing && onPasswordEdit(e.target.value)}
+              onChange={(e) => passwordData.isEditing && onEdit(e.target.value)}
               className={`font-mono text-sm bg-slate-800/50 text-slate-200 border-slate-600 focus:border-cyan-500 ${
                 passwordData.isEditing ? 'border-cyan-500' : ''
               }`}
@@ -96,12 +117,12 @@ export const GeneratedPasswordCard: React.FC<GeneratedPasswordCardProps> = ({
               onClick={onToggleVisibility}
               className="border-slate-600 hover:bg-slate-700 hover:border-cyan-500"
             >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {isVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </Button>
             <Button
               variant="outline"
               size="icon"
-              onClick={onToggleEdit}
+              onClick={handleEdit}
               className="border-slate-600 hover:bg-slate-700 hover:border-amber-500"
             >
               {passwordData.isEditing ? <Save className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
@@ -109,7 +130,7 @@ export const GeneratedPasswordCard: React.FC<GeneratedPasswordCardProps> = ({
             <Button
               variant="outline"
               size="icon"
-              onClick={onCopy}
+              onClick={handleCopy}
               className="border-slate-600 hover:bg-slate-700 hover:border-emerald-500"
             >
               <Copy className="h-4 w-4" />
@@ -154,7 +175,7 @@ export const GeneratedPasswordCard: React.FC<GeneratedPasswordCardProps> = ({
           )}
 
           <Button
-            onClick={onSaveToManager}
+            onClick={onSave}
             className="w-full bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white font-semibold"
           >
             <Key className="mr-2 h-4 w-4" />

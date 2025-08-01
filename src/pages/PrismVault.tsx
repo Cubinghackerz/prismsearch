@@ -152,6 +152,62 @@ const PrismVault = () => {
     };
   }, []);
 
+  const handleGenerate = () => {
+    setIsGenerating(true);
+    setGenerationProgress(0);
+    
+    let charset = '';
+    if (includeUppercase) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    if (includeLowercase) charset += 'abcdefghijklmnopqrstuvwxyz';
+    if (includeNumbers) charset += '0123456789';
+    if (includeSymbols) charset += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+
+    if (charset === '') {
+      toast({
+        title: "No character types selected",
+        description: "Please select at least one character type for password generation.",
+        variant: "destructive"
+      });
+      setIsGenerating(false);
+      return;
+    }
+
+    const newPasswords: PasswordData[] = [];
+    const animating: string[] = [];
+
+    for (let i = 0; i < passwordCount; i++) {
+      let generatedPassword = '';
+      for (let j = 0; j < passwordLength[0]; j++) {
+        generatedPassword += charset.charAt(Math.floor(Math.random() * charset.length));
+      }
+      
+      const strengthAssessment = assessPasswordStrengthWithZxcvbn(generatedPassword);
+      newPasswords.push({
+        password: generatedPassword,
+        strengthAssessment
+      });
+      animating.push(generatedPassword);
+    }
+
+    setAnimatingPasswords(animating);
+    
+    const progressInterval = setInterval(() => {
+      setGenerationProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(progressInterval);
+          setTimeout(() => {
+            setPasswords(newPasswords);
+            setShowPasswords(new Array(newPasswords.length).fill(false));
+            setIsGenerating(false);
+            setAnimatingPasswords([]);
+          }, 500);
+          return 100;
+        }
+        return prev + 2;
+      });
+    }, 50);
+  };
+
   if (isVaultLoading) {
     return <VaultLoadingScreen vaultText={vaultText} encryptionProgress={encryptionProgress} />;
   }
@@ -178,61 +234,7 @@ const PrismVault = () => {
                 setIncludeNumbers={setIncludeNumbers}
                 includeSymbols={includeSymbols}
                 setIncludeSymbols={setIncludeSymbols}
-                onGenerate={() => {
-                  setIsGenerating(true);
-                  setGenerationProgress(0);
-                  
-                  let charset = '';
-                  if (includeUppercase) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                  if (includeLowercase) charset += 'abcdefghijklmnopqrstuvwxyz';
-                  if (includeNumbers) charset += '0123456789';
-                  if (includeSymbols) charset += '!@#$%^&*()_+-=[]{}|;:,.<>?';
-
-                  if (charset === '') {
-                    toast({
-                      title: "No character types selected",
-                      description: "Please select at least one character type for password generation.",
-                      variant: "destructive"
-                    });
-                    setIsGenerating(false);
-                    return;
-                  }
-
-                  const newPasswords: PasswordData[] = [];
-                  const animating: string[] = [];
-
-                  for (let i = 0; i < passwordCount; i++) {
-                    let generatedPassword = '';
-                    for (let j = 0; j < passwordLength[0]; j++) {
-                      generatedPassword += charset.charAt(Math.floor(Math.random() * charset.length));
-                    }
-                    
-                    const strengthAssessment = assessPasswordStrengthWithZxcvbn(generatedPassword);
-                    newPasswords.push({
-                      password: generatedPassword,
-                      strengthAssessment
-                    });
-                    animating.push(generatedPassword);
-                  }
-
-                  setAnimatingPasswords(animating);
-                  
-                  const progressInterval = setInterval(() => {
-                    setGenerationProgress(prev => {
-                      if (prev >= 100) {
-                        clearInterval(progressInterval);
-                        setTimeout(() => {
-                          setPasswords(newPasswords);
-                          setShowPasswords(new Array(newPasswords.length).fill(false));
-                          setIsGenerating(false);
-                          setAnimatingPasswords([]);
-                        }, 500);
-                        return 100;
-                      }
-                      return prev + 2;
-                    });
-                  }, 50);
-                }}
+                onGenerate={handleGenerate}
                 isGenerating={isGenerating}
                 generationProgress={generationProgress}
               />
@@ -244,11 +246,11 @@ const PrismVault = () => {
               ) : (
                 <div className="space-y-4">
                   {animatingPasswords.map((password, index) => (
-                    <AnimatingPasswordCard key={index} password={password} />
+                    <AnimatingPasswordCard key={`anim-${index}`} password={password} />
                   ))}
                   {passwords.map((passwordData, index) => (
                     <GeneratedPasswordCard
-                      key={index}
+                      key={`gen-${index}`}
                       passwordData={passwordData}
                       isVisible={showPasswords[index]}
                       onToggleVisibility={() => {
