@@ -82,13 +82,7 @@ const LoadingAnimation = ({
       </div>;
   }
   if (variant === "orbit") {
-    return <div className={cn("relative", sizeClasses[size], className)}>
-        {/* Central core */}
-        <div className={cn("absolute top-1/2 left-1/2 w-2 h-2 -translate-x-1/2 -translate-y-1/2 rounded-full", colors.primary, "animate-pulse")} />
-        
-        {/* Orbiting particles */}
-        {[0, 1, 2].map(i => {})}
-      </div>;
+    return;
   }
   if (variant === "neural") {
     return <div className={cn("relative flex items-center justify-center", sizeClasses[size], className)}>
