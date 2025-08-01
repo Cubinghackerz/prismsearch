@@ -21,30 +21,40 @@ const ClerkAuth = () => {
   const prismAppearance = {
     elements: {
       rootBox: "w-full max-w-md mx-auto",
-      card: "bg-transparent shadow-none border-none",
+      card: "bg-prism-surface/95 shadow-2xl border border-prism-border rounded-xl backdrop-blur-md",
       headerTitle: "hidden",
       headerSubtitle: "hidden",
       
-      // Social buttons styling - clean Microsoft-style button
-      socialButtonsBlockButton: "w-full bg-prism-surface hover:bg-prism-hover text-prism-text border border-prism-border rounded-md h-12 text-sm font-medium transition-all duration-200 flex items-center justify-center gap-3 hover:border-prism-primary/30 font-inter",
+      // Social buttons styling to match the image
+      socialButtonsBlockButton: "w-full bg-prism-surface/50 hover:bg-prism-surface/80 text-prism-text border border-prism-border rounded-lg h-12 text-sm font-medium transition-all duration-200 flex items-center justify-center gap-3 hover:border-prism-primary/40 font-inter mb-3",
       socialButtonsBlockButtonText: "text-prism-text font-medium",
       socialButtonsProviderIcon: "w-5 h-5",
       
       // Divider styling
-      dividerLine: "bg-prism-border",
-      dividerText: "text-prism-text-muted text-sm uppercase tracking-wide font-inter",
+      dividerLine: "bg-prism-border/30",
+      dividerText: "text-prism-text-muted text-xs uppercase tracking-widest font-inter opacity-70",
       
-      // Primary action button - teal like in the image
-      formButtonPrimary: "w-full bg-prism-primary hover:bg-prism-primary-dark text-white rounded-md h-12 text-sm font-medium transition-all duration-200 shadow-sm font-inter",
+      // Primary action button - teal to match image
+      formButtonPrimary: "w-full bg-prism-primary hover:bg-prism-primary-dark text-white rounded-lg h-12 text-sm font-medium transition-all duration-200 shadow-lg font-inter",
       
-      // Input fields - dark theme with proper contrast
-      formFieldInput: "w-full px-4 py-3 border border-prism-border bg-prism-surface rounded-md text-sm text-prism-text placeholder:text-prism-text-muted focus:outline-none focus:ring-2 focus:ring-prism-primary/30 focus:border-prism-primary transition-all duration-200 font-inter",
+      // Input fields to match the dark style in image
+      formFieldInput: "w-full px-4 py-3 pl-12 border border-prism-border/40 bg-prism-bg/50 rounded-lg text-sm text-prism-text placeholder:text-prism-text-muted/60 focus:outline-none focus:ring-2 focus:ring-prism-primary/30 focus:border-prism-primary transition-all duration-200 font-inter",
       
-      formFieldLabel: "text-sm font-medium text-prism-text mb-2 font-inter",
+      formFieldLabel: "text-sm font-medium text-prism-text mb-2 font-inter tracking-wide",
       
       // Footer and links
-      footerActionLink: "text-prism-primary hover:text-prism-primary-light text-sm transition-colors duration-200 font-inter underline-offset-4 hover:underline",
-      footerActionText: "text-prism-text-muted text-sm font-inter",
+      footerActionLink: "text-prism-primary hover:text-prism-primary-light text-sm transition-colors duration-200 font-inter",
+      footerActionText: "text-prism-text-muted/70 text-sm font-inter",
+      
+      // Additional social button configurations
+      socialButtonsProviderIconBox: "mr-3",
+      
+      // Form field wrapper
+      formFieldAction: "text-prism-primary hover:text-prism-primary-light text-sm font-inter",
+      
+      // Footer layout
+      footer: "text-center mt-6",
+      footerAction: "mt-4",
       
       // Identity preview and other elements
       identityPreviewText: "text-prism-text font-inter",
@@ -117,6 +127,7 @@ const ClerkAuth = () => {
     layout: {
       socialButtonsPlacement: "top" as const,
       showOptionalFields: false,
+      socialButtonsVariant: "blockButton" as const,
     },
     variables: {
       colorPrimary: "#00C2A8",
@@ -142,52 +153,52 @@ const ClerkAuth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-prism-bg flex items-center justify-center px-6">
+    <div className="min-h-screen bg-gradient-to-b from-prism-bg via-prism-bg to-prism-surface/20 flex items-center justify-center px-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <Card className="bg-prism-surface border-prism-border shadow-2xl">
-          <CardHeader className="text-center pb-6">
+        <Card className="bg-prism-surface/95 border-prism-border/50 shadow-2xl backdrop-blur-md">
+          <CardHeader className="text-center pb-8 pt-8">
             <div className="flex items-center justify-center gap-2 mb-6">
-              <img 
-                src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" 
-                alt="Prism Logo" 
-                className="h-8 w-8"
-              />
-              <h1 className="text-2xl font-bold text-prism-primary font-inter">
+              <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-orange-600 transform rotate-45"></div>
+              <h1 className="text-2xl font-bold text-prism-primary font-inter tracking-wide">
                 Prism
               </h1>
             </div>
-            <CardTitle className="text-prism-text font-inter text-xl">
+            <CardTitle className="text-prism-text font-inter text-xl font-normal">
               {mode === 'sign-in' ? 'Welcome Back' : 'Create Account'}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6 px-8 pb-8">
             <div className="flex items-center justify-center">
               {mode === 'sign-in' ? (
                 <SignIn 
                   appearance={prismAppearance}
                   redirectUrl={window.location.origin}
                   signUpUrl="/auth?mode=sign-up"
+                  routing="path"
+                  path="/auth"
                 />
               ) : (
                 <SignUp 
                   appearance={prismAppearance}
                   redirectUrl={window.location.origin}
                   signInUrl="/auth?mode=sign-in"
+                  routing="path"
+                  path="/auth"
                 />
               )}
             </div>
 
-            <div className="flex items-center justify-center gap-4 pt-4 border-t border-prism-border">
+            <div className="flex items-center justify-center gap-4 pt-6 border-t border-prism-border/30">
               <Button
                 type="button"
                 onClick={() => navigate('/')}
-                variant="outline"
-                className="flex items-center gap-2"
+                variant="ghost"
+                className="flex items-center gap-2 text-prism-text-muted hover:text-prism-text"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back to Home
@@ -197,11 +208,11 @@ const ClerkAuth = () => {
                 type="button"
                 onClick={toggleMode}
                 variant="ghost"
-                className="text-sm"
+                className="text-sm text-prism-primary hover:text-prism-primary-light"
               >
                 {mode === 'sign-in' 
                   ? "Don't have an account? Sign up" 
-                  : "Have an account? Sign in"}
+                  : "Already have an account? Sign in"}
               </Button>
             </div>
           </CardContent>
