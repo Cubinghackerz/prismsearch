@@ -16,19 +16,23 @@ const AuthButtons = () => {
     navigate('/secure-redirect?message=Securely signing you out&redirectTo=/');
   };
 
+  const handleAuth = () => {
+    navigate('/auth');
+  };
+
   return (
     <div className="flex items-center gap-3">
       <SignedOut>
         <Button 
           variant="outline" 
-          onClick={() => navigate('/auth')}
+          onClick={handleAuth}
           className="flex items-center gap-2"
         >
           <LogIn className="w-4 h-4" />
           Sign In
         </Button>
         <Button 
-          onClick={() => navigate('/auth')}
+          onClick={handleAuth}
           className="flex items-center gap-2"
         >
           <User className="w-4 h-4" />
@@ -39,7 +43,7 @@ const AuthButtons = () => {
       <SignedIn>
         <div className="flex items-center gap-3">
           <span className="text-sm text-muted-foreground hidden md:block">
-            Welcome, {user?.firstName || user?.emailAddresses[0]?.emailAddress}
+            Welcome, {user?.firstName || user?.primaryEmailAddress?.emailAddress}
           </span>
           <UserButton 
             afterSignOutUrl="/secure-redirect?message=Securely signing you out&redirectTo=/"
