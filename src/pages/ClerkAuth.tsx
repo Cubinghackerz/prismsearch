@@ -1,11 +1,11 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { SignIn, SignUp } from '@clerk/clerk-react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { SignUpPasswordStrength } from '@/components/auth/SignUpPasswordStrength';
 
 const ClerkAuth = () => {
   const navigate = useNavigate();
@@ -24,33 +24,18 @@ const ClerkAuth = () => {
       card: "bg-transparent shadow-none border-none",
       headerTitle: "hidden",
       headerSubtitle: "hidden",
-      
-      // Social buttons styling - clean Microsoft-style button
       socialButtonsBlockButton: "w-full bg-prism-surface hover:bg-prism-hover text-prism-text border border-prism-border rounded-md h-12 text-sm font-medium transition-all duration-200 flex items-center justify-center gap-3 hover:border-prism-primary/30 font-inter",
       socialButtonsBlockButtonText: "text-prism-text font-medium",
       socialButtonsProviderIcon: "w-5 h-5",
-      
-      // Divider styling
       dividerLine: "bg-prism-border",
       dividerText: "text-prism-text-muted text-sm uppercase tracking-wide font-inter",
-      
-      // Primary action button - teal like in the image
       formButtonPrimary: "w-full bg-prism-primary hover:bg-prism-primary-dark text-white rounded-md h-12 text-sm font-medium transition-all duration-200 shadow-sm font-inter",
-      
-      // Input fields - dark theme with proper contrast
       formFieldInput: "w-full px-4 py-3 border border-prism-border bg-prism-surface rounded-md text-sm text-prism-text placeholder:text-prism-text-muted focus:outline-none focus:ring-2 focus:ring-prism-primary/30 focus:border-prism-primary transition-all duration-200 font-inter",
-      
       formFieldLabel: "text-sm font-medium text-prism-text mb-2 font-inter",
-      
-      // Footer and links
       footerActionLink: "text-prism-primary hover:text-prism-primary-light text-sm transition-colors duration-200 font-inter underline-offset-4 hover:underline",
       footerActionText: "text-prism-text-muted text-sm font-inter",
-      
-      // Identity preview and other elements
       identityPreviewText: "text-prism-text font-inter",
       identityPreviewEditButtonIcon: "text-prism-primary",
-      
-      // User button and profile elements
       userButtonAvatarBox: "w-8 h-8 border border-prism-border rounded-full",
       userButtonPopoverCard: "bg-prism-surface border border-prism-border shadow-xl rounded-lg backdrop-blur-md",
       userButtonPopoverMain: "bg-prism-surface rounded-lg",
@@ -58,58 +43,28 @@ const ClerkAuth = () => {
       userButtonPopoverActionButton: "text-prism-text hover:bg-prism-hover hover:text-prism-primary transition-colors duration-200 rounded-md font-inter px-3 py-2",
       userButtonPopoverActionButtonText: "text-prism-text font-inter",
       userButtonPopoverActionButtonIcon: "text-prism-primary",
-      
-      // Profile page elements
       profileSectionPrimaryButton: "bg-prism-primary hover:bg-prism-primary-dark text-white font-inter transition-colors duration-200",
       profileSectionTitle: "text-prism-text font-inter text-lg font-semibold",
       profileSectionContent: "text-prism-text font-inter leading-relaxed",
-      
-      // Account management elements
       accordionTriggerButton: "text-prism-text hover:bg-prism-hover hover:text-prism-primary transition-colors duration-200 font-inter rounded-md px-3 py-2",
       accordionContent: "text-prism-text bg-prism-surface font-inter rounded-md",
-      
-      // Enhanced visibility for user info
       userPreviewMainIdentifier: "text-prism-text font-inter font-semibold text-base",
       userPreviewSecondaryIdentifier: "text-prism-text font-inter text-sm",
-      
-      // Menu elements with better contrast
       menuButton: "text-prism-text hover:bg-prism-hover hover:text-prism-primary transition-colors duration-200 font-inter rounded-md px-3 py-2",
       menuList: "bg-prism-surface border border-prism-border shadow-xl rounded-lg",
       menuItem: "text-prism-text hover:bg-prism-hover hover:text-prism-primary transition-colors duration-200 font-inter px-3 py-2 rounded-md",
-      
-      // Verification and resend links
       formResendCodeLink: "text-prism-primary hover:text-prism-primary-light text-sm transition-colors duration-200 font-inter underline-offset-4 hover:underline",
-      
-      // Alert and error styling
       alertText: "text-red-400 text-sm font-inter",
-      
-      // OTP input styling
       otpCodeFieldInput: "w-12 h-12 text-center border border-prism-border bg-prism-surface rounded-md text-prism-text focus:outline-none focus:ring-2 focus:ring-prism-primary/30 focus:border-prism-primary transition-all duration-200 font-inter text-lg font-medium",
-      
-      // Loading spinner
       spinner: "text-prism-primary",
-      
-      // Badge styling
       badge: "bg-prism-accent text-white text-xs px-2 py-1 rounded-full font-inter",
-      
-      // Internal card styling
       cardBox: "bg-transparent",
       main: "bg-transparent",
-      
-      // Form field row
       formFieldRow: "space-y-2",
-      
-      // Form field action
       formFieldAction: "text-prism-primary hover:text-prism-primary-light text-sm font-inter underline-offset-4 hover:underline",
-      
-      // Terms and conditions
       formFieldInfoText: "text-prism-text-muted text-xs font-inter leading-relaxed",
-      
-      // Page elements
       pageScrollBox: "bg-prism-bg min-h-screen",
       page: "bg-prism-bg text-prism-text font-inter min-h-screen",
-      
-      // Navbar elements
       navbar: "bg-prism-surface border-b border-prism-border",
       navbarButton: "text-prism-text hover:text-prism-primary font-inter transition-colors duration-200",
       navbarMobileMenuButton: "text-prism-text hover:text-prism-primary transition-colors duration-200",
@@ -181,6 +136,15 @@ const ClerkAuth = () => {
                 />
               )}
             </div>
+
+            {/* Password Strength Analysis for Sign Up */}
+            {mode === 'sign-up' && (
+              <SignUpPasswordStrength 
+                onPasswordChange={(password, isStrong) => {
+                  console.log('Password strength update:', { password: password.length > 0 ? '[REDACTED]' : '', isStrong });
+                }}
+              />
+            )}
 
             <div className="flex items-center justify-center gap-4 pt-4 border-t border-prism-border">
               <Button
