@@ -184,9 +184,7 @@ const PrismDetector = () => {
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-fira-code">
               Prism Detector
             </h1>
-            <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-sm font-semibold rounded-full border border-orange-500/30 font-fira-code">
-              ClamAV Enhanced
-            </span>
+            <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-sm font-semibold rounded-full border border-orange-500/30 font-fira-code">Beta</span>
           </div>
           <p className="text-xl text-muted-foreground mb-4 max-w-2xl mx-auto font-fira-code">
             Advanced threat detection powered by ClamAV engine with enhanced heuristics
