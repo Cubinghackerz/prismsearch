@@ -16,6 +16,7 @@ const VaultLoadingScreen: React.FC<VaultLoadingScreenProps> = ({ vaultText, encr
   const [terminalLines, setTerminalLines] = useState<string[]>(['$ prism-vault initialize...']);
   const [currentLine, setCurrentLine] = useState('');
   const [showCursor, setShowCursor] = useState(true);
+  const [showAccessGranted, setShowAccessGranted] = useState(false);
   
   const securityChecks = [
     { icon: Lock, text: "Verifying identity..." },
@@ -218,12 +219,19 @@ const VaultLoadingScreen: React.FC<VaultLoadingScreenProps> = ({ vaultText, encr
     }
   }, [encryptionProgress]);
 
-  // Start unlock animation when almost complete
+  // Start unlock animation when almost complete and handle access granted message
   useEffect(() => {
     if (encryptionProgress > 80 && !isUnlocking) {
       setIsUnlocking(true);
     }
-  }, [encryptionProgress]);
+    
+    // Show flashing access granted message when complete
+    if (encryptionProgress === 100 && !showAccessGranted) {
+      setTimeout(() => {
+        setShowAccessGranted(true);
+      }, 2000); // 2 second pause
+    }
+  }, [encryptionProgress, showAccessGranted]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 flex flex-col items-center justify-center relative overflow-hidden">
@@ -265,17 +273,13 @@ const VaultLoadingScreen: React.FC<VaultLoadingScreenProps> = ({ vaultText, encr
       </div>
 
       <div className="text-center space-y-8 z-10 relative">
-        {/* Main vault icon with pulsing effect */}
+        {/* Main vault icon without rotation */}
         <motion.div 
           className="flex items-center justify-center space-x-4"
           animate={isUnlocking ? { scale: [1, 1.1, 1] } : {}}
           transition={{ duration: 0.5, repeat: isUnlocking ? Infinity : 0 }}
         >
-          <motion.div
-            className="relative"
-            animate={{ rotate: isUnlocking ? 360 : 0 }}
-            transition={{ duration: 2, ease: "easeInOut" }}
-          >
+          <motion.div className="relative">
             <Shield className="h-12 w-12 text-cyan-300" />
             {isUnlocking && (
               <motion.div
@@ -329,7 +333,24 @@ const VaultLoadingScreen: React.FC<VaultLoadingScreenProps> = ({ vaultText, encr
             <div className="text-sm text-slate-400 font-mono">
               {encryptionProgress < 100 
                 ? "Initializing secure encryption protocols..."
-                : "Access granted. Welcome to Prism Vault."
+                : showAccessGranted ? (
+                  <motion.span
+                    className="text-green-400"
+                    animate={{ 
+                      opacity: [1, 0.3, 1],
+                      textShadow: [
+                        "0 0 5px #4ade80",
+                        "0 0 15px #4ade80",
+                        "0 0 5px #4ade80"
+                      ]
+                    }}
+                    transition={{ duration: 0.8, repeat: Infinity }}
+                  >
+                    Access granted. Welcome to Prism Vault.
+                  </motion.span>
+                ) : (
+                  "Processing final security checks..."
+                )
               }
             </div>
           </div>
