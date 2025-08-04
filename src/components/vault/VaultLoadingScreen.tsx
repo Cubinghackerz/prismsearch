@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Shield, Lock, Key, Eye } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
@@ -14,12 +13,33 @@ const VaultLoadingScreen: React.FC<VaultLoadingScreenProps> = ({ vaultText, encr
   const [showSecurityChecks, setShowSecurityChecks] = useState(false);
   const [completedChecks, setCompletedChecks] = useState<boolean[]>([]);
   const [isUnlocking, setIsUnlocking] = useState(false);
+  const [terminalLines, setTerminalLines] = useState<string[]>(['$ prism-vault initialize...']);
+  const [currentLine, setCurrentLine] = useState('');
+  const [showCursor, setShowCursor] = useState(true);
   
   const securityChecks = [
     { icon: Lock, text: "Verifying identity..." },
     { icon: Key, text: "Generating encryption keys..." },
     { icon: Shield, text: "Initializing secure protocols..." },
     { icon: Eye, text: "Authenticating access..." },
+  ];
+
+  const encryptionCommands = [
+    "Generating 256-bit AES encryption keys...",
+    "import { createCipheriv } from 'crypto';",
+    "const algorithm = 'aes-256-gcm';",
+    "const key = crypto.randomBytes(32);",
+    "const iv = crypto.randomBytes(16);",
+    "cipher = createCipheriv(algorithm, key, iv);",
+    "Establishing secure connection...",
+    "RSA key pair generation initiated...",
+    "const { publicKey, privateKey } = generateKeyPair();",
+    "Salt generation: crypto.randomBytes(64);",
+    "PBKDF2 iterations: 100000",
+    "Initializing vault encryption layer...",
+    "Secure storage protocol activated",
+    "Authentication tokens validated",
+    "Vault ready for secure operations"
   ];
 
   // Generate scanning effect
@@ -38,6 +58,49 @@ const VaultLoadingScreen: React.FC<VaultLoadingScreenProps> = ({ vaultText, encr
     }, 200);
 
     return () => clearInterval(interval);
+  }, []);
+
+  // Terminal animation effect
+  useEffect(() => {
+    let commandIndex = 0;
+    let charIndex = 0;
+    
+    const typeCommand = () => {
+      if (commandIndex < encryptionCommands.length) {
+        const command = encryptionCommands[commandIndex];
+        
+        if (charIndex < command.length) {
+          setCurrentLine(command.slice(0, charIndex + 1));
+          charIndex++;
+        } else {
+          // Command finished, add to terminal lines
+          setTimeout(() => {
+            setTerminalLines(prev => [...prev, command]);
+            setCurrentLine('');
+            commandIndex++;
+            charIndex = 0;
+            
+            // Keep only last 8 lines visible
+            setTimeout(() => {
+              setTerminalLines(prev => prev.slice(-8));
+            }, 100);
+          }, 500);
+        }
+      }
+    };
+
+    const typingInterval = setInterval(typeCommand, 50 + Math.random() * 50);
+    
+    return () => clearInterval(typingInterval);
+  }, []);
+
+  // Cursor blinking effect
+  useEffect(() => {
+    const cursorInterval = setInterval(() => {
+      setShowCursor(prev => !prev);
+    }, 500);
+
+    return () => clearInterval(cursorInterval);
   }, []);
 
   // Show security checks when progress > 20%
@@ -222,31 +285,42 @@ const VaultLoadingScreen: React.FC<VaultLoadingScreenProps> = ({ vaultText, encr
           </AnimatePresence>
         </div>
         
-        {/* Interactive orbital animation */}
-        <div className="relative w-32 h-32 mx-auto">
-          <motion.div
-            className="absolute inset-0 border border-cyan-300/30 rounded-full"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-          />
-          <motion.div
-            className="absolute inset-2 border border-cyan-300/20 rounded-full"
-            animate={{ rotate: -360 }}
-            transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-          />
-          <motion.div
-            className="absolute top-0 left-1/2 w-2 h-2 bg-cyan-300 rounded-full transform -translate-x-1/2"
-            animate={{ rotate: 360 }}
-            style={{ transformOrigin: "50% 64px" }}
-            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-          />
-          <motion.div
-            className="absolute top-2 left-1/2 w-1.5 h-1.5 bg-blue-400 rounded-full transform -translate-x-1/2"
-            animate={{ rotate: -360 }}
-            style={{ transformOrigin: "50% 56px" }}
-            transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-          />
-        </div>
+        {/* Terminal/Code Environment */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="w-96 mx-auto bg-black/80 border border-cyan-300/30 rounded-lg p-4 font-mono text-sm"
+        >
+          <div className="flex items-center space-x-2 mb-3 pb-2 border-b border-cyan-300/20">
+            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <span className="text-cyan-300/70 text-xs ml-2">prism-vault-terminal</span>
+          </div>
+          
+          <div className="space-y-1 max-h-48 overflow-hidden">
+            {terminalLines.map((line, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="text-green-400 text-xs leading-relaxed"
+              >
+                {line}
+              </motion.div>
+            ))}
+            
+            {currentLine && (
+              <div className="text-green-400 text-xs leading-relaxed">
+                {currentLine}
+                <span className={`${showCursor ? 'opacity-100' : 'opacity-0'} transition-opacity`}>
+                  █
+                </span>
+              </div>
+            )}
+          </div>
+        </motion.div>
       </div>
     </div>
   );
