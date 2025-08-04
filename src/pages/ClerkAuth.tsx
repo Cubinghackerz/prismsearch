@@ -34,10 +34,21 @@ const ClerkAuth = () => {
     setSearchParams({ mode: newMode });
   };
 
-  // Ensure proper redirect to production URL or homepage
-  const redirectUrl = window.location.hostname === 'localhost' 
-    ? `${window.location.origin}/`
-    : 'https://prismsearch.vercel.app/';
+  // Fixed redirect URL configuration to prevent 404 errors
+  const getRedirectUrl = () => {
+    if (typeof window === 'undefined') return '/';
+    
+    // Use the current origin for redirect
+    const origin = window.location.origin;
+    
+    // For production deployments, ensure we use the correct URL
+    if (origin.includes('vercel.app') || origin.includes('prismsearch')) {
+      return origin + '/';
+    }
+    
+    // For local development
+    return origin + '/';
+  };
 
   // Clean Prism theme appearance configuration matching the reference image
   const prismAppearance = {
@@ -54,10 +65,10 @@ const ClerkAuth = () => {
       formButtonPrimary: "w-full bg-prism-primary hover:bg-prism-primary-dark text-white rounded-md h-12 text-sm font-medium transition-all duration-200 shadow-sm font-inter",
       formFieldInput: "w-full px-4 py-3 border border-prism-border bg-prism-surface rounded-md text-sm text-prism-text placeholder:text-prism-text-muted focus:outline-none focus:ring-2 focus:ring-prism-primary/30 focus:border-prism-primary transition-all duration-200 font-inter",
       formFieldLabel: "text-sm font-medium text-prism-text mb-2 font-inter",
-      footerActionLink: "hidden", // Hide the default signup/signin links
-      footerActionText: "hidden", // Hide the default text
-      footerAction: "hidden", // Hide the entire footer action section
-      footer: "hidden", // Hide the footer completely
+      footerActionLink: "hidden",
+      footerActionText: "hidden",
+      footerAction: "hidden",
+      footer: "hidden",
       identityPreviewText: "text-prism-text font-inter",
       identityPreviewEditButtonIcon: "text-prism-primary",
       userButtonAvatarBox: "w-8 h-8 border border-prism-border rounded-full",
@@ -180,18 +191,18 @@ const ClerkAuth = () => {
                   {currentMode === 'sign-in' ? (
                     <SignIn 
                       appearance={prismAppearance}
-                      forceRedirectUrl={redirectUrl}
-                      fallbackRedirectUrl={redirectUrl}
-                      signUpUrl="#"
-                      signUpForceRedirectUrl={redirectUrl}
+                      forceRedirectUrl={getRedirectUrl()}
+                      fallbackRedirectUrl={getRedirectUrl()}
+                      signUpUrl="?mode=sign-up"
+                      signUpForceRedirectUrl={getRedirectUrl()}
                     />
                   ) : (
                     <SignUp 
                       appearance={prismAppearance}
-                      forceRedirectUrl={redirectUrl}
-                      fallbackRedirectUrl={redirectUrl}
-                      signInUrl="#"
-                      signInForceRedirectUrl={redirectUrl}
+                      forceRedirectUrl={getRedirectUrl()}
+                      fallbackRedirectUrl={getRedirectUrl()}
+                      signInUrl="?mode=sign-in"
+                      signInForceRedirectUrl={getRedirectUrl()}
                     />
                   )}
                 </motion.div>
