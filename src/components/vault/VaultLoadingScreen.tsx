@@ -6,9 +6,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface VaultLoadingScreenProps {
   vaultText: string;
   encryptionProgress: number;
+  onLoadingComplete?: () => void;
 }
 
-const VaultLoadingScreen: React.FC<VaultLoadingScreenProps> = ({ vaultText, encryptionProgress }) => {
+const VaultLoadingScreen: React.FC<VaultLoadingScreenProps> = ({ vaultText, encryptionProgress, onLoadingComplete }) => {
   const [scanLines, setScanLines] = useState<number[]>([]);
   const [showSecurityChecks, setShowSecurityChecks] = useState(false);
   const [completedChecks, setCompletedChecks] = useState<boolean[]>([]);
@@ -219,7 +220,7 @@ const VaultLoadingScreen: React.FC<VaultLoadingScreenProps> = ({ vaultText, encr
     }
   }, [encryptionProgress]);
 
-  // Start unlock animation when almost complete and handle access granted message
+  // Start unlock animation when almost complete and handle access granted message with transition
   useEffect(() => {
     if (encryptionProgress > 80 && !isUnlocking) {
       setIsUnlocking(true);
@@ -229,9 +230,13 @@ const VaultLoadingScreen: React.FC<VaultLoadingScreenProps> = ({ vaultText, encr
     if (encryptionProgress === 100 && !showAccessGranted) {
       setTimeout(() => {
         setShowAccessGranted(true);
-      }, 2000); // 2 second pause
+        // After showing the access granted message, wait 3 seconds then trigger transition
+        setTimeout(() => {
+          onLoadingComplete?.();
+        }, 3000); // 3 second delay after access granted appears
+      }, 2000); // 2 second pause before access granted appears
     }
-  }, [encryptionProgress, showAccessGranted]);
+  }, [encryptionProgress, showAccessGranted, onLoadingComplete]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 flex flex-col items-center justify-center relative overflow-hidden">

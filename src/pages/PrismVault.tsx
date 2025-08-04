@@ -81,10 +81,6 @@ const PrismVault = () => {
         if (currentIndex < targetText.length) {
           currentIndex++;
           setTimeout(animateText, 200);
-        } else {
-          setTimeout(() => {
-            setIsVaultLoading(false);
-          }, 1000);
         }
       }
     };
@@ -208,8 +204,18 @@ const PrismVault = () => {
     }, 50);
   };
 
+  const handleLoadingComplete = () => {
+    setIsVaultLoading(false);
+  };
+
   if (isVaultLoading) {
-    return <VaultLoadingScreen vaultText={vaultText} encryptionProgress={encryptionProgress} />;
+    return (
+      <VaultLoadingScreen 
+        vaultText={vaultText} 
+        encryptionProgress={encryptionProgress}
+        onLoadingComplete={handleLoadingComplete}
+      />
+    );
   }
 
   return (
