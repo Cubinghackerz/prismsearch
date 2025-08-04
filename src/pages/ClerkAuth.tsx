@@ -9,7 +9,7 @@ import { SignUpPasswordStrength } from '@/components/auth/SignUpPasswordStrength
 
 const ClerkAuth = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const mode = searchParams.get('mode') || 'sign-in';
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [currentMode, setCurrentMode] = useState(mode);
@@ -30,11 +30,11 @@ const ClerkAuth = () => {
   const toggleMode = () => {
     const newMode = mode === 'sign-in' ? 'sign-up' : 'sign-in';
     setIsTransitioning(true);
-    navigate(`/auth?mode=${newMode}`);
+    setSearchParams({ mode: newMode });
   };
 
-  // Get the current origin for redirect URLs
-  const redirectUrl = window.location.origin;
+  // Get the current origin for redirect URLs - ensure immediate redirect to homepage
+  const redirectUrl = `${window.location.origin}/`;
 
   // Clean Prism theme appearance configuration matching the reference image
   const prismAppearance = {
@@ -167,14 +167,16 @@ const ClerkAuth = () => {
                       appearance={prismAppearance}
                       forceRedirectUrl={redirectUrl}
                       fallbackRedirectUrl={redirectUrl}
-                      signUpUrl="/auth?mode=sign-up"
+                      signUpUrl="#"
+                      signUpForceRedirectUrl={redirectUrl}
                     />
                   ) : (
                     <SignUp 
                       appearance={prismAppearance}
                       forceRedirectUrl={redirectUrl}
                       fallbackRedirectUrl={redirectUrl}
-                      signInUrl="/auth?mode=sign-in"
+                      signInUrl="#"
+                      signInForceRedirectUrl={redirectUrl}
                     />
                   )}
                 </motion.div>
