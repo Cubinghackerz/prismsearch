@@ -214,40 +214,40 @@ export const PasswordManagerDialog: React.FC<PasswordManagerDialogProps> = ({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="bg-slate-900/95 border-slate-700 backdrop-blur-sm max-w-2xl">
+        <DialogContent className="bg-slate-900/95 border-slate-700 backdrop-blur-sm max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-cyan-300 text-xl">
+            <DialogTitle className="text-cyan-300 text-lg">
               {editingPassword ? 'Edit Password' : 'Save New Password'}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Basic Information */}
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name" className="text-slate-200 font-medium">Name *</Label>
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label htmlFor="name" className="text-slate-200 font-medium text-sm">Name *</Label>
                 <Input
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g., Gmail Account, Banking"
-                  className="bg-slate-800/50 border-slate-600 text-slate-200"
+                  className="bg-slate-800/50 border-slate-600 text-slate-200 text-sm"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="url" className="text-slate-200 font-medium">URL (optional)</Label>
+              <div className="space-y-1">
+                <Label htmlFor="url" className="text-slate-200 font-medium text-sm">URL (optional)</Label>
                 <Input
                   id="url"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="https://example.com"
-                  className="bg-slate-800/50 border-slate-600 text-slate-200"
+                  className="bg-slate-800/50 border-slate-600 text-slate-200 text-sm"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-200 font-medium">Password *</Label>
+              <div className="space-y-1">
+                <Label htmlFor="password" className="text-slate-200 font-medium text-sm">Password *</Label>
                 <div className="flex space-x-2">
                   <Input
                     id="password"
@@ -255,13 +255,14 @@ export const PasswordManagerDialog: React.FC<PasswordManagerDialogProps> = ({
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter or generate a password"
-                    className="bg-slate-800/50 border-slate-600 text-slate-200 font-mono"
+                    className="bg-slate-800/50 border-slate-600 text-slate-200 font-mono text-sm"
                   />
                   <Button
                     onClick={generatePassword}
                     disabled={isGenerating}
                     variant="outline"
-                    className="border-slate-600 hover:bg-slate-700"
+                    size="sm"
+                    className="border-slate-600 hover:bg-slate-700 px-3"
                   >
                     {isGenerating ? (
                       <RefreshCw className="h-4 w-4 animate-spin" />
@@ -275,18 +276,18 @@ export const PasswordManagerDialog: React.FC<PasswordManagerDialogProps> = ({
 
             {/* Breach Detection Results */}
             {(isCheckingBreach || breachData) && (
-              <div className="p-4 bg-slate-800/30 rounded-lg border border-slate-700">
+              <div className="p-3 bg-slate-800/30 rounded-lg border border-slate-700">
                 <div className="flex items-center space-x-2 mb-2">
                   <Shield className="h-4 w-4 text-cyan-400" />
-                  <span className="text-slate-200 font-medium">Security Check</span>
+                  <span className="text-slate-200 font-medium text-sm">Security Check</span>
                 </div>
                 {isCheckingBreach ? (
                   <div className="flex items-center space-x-2 text-blue-400">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    <span className="text-sm">Checking for data breaches...</span>
+                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    <span className="text-xs">Checking for data breaches...</span>
                   </div>
                 ) : breachData && (
-                  <div className={`text-sm ${breachData.isBreached ? 'text-red-400' : 'text-emerald-400'}`}>
+                  <div className={`text-xs ${breachData.isBreached ? 'text-red-400' : 'text-emerald-400'}`}>
                     {breachData.isBreached ? (
                       <>⚠️ This password has been found in {breachData.breachCount.toLocaleString()} data breaches. Consider using a different password.</>
                     ) : (
@@ -315,10 +316,11 @@ export const PasswordManagerDialog: React.FC<PasswordManagerDialogProps> = ({
             <PasswordStrengthMeter password={password} />
 
             {/* Action Buttons */}
-            <div className="flex justify-end space-x-3 pt-4">
+            <div className="flex justify-end space-x-2 pt-3">
               <Button
                 onClick={onClose}
                 variant="outline"
+                size="sm"
                 className="border-slate-600 hover:bg-slate-700"
               >
                 Cancel
@@ -326,6 +328,7 @@ export const PasswordManagerDialog: React.FC<PasswordManagerDialogProps> = ({
               <Button
                 onClick={handleSave}
                 disabled={isSaving || !name.trim() || !password.trim()}
+                size="sm"
                 className="bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-700 hover:to-emerald-700"
               >
                 <Save className="h-4 w-4 mr-2" />

@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { SignIn, SignUp } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Info } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SignUpPasswordStrength } from '@/components/auth/SignUpPasswordStrength';
 
@@ -33,8 +34,10 @@ const ClerkAuth = () => {
     setSearchParams({ mode: newMode });
   };
 
-  // Get the current origin for redirect URLs - ensure immediate redirect to homepage
-  const redirectUrl = `${window.location.origin}/`;
+  // Ensure proper redirect to production URL or homepage
+  const redirectUrl = window.location.hostname === 'localhost' 
+    ? `${window.location.origin}/`
+    : 'https://prismsearch.vercel.app/';
 
   // Clean Prism theme appearance configuration matching the reference image
   const prismAppearance = {
@@ -51,8 +54,10 @@ const ClerkAuth = () => {
       formButtonPrimary: "w-full bg-prism-primary hover:bg-prism-primary-dark text-white rounded-md h-12 text-sm font-medium transition-all duration-200 shadow-sm font-inter",
       formFieldInput: "w-full px-4 py-3 border border-prism-border bg-prism-surface rounded-md text-sm text-prism-text placeholder:text-prism-text-muted focus:outline-none focus:ring-2 focus:ring-prism-primary/30 focus:border-prism-primary transition-all duration-200 font-inter",
       formFieldLabel: "text-sm font-medium text-prism-text mb-2 font-inter",
-      footerActionLink: "text-prism-primary hover:text-prism-primary-light text-sm transition-colors duration-200 font-inter underline-offset-4 hover:underline",
-      footerActionText: "text-prism-text-muted text-sm font-inter",
+      footerActionLink: "hidden", // Hide the default signup/signin links
+      footerActionText: "hidden", // Hide the default text
+      footerAction: "hidden", // Hide the entire footer action section
+      footer: "hidden", // Hide the footer completely
       identityPreviewText: "text-prism-text font-inter",
       identityPreviewEditButtonIcon: "text-prism-primary",
       userButtonAvatarBox: "w-8 h-8 border border-prism-border rounded-full",
@@ -146,6 +151,16 @@ const ClerkAuth = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Beta Notice for Social Auth */}
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+              <div className="flex items-center gap-2">
+                <Info className="h-4 w-4 text-blue-400" />
+                <p className="text-sm text-blue-400 font-medium">
+                  Google and Microsoft authentication are currently in beta
+                </p>
+              </div>
+            </div>
+
             {/* Loading state during transitions */}
             {isTransitioning ? (
               <div className="flex items-center justify-center py-12">
