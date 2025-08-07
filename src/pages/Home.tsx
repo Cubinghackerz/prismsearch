@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, MessageCircle, Lock, ArrowRight, Shield, FileType, AlertTriangle } from 'lucide-react';
+import { Search, MessageCircle, Lock, ArrowRight, Shield, FileType, AlertTriangle, FileText } from 'lucide-react';
 import AnimatedHeadline from '@/components/AnimatedHeadline';
 import Footer from '@/components/Footer';
 import AuthButtons from '@/components/AuthButtons';
@@ -25,6 +25,14 @@ const Home = () => {
       description: 'Engage with AI assistants for complex queries and conversations',
       path: '/chat',
       gradient: 'from-purple-500 to-pink-500'
+    },
+    {
+      icon: FileText,
+      title: 'Prism Pages',
+      description: 'Create, edit, and collaborate on documents with powerful rich text features',
+      path: '/pages',
+      gradient: 'from-indigo-500 to-purple-500',
+      featured: true
     },
     {
       icon: Lock,
@@ -74,6 +82,9 @@ const Home = () => {
             <Button variant="ghost" onClick={() => navigate('/chat')} className="font-fira-code">
               Chat
             </Button>
+            <Button variant="ghost" onClick={() => navigate('/pages')} className="font-fira-code">
+              Pages
+            </Button>
             <Button variant="ghost" onClick={() => navigate('/vault')} className="font-fira-code">
               Vault
             </Button>
@@ -108,26 +119,26 @@ const Home = () => {
             <AnimatedHeadline />
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto font-fira-code">
               Experience the future of intelligent search, secure password management, 
-              and AI-powered conversations in one unified platform.
+              document creation, and AI-powered conversations in one unified platform.
             </p>
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
-              onClick={() => navigate('/search')}
-              className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 font-fira-code"
+              onClick={() => navigate('/pages')}
+              className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 font-fira-code"
             >
-              Start Searching
+              Try Prism Pages
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
             <Button 
               size="lg" 
               variant="outline" 
-              onClick={() => navigate('/chat')}
+              onClick={() => navigate('/search')}
               className="font-fira-code"
             >
-              Try AI Chat
+              Start Searching
             </Button>
           </div>
         </div>
@@ -137,7 +148,9 @@ const Home = () => {
           {features.map((feature, index) => (
             <Card 
               key={index}
-              className="group cursor-pointer transition-all duration-300 hover:scale-105"
+              className={`group cursor-pointer transition-all duration-300 hover:scale-105 ${
+                feature.featured ? 'ring-2 ring-primary/50 shadow-lg' : ''
+              }`}
               onClick={() => navigate(feature.path)}
             >
               <CardHeader>
@@ -147,6 +160,11 @@ const Home = () => {
                   </div>
                   <div className="flex items-center space-x-2">
                     <CardTitle className="font-fira-code">{feature.title}</CardTitle>
+                    {feature.featured && (
+                      <span className="px-2 py-1 bg-primary/20 text-primary text-xs font-semibold rounded-full border border-primary/30 font-fira-code">
+                        New
+                      </span>
+                    )}
                     {feature.beta && (
                       <span className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs font-semibold rounded-full border border-orange-500/30 font-fira-code">
                         Beta
@@ -172,12 +190,18 @@ const Home = () => {
         </div>
 
         {/* Stats Section */}
-        <div className="grid md:grid-cols-3 gap-8 text-center">
+        <div className="grid md:grid-cols-4 gap-8 text-center">
           <div className="space-y-2">
             <h3 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-fira-code">
               10M+
             </h3>
             <p className="text-muted-foreground font-fira-code">Searches Powered</p>
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-fira-code">
+              50K+
+            </h3>
+            <p className="text-muted-foreground font-fira-code">Documents Created</p>
           </div>
           <div className="space-y-2">
             <h3 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-fira-code">

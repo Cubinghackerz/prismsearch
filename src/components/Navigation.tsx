@@ -2,6 +2,7 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import AuthButtons from "@/components/AuthButtons";
 
 const Navigation = () => {
   const navigate = useNavigate();
@@ -39,6 +40,13 @@ const Navigation = () => {
             Chat
           </Button>
           <Button 
+            variant={isActive("/pages") ? "default" : "ghost"} 
+            onClick={() => navigate("/pages")}
+            className="font-fira-code"
+          >
+            Pages
+          </Button>
+          <Button 
             variant={isActive("/vault") ? "default" : "ghost"} 
             onClick={() => navigate("/vault")}
             className="font-fira-code"
@@ -68,6 +76,7 @@ const Navigation = () => {
           >
             Pricing
           </Button>
+          <AuthButtons />
         </div>
       </nav>
     </header>
