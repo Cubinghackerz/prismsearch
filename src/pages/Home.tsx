@@ -153,9 +153,7 @@ const Home = () => {
           {features.map((feature, index) => (
             <Card 
               key={index}
-              className={`group cursor-pointer transition-all duration-300 hover:scale-105 ${
-                feature.featured ? 'ring-2 ring-primary/50 shadow-lg' : ''
-              }`}
+              className="group cursor-pointer transition-all duration-300 hover:scale-105"
               onClick={() => navigate(feature.path)}
             >
               <CardHeader>
@@ -165,11 +163,6 @@ const Home = () => {
                   </div>
                   <div className="flex items-center space-x-2">
                     <CardTitle className="font-fira-code">{feature.title}</CardTitle>
-                    {feature.featured && (
-                      <span className="px-2 py-1 bg-primary/20 text-primary text-xs font-semibold rounded-full border border-primary/30 font-fira-code">
-                        New
-                      </span>
-                    )}
                     {feature.beta && (
                       <span className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs font-semibold rounded-full border border-orange-500/30 font-fira-code">
                         Beta
