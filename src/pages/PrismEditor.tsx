@@ -30,7 +30,7 @@ const PrismEditor = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState<any>('');
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
