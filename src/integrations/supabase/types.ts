@@ -44,98 +44,6 @@ export type Database = {
         }
         Relationships: []
       }
-      document_collaborators: {
-        Row: {
-          created_at: string
-          document_id: string | null
-          id: string
-          permission: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          document_id?: string | null
-          id?: string
-          permission?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          document_id?: string | null
-          id?: string
-          permission?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "document_collaborators_document_id_fkey"
-            columns: ["document_id"]
-            isOneToOne: false
-            referencedRelation: "documents"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      documents: {
-        Row: {
-          content: Json
-          created_at: string
-          id: string
-          is_public: boolean | null
-          share_token: string | null
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          content?: Json
-          created_at?: string
-          id?: string
-          is_public?: boolean | null
-          share_token?: string | null
-          title?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          content?: Json
-          created_at?: string
-          id?: string
-          is_public?: boolean | null
-          share_token?: string | null
-          title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      email_verification_codes: {
-        Row: {
-          code: string
-          created_at: string
-          email: string
-          expires_at: string
-          id: string
-          is_used: boolean
-        }
-        Insert: {
-          code: string
-          created_at?: string
-          email: string
-          expires_at?: string
-          id?: string
-          is_used?: boolean
-        }
-        Update: {
-          code?: string
-          created_at?: string
-          email?: string
-          expires_at?: string
-          id?: string
-          is_used?: boolean
-        }
-        Relationships: []
-      }
       notes: {
         Row: {
           content_encrypted: string
@@ -284,10 +192,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      cleanup_expired_verification_codes: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
       delete_old_chat_messages: {
         Args: Record<PropertyKey, never>
         Returns: undefined
