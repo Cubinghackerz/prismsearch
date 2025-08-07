@@ -46,6 +46,13 @@ const Navigation = () => {
             Vault
           </Button>
           <Button 
+            variant={isActive("/pages") ? "default" : "ghost"} 
+            onClick={() => navigate("/pages")}
+            className="font-fira-code"
+          >
+            Pages
+          </Button>
+          <Button 
             variant={isActive("/conversions") ? "default" : "ghost"} 
             onClick={() => navigate("/conversions")}
             className="relative font-fira-code"

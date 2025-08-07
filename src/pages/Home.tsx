@@ -35,6 +35,13 @@ const Home = () => {
     },
     {
       icon: FileType,
+      title: 'Prism Pages',
+      description: 'Rich-text document editor with real-time collaboration and cloud sync',
+      path: '/pages',
+      gradient: 'from-indigo-500 to-purple-500'
+    },
+    {
+      icon: FileType,
       title: 'File Conversions',
       description: 'Convert between different file formats while maintaining quality',
       path: '/conversions',
@@ -77,6 +84,9 @@ const Home = () => {
             <Button variant="ghost" onClick={() => navigate('/vault')} className="font-fira-code">
               Vault
             </Button>
+            <Button variant="ghost" onClick={() => navigate('/pages')} className="font-fira-code">
+              Pages
+            </Button>
             <Button 
               variant="ghost" 
               onClick={() => navigate('/conversions')}
@@ -108,7 +118,7 @@ const Home = () => {
             <AnimatedHeadline />
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto font-fira-code">
               Experience the future of intelligent search, secure password management, 
-              and AI-powered conversations in one unified platform.
+              collaborative document editing, and AI-powered conversations in one unified platform.
             </p>
           </div>
           
@@ -124,10 +134,10 @@ const Home = () => {
             <Button 
               size="lg" 
               variant="outline" 
-              onClick={() => navigate('/chat')}
+              onClick={() => navigate('/pages')}
               className="font-fira-code"
             >
-              Try AI Chat
+              Try Prism Pages
             </Button>
           </div>
         </div>
