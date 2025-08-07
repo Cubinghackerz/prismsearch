@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useUser } from '@clerk/clerk-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Save, Share, Users, Download, FileText } from 'lucide-react';
@@ -25,6 +26,7 @@ const PrismEditor = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
+  const { user, isSignedIn } = useUser();
   
   const [document, setDocument] = useState<Document | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,13 +37,19 @@ const PrismEditor = () => {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   useEffect(() => {
+    if (!isSignedIn) {
+      toast.error('Please sign in using the button in the navigation to access documents');
+      navigate('/pages');
+      return;
+    }
+
     if (documentId) {
       loadDocument();
     } else {
       setIsLoading(false);
       navigate('/pages');
     }
-  }, [documentId]);
+  }, [documentId, isSignedIn]);
 
   const loadDocument = async () => {
     if (!documentId) return;

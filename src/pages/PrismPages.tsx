@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useUser } from '@clerk/clerk-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -26,6 +27,7 @@ const PrismPages = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
+  const { user, isSignedIn } = useUser();
 
   const { data: documents, isLoading, refetch } = useQuery({
     queryKey: ['documents'],
@@ -45,15 +47,12 @@ const PrismPages = () => {
   });
 
   const createNewDocument = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast.error('Please sign in to create documents');
-        navigate('/auth');
-        return;
-      }
+    if (!isSignedIn || !user) {
+      toast.error('Please sign in using the button in the navigation to create documents');
+      return;
+    }
 
+    try {
       const { data, error } = await supabase
         .from('documents')
         .insert({
@@ -144,7 +143,9 @@ const PrismPages = () => {
             <p className="text-muted-foreground mb-4 font-fira-code">
               {searchQuery 
                 ? 'Try adjusting your search terms' 
-                : 'Create your first document to get started'
+                : isSignedIn 
+                  ? 'Create your first document to get started'
+                  : 'Sign in to create and manage your documents'
               }
             </p>
             {!searchQuery && (
