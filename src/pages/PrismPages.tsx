@@ -53,11 +53,12 @@ const PrismPages = () => {
     }
 
     try {
+      // Use the Clerk user ID directly as a string since our database accepts text
       const { data, error } = await supabase
         .from('documents')
         .insert({
           title: 'Untitled Document',
-          user_id: user.id,
+          user_id: user.id, // Clerk user ID as string
         })
         .select()
         .single();
@@ -87,9 +88,14 @@ const PrismPages = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div className="mb-4 md:mb-0">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-fira-code">
-              Prism Pages
-            </h1>
+            <div className="flex items-center space-x-3">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-fira-code">
+                Prism Pages
+              </h1>
+              <span className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs font-semibold rounded-full border border-orange-500/30 font-fira-code">
+                Beta
+              </span>
+            </div>
             <p className="text-muted-foreground mt-2 font-fira-code">
               Create, edit, and collaborate on documents with powerful features
             </p>

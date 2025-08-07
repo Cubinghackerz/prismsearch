@@ -32,7 +32,7 @@ const Home = () => {
       description: 'Create, edit, and collaborate on documents with powerful rich text features',
       path: '/pages',
       gradient: 'from-indigo-500 to-purple-500',
-      featured: true
+      beta: true
     },
     {
       icon: Lock,
@@ -82,8 +82,13 @@ const Home = () => {
             <Button variant="ghost" onClick={() => navigate('/chat')} className="font-fira-code">
               Chat
             </Button>
-            <Button variant="ghost" onClick={() => navigate('/pages')} className="font-fira-code">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/pages')}
+              className="relative font-fira-code"
+            >
               Pages
+              <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
             </Button>
             <Button variant="ghost" onClick={() => navigate('/vault')} className="font-fira-code">
               Vault
