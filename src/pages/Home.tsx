@@ -30,9 +30,9 @@ const Home = () => {
       icon: FileText,
       title: 'Prism Pages',
       description: 'Create, edit, and collaborate on documents with powerful rich text features',
-      path: '/pages',
+      path: null,
       gradient: 'from-indigo-500 to-purple-500',
-      beta: true
+      comingSoon: true
     },
     {
       icon: Lock,
@@ -84,11 +84,11 @@ const Home = () => {
             </Button>
             <Button 
               variant="ghost" 
-              onClick={() => navigate('/pages')}
-              className="relative font-fira-code"
+              disabled
+              className="relative font-fira-code opacity-50 cursor-not-allowed"
             >
               Pages
-              <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
+              <span className="ml-1 px-1.5 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30 font-fira-code">Coming Soon</span>
             </Button>
             <Button variant="ghost" onClick={() => navigate('/vault')} className="font-fira-code">
               Vault
@@ -131,19 +131,19 @@ const Home = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
-              onClick={() => navigate('/pages')}
-              className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 font-fira-code"
+              onClick={() => navigate('/search')}
+              className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 font-fira-code"
             >
-              Try Prism Pages
+              Start Searching
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
             <Button 
               size="lg" 
               variant="outline" 
-              onClick={() => navigate('/search')}
+              onClick={() => navigate('/chat')}
               className="font-fira-code"
             >
-              Start Searching
+              Try AI Chat
             </Button>
           </div>
         </div>
@@ -153,8 +153,10 @@ const Home = () => {
           {features.map((feature, index) => (
             <Card 
               key={index}
-              className="group cursor-pointer transition-all duration-300 hover:scale-105"
-              onClick={() => navigate(feature.path)}
+              className={`group transition-all duration-300 ${
+                feature.path ? 'cursor-pointer hover:scale-105' : 'opacity-75'
+              }`}
+              onClick={() => feature.path && navigate(feature.path)}
             >
               <CardHeader>
                 <div className="flex items-center space-x-3">
@@ -168,6 +170,11 @@ const Home = () => {
                         Beta
                       </span>
                     )}
+                    {feature.comingSoon && (
+                      <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full border border-blue-500/30 font-fira-code">
+                        Coming Soon
+                      </span>
+                    )}
                   </div>
                 </div>
                 <CardDescription className="font-fira-code">
@@ -177,10 +184,15 @@ const Home = () => {
               <CardContent>
                 <Button 
                   variant="ghost" 
-                  className="w-full justify-start group-hover:bg-accent/50 font-fira-code"
+                  className={`w-full justify-start font-fira-code ${
+                    feature.path ? 'group-hover:bg-accent/50' : 'opacity-50 cursor-not-allowed'
+                  }`}
+                  disabled={!feature.path}
                 >
-                  Explore Feature
-                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  {feature.comingSoon ? 'Coming Soon' : 'Explore Feature'}
+                  {feature.path && (
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  )}
                 </Button>
               </CardContent>
             </Card>
