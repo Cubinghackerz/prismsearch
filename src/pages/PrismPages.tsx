@@ -32,6 +32,10 @@ const PrismPages = () => {
   const { data: documents, isLoading, refetch } = useQuery({
     queryKey: ['documents'],
     queryFn: async () => {
+      if (!isSignedIn) {
+        return [];
+      }
+      
       const { data, error } = await supabase
         .from('documents')
         .select('*')
@@ -44,6 +48,7 @@ const PrismPages = () => {
       
       return data as Document[];
     },
+    enabled: isSignedIn,
   });
 
   const createNewDocument = async () => {
@@ -53,12 +58,11 @@ const PrismPages = () => {
     }
 
     try {
-      // Use the Clerk user ID directly as a string since our database accepts text
       const { data, error } = await supabase
         .from('documents')
         .insert({
           title: 'Untitled Document',
-          user_id: user.id, // Clerk user ID as string
+          user_id: user.id,
         })
         .select()
         .single();

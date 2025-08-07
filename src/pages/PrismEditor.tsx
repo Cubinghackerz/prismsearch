@@ -52,7 +52,7 @@ const PrismEditor = () => {
   }, [documentId, isSignedIn]);
 
   const loadDocument = async () => {
-    if (!documentId) return;
+    if (!documentId || !isSignedIn) return;
     
     try {
       const { data, error } = await supabase
@@ -80,7 +80,7 @@ const PrismEditor = () => {
   };
 
   const saveDocument = async () => {
-    if (!document || !documentId) return;
+    if (!document || !documentId || !isSignedIn) return;
     
     setIsSaving(true);
     try {
@@ -111,7 +111,7 @@ const PrismEditor = () => {
 
   // Auto-save functionality
   useEffect(() => {
-    if (!document) return;
+    if (!document || !isSignedIn) return;
     
     const autoSaveTimer = setTimeout(() => {
       saveDocument();
