@@ -4,17 +4,28 @@ import { Document, CreateDocumentData, UpdateDocumentData } from "@/types/docume
 
 export class DocumentService {
   static async createDocument(data: CreateDocumentData): Promise<Document> {
+    // Get the current user first
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw new Error('User not authenticated');
+    }
+
     const { data: document, error } = await supabase
       .from('documents')
       .insert({
         title: data.title,
         content: data.content || {},
-        user_id: (await supabase.auth.getUser()).data.user?.id
+        user_id: user.id // Use the user ID directly
       })
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error creating document:', error);
+      throw error;
+    }
+    
     return document;
   }
 
@@ -25,29 +36,52 @@ export class DocumentService {
       .eq('id', id)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching document:', error);
+      throw error;
+    }
+    
     return document;
   }
 
   static async getUserDocuments(): Promise<Document[]> {
+    // Get the current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw new Error('User not authenticated');
+    }
+
     const { data: documents, error } = await supabase
       .from('documents')
       .select('*')
+      .eq('user_id', user.id) // Filter by user_id explicitly
       .order('updated_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching user documents:', error);
+      throw error;
+    }
+    
     return documents || [];
   }
 
   static async updateDocument(id: string, data: UpdateDocumentData): Promise<Document> {
     const { data: document, error } = await supabase
       .from('documents')
-      .update(data)
+      .update({
+        ...data,
+        updated_at: new Date().toISOString() // Explicitly set updated_at
+      })
       .eq('id', id)
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error updating document:', error);
+      throw error;
+    }
+    
     return document;
   }
 
@@ -57,7 +91,10 @@ export class DocumentService {
       .delete()
       .eq('id', id);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error deleting document:', error);
+      throw error;
+    }
   }
 
   static async shareDocument(id: string, userEmail: string, permission: 'view' | 'edit'): Promise<void> {
@@ -71,6 +108,9 @@ export class DocumentService {
         permission
       });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error sharing document:', error);
+      throw error;
+    }
   }
 }
