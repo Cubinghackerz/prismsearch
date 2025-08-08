@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,8 +24,7 @@ interface Document {
 
 const PrismEditor = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const documentId = searchParams.get('id');
+  const { docId } = useParams();
   const { user, isSignedIn } = useUser();
   
   const [document, setDocument] = useState<Document | null>(null);
@@ -38,33 +37,33 @@ const PrismEditor = () => {
 
   useEffect(() => {
     if (!isSignedIn) {
-      toast.error('Please sign in using the button in the navigation to access documents');
-      navigate('/pages');
+      toast.error('Please sign in to access documents');
+      navigate('/docs');
       return;
     }
 
-    if (documentId) {
+    if (docId) {
       loadDocument();
     } else {
       setIsLoading(false);
-      navigate('/pages');
+      navigate('/docs');
     }
-  }, [documentId, isSignedIn]);
+  }, [docId, isSignedIn]);
 
   const loadDocument = async () => {
-    if (!documentId || !isSignedIn) return;
+    if (!docId || !isSignedIn) return;
     
     try {
       const { data, error } = await supabase
         .from('documents')
         .select('*')
-        .eq('id', documentId)
+        .eq('id', docId)
         .single();
 
       if (error) {
         console.error('Error loading document:', error);
         toast.error('Failed to load document');
-        navigate('/pages');
+        navigate('/docs');
         return;
       }
 
@@ -75,12 +74,12 @@ const PrismEditor = () => {
     } catch (error) {
       console.error('Error loading document:', error);
       toast.error('Failed to load document');
-      navigate('/pages');
+      navigate('/docs');
     }
   };
 
   const saveDocument = async () => {
-    if (!document || !documentId || !isSignedIn) return;
+    if (!document || !docId || !isSignedIn) return;
     
     setIsSaving(true);
     try {
@@ -91,7 +90,7 @@ const PrismEditor = () => {
           content: content,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', documentId);
+        .eq('id', docId);
 
       if (error) {
         console.error('Error saving document:', error);
@@ -115,7 +114,7 @@ const PrismEditor = () => {
     
     const autoSaveTimer = setTimeout(() => {
       saveDocument();
-    }, 2000);
+    }, 5000);
 
     return () => clearTimeout(autoSaveTimer);
   }, [title, content]);
@@ -137,7 +136,7 @@ const PrismEditor = () => {
         <div className="text-center">
           <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground mb-4 font-fira-code">Document not found</p>
-          <Button onClick={() => navigate('/pages')} className="font-fira-code">
+          <Button onClick={() => navigate('/docs')} className="font-fira-code">
             Back to Documents
           </Button>
         </div>
@@ -155,7 +154,7 @@ const PrismEditor = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/pages')}
+                onClick={() => navigate('/docs')}
                 className="font-fira-code"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />

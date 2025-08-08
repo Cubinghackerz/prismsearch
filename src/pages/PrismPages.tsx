@@ -53,7 +53,7 @@ const PrismPages = () => {
 
   const createNewDocument = async () => {
     if (!isSignedIn || !user) {
-      toast.error('Please sign in using the button in the navigation to create documents');
+      toast.error('Please sign in to create documents');
       return;
     }
 
@@ -73,7 +73,7 @@ const PrismPages = () => {
         return;
       }
 
-      navigate(`/pages/editor?id=${data.id}`);
+      navigate(`/docs/${data.id}`);
     } catch (error) {
       console.error('Error creating document:', error);
       toast.error('Failed to create document');
@@ -171,7 +171,7 @@ const PrismPages = () => {
               <Card 
                 key={doc.id}
                 className="cursor-pointer hover:shadow-lg transition-all duration-200 group"
-                onClick={() => navigate(`/pages/editor?id=${doc.id}`)}
+                onClick={() => navigate(`/docs/${doc.id}`)}
               >
                 <CardHeader>
                   <div className="flex items-start justify-between">
