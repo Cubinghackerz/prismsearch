@@ -94,8 +94,21 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ docId }) => {
       setDocument(data);
       setTitle(data.title);
       
+      // Handle content properly - check if it's valid JSON content or empty
       if (editor && data.content) {
-        editor.commands.setContent(data.content);
+        // If content is an object (TipTap JSON format), use it directly
+        if (typeof data.content === 'object' && data.content !== null) {
+          editor.commands.setContent(data.content);
+        } else if (typeof data.content === 'string') {
+          // If it's a string, try to parse it or use as HTML
+          try {
+            const parsedContent = JSON.parse(data.content);
+            editor.commands.setContent(parsedContent);
+          } catch {
+            // If parsing fails, treat as HTML string
+            editor.commands.setContent(data.content);
+          }
+        }
       }
     } catch (error) {
       console.error('Error loading document:', error);
