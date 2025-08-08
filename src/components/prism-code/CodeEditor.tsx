@@ -42,14 +42,15 @@ const CodeEditor = ({ language, code, onChange }: CodeEditorProps) => {
           // Handle tab key for indentation
           if (e.key === 'Tab') {
             e.preventDefault();
-            const start = e.target.selectionStart;
-            const end = e.target.selectionEnd;
-            const value = e.target.value;
+            const target = e.target as HTMLTextAreaElement;
+            const start = target.selectionStart;
+            const end = target.selectionEnd;
+            const value = target.value;
             const newValue = value.substring(0, start) + '  ' + value.substring(end);
             onChange(newValue);
             // Set cursor position after the inserted spaces
             setTimeout(() => {
-              e.target.selectionStart = e.target.selectionEnd = start + 2;
+              target.selectionStart = target.selectionEnd = start + 2;
             }, 0);
           }
         }}
