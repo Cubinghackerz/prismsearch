@@ -39,6 +39,13 @@ const Navigation = () => {
             Chat
           </Button>
           <Button 
+            variant={isActive("/docs") ? "default" : "ghost"} 
+            onClick={() => navigate("/docs")}
+            className="font-fira-code"
+          >
+            Pages
+          </Button>
+          <Button 
             variant={isActive("/vault") ? "default" : "ghost"} 
             onClick={() => navigate("/vault")}
             className="font-fira-code"
