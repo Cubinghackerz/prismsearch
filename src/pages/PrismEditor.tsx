@@ -3,15 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Save, Share, Users, Download, FileText, Clock } from 'lucide-react';
+import { ArrowLeft, Save, Share, Users, Download, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import DocumentEditor from '@/components/editor/DocumentEditor';
+import { toast } from 'sonner';
+import RichTextEditor from '@/components/pages/RichTextEditor';
+import DocumentToolbar from '@/components/pages/DocumentToolbar';
 import ShareDialog from '@/components/pages/ShareDialog';
-import Navigation from '@/components/Navigation';
-import { formatDistanceToNow } from 'date-fns';
 
 interface Document {
   id: string;
@@ -37,15 +35,10 @@ const PrismEditor = () => {
   const [content, setContent] = useState<any>('');
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
     if (!isSignedIn) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to access documents",
-        variant: "destructive"
-      });
+      toast.error('Please sign in using the button in the navigation to access documents');
       navigate('/pages');
       return;
     }
@@ -70,11 +63,7 @@ const PrismEditor = () => {
 
       if (error) {
         console.error('Error loading document:', error);
-        toast({
-          title: "Failed to load document",
-          description: "An error occurred while loading the document",
-          variant: "destructive"
-        });
+        toast.error('Failed to load document');
         navigate('/pages');
         return;
       }
@@ -85,11 +74,7 @@ const PrismEditor = () => {
       setIsLoading(false);
     } catch (error) {
       console.error('Error loading document:', error);
-      toast({
-        title: "Failed to load document", 
-        description: "An unexpected error occurred",
-        variant: "destructive"
-      });
+      toast.error('Failed to load document');
       navigate('/pages');
     }
   };
@@ -110,26 +95,15 @@ const PrismEditor = () => {
 
       if (error) {
         console.error('Error saving document:', error);
-        toast({
-          title: "Failed to save document",
-          description: "An error occurred while saving",
-          variant: "destructive"
-        });
+        toast.error('Failed to save document');
         return;
       }
 
       setLastSaved(new Date());
-      toast({
-        title: "Document saved",
-        description: "Your changes have been saved successfully"
-      });
+      toast.success('Document saved');
     } catch (error) {
       console.error('Error saving document:', error);
-      toast({
-        title: "Failed to save document",
-        description: "An unexpected error occurred",
-        variant: "destructive"
-      });
+      toast.error('Failed to save document');
     } finally {
       setIsSaving(false);
     }
@@ -148,10 +122,10 @@ const PrismEditor = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-prism-bg to-prism-surface flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <FileText className="h-12 w-12 text-prism-text-muted mx-auto mb-4 animate-pulse" />
-          <p className="text-prism-text-muted font-fira-code">Loading document...</p>
+          <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4 animate-pulse" />
+          <p className="text-muted-foreground font-fira-code">Loading document...</p>
         </div>
       </div>
     );
@@ -159,10 +133,10 @@ const PrismEditor = () => {
 
   if (!document) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-prism-bg to-prism-surface flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <FileText className="h-12 w-12 text-prism-text-muted mx-auto mb-4" />
-          <p className="text-prism-text-muted mb-4 font-fira-code">Document not found</p>
+          <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground mb-4 font-fira-code">Document not found</p>
           <Button onClick={() => navigate('/pages')} className="font-fira-code">
             Back to Documents
           </Button>
@@ -172,11 +146,9 @@ const PrismEditor = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-prism-bg to-prism-surface">
-      <Navigation />
-      
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-prism-border bg-prism-surface/80 backdrop-blur-md sticky top-0 z-40">
+      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -195,7 +167,7 @@ const PrismEditor = () => {
                 <Input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="border-none bg-transparent text-lg font-medium focus-visible:ring-0 font-fira-code text-prism-text"
+                  className="border-none bg-transparent text-lg font-medium focus-visible:ring-0 font-fira-code"
                   placeholder="Untitled Document"
                 />
               </div>
@@ -203,9 +175,8 @@ const PrismEditor = () => {
 
             <div className="flex items-center space-x-2">
               {lastSaved && (
-                <span className="text-sm text-prism-text-muted font-fira-code flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  Saved {formatDistanceToNow(lastSaved, { addSuffix: true })}
+                <span className="text-sm text-muted-foreground font-fira-code">
+                  Saved {lastSaved.toLocaleTimeString()}
                 </span>
               )}
               
@@ -233,15 +204,17 @@ const PrismEditor = () => {
         </div>
       </header>
 
+      {/* Toolbar */}
+      <DocumentToolbar />
+
       {/* Editor */}
-      <main className="container mx-auto px-6 py-8">
-        <Card className="max-w-5xl mx-auto bg-prism-surface/50 border-prism-border shadow-xl">
-          <DocumentEditor
+      <main className="container mx-auto px-6 py-6">
+        <div className="max-w-4xl mx-auto">
+          <RichTextEditor
             content={content}
             onChange={setContent}
-            className="min-h-[70vh]"
           />
-        </Card>
+        </div>
       </main>
 
       {/* Share Dialog */}

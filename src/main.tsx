@@ -59,7 +59,9 @@ if ('serviceWorker' in navigator) {
 
 const root = ReactDOM.createRoot(document.getElementById('root')!);
 root.render(
-  <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
-    <App />
-  </ClerkProvider>
+  <React.StrictMode>
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+      <App />
+    </ClerkProvider>
+  </React.StrictMode>
 );

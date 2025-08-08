@@ -19,8 +19,6 @@ import PrismConversions from "./pages/PrismConversions";
 import PrismDetector from "./pages/PrismDetector";
 import ClerkAuth from "./pages/ClerkAuth";
 import SecureRedirect from "./pages/SecureRedirect";
-import PrismPages from "./pages/PrismPages";
-import PrismEditor from "./pages/PrismEditor";
 
 // Create QueryClient with optimized settings for better performance
 const queryClient = new QueryClient({
@@ -51,8 +49,6 @@ const AppContent: React.FC = () => {
         <Route path="/detector" element={<PrismDetector />} />
         <Route path="/auth" element={<ClerkAuth />} />
         <Route path="/secure-redirect" element={<SecureRedirect />} />
-        <Route path="/pages" element={<PrismPages />} />
-        <Route path="/pages/editor" element={<PrismEditor />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <AuthPromptDialog isOpen={showPrompt} onClose={closePrompt} />
@@ -61,20 +57,16 @@ const AppContent: React.FC = () => {
   );
 };
 
-const App: React.FC = () => {
-  return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <TooltipProvider>
-            <BrowserRouter>
-              <AppContent />
-            </BrowserRouter>
-          </TooltipProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </React.StrictMode>
-  );
-};
+const App: React.FC = () => (
+  <QueryClientProvider client={queryClient}>
+    <ThemeProvider>
+      <TooltipProvider>
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
+  </QueryClientProvider>
+);
 
 export default App;

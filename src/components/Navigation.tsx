@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -39,11 +40,12 @@ const Navigation = () => {
             Chat
           </Button>
           <Button 
-            variant={isActive("/pages") ? "default" : "ghost"} 
-            onClick={() => navigate("/pages")}
-            className="font-fira-code"
+            variant="ghost"
+            disabled
+            className="relative font-fira-code opacity-50 cursor-not-allowed"
           >
             Pages
+            <span className="ml-1 px-1.5 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30 font-fira-code">Coming Soon</span>
           </Button>
           <Button 
             variant={isActive("/vault") ? "default" : "ghost"} 
