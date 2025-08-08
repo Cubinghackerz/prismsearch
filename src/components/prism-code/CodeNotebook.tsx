@@ -222,14 +222,14 @@ const CodeNotebook = () => {
           const parts = trimmedLine.split('=');
           if (parts.length >= 2) {
             const varName = parts[0].trim();
-            let value = parts.slice(1).join('=').trim().replace(/^["']|["']$/g, '');
+            let value: any = parts.slice(1).join('=').trim().replace(/^["']|["']$/g, '');
             
             // Handle numeric values
             if (!isNaN(Number(value)) && value !== '') {
-              value = Number(value);
+              variables[varName] = Number(value);
+            } else {
+              variables[varName] = value;
             }
-            
-            variables[varName] = value;
           }
         } else if (trimmedLine.startsWith('def ')) {
           // Function definition - just acknowledge it
