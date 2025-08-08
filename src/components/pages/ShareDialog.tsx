@@ -39,7 +39,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({
   const [isPublic, setIsPublic] = useState(document.is_public);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const shareUrl = `${window.location.origin}/pages/shared/${document.share_token}`;
+  const shareUrl = `${window.location.origin}/docs/shared/${document.share_token}`;
 
   const togglePublicAccess = async () => {
     setIsUpdating(true);
