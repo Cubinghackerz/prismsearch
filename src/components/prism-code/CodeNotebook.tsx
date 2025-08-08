@@ -1,9 +1,8 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Play, Plus, Code, AlertTriangle } from "lucide-react";
+import { Play, Plus, Code, AlertTriangle, Trash2, Download } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import CodeEditor from "./CodeEditor";
 import Terminal from "./Terminal";
@@ -31,6 +30,58 @@ const CodeNotebook = () => {
       output: ''
     };
     setCells([...cells, newCell]);
+  };
+
+  const deleteCell = (id: number) => {
+    if (cells.length > 1) {
+      setCells(cells.filter(cell => cell.id !== id));
+    }
+  };
+
+  const downloadCell = (id: number) => {
+    const cell = cells.find(c => c.id === id);
+    if (!cell) return;
+
+    const fileExtensions = {
+      javascript: 'js',
+      python: 'py',
+      typescript: 'ts',
+      html: 'html',
+      css: 'css',
+      json: 'json'
+    };
+
+    const extension = fileExtensions[cell.language as keyof typeof fileExtensions] || 'txt';
+    const filename = `prism-code-cell-${id}.${extension}`;
+    
+    const blob = new Blob([cell.code], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadAllCells = () => {
+    const allCode = cells.map((cell, index) => {
+      const langLabel = supportedLanguages.find(l => l.value === cell.language)?.label;
+      return `// Cell ${index + 1} - ${langLabel}\n${cell.code}\n\n`;
+    }).join('');
+
+    const blob = new Blob([allCode], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'prism-code-notebook.txt';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const updateCell = (id: number, updates: any) => {
@@ -228,6 +279,10 @@ const CodeNotebook = () => {
               ))}
             </SelectContent>
           </Select>
+          <Button onClick={downloadAllCells} variant="outline" className="font-inter">
+            <Download className="w-4 h-4 mr-2" />
+            Download All
+          </Button>
           <Button onClick={addCell} className="font-inter">
             <Plus className="w-4 h-4 mr-2" />
             Add Cell
@@ -254,14 +309,35 @@ const CodeNotebook = () => {
                 <CardTitle className="text-lg font-semibold">
                   Cell {index + 1} ({supportedLanguages.find(l => l.value === cell.language)?.label})
                 </CardTitle>
-                <Button
-                  onClick={() => runCell(cell.id)}
-                  size="sm"
-                  className="font-inter"
-                >
-                  <Play className="w-4 h-4 mr-2" />
-                  Run
-                </Button>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    onClick={() => downloadCell(cell.id)}
+                    size="sm"
+                    variant="outline"
+                    className="font-inter"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download
+                  </Button>
+                  <Button
+                    onClick={() => runCell(cell.id)}
+                    size="sm"
+                    className="font-inter"
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    Run
+                  </Button>
+                  {cells.length > 1 && (
+                    <Button
+                      onClick={() => deleteCell(cell.id)}
+                      size="sm"
+                      variant="destructive"
+                      className="font-inter"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent className="p-0">
