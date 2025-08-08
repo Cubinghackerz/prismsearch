@@ -49,7 +49,8 @@ const CodeNotebook = () => {
       id: Date.now(),
       language: selectedLanguage,
       code: '',
-      output: ''
+      output: '',
+      userInputs: []
     };
     setCells([...cells, newCell]);
   };
