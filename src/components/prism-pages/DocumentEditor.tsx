@@ -1,23 +1,13 @@
 
-import React, { useEffect, useState } from 'react';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Placeholder from '@tiptap/extension-placeholder';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { 
-  Bold, 
-  Italic, 
-  Underline, 
-  AlignLeft, 
-  AlignCenter, 
-  AlignRight,
-  List,
-  ListOrdered,
-  Undo,
-  Redo,
   Save,
-  Users
+  Users,
+  Undo,
+  Redo
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@clerk/clerk-react';
@@ -31,37 +21,11 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ docId }) => {
   const { userId } = useAuth();
   const [document, setDocument] = useState<any>(null);
   const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Placeholder.configure({
-        placeholder: 'Start writing your document...',
-      }),
-    ],
-    content: '',
-    editorProps: {
-      attributes: {
-        class: 'prose prose-lg max-w-none focus:outline-none min-h-[500px] px-6 py-4',
-      },
-    },
-    onUpdate: ({ editor }) => {
-      // Auto-save after 2 seconds of inactivity
-      debounceAutoSave();
-    },
-  });
-
-  // Debounced auto-save function
-  const debounceAutoSave = React.useCallback(
-    debounce(() => {
-      if (editor && document) {
-        saveDocument();
-      }
-    }, 2000),
-    [editor, document]
-  );
+  const [history, setHistory] = useState<string[]>(['']);
+  const [historyIndex, setHistoryIndex] = useState(0);
 
   // Simple debounce implementation
   function debounce(func: Function, wait: number) {
@@ -75,6 +39,16 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ docId }) => {
       timeout = setTimeout(later, wait);
     };
   }
+
+  // Debounced auto-save function
+  const debounceAutoSave = useCallback(
+    debounce(() => {
+      if (document) {
+        saveDocument();
+      }
+    }, 2000),
+    [document, title, content]
+  );
 
   // Load document data
   useEffect(() => {
@@ -94,22 +68,20 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ docId }) => {
       setDocument(data);
       setTitle(data.title);
       
-      // Handle content properly - check if it's valid JSON content or empty
-      if (editor && data.content) {
-        // If content is an object (TipTap JSON format), use it directly
+      // Handle content - convert from TipTap format if needed
+      let textContent = '';
+      if (data.content) {
         if (typeof data.content === 'object' && data.content !== null) {
-          editor.commands.setContent(data.content);
+          // Convert TipTap JSON to plain text
+          textContent = extractTextFromTipTapJSON(data.content);
         } else if (typeof data.content === 'string') {
-          // If it's a string, try to parse it or use as HTML
-          try {
-            const parsedContent = JSON.parse(data.content);
-            editor.commands.setContent(parsedContent);
-          } catch {
-            // If parsing fails, treat as HTML string
-            editor.commands.setContent(data.content);
-          }
+          textContent = data.content;
         }
       }
+      
+      setContent(textContent);
+      setHistory([textContent]);
+      setHistoryIndex(0);
     } catch (error) {
       console.error('Error loading document:', error);
       toast.error('Failed to load document');
@@ -118,18 +90,41 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ docId }) => {
     }
   };
 
+  // Helper function to extract text from TipTap JSON format
+  const extractTextFromTipTapJSON = (json: any): string => {
+    if (!json || !json.content) return '';
+    
+    let text = '';
+    
+    const extractFromNode = (node: any): string => {
+      if (node.type === 'text') {
+        return node.text || '';
+      }
+      
+      if (node.content && Array.isArray(node.content)) {
+        return node.content.map(extractFromNode).join('');
+      }
+      
+      return '';
+    };
+    
+    if (Array.isArray(json.content)) {
+      text = json.content.map(extractFromNode).join('\n');
+    }
+    
+    return text;
+  };
+
   const saveDocument = async () => {
-    if (!editor || !document || isSaving) return;
+    if (!document || isSaving) return;
 
     setIsSaving(true);
     try {
-      const content = editor.getJSON();
-      
       const { error } = await supabase
         .from('documents')
         .update({ 
           title,
-          content,
+          content: content, // Store as plain text
           updated_at: new Date().toISOString()
         })
         .eq('id', docId);
@@ -150,16 +145,41 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ docId }) => {
     debounceAutoSave();
   };
 
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newContent = e.target.value;
+    setContent(newContent);
+    
+    // Update history for undo/redo
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newContent);
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+    
+    debounceAutoSave();
+  };
+
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setContent(history[newIndex]);
+    }
+  };
+
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setContent(history[newIndex]);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-prism-primary"></div>
       </div>
     );
-  }
-
-  if (!editor) {
-    return <div>Loading editor...</div>;
   }
 
   return (
@@ -195,57 +215,29 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ docId }) => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => editor.chain().focus().toggleBold().run()}
-            className={editor.isActive('bold') ? 'bg-prism-primary/10' : ''}
-          >
-            <Bold className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-            className={editor.isActive('italic') ? 'bg-prism-primary/10' : ''}
-          >
-            <Italic className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
-            className={editor.isActive('bulletList') ? 'bg-prism-primary/10' : ''}
-          >
-            <List className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            className={editor.isActive('orderedList') ? 'bg-prism-primary/10' : ''}
-          >
-            <ListOrdered className="w-4 h-4" />
-          </Button>
-          <div className="w-px h-6 bg-border mx-2" />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().undo().run()}
-            disabled={!editor.can().undo()}
+            onClick={handleUndo}
+            disabled={historyIndex === 0}
           >
             <Undo className="w-4 h-4" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => editor.chain().focus().redo().run()}
-            disabled={!editor.can().redo()}
+            onClick={handleRedo}
+            disabled={historyIndex === history.length - 1}
           >
             <Redo className="w-4 h-4" />
           </Button>
         </div>
 
         {/* Editor Content */}
-        <div className="min-h-[500px] bg-background">
-          <EditorContent editor={editor} />
+        <div className="bg-background">
+          <Textarea
+            value={content}
+            onChange={handleContentChange}
+            placeholder="Start writing your document..."
+            className="min-h-[500px] border-none resize-none focus:ring-0 text-lg leading-relaxed p-6"
+          />
         </div>
       </div>
 
@@ -255,7 +247,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ docId }) => {
           Last saved: {document?.updated_at ? new Date(document.updated_at).toLocaleString() : 'Never'}
         </div>
         <div>
-          {editor.storage.characterCount?.characters() || 0} characters
+          {content.length} characters
         </div>
       </div>
     </div>
