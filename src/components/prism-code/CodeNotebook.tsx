@@ -6,33 +6,44 @@ import { Play, Plus, Code, AlertTriangle, Trash2, Download } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import CodeEditor from "./CodeEditor";
 import Terminal from "./Terminal";
+import UserInputDialog from "./UserInputDialog";
+
 const CodeNotebook = () => {
   const [cells, setCells] = useState([{
     id: 1,
-    language: 'javascript',
-    code: 'console.log("Hello, Prism Code!");',
-    output: ''
+    language: 'python',
+    code: 'name = input("Enter your name: ")\nprint(f"Hello, {name}!")',
+    output: '',
+    userInputs: []
   }]);
-  const [selectedLanguage, setSelectedLanguage] = useState('javascript');
+  const [selectedLanguage, setSelectedLanguage] = useState('python');
+  const [inputDialog, setInputDialog] = useState<{
+    isOpen: boolean;
+    cellId: number;
+    prompt: string;
+    onSubmit: (value: string) => void;
+  }>({ isOpen: false, cellId: 0, prompt: '', onSubmit: () => {} });
+
   const supportedLanguages = [{
-    value: 'javascript',
-    label: 'JavaScript'
-  }, {
     value: 'python',
     label: 'Python'
   }, {
+    value: 'javascript',
+    label: 'JavaScript (Beta)'
+  }, {
     value: 'typescript',
-    label: 'TypeScript'
+    label: 'TypeScript (Beta)'
   }, {
     value: 'html',
-    label: 'HTML'
+    label: 'HTML (Beta)'
   }, {
     value: 'css',
-    label: 'CSS'
+    label: 'CSS (Beta)'
   }, {
     value: 'json',
-    label: 'JSON'
+    label: 'JSON (Beta)'
   }];
+
   const addCell = () => {
     const newCell = {
       id: Date.now(),
@@ -42,11 +53,13 @@ const CodeNotebook = () => {
     };
     setCells([...cells, newCell]);
   };
+
   const deleteCell = (id: number) => {
     if (cells.length > 1) {
       setCells(cells.filter(cell => cell.id !== id));
     }
   };
+
   const downloadCell = (id: number) => {
     const cell = cells.find(c => c.id === id);
     if (!cell) return;
@@ -72,6 +85,7 @@ const CodeNotebook = () => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
+
   const downloadAllCells = () => {
     const allCode = cells.map((cell, index) => {
       const langLabel = supportedLanguages.find(l => l.value === cell.language)?.label;
@@ -89,24 +103,40 @@ const CodeNotebook = () => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
+
   const updateCell = (id: number, updates: any) => {
     setCells(cells.map(cell => cell.id === id ? {
       ...cell,
       ...updates
     } : cell));
   };
-  const executeJavaScript = (code: string): string => {
+
+  const executeJavaScript = (code: string, userInputs: string[] = []): string => {
     try {
       const originalLog = console.log;
       const originalError = console.error;
       const originalWarn = console.warn;
       let output = '';
+      let inputIndex = 0;
+
       const captureOutput = (...args: any[]) => {
         output += args.map(arg => typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)).join(' ') + '\n';
       };
+
+      // Mock prompt function for user input
+      const mockPrompt = (message: string) => {
+        if (inputIndex < userInputs.length) {
+          const input = userInputs[inputIndex++];
+          output += `${message}${input}\n`;
+          return input;
+        }
+        return '';
+      };
+
       console.log = captureOutput;
       console.error = captureOutput;
       console.warn = captureOutput;
+      (window as any).prompt = mockPrompt;
 
       // Create a safer eval environment
       const result = Function('"use strict"; ' + code)();
@@ -115,6 +145,8 @@ const CodeNotebook = () => {
       console.log = originalLog;
       console.error = originalError;
       console.warn = originalWarn;
+      delete (window as any).prompt;
+
       if (result !== undefined && !output) {
         output = String(result);
       }
@@ -123,28 +155,74 @@ const CodeNotebook = () => {
       return `Error: ${error.message}`;
     }
   };
-  const executePython = (code: string): string => {
-    // Simulate Python execution with basic syntax checking
+
+  const executePython = (code: string, userInputs: string[] = []): string => {
     try {
       const lines = code.split('\n').filter(line => line.trim());
       let output = '';
+      let inputIndex = 0;
+      const variables: { [key: string]: any } = {};
+
       for (const line of lines) {
         const trimmedLine = line.trim();
+        
         if (trimmedLine.startsWith('print(') && trimmedLine.endsWith(')')) {
           const content = trimmedLine.slice(6, -1);
-          // Remove quotes if present
-          const cleanContent = content.replace(/^["']|["']$/g, '');
-          output += cleanContent + '\n';
+          
+          // Handle f-strings
+          if (content.startsWith('f"') || content.startsWith("f'")) {
+            let fStringContent = content.slice(2, -1);
+            // Replace variables in f-string
+            Object.keys(variables).forEach(varName => {
+              const regex = new RegExp(`\\{${varName}\\}`, 'g');
+              fStringContent = fStringContent.replace(regex, variables[varName]);
+            });
+            output += fStringContent + '\n';
+          } else {
+            // Regular string or variable
+            const cleanContent = content.replace(/^["']|["']$/g, '');
+            if (variables[cleanContent] !== undefined) {
+              output += variables[cleanContent] + '\n';
+            } else {
+              output += cleanContent + '\n';
+            }
+          }
+        } else if (trimmedLine.includes('input(') && trimmedLine.includes('=')) {
+          // Handle input statements
+          const parts = trimmedLine.split('=');
+          const varName = parts[0].trim();
+          const inputCall = parts[1].trim();
+          const promptMatch = inputCall.match(/input\("([^"]*)"\)/);
+          const prompt = promptMatch ? promptMatch[1] : 'Enter input: ';
+          
+          if (inputIndex < userInputs.length) {
+            const userInput = userInputs[inputIndex++];
+            variables[varName] = userInput;
+            output += `${prompt}${userInput}\n`;
+          } else {
+            variables[varName] = '';
+          }
         } else if (trimmedLine.includes('=') && !trimmedLine.startsWith('#')) {
           // Variable assignment
-          output += `Variable assigned: ${trimmedLine}\n`;
+          const parts = trimmedLine.split('=');
+          const varName = parts[0].trim();
+          let value = parts[1].trim().replace(/^["']|["']$/g, '');
+          
+          // Handle numeric values
+          if (!isNaN(Number(value))) {
+            value = Number(value);
+          }
+          
+          variables[varName] = value;
         }
       }
+      
       return output || 'Python code processed (simulated execution)';
     } catch (error) {
       return 'Error: Invalid Python syntax';
     }
   };
+
   const executeTypeScript = (code: string): string => {
     try {
       // Convert basic TypeScript to JavaScript for execution
@@ -157,6 +235,7 @@ const CodeNotebook = () => {
       return `TypeScript Error: ${error.message}`;
     }
   };
+
   const executeHTML = (code: string): string => {
     try {
       // Create a temporary iframe to render HTML
@@ -176,6 +255,7 @@ const CodeNotebook = () => {
       return `HTML Error: ${error.message}`;
     }
   };
+
   const executeCSS = (code: string): string => {
     try {
       // Validate CSS syntax by creating a style element
@@ -188,6 +268,7 @@ const CodeNotebook = () => {
       return `CSS Error: ${error.message}`;
     }
   };
+
   const executeJSON = (code: string): string => {
     try {
       const parsed = JSON.parse(code);
@@ -196,36 +277,104 @@ const CodeNotebook = () => {
       return `JSON Error: ${error.message}`;
     }
   };
-  const runCell = (id: number) => {
+
+  const runCell = async (id: number) => {
     const cell = cells.find(c => c.id === id);
     if (!cell) return;
-    let output: string;
-    switch (cell.language) {
-      case 'javascript':
-        output = executeJavaScript(cell.code);
-        break;
-      case 'python':
-        output = executePython(cell.code);
-        break;
-      case 'typescript':
-        output = executeTypeScript(cell.code);
-        break;
-      case 'html':
-        output = executeHTML(cell.code);
-        break;
-      case 'css':
-        output = executeCSS(cell.code);
-        break;
-      case 'json':
-        output = executeJSON(cell.code);
-        break;
-      default:
-        output = `${cell.language} execution not implemented`;
+
+    // Check if code requires input
+    const requiresInput = (
+      (cell.language === 'python' && cell.code.includes('input(')) ||
+      (cell.language === 'javascript' && cell.code.includes('prompt('))
+    );
+
+    if (requiresInput) {
+      // Collect all input prompts
+      const inputPrompts: string[] = [];
+      
+      if (cell.language === 'python') {
+        const inputMatches = cell.code.match(/input\("([^"]*)"\)/g);
+        if (inputMatches) {
+          inputMatches.forEach(match => {
+            const promptMatch = match.match(/input\("([^"]*)"\)/);
+            if (promptMatch) {
+              inputPrompts.push(promptMatch[1]);
+            }
+          });
+        }
+      } else if (cell.language === 'javascript') {
+        const promptMatches = cell.code.match(/prompt\("([^"]*)"\)/g);
+        if (promptMatches) {
+          promptMatches.forEach(match => {
+            const promptMatch = match.match(/prompt\("([^"]*)"\)/);
+            if (promptMatch) {
+              inputPrompts.push(promptMatch[1]);
+            }
+          });
+        }
+      }
+
+      // Collect user inputs
+      const userInputs: string[] = [];
+      
+      for (let i = 0; i < inputPrompts.length; i++) {
+        await new Promise<void>((resolve) => {
+          setInputDialog({
+            isOpen: true,
+            cellId: id,
+            prompt: inputPrompts[i] || `Input ${i + 1}:`,
+            onSubmit: (value: string) => {
+              userInputs.push(value);
+              setInputDialog(prev => ({ ...prev, isOpen: false }));
+              resolve();
+            }
+          });
+        });
+      }
+
+      // Execute with inputs
+      let output: string;
+      switch (cell.language) {
+        case 'javascript':
+          output = executeJavaScript(cell.code, userInputs);
+          break;
+        case 'python':
+          output = executePython(cell.code, userInputs);
+          break;
+        default:
+          output = `${cell.language} execution with inputs not implemented`;
+      }
+      
+      updateCell(id, { output, userInputs });
+    } else {
+      // Execute without inputs (existing functionality)
+      let output: string;
+      switch (cell.language) {
+        case 'javascript':
+          output = executeJavaScript(cell.code);
+          break;
+        case 'python':
+          output = executePython(cell.code);
+          break;
+        case 'typescript':
+          output = executeTypeScript(cell.code);
+          break;
+        case 'html':
+          output = executeHTML(cell.code);
+          break;
+        case 'css':
+          output = executeCSS(cell.code);
+          break;
+        case 'json':
+          output = executeJSON(cell.code);
+          break;
+        default:
+          output = `${cell.language} execution not implemented`;
+      }
+      updateCell(id, { output });
     }
-    updateCell(id, {
-      output
-    });
   };
+
   return <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -270,8 +419,9 @@ const CodeNotebook = () => {
       <Alert className="border-orange-500/30 bg-orange-500/5">
         <AlertTriangle className="h-4 w-4 text-orange-500" />
         <AlertDescription className="text-orange-300">
-          <strong>Beta Warning:</strong> This is an experimental feature. Code execution capabilities vary by language. 
-          JavaScript and TypeScript run in browser environment, Python is simulated, HTML/CSS are temporarily applied, and JSON is parsed for validation. 
+          <strong>Beta Warning:</strong> This is an experimental feature. Python has full input support and simulated execution. 
+          JavaScript has basic input support via prompt(). Other languages are in beta with limited functionality.
+          TypeScript is transpiled to JavaScript, HTML/CSS are temporarily applied, and JSON is parsed for validation. 
           Do not run untrusted code. Full sandboxed execution coming soon.
         </AlertDescription>
       </Alert>
@@ -329,6 +479,15 @@ const CodeNotebook = () => {
           <Terminal />
         </CardContent>
       </Card>
+
+      {/* User Input Dialog */}
+      <UserInputDialog
+        isOpen={inputDialog.isOpen}
+        prompt={inputDialog.prompt}
+        onSubmit={inputDialog.onSubmit}
+        onCancel={() => setInputDialog(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>;
 };
+
 export default CodeNotebook;

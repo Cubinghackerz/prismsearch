@@ -11,17 +11,18 @@ interface CodeEditorProps {
 const CodeEditor = ({ language, code, onChange }: CodeEditorProps) => {
   const getLanguageComment = (lang: string) => {
     switch (lang) {
-      case 'javascript':
-      case 'typescript':
-        return '// Write your JavaScript/TypeScript code here';
       case 'python':
-        return '# Write your Python code here';
+        return '# Write your Python code here\n# Use input("prompt: ") to get user input\n# Example: name = input("Enter your name: ")';
+      case 'javascript':
+        return '// Write your JavaScript code here\n// Use prompt("message") to get user input';
+      case 'typescript':
+        return '// Write your TypeScript code here (Beta)';
       case 'html':
-        return '<!-- Write your HTML code here -->';
+        return '<!-- Write your HTML code here (Beta) -->';
       case 'css':
-        return '/* Write your CSS code here */';
+        return '/* Write your CSS code here (Beta) */';
       case 'json':
-        return '// Write your JSON here';
+        return '// Write your JSON here (Beta)';
       default:
         return '// Write your code here';
     }
