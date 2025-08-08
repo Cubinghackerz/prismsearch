@@ -51,8 +51,8 @@ const AppContent: React.FC = () => {
         <Route path="/detector" element={<PrismDetector />} />
         <Route path="/auth" element={<ClerkAuth />} />
         <Route path="/secure-redirect" element={<SecureRedirect />} />
-        <Route path="/pages" element={<PrismPages />} />
-        <Route path="/pages/editor" element={<PrismEditor />} />
+        <Route path="/docs" element={<PrismPages />} />
+        <Route path="/docs/:docId" element={<PrismEditor />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <AuthPromptDialog isOpen={showPrompt} onClose={closePrompt} />

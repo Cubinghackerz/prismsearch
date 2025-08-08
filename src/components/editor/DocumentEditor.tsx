@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -11,6 +11,10 @@ import { Table } from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
 import TableHeader from '@tiptap/extension-table-header';
 import TableCell from '@tiptap/extension-table-cell';
+import Collaboration from '@tiptap/extension-collaboration';
+import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
+import * as Y from 'yjs';
+import { WebrtcProvider } from 'y-webrtc';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { 
@@ -36,17 +40,32 @@ import {
 } from 'lucide-react';
 
 interface DocumentEditorProps {
+  docId: string;
   content: any;
   onChange: (content: any) => void;
   className?: string;
+  userName?: string;
 }
 
-const DocumentEditor: React.FC<DocumentEditorProps> = ({ 
-  content, 
-  onChange, 
-  className = '' 
+const DocumentEditor: React.FC<DocumentEditorProps> = ({
+  docId,
+  content,
+  onChange,
+  className = '',
+  userName,
 }) => {
   const [wordCount, setWordCount] = useState(0);
+
+  const ydoc = useMemo(() => new Y.Doc(), [docId]);
+  const provider = useMemo(() => new WebrtcProvider(docId, ydoc), [docId, ydoc]);
+  const yXmlFragment = useMemo(() => ydoc.getXmlFragment('document'), [ydoc]);
+
+  useEffect(() => {
+    return () => {
+      provider.destroy();
+      ydoc.destroy();
+    };
+  }, [provider, ydoc]);
 
   const editor = useEditor({
     extensions: [
@@ -73,8 +92,15 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({
       TableRow,
       TableHeader,
       TableCell,
+      Collaboration.configure({ document: yXmlFragment }),
+      CollaborationCursor.configure({
+        provider,
+        user: {
+          name: userName || 'Anonymous',
+          color: '#ffa3d7',
+        },
+      }),
     ],
-    content: content,
     onUpdate: ({ editor }) => {
       const json = editor.getJSON();
       onChange(json);
@@ -90,6 +116,16 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({
       },
     },
   });
+
+  // Set initial content when editor is first loaded
+  useEffect(() => {
+    if (editor && content) {
+      const current = editor.getJSON();
+      if (!current.content || current.content.length === 0) {
+        editor.commands.setContent(content);
+      }
+    }
+  }, [editor, content]);
 
   // Update word count on initial load
   useEffect(() => {

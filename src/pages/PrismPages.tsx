@@ -80,7 +80,7 @@ const PrismPages = () => {
         return;
       }
 
-      navigate(`/pages/editor?id=${data.id}`);
+      navigate(`/docs/${data.id}`);
     } catch (error) {
       console.error('Error creating document:', error);
       toast({
@@ -255,7 +255,7 @@ const PrismPages = () => {
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/pages/editor?id=${doc.id}`);
+                              navigate(`/docs/${doc.id}`);
                             }}
                             className="p-1 h-8 w-8 text-prism-primary hover:bg-prism-primary/20"
                           >
@@ -283,7 +283,7 @@ const PrismPages = () => {
                       </CardDescription>
                     </CardHeader>
                     <CardContent 
-                      onClick={() => navigate(`/pages/editor?id=${doc.id}`)}
+                      onClick={() => navigate(`/docs/${doc.id}`)}
                     >
                       <p className="text-sm text-prism-text-muted line-clamp-3 font-fira-code">
                         {doc.content?.content?.[0]?.content?.[0]?.text || 'Empty document'}

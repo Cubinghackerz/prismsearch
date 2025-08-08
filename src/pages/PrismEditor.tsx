@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -26,8 +26,8 @@ interface Document {
 
 const PrismEditor = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const documentId = searchParams.get('id');
+  const { docId } = useParams();
+  const documentId = docId || null;
   const { user, isSignedIn } = useUser();
   
   const [document, setDocument] = useState<Document | null>(null);
@@ -46,7 +46,7 @@ const PrismEditor = () => {
         description: "Please sign in to access documents",
         variant: "destructive"
       });
-      navigate('/pages');
+      navigate('/docs');
       return;
     }
 
@@ -54,7 +54,7 @@ const PrismEditor = () => {
       loadDocument();
     } else {
       setIsLoading(false);
-      navigate('/pages');
+      navigate('/docs');
     }
   }, [documentId, isSignedIn]);
 
@@ -75,7 +75,7 @@ const PrismEditor = () => {
           description: "An error occurred while loading the document",
           variant: "destructive"
         });
-        navigate('/pages');
+        navigate('/docs');
         return;
       }
 
@@ -90,7 +90,7 @@ const PrismEditor = () => {
         description: "An unexpected error occurred",
         variant: "destructive"
       });
-      navigate('/pages');
+      navigate('/docs');
     }
   };
 
@@ -141,7 +141,7 @@ const PrismEditor = () => {
     
     const autoSaveTimer = setTimeout(() => {
       saveDocument();
-    }, 2000);
+    }, 5000);
 
     return () => clearTimeout(autoSaveTimer);
   }, [title, content]);
@@ -163,7 +163,7 @@ const PrismEditor = () => {
         <div className="text-center">
           <FileText className="h-12 w-12 text-prism-text-muted mx-auto mb-4" />
           <p className="text-prism-text-muted mb-4 font-fira-code">Document not found</p>
-          <Button onClick={() => navigate('/pages')} className="font-fira-code">
+          <Button onClick={() => navigate('/docs')} className="font-fira-code">
             Back to Documents
           </Button>
         </div>
@@ -183,7 +183,7 @@ const PrismEditor = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/pages')}
+                onClick={() => navigate('/docs')}
                 className="font-fira-code"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
@@ -237,9 +237,11 @@ const PrismEditor = () => {
       <main className="container mx-auto px-6 py-8">
         <Card className="max-w-5xl mx-auto bg-prism-surface/50 border-prism-border shadow-xl">
           <DocumentEditor
+            docId={documentId as string}
             content={content}
             onChange={setContent}
             className="min-h-[70vh]"
+            userName={user?.fullName || user?.username || undefined}
           />
         </Card>
       </main>

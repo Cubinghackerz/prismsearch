@@ -46,6 +46,8 @@
     "@radix-ui/react-tooltip": "^1.1.4",
     "@supabase/supabase-js": "^2.49.4",
     "@tanstack/react-query": "^5.56.2",
+    "@tiptap/extension-collaboration": "^3.0.0",
+    "@tiptap/extension-collaboration-cursor": "^3.0.0",
     "@tiptap/extension-color": "^3.0.9",
     "@tiptap/extension-font-family": "^3.0.9",
     "@tiptap/extension-highlight": "^3.0.9",
@@ -85,6 +87,8 @@
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^11.1.0",
     "vaul": "^0.9.3",
+    "y-webrtc": "^10.3.0",
+    "yjs": "^13.6.27",
     "zod": "^3.23.8",
     "zxcvbn": "^4.4.2"
   },
