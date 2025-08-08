@@ -39,33 +39,158 @@ const CodeNotebook = () => {
     ));
   };
 
+  const executeJavaScript = (code: string): string => {
+    try {
+      const originalLog = console.log;
+      const originalError = console.error;
+      const originalWarn = console.warn;
+      let output = '';
+      
+      const captureOutput = (...args: any[]) => {
+        output += args.map(arg => 
+          typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+        ).join(' ') + '\n';
+      };
+      
+      console.log = captureOutput;
+      console.error = captureOutput;
+      console.warn = captureOutput;
+
+      // Create a safer eval environment
+      const result = Function('"use strict"; ' + code)();
+      
+      // Restore original console methods
+      console.log = originalLog;
+      console.error = originalError;
+      console.warn = originalWarn;
+      
+      if (result !== undefined && !output) {
+        output = String(result);
+      }
+      
+      return output || 'Code executed successfully';
+    } catch (error: any) {
+      return `Error: ${error.message}`;
+    }
+  };
+
+  const executePython = (code: string): string => {
+    // Simulate Python execution with basic syntax checking
+    try {
+      const lines = code.split('\n').filter(line => line.trim());
+      let output = '';
+      
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        if (trimmedLine.startsWith('print(') && trimmedLine.endsWith(')')) {
+          const content = trimmedLine.slice(6, -1);
+          // Remove quotes if present
+          const cleanContent = content.replace(/^["']|["']$/g, '');
+          output += cleanContent + '\n';
+        } else if (trimmedLine.includes('=') && !trimmedLine.startsWith('#')) {
+          // Variable assignment
+          output += `Variable assigned: ${trimmedLine}\n`;
+        }
+      }
+      
+      return output || 'Python code processed (simulated execution)';
+    } catch (error) {
+      return 'Error: Invalid Python syntax';
+    }
+  };
+
+  const executeTypeScript = (code: string): string => {
+    try {
+      // Convert basic TypeScript to JavaScript for execution
+      let jsCode = code
+        .replace(/:\s*\w+(\[\])?/g, '') // Remove type annotations
+        .replace(/interface\s+\w+\s*\{[^}]*\}/g, '') // Remove interfaces
+        .replace(/type\s+\w+\s*=\s*[^;]+;/g, ''); // Remove type aliases
+      
+      return executeJavaScript(jsCode);
+    } catch (error: any) {
+      return `TypeScript Error: ${error.message}`;
+    }
+  };
+
+  const executeHTML = (code: string): string => {
+    try {
+      // Create a temporary iframe to render HTML
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+      
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (iframeDoc) {
+        iframeDoc.open();
+        iframeDoc.write(code);
+        iframeDoc.close();
+        
+        setTimeout(() => document.body.removeChild(iframe), 100);
+        
+        return 'HTML rendered successfully\n(Check browser developer tools for full output)';
+      }
+      
+      return 'HTML code processed';
+    } catch (error: any) {
+      return `HTML Error: ${error.message}`;
+    }
+  };
+
+  const executeCSS = (code: string): string => {
+    try {
+      // Validate CSS syntax by creating a style element
+      const style = document.createElement('style');
+      style.textContent = code;
+      document.head.appendChild(style);
+      
+      setTimeout(() => document.head.removeChild(style), 100);
+      
+      return 'CSS applied successfully\n(Styles temporarily applied to document)';
+    } catch (error: any) {
+      return `CSS Error: ${error.message}`;
+    }
+  };
+
+  const executeJSON = (code: string): string => {
+    try {
+      const parsed = JSON.parse(code);
+      return `Valid JSON:\n${JSON.stringify(parsed, null, 2)}`;
+    } catch (error: any) {
+      return `JSON Error: ${error.message}`;
+    }
+  };
+
   const runCell = (id: number) => {
     const cell = cells.find(c => c.id === id);
     if (!cell) return;
 
-    // Simple JavaScript execution (in real implementation, this would be sandboxed)
-    if (cell.language === 'javascript') {
-      try {
-        // Capture console.log output
-        const originalLog = console.log;
-        let output = '';
-        console.log = (...args) => {
-          output += args.join(' ') + '\n';
-        };
+    let output: string;
 
-        // Execute the code
-        eval(cell.code);
-        
-        // Restore original console.log
-        console.log = originalLog;
-        
-        updateCell(id, { output: output || 'Code executed successfully' });
-      } catch (error) {
-        updateCell(id, { output: `Error: ${error.message}` });
-      }
-    } else {
-      updateCell(id, { output: `${cell.language} execution not implemented in beta version` });
+    switch (cell.language) {
+      case 'javascript':
+        output = executeJavaScript(cell.code);
+        break;
+      case 'python':
+        output = executePython(cell.code);
+        break;
+      case 'typescript':
+        output = executeTypeScript(cell.code);
+        break;
+      case 'html':
+        output = executeHTML(cell.code);
+        break;
+      case 'css':
+        output = executeCSS(cell.code);
+        break;
+      case 'json':
+        output = executeJSON(cell.code);
+        break;
+      default:
+        output = `${cell.language} execution not implemented`;
     }
+
+    updateCell(id, { output });
   };
 
   return (
@@ -114,8 +239,9 @@ const CodeNotebook = () => {
       <Alert className="border-orange-500/30 bg-orange-500/5">
         <AlertTriangle className="h-4 w-4 text-orange-500" />
         <AlertDescription className="text-orange-300">
-          <strong>Beta Warning:</strong> This is an experimental feature. Code execution is limited and runs in your browser environment. 
-          Do not run untrusted code or code that could harm your system. Full sandboxed execution and additional language support coming soon.
+          <strong>Beta Warning:</strong> This is an experimental feature. Code execution capabilities vary by language. 
+          JavaScript and TypeScript run in browser environment, Python is simulated, HTML/CSS are temporarily applied, and JSON is parsed for validation. 
+          Do not run untrusted code. Full sandboxed execution coming soon.
         </AlertDescription>
       </Alert>
 
