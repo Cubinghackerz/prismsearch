@@ -18,10 +18,12 @@ import {
   Table,
   Highlighter
 } from 'lucide-react';
-import { useCurrentEditor } from '@tiptap/react';
+import { useEditor } from '@tiptap/react';
 
 const DocumentToolbar = () => {
-  const { editor } = useCurrentEditor();
+  const editor = useEditor({
+    extensions: [],
+  });
 
   if (!editor) {
     return null;

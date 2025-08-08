@@ -17,8 +17,6 @@ import Home from "./pages/Home";
 import PrismVault from "./pages/PrismVault";
 import PrismConversions from "./pages/PrismConversions";
 import PrismDetector from "./pages/PrismDetector";
-import PrismPages from "./pages/PrismPages";
-import PrismEditor from "./pages/PrismEditor";
 import ClerkAuth from "./pages/ClerkAuth";
 import SecureRedirect from "./pages/SecureRedirect";
 
@@ -49,8 +47,6 @@ const AppContent: React.FC = () => {
         <Route path="/vault" element={<PrismVault />} />
         <Route path="/conversions" element={<PrismConversions />} />
         <Route path="/detector" element={<PrismDetector />} />
-        <Route path="/docs" element={<PrismPages />} />
-        <Route path="/docs/:docId" element={<PrismEditor />} />
         <Route path="/auth" element={<ClerkAuth />} />
         <Route path="/secure-redirect" element={<SecureRedirect />} />
         <Route path="*" element={<NotFound />} />
