@@ -6,6 +6,7 @@ import { Search, MessageCircle, Lock, ArrowRight, Shield, FileType, AlertTriangl
 import AnimatedHeadline from '@/components/AnimatedHeadline';
 import Footer from '@/components/Footer';
 import AuthButtons from '@/components/AuthButtons';
+
 const Home = () => {
   const navigate = useNavigate();
   const features = [{
@@ -48,6 +49,7 @@ const Home = () => {
     gradient: 'from-red-500 to-pink-500',
     beta: true
   }];
+
   return <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10 font-fira-code">
       {/* Navigation */}
       <header className="container mx-auto px-6 py-8">
@@ -65,10 +67,6 @@ const Home = () => {
             </Button>
             <Button variant="ghost" onClick={() => navigate('/chat')} className="font-fira-code">
               Chat
-            </Button>
-            <Button variant="ghost" disabled className="relative font-fira-code opacity-50 cursor-not-allowed">
-              Pages
-              <span className="ml-1 px-1.5 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30 font-fira-code">Coming Soon</span>
             </Button>
             <Button variant="ghost" onClick={() => navigate('/pages')} className="font-fira-code">
               Pages
@@ -175,4 +173,5 @@ const Home = () => {
       <Footer />
     </div>;
 };
+
 export default Home;
