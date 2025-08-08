@@ -1,16 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { FileText, Plus, Search, Clock, Users } from 'lucide-react';
+import { FileText, Plus, Search, Clock, Users, Edit, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 
 interface Document {
@@ -25,9 +24,9 @@ interface Document {
 
 const PrismPages = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const { user, isSignedIn } = useUser();
+  const { toast } = useToast();
 
   const { data: documents, isLoading, refetch } = useQuery({
     queryKey: ['documents'],
@@ -53,7 +52,11 @@ const PrismPages = () => {
 
   const createNewDocument = async () => {
     if (!isSignedIn || !user) {
-      toast.error('Please sign in using the button in the navigation to create documents');
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to create documents",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -69,14 +72,58 @@ const PrismPages = () => {
 
       if (error) {
         console.error('Error creating document:', error);
-        toast.error('Failed to create document');
+        toast({
+          title: "Failed to create document",
+          description: "An error occurred while creating the document",
+          variant: "destructive"
+        });
         return;
       }
 
       navigate(`/pages/editor?id=${data.id}`);
     } catch (error) {
       console.error('Error creating document:', error);
-      toast.error('Failed to create document');
+      toast({
+        title: "Failed to create document",
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const deleteDocument = async (docId: string, docTitle: string) => {
+    if (!confirm(`Are you sure you want to delete "${docTitle}"?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', docId);
+
+      if (error) {
+        console.error('Error deleting document:', error);
+        toast({
+          title: "Failed to delete document",
+          description: "An error occurred while deleting the document",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      refetch();
+      toast({
+        title: "Document deleted",
+        description: `"${docTitle}" has been deleted successfully`
+      });
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast({
+        title: "Failed to delete document",
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      });
     }
   };
 
@@ -85,7 +132,7 @@ const PrismPages = () => {
   ) || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10 font-fira-code">
+    <div className="min-h-screen bg-gradient-to-b from-prism-bg to-prism-surface font-fira-code">
       <Navigation />
 
       <main className="container mx-auto px-6 py-8">
@@ -93,111 +140,160 @@ const PrismPages = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div className="mb-4 md:mb-0">
             <div className="flex items-center space-x-3">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-fira-code">
+              <FileText className="h-8 w-8 text-prism-primary" />
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-prism-primary to-prism-accent bg-clip-text text-transparent font-fira-code">
                 Prism Pages
               </h1>
-              <span className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs font-semibold rounded-full border border-orange-500/30 font-fira-code">
-                Beta
-              </span>
             </div>
-            <p className="text-muted-foreground mt-2 font-fira-code">
-              Create, edit, and collaborate on documents with powerful features
+            <p className="text-prism-text-muted mt-2 font-fira-code">
+              Create, edit, and collaborate on documents with powerful rich text features
             </p>
           </div>
           
           <Button 
             onClick={createNewDocument} 
             size="lg"
-            className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 font-fira-code"
+            className="bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary/90 hover:to-prism-accent/90 font-fira-code"
           >
             <Plus className="mr-2 h-4 w-4" />
             New Document
           </Button>
         </div>
 
-        {/* Search */}
-        <div className="mb-8">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search documents..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 font-fira-code"
-            />
+        {/* Authentication Check */}
+        {!isSignedIn && (
+          <div className="text-center py-12">
+            <FileText className="mx-auto h-12 w-12 text-prism-text-muted mb-4" />
+            <h3 className="text-lg font-semibold mb-2 text-prism-text font-fira-code">
+              Sign in to access Prism Pages
+            </h3>
+            <p className="text-prism-text-muted mb-4 font-fira-code">
+              Create an account to start building your document library
+            </p>
+            <Button 
+              onClick={() => navigate('/auth')} 
+              className="bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary/90 hover:to-prism-accent/90 font-fira-code"
+            >
+              Sign In / Sign Up
+            </Button>
           </div>
-        </div>
+        )}
+
+        {/* Search */}
+        {isSignedIn && (
+          <div className="mb-8">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-prism-text-muted" />
+              <Input
+                placeholder="Search documents..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-prism-surface/50 border-prism-border text-prism-text font-fira-code"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Documents Grid */}
-        {isLoading ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <Card key={i} className="animate-pulse">
-                <CardHeader>
-                  <div className="h-4 bg-muted rounded w-3/4"></div>
-                  <div className="h-3 bg-muted rounded w-1/2"></div>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-3 bg-muted rounded mb-2"></div>
-                  <div className="h-3 bg-muted rounded w-2/3"></div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : filteredDocuments.length === 0 ? (
-          <div className="text-center py-12">
-            <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2 font-fira-code">
-              {searchQuery ? 'No documents found' : 'No documents yet'}
-            </h3>
-            <p className="text-muted-foreground mb-4 font-fira-code">
-              {searchQuery 
-                ? 'Try adjusting your search terms' 
-                : isSignedIn 
-                  ? 'Create your first document to get started'
-                  : 'Sign in to create and manage your documents'
-              }
-            </p>
-            {!searchQuery && (
-              <Button onClick={createNewDocument} className="font-fira-code">
-                <Plus className="mr-2 h-4 w-4" />
-                Create Document
-              </Button>
+        {isSignedIn && (
+          <>
+            {isLoading ? (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <Card key={i} className="animate-pulse bg-prism-surface/30 border-prism-border">
+                    <CardHeader>
+                      <div className="h-4 bg-prism-surface rounded w-3/4"></div>
+                      <div className="h-3 bg-prism-surface rounded w-1/2"></div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-3 bg-prism-surface rounded mb-2"></div>
+                      <div className="h-3 bg-prism-surface rounded w-2/3"></div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : filteredDocuments.length === 0 ? (
+              <div className="text-center py-12">
+                <FileText className="mx-auto h-12 w-12 text-prism-text-muted mb-4" />
+                <h3 className="text-lg font-semibold mb-2 text-prism-text font-fira-code">
+                  {searchQuery ? 'No documents found' : 'No documents yet'}
+                </h3>
+                <p className="text-prism-text-muted mb-4 font-fira-code">
+                  {searchQuery 
+                    ? 'Try adjusting your search terms' 
+                    : 'Create your first document to get started'
+                  }
+                </p>
+                {!searchQuery && (
+                  <Button 
+                    onClick={createNewDocument} 
+                    className="bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary/90 hover:to-prism-accent/90 font-fira-code"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create Your First Document
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredDocuments.map((doc) => (
+                  <Card 
+                    key={doc.id}
+                    className="cursor-pointer hover:shadow-lg transition-all duration-200 group bg-prism-surface/30 border-prism-border hover:bg-prism-surface/50"
+                  >
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-2 flex-1">
+                          <FileText className="h-5 w-5 text-prism-primary" />
+                          <CardTitle className="text-base font-fira-code group-hover:text-prism-primary transition-colors text-prism-text line-clamp-1">
+                            {doc.title}
+                          </CardTitle>
+                        </div>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/pages/editor?id=${doc.id}`);
+                            }}
+                            className="p-1 h-8 w-8 text-prism-primary hover:bg-prism-primary/20"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteDocument(doc.id, doc.title);
+                            }}
+                            className="p-1 h-8 w-8 text-red-400 hover:bg-red-400/20"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        {doc.is_public && <Users className="h-4 w-4 text-prism-text-muted" />}
+                      </div>
+                      <CardDescription className="flex items-center space-x-1 font-fira-code text-prism-text-muted">
+                        <Clock className="h-3 w-3" />
+                        <span>
+                          {formatDistanceToNow(new Date(doc.updated_at), { addSuffix: true })}
+                        </span>
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent 
+                      onClick={() => navigate(`/pages/editor?id=${doc.id}`)}
+                    >
+                      <p className="text-sm text-prism-text-muted line-clamp-3 font-fira-code">
+                        {doc.content?.content?.[0]?.content?.[0]?.text || 'Empty document'}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             )}
-          </div>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredDocuments.map((doc) => (
-              <Card 
-                key={doc.id}
-                className="cursor-pointer hover:shadow-lg transition-all duration-200 group"
-                onClick={() => navigate(`/pages/editor?id=${doc.id}`)}
-              >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-2">
-                      <FileText className="h-5 w-5 text-primary" />
-                      <CardTitle className="text-base font-fira-code group-hover:text-primary transition-colors">
-                        {doc.title}
-                      </CardTitle>
-                    </div>
-                    {doc.is_public && <Users className="h-4 w-4 text-muted-foreground" />}
-                  </div>
-                  <CardDescription className="flex items-center space-x-1 font-fira-code">
-                    <Clock className="h-3 w-3" />
-                    <span>
-                      {formatDistanceToNow(new Date(doc.updated_at), { addSuffix: true })}
-                    </span>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground line-clamp-3 font-fira-code">
-                    {doc.content?.content?.[0]?.content?.[0]?.text || 'Empty document'}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          </>
         )}
       </main>
 

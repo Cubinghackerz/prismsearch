@@ -24,9 +24,9 @@ const Home = () => {
     icon: FileText,
     title: 'Prism Pages',
     description: 'Create, edit, and collaborate on documents with powerful rich text features',
-    path: null,
+    path: '/pages',
     gradient: 'from-indigo-500 to-purple-500',
-    comingSoon: true
+    comingSoon: false
   }, {
     icon: Lock,
     title: 'Secure Vault',
@@ -69,6 +69,9 @@ const Home = () => {
             <Button variant="ghost" disabled className="relative font-fira-code opacity-50 cursor-not-allowed">
               Pages
               <span className="ml-1 px-1.5 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30 font-fira-code">Coming Soon</span>
+            </Button>
+            <Button variant="ghost" onClick={() => navigate('/pages')} className="font-fira-code">
+              Pages
             </Button>
             <Button variant="ghost" onClick={() => navigate('/vault')} className="font-fira-code">
               Vault
