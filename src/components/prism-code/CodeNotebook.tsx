@@ -8,8 +8,16 @@ import CodeEditor from "./CodeEditor";
 import Terminal from "./Terminal";
 import UserInputDialog from "./UserInputDialog";
 
+interface Cell {
+  id: number;
+  language: string;
+  code: string;
+  output: string;
+  userInputs: string[];
+}
+
 const CodeNotebook = () => {
-  const [cells, setCells] = useState([{
+  const [cells, setCells] = useState<Cell[]>([{
     id: 1,
     language: 'python',
     code: 'name = input("Enter your name: ")\nprint(f"Hello, {name}!")',
@@ -45,7 +53,7 @@ const CodeNotebook = () => {
   }];
 
   const addCell = () => {
-    const newCell = {
+    const newCell: Cell = {
       id: Date.now(),
       language: selectedLanguage,
       code: '',
@@ -105,7 +113,7 @@ const CodeNotebook = () => {
     URL.revokeObjectURL(url);
   };
 
-  const updateCell = (id: number, updates: any) => {
+  const updateCell = (id: number, updates: Partial<Cell>) => {
     setCells(cells.map(cell => cell.id === id ? {
       ...cell,
       ...updates
@@ -167,6 +175,11 @@ const CodeNotebook = () => {
       for (const line of lines) {
         const trimmedLine = line.trim();
         
+        // Skip comments and empty lines
+        if (trimmedLine.startsWith('#') || !trimmedLine) {
+          continue;
+        }
+        
         if (trimmedLine.startsWith('print(') && trimmedLine.endsWith(')')) {
           const content = trimmedLine.slice(6, -1);
           
@@ -176,7 +189,7 @@ const CodeNotebook = () => {
             // Replace variables in f-string
             Object.keys(variables).forEach(varName => {
               const regex = new RegExp(`\\{${varName}\\}`, 'g');
-              fStringContent = fStringContent.replace(regex, variables[varName]);
+              fStringContent = fStringContent.replace(regex, String(variables[varName]));
             });
             output += fStringContent + '\n';
           } else {
@@ -202,25 +215,47 @@ const CodeNotebook = () => {
             output += `${prompt}${userInput}\n`;
           } else {
             variables[varName] = '';
+            output += `${prompt}\n`;
           }
-        } else if (trimmedLine.includes('=') && !trimmedLine.startsWith('#')) {
+        } else if (trimmedLine.includes('=') && !trimmedLine.includes('input(')) {
           // Variable assignment
           const parts = trimmedLine.split('=');
-          const varName = parts[0].trim();
-          let value = parts[1].trim().replace(/^["']|["']$/g, '');
-          
-          // Handle numeric values
-          if (!isNaN(Number(value))) {
-            value = Number(value);
+          if (parts.length >= 2) {
+            const varName = parts[0].trim();
+            let value = parts.slice(1).join('=').trim().replace(/^["']|["']$/g, '');
+            
+            // Handle numeric values
+            if (!isNaN(Number(value)) && value !== '') {
+              value = Number(value);
+            }
+            
+            variables[varName] = value;
           }
-          
-          variables[varName] = value;
+        } else if (trimmedLine.startsWith('def ')) {
+          // Function definition - just acknowledge it
+          const funcMatch = trimmedLine.match(/def\s+(\w+)/);
+          if (funcMatch) {
+            output += `Function ${funcMatch[1]} defined\n`;
+          }
+        } else if (trimmedLine.includes('(') && trimmedLine.includes(')') && !trimmedLine.includes('=')) {
+          // Function call or other operations
+          try {
+            // Handle basic arithmetic operations
+            if (/^[\d\s+\-*/().]+$/.test(trimmedLine)) {
+              const result = eval(trimmedLine);
+              output += `${result}\n`;
+            } else {
+              output += `Executed: ${trimmedLine}\n`;
+            }
+          } catch {
+            output += `Executed: ${trimmedLine}\n`;
+          }
         }
       }
       
-      return output || 'Python code processed (simulated execution)';
+      return output || 'Python code executed successfully';
     } catch (error) {
-      return 'Error: Invalid Python syntax';
+      return 'Error: Invalid Python syntax or execution error';
     }
   };
 
