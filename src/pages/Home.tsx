@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, MessageCircle, Lock, ArrowRight, Shield, FileType, AlertTriangle, FileText } from 'lucide-react';
+import { Search, MessageCircle, Lock, ArrowRight, Shield, FileType, AlertTriangle, Code } from 'lucide-react';
 import AnimatedHeadline from '@/components/AnimatedHeadline';
 import Footer from '@/components/Footer';
 import AuthButtons from '@/components/AuthButtons';
@@ -27,11 +27,12 @@ const Home = () => {
       gradient: 'from-purple-500 to-pink-500'
     },
     {
-      icon: FileText,
-      title: 'Prism Pages',
-      description: 'Create and collaborate on rich-text documents with real-time editing',
-      path: '/docs',
-      gradient: 'from-indigo-500 to-purple-500'
+      icon: Code,
+      title: 'Prism Code',
+      description: 'Online notebook for coding, testing, and running code snippets',
+      path: '/code',
+      gradient: 'from-indigo-500 to-purple-500',
+      beta: true
     },
     {
       icon: Lock,
@@ -81,8 +82,13 @@ const Home = () => {
             <Button variant="ghost" onClick={() => navigate('/chat')} className="font-fira-code">
               Chat
             </Button>
-            <Button variant="ghost" onClick={() => navigate('/docs')} className="font-fira-code">
-              Pages
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/code')}
+              className="relative font-fira-code"
+            >
+              Code
+              <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
             </Button>
             <Button variant="ghost" onClick={() => navigate('/vault')} className="font-fira-code">
               Vault
@@ -118,7 +124,7 @@ const Home = () => {
             <AnimatedHeadline />
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto font-fira-code">
               Experience the future of intelligent search, secure password management, 
-              document collaboration, and AI-powered conversations in one unified platform.
+              online code execution, and AI-powered conversations in one unified platform.
             </p>
           </div>
           
