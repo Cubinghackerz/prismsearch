@@ -1,0 +1,222 @@
+
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Globe, Wand2, Eye, Download, AlertTriangle, Sparkles } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import WebAppPreview from "./WebAppPreview";
+
+interface GeneratedApp {
+  html: string;
+  css: string;
+  javascript: string;
+  description: string;
+  features: string[];
+}
+
+const WebAppGenerator = () => {
+  const [prompt, setPrompt] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedApp, setGeneratedApp] = useState<GeneratedApp | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const { toast } = useToast();
+
+  const generateWebApp = async () => {
+    if (!prompt.trim()) {
+      toast({
+        title: "Missing Prompt",
+        description: "Please describe the web app you want to create.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-webapp', {
+        body: { 
+          prompt,
+          model: 'gemini' 
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      setGeneratedApp(data);
+      toast({
+        title: "Web App Generated!",
+        description: "Your web application has been created successfully.",
+      });
+    } catch (error) {
+      console.error('Error generating web app:', error);
+      toast({
+        title: "Generation Failed",
+        description: `Failed to generate web app: ${error.message}`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const downloadApp = () => {
+    if (!generatedApp) return;
+
+    const files = [
+      { name: 'index.html', content: generatedApp.html },
+      { name: 'styles.css', content: generatedApp.css },
+      { name: 'script.js', content: generatedApp.javascript },
+      { name: 'README.txt', content: `Generated Web App\n\nDescription: ${generatedApp.description}\n\nFeatures:\n${generatedApp.features.map(f => `- ${f}`).join('\n')}` }
+    ];
+
+    files.forEach(file => {
+      const blob = new Blob([file.content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = file.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    });
+
+    toast({
+      title: "Files Downloaded",
+      description: "All web app files have been downloaded to your device.",
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center space-x-4">
+        <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/10 to-yellow-500/10 border border-orange-500/20">
+          <Globe className="w-8 h-8 text-orange-400" />
+        </div>
+        <div>
+          <div className="flex items-center space-x-3">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent font-fira-code">
+              AI Web App Generator
+            </h2>
+            <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-sm font-semibold rounded-full border border-orange-500/30 font-fira-code">
+              Beta
+            </span>
+          </div>
+          <p className="text-prism-text-muted mt-2 font-inter">
+            Generate fully functional web applications using Gemini 2.5 Flash
+          </p>
+        </div>
+      </div>
+
+      {/* Beta Warning */}
+      <Alert className="border-orange-500/30 bg-orange-500/5">
+        <AlertTriangle className="h-4 w-4 text-orange-500" />
+        <AlertDescription className="text-orange-300">
+          <strong>Beta Feature:</strong> This AI generator creates complete web applications with HTML, CSS, and JavaScript. 
+          Always review generated code before deployment. This feature uses advanced AI models and may consume significant resources.
+        </AlertDescription>
+      </Alert>
+
+      {/* Generation Interface */}
+      <Card className="overflow-hidden">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Wand2 className="w-5 h-5 text-prism-primary" />
+            <span>Describe Your Web App</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Describe the web application you want to create... For example: 'Create a todo list app with drag and drop functionality, dark mode toggle, and local storage. Include animations and a modern design.'"
+              className="min-h-[120px] resize-none bg-prism-surface/10 border-prism-border"
+              disabled={isGenerating}
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3">
+            <Button
+              onClick={generateWebApp}
+              disabled={isGenerating || !prompt.trim()}
+              className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-semibold"
+            >
+              {isGenerating ? (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="w-4 h-4 mr-2" />
+                  Generate Web App
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Generated App Display */}
+      {generatedApp && (
+        <Card className="overflow-hidden">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center space-x-2">
+                <Globe className="w-5 h-5 text-green-400" />
+                <span>Generated Web Application</span>
+              </CardTitle>
+              <div className="flex space-x-2">
+                <Button
+                  onClick={() => setShowPreview(!showPreview)}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  {showPreview ? "Hide Preview" : "Show Preview"}
+                </Button>
+                <Button onClick={downloadApp} size="sm">
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Files
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="p-4 bg-prism-surface/20 rounded-lg">
+              <h4 className="font-semibold text-prism-text mb-2">Description:</h4>
+              <p className="text-prism-text-muted text-sm">{generatedApp.description}</p>
+            </div>
+
+            <div className="p-4 bg-prism-surface/20 rounded-lg">
+              <h4 className="font-semibold text-prism-text mb-2">Features:</h4>
+              <ul className="list-disc list-inside text-prism-text-muted text-sm space-y-1">
+                {generatedApp.features.map((feature, index) => (
+                  <li key={index}>{feature}</li>
+                ))}
+              </ul>
+            </div>
+
+            {showPreview && (
+              <WebAppPreview
+                html={generatedApp.html}
+                css={generatedApp.css}
+                javascript={generatedApp.javascript}
+              />
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default WebAppGenerator;

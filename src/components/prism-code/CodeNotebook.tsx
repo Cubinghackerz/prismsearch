@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Play, Plus, Code, AlertTriangle, Trash2, Download } from "lucide-react";
+import { Play, Plus, Code, AlertTriangle, Trash2, Download, Globe } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import CodeEditor from "./CodeEditor";
 import Terminal from "./Terminal";
 import UserInputDialog from "./UserInputDialog";
+import WebAppGenerator from "./WebAppGenerator";
+import WebAppPasswordDialog from "./WebAppPasswordDialog";
 
 interface Cell {
   id: number;
@@ -31,6 +33,9 @@ const CodeNotebook = () => {
     prompt: string;
     onSubmit: (value: string) => void;
   }>({ isOpen: false, cellId: 0, prompt: '', onSubmit: () => {} });
+  const [showWebAppGenerator, setShowWebAppGenerator] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [hasWebAppAccess, setHasWebAppAccess] = useState(false);
 
   const supportedLanguages = [{
     value: 'python',
@@ -411,7 +416,41 @@ const CodeNotebook = () => {
     }
   };
 
-  return <div className="space-y-6">
+  const handleWebAppGeneratorClick = () => {
+    if (hasWebAppAccess) {
+      setShowWebAppGenerator(true);
+    } else {
+      setShowPasswordDialog(true);
+    }
+  };
+
+  const handlePasswordSuccess = () => {
+    setHasWebAppAccess(true);
+    setShowPasswordDialog(false);
+    setShowWebAppGenerator(true);
+  };
+
+  if (showWebAppGenerator) {
+    return (
+      <div className="space-y-6">
+        {/* Back Button */}
+        <div className="flex items-center justify-between">
+          <Button
+            onClick={() => setShowWebAppGenerator(false)}
+            variant="outline"
+            className="font-inter"
+          >
+            ← Back to Code Notebook
+          </Button>
+        </div>
+
+        <WebAppGenerator />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
@@ -438,11 +477,18 @@ const CodeNotebook = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {supportedLanguages.map(lang => <SelectItem key={lang.value} value={lang.value}>
+              {supportedLanguages.map(lang => (
+                <SelectItem key={lang.value} value={lang.value}>
                   {lang.label}
-                </SelectItem>)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
+          
+          <Button onClick={handleWebAppGeneratorClick} className="font-inter bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600">
+            <Globe className="w-4 h-4 mr-2" />
+            AI Web App Generator
+          </Button>
           
           <Button onClick={addCell} className="font-inter">
             <Plus className="w-4 h-4 mr-2" />
@@ -523,7 +569,15 @@ const CodeNotebook = () => {
         onSubmit={inputDialog.onSubmit}
         onCancel={() => setInputDialog(prev => ({ ...prev, isOpen: false }))}
       />
-    </div>;
+
+      {/* Password Dialog */}
+      <WebAppPasswordDialog
+        isOpen={showPasswordDialog}
+        onClose={() => setShowPasswordDialog(false)}
+        onSuccess={handlePasswordSuccess}
+      />
+    </div>
+  );
 };
 
 export default CodeNotebook;
