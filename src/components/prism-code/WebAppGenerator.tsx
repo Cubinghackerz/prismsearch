@@ -21,7 +21,6 @@ const WebAppGenerator = () => {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedApp, setGeneratedApp] = useState<GeneratedApp | null>(null);
-  const [showPreview, setShowPreview] = useState(false);
   const { toast } = useToast();
 
   const generateWebApp = async () => {
@@ -124,97 +123,104 @@ const WebAppGenerator = () => {
         </AlertDescription>
       </Alert>
 
-      {/* Generation Interface */}
-      <Card className="overflow-hidden">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Wand2 className="w-5 h-5 text-prism-primary" />
-            <span>Describe Your Web App</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Describe the web application you want to create... For example: 'Create a todo list app with drag and drop functionality, dark mode toggle, and local storage. Include animations and a modern design.'"
-              className="min-h-[120px] resize-none bg-prism-surface/10 border-prism-border"
-              disabled={isGenerating}
-            />
-          </div>
-
-          <div className="flex justify-end space-x-3">
-            <Button
-              onClick={generateWebApp}
-              disabled={isGenerating || !prompt.trim()}
-              className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-semibold"
-            >
-              {isGenerating ? (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Wand2 className="w-4 h-4 mr-2" />
-                  Generate Web App
-                </>
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Generated App Display */}
-      {generatedApp && (
-        <Card className="overflow-hidden">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center space-x-2">
-                <Globe className="w-5 h-5 text-green-400" />
-                <span>Generated Web Application</span>
-              </CardTitle>
-              <div className="flex space-x-2">
-                <Button
-                  onClick={() => setShowPreview(!showPreview)}
-                  variant="outline"
-                  size="sm"
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  {showPreview ? "Hide Preview" : "Show Preview"}
-                </Button>
-                <Button onClick={downloadApp} size="sm">
-                  <Download className="w-4 h-4 mr-2" />
-                  Download Files
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="p-4 bg-prism-surface/20 rounded-lg">
-              <h4 className="font-semibold text-prism-text mb-2">Description:</h4>
-              <p className="text-prism-text-muted text-sm">{generatedApp.description}</p>
-            </div>
-
-            <div className="p-4 bg-prism-surface/20 rounded-lg">
-              <h4 className="font-semibold text-prism-text mb-2">Features:</h4>
-              <ul className="list-disc list-inside text-prism-text-muted text-sm space-y-1">
-                {generatedApp.features.map((feature, index) => (
-                  <li key={index}>{feature}</li>
-                ))}
-              </ul>
-            </div>
-
-            {showPreview && (
+      {/* Split Layout */}
+      <div className="flex gap-6 h-[calc(100vh-20rem)]">
+        {/* Left Side - Preview (Takes up 2/3 of the space) */}
+        <div className="flex-1 lg:flex-[2]">
+          {generatedApp ? (
+            <div className="h-full">
               <WebAppPreview
                 html={generatedApp.html}
                 css={generatedApp.css}
                 javascript={generatedApp.javascript}
               />
-            )}
-          </CardContent>
-        </Card>
-      )}
+            </div>
+          ) : (
+            <Card className="h-full flex items-center justify-center">
+              <CardContent className="text-center py-20">
+                <Globe className="w-16 h-16 text-prism-text-muted mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-prism-text mb-2">No Web App Generated Yet</h3>
+                <p className="text-prism-text-muted">Use the generator on the right to create your web application</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Right Side - Generation Interface (Takes up 1/3 of the space) */}
+        <div className="w-full lg:w-96 flex flex-col space-y-4">
+          {/* Generation Interface */}
+          <Card className="flex-1">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Wand2 className="w-5 h-5 text-prism-primary" />
+                <span>Describe Your Web App</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Textarea
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  placeholder="Describe the web application you want to create... For example: 'Create a todo list app with drag and drop functionality, dark mode toggle, and local storage. Include animations and a modern design.'"
+                  className="min-h-[200px] resize-none bg-prism-surface/10 border-prism-border"
+                  disabled={isGenerating}
+                />
+              </div>
+
+              <Button
+                onClick={generateWebApp}
+                disabled={isGenerating || !prompt.trim()}
+                className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-semibold"
+              >
+                {isGenerating ? (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="w-4 h-4 mr-2" />
+                    Generate Web App
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Generated App Info */}
+          {generatedApp && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center space-x-2 text-lg">
+                    <Globe className="w-5 h-5 text-green-400" />
+                    <span>Generated App</span>
+                  </CardTitle>
+                  <Button onClick={downloadApp} size="sm">
+                    <Download className="w-4 h-4 mr-2" />
+                    Download
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-3 bg-prism-surface/20 rounded-lg">
+                  <h4 className="font-semibold text-prism-text mb-2 text-sm">Description:</h4>
+                  <p className="text-prism-text-muted text-xs">{generatedApp.description}</p>
+                </div>
+
+                <div className="p-3 bg-prism-surface/20 rounded-lg">
+                  <h4 className="font-semibold text-prism-text mb-2 text-sm">Features:</h4>
+                  <ul className="list-disc list-inside text-prism-text-muted text-xs space-y-1">
+                    {generatedApp.features.map((feature, index) => (
+                      <li key={index}>{feature}</li>
+                    ))}
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

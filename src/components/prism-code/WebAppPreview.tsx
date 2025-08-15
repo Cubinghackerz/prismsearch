@@ -58,7 +58,7 @@ const WebAppPreview = ({ html, css, javascript }: WebAppPreviewProps) => {
   }, [html, css, javascript]);
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="h-full flex flex-col">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2 text-lg">
@@ -67,7 +67,7 @@ const WebAppPreview = ({ html, css, javascript }: WebAppPreviewProps) => {
           </CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent className="flex-1 flex flex-col p-0">
         <Alert className="mx-6 mb-4 border-yellow-500/30 bg-yellow-500/5">
           <AlertTriangle className="h-4 w-4 text-yellow-500" />
           <AlertDescription className="text-yellow-300 text-sm">
@@ -75,13 +75,12 @@ const WebAppPreview = ({ html, css, javascript }: WebAppPreviewProps) => {
           </AlertDescription>
         </Alert>
         
-        <div className="mx-6 mb-6 border border-prism-border rounded-lg overflow-hidden bg-white">
+        <div className="flex-1 mx-6 mb-6 border border-prism-border rounded-lg overflow-hidden bg-white">
           <iframe
             ref={iframeRef}
-            className="w-full h-96 border-0"
+            className="w-full h-full border-0"
             title="Web App Preview"
             sandbox="allow-scripts allow-same-origin"
-            style={{ minHeight: '400px' }}
           />
         </div>
       </CardContent>
