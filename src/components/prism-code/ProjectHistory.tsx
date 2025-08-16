@@ -72,7 +72,7 @@ const ProjectHistory: React.FC<ProjectHistoryProps> = ({ onLoadProject }) => {
   };
 
   return (
-    <Dialog open={isOpen} onValueChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <History className="w-4 h-4 mr-2" />
