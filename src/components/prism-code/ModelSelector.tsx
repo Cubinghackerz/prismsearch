@@ -3,7 +3,7 @@ import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 
-export type AIModel = 'gemini' | 'groq-llama4-maverick' | 'groq-llama4-scout' | 'groq-llama31-8b-instant' | 'azure-gpt4-nano';
+export type AIModel = 'gemini' | 'groq-llama4-maverick' | 'groq-llama4-scout' | 'groq-llama31-8b-instant';
 
 interface ModelSelectorProps {
   selectedModel: AIModel;
@@ -16,7 +16,6 @@ const MODEL_OPTIONS = [
   { value: 'groq-llama4-maverick' as AIModel, label: 'Llama 4 Maverick', description: 'Meta\'s powerful coding model' },
   { value: 'groq-llama4-scout' as AIModel, label: 'Llama 4 Scout', description: 'Fast and efficient for development' },
   { value: 'groq-llama31-8b-instant' as AIModel, label: 'Llama 3.1 8B Instant', description: 'Ultra-fast code generation' },
-  { value: 'azure-gpt4-nano' as AIModel, label: 'Azure GPT-4 Nano', description: 'Microsoft\'s optimized model' },
 ];
 
 const ModelSelector: React.FC<ModelSelectorProps> = ({ selectedModel, onModelChange, disabled }) => {

@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Wand2, Eye, Download, AlertTriangle, Sparkles, Maximize, FileText } from "lucide-react";
+import { Globe, Wand2, Eye, Download, AlertTriangle, Sparkles, Maximize, FileText, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import WebAppPreview from "./WebAppPreview";
 import ModelSelector, { AIModel } from "./ModelSelector";
 import FileViewer from "./FileViewer";
+import ProjectHistory from "./ProjectHistory";
+import { v4 as uuidv4 } from 'uuid';
 
 interface GeneratedApp {
   html: string;
@@ -19,6 +21,14 @@ interface GeneratedApp {
   features: string[];
 }
 
+interface ProjectHistoryItem {
+  id: string;
+  prompt: string;
+  generatedApp: GeneratedApp;
+  model: string;
+  timestamp: Date;
+}
+
 const WebAppGenerator = () => {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -26,9 +36,47 @@ const WebAppGenerator = () => {
   const [selectedModel, setSelectedModel] = useState<AIModel>('gemini');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeRightTab, setActiveRightTab] = useState('generator');
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
+  const [conversationHistory, setConversationHistory] = useState<Array<{ prompt: string; response: GeneratedApp }>>([]);
   const { toast } = useToast();
 
-  const MODEL_FALLBACK_ORDER: AIModel[] = ['gemini', 'groq-llama4-maverick', 'groq-llama4-scout', 'groq-llama31-8b-instant', 'azure-gpt4-nano'];
+  const MODEL_FALLBACK_ORDER: AIModel[] = ['gemini', 'groq-llama4-maverick', 'groq-llama4-scout', 'groq-llama31-8b-instant'];
+
+  const saveProject = (projectPrompt: string, app: GeneratedApp, model: string) => {
+    const projectId = currentProjectId || uuidv4();
+    const project: ProjectHistoryItem = {
+      id: projectId,
+      prompt: projectPrompt,
+      generatedApp: app,
+      model: model,
+      timestamp: new Date()
+    };
+
+    const savedProjects = localStorage.getItem('prism-code-projects');
+    let projects: ProjectHistoryItem[] = [];
+    
+    if (savedProjects) {
+      try {
+        projects = JSON.parse(savedProjects);
+      } catch (error) {
+        console.error('Error parsing saved projects:', error);
+      }
+    }
+
+    // Update existing project or add new one
+    const existingIndex = projects.findIndex(p => p.id === projectId);
+    if (existingIndex >= 0) {
+      projects[existingIndex] = project;
+    } else {
+      projects.unshift(project);
+    }
+
+    // Keep only the last 50 projects
+    projects = projects.slice(0, 50);
+    
+    localStorage.setItem('prism-code-projects', JSON.stringify(projects));
+    setCurrentProjectId(projectId);
+  };
 
   const generateWebApp = async (modelToUse: AIModel = selectedModel, isRetry: boolean = false) => {
     if (!prompt.trim()) {
@@ -43,9 +91,23 @@ const WebAppGenerator = () => {
     setIsGenerating(true);
     
     try {
+      // Build context from conversation history for continuation
+      let contextPrompt = prompt;
+      if (conversationHistory.length > 0) {
+        contextPrompt = `Based on the previous web application, ${prompt}. 
+
+Previous conversation context:
+${conversationHistory.slice(-3).map((item, index) => 
+  `Request ${index + 1}: ${item.prompt}
+  Result: ${item.response.description}`
+).join('\n\n')}
+
+Please modify or enhance the current application accordingly.`;
+      }
+
       const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
         body: { 
-          query: `Generate a complete web application based on this description: ${prompt}. 
+          query: `Generate a complete web application based on this description: ${contextPrompt}. 
 
 Please return ONLY a valid JSON object with this exact structure:
 {
@@ -58,7 +120,7 @@ Please return ONLY a valid JSON object with this exact structure:
 
 Make it responsive, modern, and fully functional. Do not include any markdown formatting or code blocks. Just the raw JSON.`,
           model: modelToUse,
-          chatId: 'webapp-generation',
+          chatId: currentProjectId || 'webapp-generation',
           chatHistory: []
         }
       });
@@ -119,6 +181,16 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
 
       setGeneratedApp(parsedApp);
       setActiveRightTab('files');
+      
+      // Add to conversation history
+      setConversationHistory(prev => [...prev, { prompt, response: parsedApp }]);
+      
+      // Save project
+      saveProject(prompt, parsedApp, modelToUse);
+      
+      // Clear the prompt for next iteration
+      setPrompt("");
+      
       toast({
         title: "Web App Generated!",
         description: `Your web application has been created successfully using ${modelToUse}.`,
@@ -146,6 +218,26 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const startNewProject = () => {
+    setGeneratedApp(null);
+    setCurrentProjectId(null);
+    setConversationHistory([]);
+    setPrompt("");
+    setActiveRightTab('generator');
+    toast({
+      title: "New Project Started",
+      description: "You can now create a fresh web application.",
+    });
+  };
+
+  const loadProject = (project: ProjectHistoryItem) => {
+    setGeneratedApp(project.generatedApp);
+    setCurrentProjectId(project.id);
+    setConversationHistory([{ prompt: project.prompt, response: project.generatedApp }]);
+    setPrompt("");
+    setActiveRightTab('files');
   };
 
   const downloadApp = () => {
@@ -206,22 +298,33 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center space-x-4">
-        <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/10 to-yellow-500/10 border border-orange-500/20">
-          <Globe className="w-8 h-8 text-orange-400" />
-        </div>
-        <div>
-          <div className="flex items-center space-x-3">
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent font-fira-code">
-              AI Web App Generator
-            </h2>
-            <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-sm font-semibold rounded-full border border-orange-500/30 font-fira-code">
-              Beta
-            </span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/10 to-yellow-500/10 border border-orange-500/20">
+            <Globe className="w-8 h-8 text-orange-400" />
           </div>
-          <p className="text-prism-text-muted mt-2 font-inter">
-            Generate fully functional web applications using multiple AI models
-          </p>
+          <div>
+            <div className="flex items-center space-x-3">
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent font-fira-code">
+                AI Web App Generator
+              </h2>
+              <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-sm font-semibold rounded-full border border-orange-500/30 font-fira-code">
+                Beta
+              </span>
+            </div>
+            <p className="text-prism-text-muted mt-2 font-inter">
+              Generate fully functional web applications using multiple AI models
+            </p>
+          </div>
+        </div>
+        <div className="flex space-x-2">
+          <ProjectHistory onLoadProject={loadProject} />
+          {generatedApp && (
+            <Button onClick={startNewProject} variant="outline" size="sm">
+              <Plus className="w-4 h-4 mr-2" />
+              New Project
+            </Button>
+          )}
         </div>
       </div>
 
@@ -295,7 +398,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Wand2 className="w-5 h-5 text-prism-primary" />
-                    <span>Describe Your Web App</span>
+                    <span>{generatedApp ? 'Continue Working' : 'Describe Your Web App'}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -309,7 +412,10 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                     <Textarea
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
-                      placeholder="Describe the web application you want to create... For example: 'Create a todo list app with drag and drop functionality, dark mode toggle, and local storage. Include animations and a modern design.'"
+                      placeholder={generatedApp ? 
+                        "Describe how you want to modify or enhance the current web app..." : 
+                        "Describe the web application you want to create... For example: 'Create a todo list app with drag and drop functionality, dark mode toggle, and local storage. Include animations and a modern design.'"
+                      }
                       className="min-h-[200px] resize-none bg-prism-surface/10 border-prism-border"
                       disabled={isGenerating}
                     />
@@ -328,7 +434,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                     ) : (
                       <>
                         <Wand2 className="w-4 h-4 mr-2" />
-                        Generate Web App
+                        {generatedApp ? 'Update Web App' : 'Generate Web App'}
                       </>
                     )}
                   </Button>
@@ -336,7 +442,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                   {/* Generated App Info */}
                   {generatedApp && (
                     <div className="mt-4 p-3 bg-prism-surface/20 rounded-lg">
-                      <h4 className="font-semibold text-prism-text mb-2 text-sm">Description:</h4>
+                      <h4 className="font-semibold text-prism-text mb-2 text-sm">Current Project:</h4>
                       <p className="text-prism-text-muted text-xs mb-3">{generatedApp.description}</p>
 
                       <h4 className="font-semibold text-prism-text mb-2 text-sm">Features:</h4>
@@ -345,6 +451,14 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                           <li key={index}>{feature}</li>
                         ))}
                       </ul>
+
+                      {conversationHistory.length > 1 && (
+                        <div className="mt-3 pt-2 border-t border-prism-border">
+                          <h4 className="font-semibold text-prism-text mb-1 text-xs">
+                            Iterations: {conversationHistory.length}
+                          </h4>
+                        </div>
+                      )}
                     </div>
                   )}
                 </CardContent>
