@@ -9,7 +9,6 @@ import Terminal from "./Terminal";
 import UserInputDialog from "./UserInputDialog";
 import WebAppGenerator from "./WebAppGenerator";
 import WebAppPasswordDialog from "./WebAppPasswordDialog";
-
 interface Cell {
   id: number;
   language: string;
@@ -17,7 +16,6 @@ interface Cell {
   output: string;
   userInputs: string[];
 }
-
 const CodeNotebook = () => {
   const [cells, setCells] = useState<Cell[]>([{
     id: 1,
@@ -32,11 +30,15 @@ const CodeNotebook = () => {
     cellId: number;
     prompt: string;
     onSubmit: (value: string) => void;
-  }>({ isOpen: false, cellId: 0, prompt: '', onSubmit: () => {} });
+  }>({
+    isOpen: false,
+    cellId: 0,
+    prompt: '',
+    onSubmit: () => {}
+  });
   const [showWebAppGenerator, setShowWebAppGenerator] = useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [hasWebAppAccess, setHasWebAppAccess] = useState(false);
-
   const supportedLanguages = [{
     value: 'python',
     label: 'Python'
@@ -56,7 +58,6 @@ const CodeNotebook = () => {
     value: 'json',
     label: 'JSON (Beta)'
   }];
-
   const addCell = () => {
     const newCell: Cell = {
       id: Date.now(),
@@ -67,13 +68,11 @@ const CodeNotebook = () => {
     };
     setCells([...cells, newCell]);
   };
-
   const deleteCell = (id: number) => {
     if (cells.length > 1) {
       setCells(cells.filter(cell => cell.id !== id));
     }
   };
-
   const downloadCell = (id: number) => {
     const cell = cells.find(c => c.id === id);
     if (!cell) return;
@@ -99,7 +98,6 @@ const CodeNotebook = () => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
-
   const downloadAllCells = () => {
     const allCode = cells.map((cell, index) => {
       const langLabel = supportedLanguages.find(l => l.value === cell.language)?.label;
@@ -117,14 +115,12 @@ const CodeNotebook = () => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
-
   const updateCell = (id: number, updates: Partial<Cell>) => {
     setCells(cells.map(cell => cell.id === id ? {
       ...cell,
       ...updates
     } : cell));
   };
-
   const executeJavaScript = (code: string, userInputs: string[] = []): string => {
     try {
       const originalLog = console.log;
@@ -132,7 +128,6 @@ const CodeNotebook = () => {
       const originalWarn = console.warn;
       let output = '';
       let inputIndex = 0;
-
       const captureOutput = (...args: any[]) => {
         output += args.map(arg => typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)).join(' ') + '\n';
       };
@@ -146,7 +141,6 @@ const CodeNotebook = () => {
         }
         return '';
       };
-
       console.log = captureOutput;
       console.error = captureOutput;
       console.warn = captureOutput;
@@ -160,7 +154,6 @@ const CodeNotebook = () => {
       console.error = originalError;
       console.warn = originalWarn;
       delete (window as any).prompt;
-
       if (result !== undefined && !output) {
         output = String(result);
       }
@@ -169,25 +162,24 @@ const CodeNotebook = () => {
       return `Error: ${error.message}`;
     }
   };
-
   const executePython = (code: string, userInputs: string[] = []): string => {
     try {
       const lines = code.split('\n').filter(line => line.trim());
       let output = '';
       let inputIndex = 0;
-      const variables: { [key: string]: any } = {};
-
+      const variables: {
+        [key: string]: any;
+      } = {};
       for (const line of lines) {
         const trimmedLine = line.trim();
-        
+
         // Skip comments and empty lines
         if (trimmedLine.startsWith('#') || !trimmedLine) {
           continue;
         }
-        
         if (trimmedLine.startsWith('print(') && trimmedLine.endsWith(')')) {
           const content = trimmedLine.slice(6, -1);
-          
+
           // Handle f-strings
           if (content.startsWith('f"') || content.startsWith("f'")) {
             let fStringContent = content.slice(2, -1);
@@ -213,7 +205,6 @@ const CodeNotebook = () => {
           const inputCall = parts[1].trim();
           const promptMatch = inputCall.match(/input\("([^"]*)"\)/);
           const prompt = promptMatch ? promptMatch[1] : 'Enter input: ';
-          
           if (inputIndex < userInputs.length) {
             const userInput = userInputs[inputIndex++];
             variables[varName] = userInput;
@@ -228,7 +219,7 @@ const CodeNotebook = () => {
           if (parts.length >= 2) {
             const varName = parts[0].trim();
             let value: any = parts.slice(1).join('=').trim().replace(/^["']|["']$/g, '');
-            
+
             // Handle numeric values
             if (!isNaN(Number(value)) && value !== '') {
               variables[varName] = Number(value);
@@ -257,13 +248,11 @@ const CodeNotebook = () => {
           }
         }
       }
-      
       return output || 'Python code executed successfully';
     } catch (error) {
       return 'Error: Invalid Python syntax or execution error';
     }
   };
-
   const executeTypeScript = (code: string): string => {
     try {
       // Convert basic TypeScript to JavaScript for execution
@@ -276,7 +265,6 @@ const CodeNotebook = () => {
       return `TypeScript Error: ${error.message}`;
     }
   };
-
   const executeHTML = (code: string): string => {
     try {
       // Create a temporary iframe to render HTML
@@ -296,7 +284,6 @@ const CodeNotebook = () => {
       return `HTML Error: ${error.message}`;
     }
   };
-
   const executeCSS = (code: string): string => {
     try {
       // Validate CSS syntax by creating a style element
@@ -309,7 +296,6 @@ const CodeNotebook = () => {
       return `CSS Error: ${error.message}`;
     }
   };
-
   const executeJSON = (code: string): string => {
     try {
       const parsed = JSON.parse(code);
@@ -318,21 +304,15 @@ const CodeNotebook = () => {
       return `JSON Error: ${error.message}`;
     }
   };
-
   const runCell = async (id: number) => {
     const cell = cells.find(c => c.id === id);
     if (!cell) return;
 
     // Check if code requires input
-    const requiresInput = (
-      (cell.language === 'python' && cell.code.includes('input(')) ||
-      (cell.language === 'javascript' && cell.code.includes('prompt('))
-    );
-
+    const requiresInput = cell.language === 'python' && cell.code.includes('input(') || cell.language === 'javascript' && cell.code.includes('prompt(');
     if (requiresInput) {
       // Collect all input prompts
       const inputPrompts: string[] = [];
-      
       if (cell.language === 'python') {
         const inputMatches = cell.code.match(/input\("([^"]*)"\)/g);
         if (inputMatches) {
@@ -357,16 +337,18 @@ const CodeNotebook = () => {
 
       // Collect user inputs
       const userInputs: string[] = [];
-      
       for (let i = 0; i < inputPrompts.length; i++) {
-        await new Promise<void>((resolve) => {
+        await new Promise<void>(resolve => {
           setInputDialog({
             isOpen: true,
             cellId: id,
             prompt: inputPrompts[i] || `Input ${i + 1}:`,
             onSubmit: (value: string) => {
               userInputs.push(value);
-              setInputDialog(prev => ({ ...prev, isOpen: false }));
+              setInputDialog(prev => ({
+                ...prev,
+                isOpen: false
+              }));
               resolve();
             }
           });
@@ -385,8 +367,10 @@ const CodeNotebook = () => {
         default:
           output = `${cell.language} execution with inputs not implemented`;
       }
-      
-      updateCell(id, { output, userInputs });
+      updateCell(id, {
+        output,
+        userInputs
+      });
     } else {
       // Execute without inputs (existing functionality)
       let output: string;
@@ -412,10 +396,11 @@ const CodeNotebook = () => {
         default:
           output = `${cell.language} execution not implemented`;
       }
-      updateCell(id, { output });
+      updateCell(id, {
+        output
+      });
     }
   };
-
   const handleWebAppGeneratorClick = () => {
     if (hasWebAppAccess) {
       setShowWebAppGenerator(true);
@@ -423,34 +408,24 @@ const CodeNotebook = () => {
       setShowPasswordDialog(true);
     }
   };
-
   const handlePasswordSuccess = () => {
     setHasWebAppAccess(true);
     setShowPasswordDialog(false);
     setShowWebAppGenerator(true);
   };
-
   if (showWebAppGenerator) {
-    return (
-      <div className="space-y-6">
+    return <div className="space-y-6">
         {/* Back Button */}
         <div className="flex items-center justify-between">
-          <Button
-            onClick={() => setShowWebAppGenerator(false)}
-            variant="outline"
-            className="font-inter"
-          >
+          <Button onClick={() => setShowWebAppGenerator(false)} variant="outline" className="font-inter">
             ← Back to Code Notebook
           </Button>
         </div>
 
         <WebAppGenerator />
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
@@ -459,9 +434,7 @@ const CodeNotebook = () => {
           </div>
           <div>
             <div className="flex items-center space-x-3">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-prism-primary to-prism-accent bg-clip-text text-transparent font-fira-code">
-                Prism Code
-              </h1>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-prism-primary to-prism-accent bg-clip-text text-transparent font-fira-code">Prism Notebook</h1>
               <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-sm font-semibold rounded-full border border-orange-500/30 font-fira-code">
                 Beta
               </span>
@@ -477,11 +450,9 @@ const CodeNotebook = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {supportedLanguages.map(lang => (
-                <SelectItem key={lang.value} value={lang.value}>
+              {supportedLanguages.map(lang => <SelectItem key={lang.value} value={lang.value}>
                   {lang.label}
-                </SelectItem>
-              ))}
+                </SelectItem>)}
             </SelectContent>
           </Select>
           
@@ -563,21 +534,13 @@ const CodeNotebook = () => {
       </Card>
 
       {/* User Input Dialog */}
-      <UserInputDialog
-        isOpen={inputDialog.isOpen}
-        prompt={inputDialog.prompt}
-        onSubmit={inputDialog.onSubmit}
-        onCancel={() => setInputDialog(prev => ({ ...prev, isOpen: false }))}
-      />
+      <UserInputDialog isOpen={inputDialog.isOpen} prompt={inputDialog.prompt} onSubmit={inputDialog.onSubmit} onCancel={() => setInputDialog(prev => ({
+      ...prev,
+      isOpen: false
+    }))} />
 
       {/* Password Dialog */}
-      <WebAppPasswordDialog
-        isOpen={showPasswordDialog}
-        onClose={() => setShowPasswordDialog(false)}
-        onSuccess={handlePasswordSuccess}
-      />
-    </div>
-  );
+      <WebAppPasswordDialog isOpen={showPasswordDialog} onClose={() => setShowPasswordDialog(false)} onSuccess={handlePasswordSuccess} />
+    </div>;
 };
-
 export default CodeNotebook;
