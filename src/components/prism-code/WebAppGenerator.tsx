@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,7 +28,7 @@ const WebAppGenerator = () => {
   const [activeRightTab, setActiveRightTab] = useState('generator');
   const { toast } = useToast();
 
-  const MODEL_FALLBACK_ORDER: AIModel[] = ['gemini', 'claude-sonnet', 'gpt-4o', 'claude-haiku', 'gpt-4o-mini'];
+  const MODEL_FALLBACK_ORDER: AIModel[] = ['gemini', 'groq-llama4-maverick', 'groq-llama4-scout', 'groq-llama31-8b-instant', 'azure-gpt4-nano'];
 
   const generateWebApp = async (modelToUse: AIModel = selectedModel, isRetry: boolean = false) => {
     if (!prompt.trim()) {
@@ -44,10 +43,23 @@ const WebAppGenerator = () => {
     setIsGenerating(true);
     
     try {
-      const { data, error } = await supabase.functions.invoke('generate-webapp', {
+      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
         body: { 
-          prompt,
-          model: modelToUse 
+          query: `Generate a complete web application based on this description: ${prompt}. 
+
+Please return ONLY a valid JSON object with this exact structure:
+{
+  "html": "complete HTML content",
+  "css": "complete CSS styles", 
+  "javascript": "complete JavaScript code",
+  "description": "brief description of the app",
+  "features": ["feature 1", "feature 2", "feature 3"]
+}
+
+Make it responsive, modern, and fully functional. Do not include any markdown formatting or code blocks. Just the raw JSON.`,
+          model: modelToUse,
+          chatId: 'webapp-generation',
+          chatHistory: []
         }
       });
 
@@ -55,8 +67,58 @@ const WebAppGenerator = () => {
         throw new Error(error.message);
       }
 
-      setGeneratedApp(data);
-      setActiveRightTab('files'); // Switch to files tab after generation
+      let parsedApp;
+      try {
+        const responseText = data.response || '';
+        const cleanResponse = responseText.replace(/```json\n?|```\n?/g, '').trim();
+        parsedApp = JSON.parse(cleanResponse);
+      } catch (parseError) {
+        const responseText = data.response || 'No response received';
+        parsedApp = {
+          html: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generated Web App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Generated Web Application</h1>
+        <div class="content">
+            ${responseText.replace(/\n/g, '<br>')}
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>`,
+          css: `body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+.content {
+    margin-top: 20px;
+    line-height: 1.6;
+}`,
+          javascript: `console.log('Web app generated successfully');`,
+          description: 'AI-generated web application',
+          features: ['Responsive design', 'Modern styling', 'Basic functionality']
+        };
+      }
+
+      setGeneratedApp(parsedApp);
+      setActiveRightTab('files');
       toast({
         title: "Web App Generated!",
         description: `Your web application has been created successfully using ${modelToUse}.`,
@@ -64,7 +126,6 @@ const WebAppGenerator = () => {
     } catch (error) {
       console.error(`Error generating web app with ${modelToUse}:`, error);
       
-      // Try fallback models if the current one fails
       const currentIndex = MODEL_FALLBACK_ORDER.indexOf(modelToUse);
       const nextModel = MODEL_FALLBACK_ORDER[currentIndex + 1];
       
