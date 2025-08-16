@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, MessageCircle, Lock, ArrowRight, Shield, FileType, AlertTriangle, Code } from 'lucide-react';
+import { Search, MessageCircle, Lock, ArrowRight, Shield, FileType, AlertTriangle, Code, Globe, Sparkles } from 'lucide-react';
 import AnimatedHeadline from '@/components/AnimatedHeadline';
 import Footer from '@/components/Footer';
 import AuthButtons from '@/components/AuthButtons';
@@ -12,6 +12,15 @@ const Home = () => {
   const navigate = useNavigate();
 
   const features = [
+    {
+      icon: Globe,
+      title: 'AI Web App Generator',
+      description: 'Generate complete web applications with HTML, CSS, and JavaScript using AI',
+      path: '/code',
+      gradient: 'from-orange-500 to-yellow-500',
+      featured: true,
+      beta: true
+    },
     {
       icon: Search,
       title: 'AI-Powered Search',
@@ -28,7 +37,7 @@ const Home = () => {
     },
     {
       icon: Code,
-      title: 'Prism Code',
+      title: 'Code Notebook',
       description: 'Online notebook for coding, testing, and running code snippets',
       path: '/code',
       gradient: 'from-indigo-500 to-purple-500',
@@ -58,6 +67,9 @@ const Home = () => {
       beta: true
     }
   ];
+
+  const featuredFeature = features.find(f => f.featured);
+  const regularFeatures = features.filter(f => !f.featured);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10 font-fira-code">
@@ -123,34 +135,76 @@ const Home = () => {
           <div className="space-y-4">
             <AnimatedHeadline />
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto font-fira-code">
-              Experience the future of intelligent search, secure password management, 
-              online code execution, and AI-powered conversations in one unified platform.
+              Experience the future of intelligent search, AI-powered web app generation, secure password management, 
+              online code execution, and AI conversations in one unified platform.
             </p>
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
-              onClick={() => navigate('/search')}
-              className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 font-fira-code"
+              onClick={() => navigate('/code')}
+              className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 font-fira-code"
             >
-              Start Searching
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <Sparkles className="mr-2 h-4 w-4" />
+              Try AI Web App Generator
             </Button>
             <Button 
               size="lg" 
               variant="outline" 
-              onClick={() => navigate('/chat')}
+              onClick={() => navigate('/search')}
               className="font-fira-code"
             >
-              Try AI Chat
+              Start Searching
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
         </div>
 
-        {/* Features Grid */}
+        {/* Featured Feature */}
+        {featuredFeature && (
+          <div className="mb-16">
+            <h2 className="text-2xl font-bold text-center mb-8 font-fira-code">Featured</h2>
+            <Card 
+              className="group cursor-pointer transition-all duration-300 hover:scale-105 border-2 border-orange-500/30 bg-gradient-to-br from-orange-500/5 to-yellow-500/5"
+              onClick={() => navigate(featuredFeature.path)}
+            >
+              <CardHeader>
+                <div className="flex items-center space-x-4">
+                  <div className={`p-4 rounded-lg bg-gradient-to-r ${featuredFeature.gradient} text-white`}>
+                    <featuredFeature.icon className="h-8 w-8" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <CardTitle className="text-2xl font-fira-code">{featuredFeature.title}</CardTitle>
+                      {featuredFeature.beta && (
+                        <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-sm font-semibold rounded-full border border-orange-500/30 font-fira-code">
+                          Beta
+                        </span>
+                      )}
+                    </div>
+                    <CardDescription className="text-lg font-fira-code">
+                      {featuredFeature.description}
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start group-hover:bg-accent/50 font-fira-code text-lg py-6"
+                >
+                  Start Creating Web Apps
+                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Regular Features Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
-          {features.map((feature, index) => (
+          {regularFeatures.map((feature, index) => (
             <Card 
               key={index}
               className="group cursor-pointer transition-all duration-300 hover:scale-105"

@@ -1,12 +1,14 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Wand2, Eye, Download, AlertTriangle, Sparkles, Maximize, FileText, Plus } from "lucide-react";
+import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useDailyQueryLimit } from "@/hooks/useDailyQueryLimit";
 import WebAppPreview from "./WebAppPreview";
 import ModelSelector, { AIModel } from "./ModelSelector";
 import FileViewer from "./FileViewer";
@@ -39,6 +41,7 @@ const WebAppGenerator = () => {
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [conversationHistory, setConversationHistory] = useState<Array<{ prompt: string; response: GeneratedApp }>>([]);
   const { toast } = useToast();
+  const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
 
   const MODEL_FALLBACK_ORDER: AIModel[] = ['gemini', 'groq-llama4-maverick', 'groq-llama4-scout', 'groq-llama31-8b-instant'];
 
@@ -83,6 +86,25 @@ const WebAppGenerator = () => {
       toast({
         title: "Missing Prompt",
         description: "Please describe the web app you want to create.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (isLimitReached) {
+      toast({
+        title: "Daily Limit Reached",
+        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Check if we can increment the query count
+    if (!incrementQueryCount()) {
+      toast({
+        title: "Daily Limit Reached",
+        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
         variant: "destructive"
       });
       return;
@@ -313,7 +335,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
               </span>
             </div>
             <p className="text-prism-text-muted mt-2 font-inter">
-              Generate fully functional web applications using multiple AI models
+              Generate fully functional web applications using multiple AI models (10 queries/day)
             </p>
           </div>
         </div>
