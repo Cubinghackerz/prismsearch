@@ -456,10 +456,7 @@ const CodeNotebook = () => {
             </SelectContent>
           </Select>
           
-          <Button onClick={handleWebAppGeneratorClick} className="font-inter bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600">
-            <Globe className="w-4 h-4 mr-2" />
-            AI Web App Generator
-          </Button>
+          
           
           <Button onClick={addCell} className="font-inter">
             <Plus className="w-4 h-4 mr-2" />
