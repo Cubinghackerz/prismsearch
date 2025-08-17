@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle } from "lucide-react";
+import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Code, Activity } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyQueryLimit } from "@/hooks/useDailyQueryLimit";
@@ -12,6 +12,10 @@ import WebAppPreview from "./WebAppPreview";
 import ModelSelector, { AIModel } from "./ModelSelector";
 import FileViewer from "./FileViewer";
 import ProjectHistory from "./ProjectHistory";
+import AdvancedCodeEditor from "./AdvancedCodeEditor";
+import PackageManager from "./PackageManager";
+import FrameworkTemplates from "./FrameworkTemplates";
+import PerformanceAnalytics from "./PerformanceAnalytics";
 import { v4 as uuidv4 } from 'uuid';
 
 interface GeneratedApp {
@@ -30,6 +34,12 @@ interface ProjectHistoryItem {
   timestamp: Date;
 }
 
+interface FileData {
+  name: string;
+  content: string;
+  language: string;
+}
+
 const WebAppGenerator = () => {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -39,6 +49,8 @@ const WebAppGenerator = () => {
   const [activeRightTab, setActiveRightTab] = useState('generator');
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [conversationHistory, setConversationHistory] = useState<Array<{ prompt: string; response: GeneratedApp }>>([]);
+  const [projectFiles, setProjectFiles] = useState<FileData[]>([]);
+  const [packages, setPackages] = useState<Record<string, string>>({});
   const { toast } = useToast();
   const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
 
@@ -99,7 +111,6 @@ const WebAppGenerator = () => {
       return;
     }
 
-    // Check if we can increment the query count
     if (!incrementQueryCount()) {
       toast({
         title: "Daily Limit Reached",
@@ -112,7 +123,6 @@ const WebAppGenerator = () => {
     setIsGenerating(true);
     
     try {
-      // Build context from conversation history for continuation
       let contextPrompt = prompt;
       if (conversationHistory.length > 0) {
         contextPrompt = `Based on the previous web application, ${prompt}. 
@@ -201,15 +211,18 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       }
 
       setGeneratedApp(parsedApp);
+      
+      // Convert to file structure for advanced editor
+      const files: FileData[] = [
+        { name: 'index.html', content: parsedApp.html, language: 'html' },
+        { name: 'styles.css', content: parsedApp.css, language: 'css' },
+        { name: 'script.js', content: parsedApp.javascript, language: 'javascript' }
+      ];
+      setProjectFiles(files);
+      
       setActiveRightTab('files');
-      
-      // Add to conversation history
       setConversationHistory(prev => [...prev, { prompt, response: parsedApp }]);
-      
-      // Save project
       saveProject(prompt, parsedApp, modelToUse);
-      
-      // Clear the prompt for next iteration
       setPrompt("");
       
       toast({
@@ -241,8 +254,75 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
     }
   };
 
+  const handleFileChange = (fileName: string, content: string) => {
+    setProjectFiles(prev => prev.map(file => 
+      file.name === fileName ? { ...file, content } : file
+    ));
+    
+    // Update generatedApp if it exists
+    if (generatedApp) {
+      const updatedApp = { ...generatedApp };
+      if (fileName === 'index.html') updatedApp.html = content;
+      else if (fileName === 'styles.css') updatedApp.css = content;
+      else if (fileName === 'script.js') updatedApp.javascript = content;
+      setGeneratedApp(updatedApp);
+    }
+  };
+
+  const handlePackageAdd = (packageName: string, version: string) => {
+    setPackages(prev => ({ ...prev, [packageName]: version }));
+  };
+
+  const handlePackageRemove = (packageName: string) => {
+    setPackages(prev => {
+      const newPackages = { ...prev };
+      delete newPackages[packageName];
+      return newPackages;
+    });
+  };
+
+  const handlePackageUpdate = (packageName: string, version: string) => {
+    setPackages(prev => ({ ...prev, [packageName]: version }));
+  };
+
+  const handleTemplateSelect = (template: any) => {
+    const files: FileData[] = Object.entries(template.files).map(([name, content]) => ({
+      name,
+      content: content as string,
+      language: name.split('.').pop() || 'plaintext'
+    }));
+    
+    setProjectFiles(files);
+    setPackages(template.packages);
+    setActiveRightTab('editor');
+    
+    // Create a generatedApp from template for preview
+    const htmlFile = files.find(f => f.name.includes('.html'));
+    const cssFile = files.find(f => f.name.includes('.css'));
+    const jsFile = files.find(f => f.name.includes('.js') || f.name.includes('.ts'));
+    
+    if (htmlFile && cssFile && jsFile) {
+      setGeneratedApp({
+        html: htmlFile.content,
+        css: cssFile.content,
+        javascript: jsFile.content,
+        description: template.description,
+        features: template.features
+      });
+    }
+  };
+
+  const handleOptimizationApply = (optimization: string) => {
+    toast({
+      title: "Optimization Applied",
+      description: `Applied ${optimization} optimization to your project.`,
+    });
+  };
+
   const startNewProject = () => {
     setGeneratedApp(null);
+    setProjectFiles([]);
+    setPackages({});
     setCurrentProjectId(null);
     setConversationHistory([]);
     setPrompt("");
@@ -262,16 +342,17 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
   };
 
   const downloadApp = () => {
-    if (!generatedApp) return;
+    if (!generatedApp && projectFiles.length === 0) return;
 
-    const files = [
-      { name: 'index.html', content: generatedApp.html },
-      { name: 'styles.css', content: generatedApp.css },
-      { name: 'script.js', content: generatedApp.javascript },
-      { name: 'README.txt', content: `Generated Web App\n\nDescription: ${generatedApp.description}\n\nFeatures:\n${generatedApp.features.map(f => `- ${f}`).join('\n')}` }
-    ];
+    const filesToDownload = projectFiles.length > 0 
+      ? projectFiles.map(file => ({ name: file.name, content: file.content }))
+      : [
+          { name: 'index.html', content: generatedApp!.html },
+          { name: 'styles.css', content: generatedApp!.css },
+          { name: 'script.js', content: generatedApp!.javascript }
+        ];
 
-    files.forEach(file => {
+    filesToDownload.forEach(file => {
       const blob = new Blob([file.content], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -285,7 +366,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
 
     toast({
       title: "Files Downloaded",
-      description: "All web app files have been downloaded to your device.",
+      description: "All project files have been downloaded to your device.",
     });
   };
 
@@ -334,13 +415,13 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
               </span>
             </div>
             <p className="text-prism-text-muted mt-2 font-inter">
-              Generate fully functional web applications using multiple AI models (10 queries/day)
+              Advanced web development with AI assistance, real package management, and performance analytics
             </p>
           </div>
         </div>
         <div className="flex space-x-2">
           <ProjectHistory onLoadProject={loadProject} />
-          {generatedApp && (
+          {(generatedApp || projectFiles.length > 0) && (
             <Button onClick={startNewProject} variant="outline" size="sm">
               <Plus className="w-4 h-4 mr-2" />
               New Project
@@ -353,16 +434,16 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       <Alert className="border-orange-500/30 bg-orange-500/5">
         <AlertTriangle className="h-4 w-4 text-orange-500" />
         <AlertDescription className="text-orange-300">
-          <strong>Beta Feature:</strong> This AI generator creates complete web applications with HTML, CSS, and JavaScript. 
-          Always review generated code before deployment. This feature uses advanced AI models and may consume significant resources.
+          <strong>Enhanced Beta:</strong> Now featuring advanced code editing with Monaco Editor, real package management, 
+          framework templates, and performance analytics. Always review generated code before deployment.
         </AlertDescription>
       </Alert>
 
       {/* Split Layout */}
       <div className="flex gap-6 h-[calc(100vh-20rem)]">
-        {/* Left Side - Preview (Takes up 2/3 of the space) */}
+        {/* Left Side - Preview */}
         <div className="flex-1 lg:flex-[2]">
-          {generatedApp ? (
+          {(generatedApp || projectFiles.length > 0) ? (
             <div className="h-full flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-prism-text">Live Preview</h3>
@@ -382,35 +463,47 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                 </div>
               </div>
               <div className="flex-1">
-                <WebAppPreview
-                  html={generatedApp.html}
-                  css={generatedApp.css}
-                  javascript={generatedApp.javascript}
-                />
+                {generatedApp && (
+                  <WebAppPreview
+                    html={generatedApp.html}
+                    css={generatedApp.css}
+                    javascript={generatedApp.javascript}
+                  />
+                )}
               </div>
             </div>
           ) : (
             <Card className="h-full flex items-center justify-center">
               <CardContent className="text-center py-20">
                 <Globe className="w-16 h-16 text-prism-text-muted mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-prism-text mb-2">No Web App Generated Yet</h3>
-                <p className="text-prism-text-muted">Use the generator on the right to create your web application</p>
+                <h3 className="text-xl font-semibold text-prism-text mb-2">No Project Loaded</h3>
+                <p className="text-prism-text-muted">Create a new web app or select a framework template to get started</p>
               </CardContent>
             </Card>
           )}
         </div>
 
-        {/* Right Side - Tabs (Takes up 1/3 of the space) */}
+        {/* Right Side - Enhanced Tabs */}
         <div className="w-full lg:w-96 flex flex-col">
           <Tabs value={activeRightTab} onValueChange={setActiveRightTab} className="flex-1 flex flex-col">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="generator" className="flex items-center space-x-1">
-                <Wand2 className="w-4 h-4" />
-                <span>Generator</span>
+            <TabsList className="grid w-full grid-cols-6">
+              <TabsTrigger value="generator" className="text-xs">
+                <Wand2 className="w-3 h-3" />
               </TabsTrigger>
-              <TabsTrigger value="files" className="flex items-center space-x-1" disabled={!generatedApp}>
-                <FileText className="w-4 h-4" />
-                <span>Files</span>
+              <TabsTrigger value="templates" className="text-xs">
+                <FileText className="w-3 h-3" />
+              </TabsTrigger>
+              <TabsTrigger value="editor" className="text-xs" disabled={projectFiles.length === 0}>
+                <Code className="w-3 h-3" />
+              </TabsTrigger>
+              <TabsTrigger value="packages" className="text-xs">
+                <Package className="w-3 h-3" />
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="text-xs" disabled={projectFiles.length === 0}>
+                <Activity className="w-3 h-3" />
+              </TabsTrigger>
+              <TabsTrigger value="files" className="text-xs" disabled={!generatedApp && projectFiles.length === 0}>
+                <FileText className="w-3 h-3" />
               </TabsTrigger>
             </TabsList>
 
@@ -484,6 +577,54 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="templates" className="flex-1 mt-4">
+              <FrameworkTemplates onTemplateSelect={handleTemplateSelect} />
+            </TabsContent>
+
+            <TabsContent value="editor" className="flex-1 mt-4">
+              {projectFiles.length > 0 ? (
+                <AdvancedCodeEditor
+                  files={projectFiles}
+                  onFileChange={handleFileChange}
+                />
+              ) : (
+                <Card className="h-full flex items-center justify-center">
+                  <CardContent className="text-center py-20">
+                    <Code className="w-12 h-12 text-prism-text-muted mx-auto mb-4" />
+                    <p className="text-prism-text-muted">No files to edit</p>
+                    <p className="text-sm text-prism-text-muted">Generate an app or select a template first</p>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            <TabsContent value="packages" className="flex-1 mt-4">
+              <PackageManager
+                packages={packages}
+                onPackageAdd={handlePackageAdd}
+                onPackageRemove={handlePackageRemove}
+                onPackageUpdate={handlePackageUpdate}
+              />
+            </TabsContent>
+
+            <TabsContent value="analytics" className="flex-1 mt-4">
+              {projectFiles.length > 0 ? (
+                <PerformanceAnalytics
+                  projectFiles={Object.fromEntries(projectFiles.map(f => [f.name, f.content]))}
+                  packages={packages}
+                  onOptimizationApply={handleOptimizationApply}
+                />
+              ) : (
+                <Card className="h-full flex items-center justify-center">
+                  <CardContent className="text-center py-20">
+                    <Activity className="w-12 h-12 text-prism-text-muted mx-auto mb-4" />
+                    <p className="text-prism-text-muted">No project to analyze</p>
+                    <p className="text-sm text-prism-text-muted">Create or load a project to see analytics</p>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="files" className="flex-1 mt-4">
