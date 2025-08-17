@@ -246,6 +246,15 @@ Focus on ${languageOption.name} and provide realistic time estimates and complex
     await generateWebApp(selectedModel, false, true);
   };
 
+  const handlePlanRejection = () => {
+    setShowThinkingPlan(false);
+    setThinkingPlan(null);
+    toast({
+      title: "Plan Rejected",
+      description: "You can modify your prompt and try again.",
+    });
+  };
+
   const generateWebApp = async (modelToUse: AIModel = selectedModel, isRetry: boolean = false, usePlan: boolean = false) => {
     if (!prompt.trim()) {
       toast({
