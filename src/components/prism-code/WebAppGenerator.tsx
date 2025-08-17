@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +23,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useDailyQueryLimit } from "@/hooks/useDailyQueryLimit";
+import { supabase } from "@/integrations/supabase/client";
 import WebAppPreview from "./WebAppPreview";
 import FileViewer from "./FileViewer";
 import AdvancedCodeEditor from "./AdvancedCodeEditor";
@@ -289,26 +289,17 @@ const WebAppGenerator = () => {
                     Download Files
                   </Button>
                   
-                  <Button 
-                    onClick={() => setShowDeployment(true)} 
-                    className="w-full"
-                  >
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    Deploy Application
-                  </Button>
+                  <DeploymentDialog generatedApp={generatedApp}>
+                    <Button className="w-full">
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Deploy Application
+                    </Button>
+                  </DeploymentDialog>
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
-      )}
-
-      {generatedApp && (
-        <DeploymentDialog
-          isOpen={showDeployment}
-          onClose={() => setShowDeployment(false)}
-          generatedApp={generatedApp}
-        />
       )}
     </div>
   );

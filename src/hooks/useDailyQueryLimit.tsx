@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useUser } from '@clerk/clerk-react';
 
@@ -61,10 +62,19 @@ export const useDailyQueryLimit = () => {
     localStorage.setItem(todayKey, JSON.stringify(data));
     setQueriesUsed(newCount);
     setIsLimitReached(newCount >= maxQueries);
-    setUpdateTrigger(prev => prev + 1); // Force re-render
+    setUpdateTrigger(prev => prev + 1);
 
     return true;
   }, [isLoaded, queriesUsed, maxQueries]);
+
+  // Add the missing methods
+  const canMakeQuery = useCallback(() => {
+    return isLoaded && !isLimitReached && queriesLeft > 0;
+  }, [isLoaded, isLimitReached, queriesLeft]);
+
+  const decrementQueries = useCallback(() => {
+    return incrementQueryCount();
+  }, [incrementQueryCount]);
 
   useEffect(() => {
     loadTodaysQueries();
@@ -96,7 +106,9 @@ export const useDailyQueryLimit = () => {
     maxQueries,
     isLimitReached,
     incrementQueryCount,
+    canMakeQuery,
+    decrementQueries,
     isLoaded,
-    updateTrigger // Include this to force re-renders
+    updateTrigger
   };
 };
