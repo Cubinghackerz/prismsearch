@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package } from "lucide-react";
+import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyQueryLimit } from "@/hooks/useDailyQueryLimit";
@@ -40,6 +40,7 @@ const WebAppGenerator = () => {
   const [activeRightTab, setActiveRightTab] = useState('generator');
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [conversationHistory, setConversationHistory] = useState<Array<{ prompt: string; response: GeneratedApp }>>([]);
+  const [isThinking, setIsThinking] = useState(false);
   const { toast } = useToast();
   const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
 
@@ -77,6 +78,85 @@ const WebAppGenerator = () => {
     
     localStorage.setItem('prism-code-projects', JSON.stringify(projects));
     setCurrentProjectId(projectId);
+  };
+
+  const thinkAboutProject = async () => {
+    if (!prompt.trim()) {
+      toast({
+        title: "Missing Prompt",
+        description: "Please describe the web app you want to analyze.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (isLimitReached) {
+      toast({
+        title: "Daily Limit Reached",
+        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!incrementQueryCount()) {
+      toast({
+        title: "Daily Limit Reached",
+        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsThinking(true);
+    
+    try {
+      const thinkingPrompt = `Analyze this web application idea and provide detailed thoughts: ${prompt}
+
+Please consider:
+1. Technical feasibility and complexity
+2. Recommended technologies, frameworks, and packages
+3. Potential challenges and solutions
+4. Architecture suggestions
+5. Feature breakdown and implementation approach
+6. Security considerations
+7. Performance optimization opportunities
+
+Provide a comprehensive analysis without generating code.`;
+
+      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
+        body: { 
+          query: thinkingPrompt,
+          model: selectedModel,
+          chatId: currentProjectId || 'webapp-thinking',
+          chatHistory: []
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      const analysis = data.response || 'No analysis received';
+      
+      toast({
+        title: "Analysis Complete",
+        description: "AI has analyzed your project idea. Check the chat for detailed insights.",
+      });
+
+      // You could display this analysis in a modal or dedicated area
+      console.log('Project Analysis:', analysis);
+      
+    } catch (error) {
+      console.error('Error analyzing project:', error);
+      toast({
+        title: "Analysis Failed",
+        description: `Failed to analyze project: ${error.message}`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsThinking(false);
+    }
   };
 
   const generateWebApp = async (modelToUse: AIModel = selectedModel, isRetry: boolean = false) => {
@@ -366,6 +446,15 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
         </AlertDescription>
       </Alert>
 
+      {/* Prompt Tips */}
+      <Alert className="border-blue-500/30 bg-blue-500/5">
+        <Sparkles className="h-4 w-4 text-blue-500" />
+        <AlertDescription className="text-blue-300">
+          <strong>Pro Tip:</strong> For better results, mention specific packages, libraries, or frameworks in your prompt. 
+          Example: "Create a todo app using React hooks, Tailwind CSS, and Framer Motion for animations."
+        </AlertDescription>
+      </Alert>
+
       {/* Split Layout - Updated widths */}
       <div className="flex gap-6 h-[calc(100vh-20rem)]">
         {/* Left Side - Preview - Reduced flex weight */}
@@ -438,7 +527,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                   <ModelSelector
                     selectedModel={selectedModel}
                     onModelChange={setSelectedModel}
-                    disabled={isGenerating}
+                    disabled={isGenerating || isThinking}
                   />
 
                   <div>
@@ -446,31 +535,52 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
                       placeholder={generatedApp ? 
-                        "Describe how you want to modify or enhance the current web app..." : 
-                        "Describe the web application you want to create... For example: 'Create a todo list app with drag and drop functionality, dark mode toggle, and local storage. Include animations and a modern design.'"
+                        "Describe how you want to modify or enhance the current web app... Mention specific packages like 'Add Chart.js for data visualization' or 'Use Lodash for data manipulation'..." : 
+                        "Describe the web application you want to create... For example: 'Create a todo list app with drag and drop functionality using React Beautiful DnD, dark mode toggle, and local storage. Include animations with Framer Motion and use Tailwind CSS for styling.'"
                       }
                       className="min-h-[200px] resize-none bg-prism-surface/10 border-prism-border"
-                      disabled={isGenerating}
+                      disabled={isGenerating || isThinking}
                     />
                   </div>
 
-                  <Button
-                    onClick={() => generateWebApp()}
-                    disabled={isGenerating || !prompt.trim()}
-                    className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-semibold"
-                  >
-                    {isGenerating ? (
-                      <>
-                        <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Wand2 className="w-4 h-4 mr-2" />
-                        {generatedApp ? 'Update Web App' : 'Generate Web App'}
-                      </>
-                    )}
-                  </Button>
+                  <div className="flex space-x-2">
+                    <Button
+                      onClick={thinkAboutProject}
+                      disabled={isThinking || isGenerating || !prompt.trim()}
+                      variant="outline"
+                      className="flex-1 bg-gradient-to-r from-purple-500/20 to-blue-500/20 hover:from-purple-500/30 hover:to-blue-500/30 border-purple-500/30"
+                    >
+                      {isThinking ? (
+                        <>
+                          <Brain className="w-4 h-4 mr-2 animate-pulse" />
+                          Thinking...
+                        </>
+                      ) : (
+                        <>
+                          <Brain className="w-4 h-4 mr-2" />
+                          Think
+                        </>
+                      )}
+                    </Button>
+
+                    <Button
+                      onClick={() => generateWebApp()}
+                      disabled={isGenerating || isThinking || !prompt.trim()}
+                      className="flex-1 bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-semibold"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="w-4 h-4 mr-2" />
+                          {generatedApp ? 'Update' : 'Generate'}
+                        </>
+                      )}
+                    </Button>
+                  </div>
 
                   {/* Generated App Info */}
                   {generatedApp && (
