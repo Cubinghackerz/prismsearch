@@ -1,42 +1,70 @@
 
+# The local development settings
+[local]
+# port to use for the local development server
+port = 54321
+# the base URL of the local development server
+# api_url = "http://127.0.0.1"
+
+# A string used to distinguish different Supabase projects on the same host. Defaults to the
+# working directory name when running supabase init.
 project_id = "fgpdfkvabwemivzjeitx"
 
 [api]
 enabled = true
+# Port to use for the API URL.
 port = 54321
+# Schemas to expose in your API. Tables, views and stored procedures in this schema will get API
+# endpoints. public and storage are always included.
 schemas = ["public", "storage", "graphql_public"]
+# Extra schemas to add to the search_path of every request. public is always included.
+extra_search_path = ["public", "extensions"]
+# The maximum number of rows returns from a table or view without either count=exact or count=planned.
+max_rows = 1000
 
 [db]
-port = 54322
+# Port to use for the local database URL.
+port = 5432
+# Port used by db diff command to initialize the shadow database.
 shadow_port = 54320
+# The database major version to use. This has to be the same as your remote database's. Run `SHOW
+# server_version_num;` on the remote database to check.
 major_version = 15
-
-[studio]
-enabled = true
-port = 54323
-api_url = "http://localhost:54321"
-
-[inbucket]
-enabled = true
-port = 54324
-
-[storage]
-enabled = true
-port = 5000
-
-[auth]
-enabled = true
-port = 54325
 
 [realtime]
 enabled = true
+# Bind realtime via either IPv4 or IPv6. (default: IPv4)
+# ip_version = "IPv6"
+# The maximum length of HTTP request headers. (default: 4096)
+# max_header_length = 4096
 
-[edge_functions]
-[edge_functions."ai-search-assistant"]
+[studio]
+enabled = true
+# Port to use for Supabase Studio.
+port = 54323
+# External URL of the API server that frontend connects to.
+api_url = "http://127.0.0.1:54321"
+
+# Email template settings
+[auth.email.template.invite]
+subject = "You have been invited"
+content_path = "./supabase/templates/invite.html"
+
+[auth.email.template.confirmation]
+subject = "Confirm your signup"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.recovery]
+subject = "Reset your password"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.magic_link]
+subject = "Your magic link"
+content_path = "./supabase/templates/magic_link.html"
+
+# Make serve-webapp function public (no authentication required)
+[functions.serve-webapp]
 verify_jwt = false
 
-[edge_functions."setup-storage-bucket"]
-verify_jwt = false
-
-[edge_functions."clamav-scan"]
-verify_jwt = false
+[functions.deploy-webapp]
+verify_jwt = true

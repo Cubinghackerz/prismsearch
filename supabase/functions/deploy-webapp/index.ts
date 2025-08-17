@@ -2,9 +2,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from '../_shared/cors.ts'
 
-const VERCEL_TOKEN = Deno.env.get('VERCEL_TOKEN');
-const NETLIFY_TOKEN = Deno.env.get('NETLIFY_TOKEN');
-
 // In-memory storage for development deployments
 // In a production scenario, you'd want to use Supabase Storage
 const developmentDeployments = new Map<string, Record<string, string>>();
@@ -15,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { platform, projectName, files } = await req.json();
+    const { platform, projectName, files, apiToken } = await req.json();
 
     if (!platform || !projectName || !files) {
       throw new Error('Missing required fields: platform, projectName, or files');
@@ -25,10 +22,16 @@ serve(async (req) => {
     
     switch (platform) {
       case 'vercel':
-        result = await deployToVercel(projectName, files);
+        if (!apiToken) {
+          throw new Error('Vercel API token is required');
+        }
+        result = await deployToVercel(projectName, files, apiToken);
         break;
       case 'netlify':
-        result = await deployToNetlify(projectName, files);
+        if (!apiToken) {
+          throw new Error('Netlify access token is required');
+        }
+        result = await deployToNetlify(projectName, files, apiToken);
         break;
       case 'development':
         result = await createDevelopmentLink(projectName, files);
@@ -65,11 +68,7 @@ serve(async (req) => {
   }
 });
 
-async function deployToVercel(projectName: string, files: Record<string, string>) {
-  if (!VERCEL_TOKEN) {
-    throw new Error('Vercel token not configured');
-  }
-
+async function deployToVercel(projectName: string, files: Record<string, string>, apiToken: string) {
   const deploymentData = {
     name: projectName,
     files: Object.entries(files).map(([path, content]) => ({
@@ -84,7 +83,7 @@ async function deployToVercel(projectName: string, files: Record<string, string>
   const response = await fetch('https://api.vercel.com/v13/deployments', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${VERCEL_TOKEN}`,
+      'Authorization': `Bearer ${apiToken}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(deploymentData)
@@ -104,11 +103,7 @@ async function deployToVercel(projectName: string, files: Record<string, string>
   };
 }
 
-async function deployToNetlify(projectName: string, files: Record<string, string>) {
-  if (!NETLIFY_TOKEN) {
-    throw new Error('Netlify token not configured');
-  }
-
+async function deployToNetlify(projectName: string, files: Record<string, string>, apiToken: string) {
   // Create a zip-like structure for Netlify
   const formData = new FormData();
   
@@ -119,7 +114,7 @@ async function deployToNetlify(projectName: string, files: Record<string, string
   const response = await fetch('https://api.netlify.com/api/v1/sites', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${NETLIFY_TOKEN}`,
+      'Authorization': `Bearer ${apiToken}`,
     },
     body: formData
   });
