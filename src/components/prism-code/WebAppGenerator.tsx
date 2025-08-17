@@ -1,20 +1,24 @@
-
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Navigation from "@/components/Navigation";
+import { useAuth } from "@clerk/clerk-react";
+import { Navigate } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Globe, Code, AlertTriangle, FileText, Package, Terminal as TerminalIcon, Template, Cloud } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Terminal as TerminalIcon } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyQueryLimit } from "@/hooks/useDailyQueryLimit";
 import WebAppPreview from "./WebAppPreview";
 import ModelSelector, { AIModel } from "./ModelSelector";
-import FileViewer from "./FileViewer";
-import ProjectHistory from "./ProjectHistory";
+import AdvancedCodeEditor from "./AdvancedCodeEditor";
+import FrameworkTemplates from "./FrameworkTemplates";
+import ProjectCloudStorage from "./ProjectCloudStorage";
 import PackageManager from "./PackageManager";
 import Terminal from "./Terminal";
+import ProjectHistory from "./ProjectHistory";
 import { v4 as uuidv4 } from 'uuid';
 
 interface GeneratedApp {
@@ -47,11 +51,11 @@ const WebAppGenerator = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedApp, setGeneratedApp] = useState<GeneratedApp | null>(null);
   const [selectedModel, setSelectedModel] = useState<AIModel>('gemini');
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeRightTab, setActiveRightTab] = useState('generator');
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [conversationHistory, setConversationHistory] = useState<Array<{ prompt: string; response: GeneratedApp }>>([]);
   const [packages, setPackages] = useState<PackageInfo[]>([]);
+  const [editorFiles, setEditorFiles] = useState<Array<{name: string; content: string; language: string; icon: any}>>([]);
   const { toast } = useToast();
   const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
 
@@ -262,7 +266,15 @@ Make it modern, functional, and leverage the specified packages if any. Include 
       }
 
       setGeneratedApp(parsedApp);
-      setActiveRightTab('files');
+      
+      const files = [
+        { name: 'index.html', content: parsedApp.html, language: 'html', icon: FileText },
+        { name: 'styles.css', content: parsedApp.css, language: 'css', icon: Code },
+        { name: 'script.js', content: parsedApp.javascript, language: 'javascript', icon: Code }
+      ];
+      setEditorFiles(files);
+
+      setActiveRightTab('editor');
       
       setConversationHistory(prev => [...prev, { prompt, response: parsedApp }]);
       saveProject(prompt, parsedApp, modelToUse);
@@ -297,6 +309,72 @@ Make it modern, functional, and leverage the specified packages if any. Include 
     }
   };
 
+  const handleTemplateSelect = (template: any) => {
+    const files = Object.entries(template.files).map(([filename, content]) => ({
+      name: filename,
+      content: content as string,
+      language: getLanguageFromFilename(filename),
+      icon: getIconFromFilename(filename)
+    }));
+
+    setEditorFiles(files);
+    setPackages(template.packages.map((pkg: string) => ({
+      name: pkg,
+      version: '^1.0.0',
+      type: 'dependency' as const
+    })));
+
+    const mockApp: GeneratedApp = {
+      html: template.files['index.html'] || '',
+      css: template.files['styles.css'] || template.files['app.css'] || '',
+      javascript: template.files['app.js'] || template.files['script.js'] || template.files['server.js'] || '',
+      description: template.description,
+      features: template.features,
+      dependencies: packages
+    };
+
+    setGeneratedApp(mockApp);
+    setCurrentProjectId(uuidv4());
+    setActiveRightTab('editor');
+  };
+
+  const handleFileChange = (fileName: string, content: string) => {
+    setEditorFiles(prev => prev.map(file => 
+      file.name === fileName ? { ...file, content } : file
+    ));
+
+    // Update generatedApp based on file changes
+    if (generatedApp) {
+      const updatedApp = { ...generatedApp };
+      if (fileName === 'index.html') updatedApp.html = content;
+      if (fileName === 'styles.css' || fileName === 'app.css') updatedApp.css = content;
+      if (fileName.endsWith('.js')) updatedApp.javascript = content;
+      setGeneratedApp(updatedApp);
+    }
+  };
+
+  const getLanguageFromFilename = (filename: string) => {
+    const ext = filename.split('.').pop();
+    switch (ext) {
+      case 'html': return 'html';
+      case 'css': return 'css';
+      case 'js': return 'javascript';
+      case 'json': return 'json';
+      default: return 'plaintext';
+    }
+  };
+
+  const getIconFromFilename = (filename: string) => {
+    const ext = filename.split('.').pop();
+    switch (ext) {
+      case 'html': return FileText;
+      case 'css': return Code;
+      case 'js': return Code;
+      case 'json': return Package;
+      default: return FileText;
+    }
+  };
+
   const handleAddPackage = (packageName: string, type: 'dependency' | 'devDependency') => {
     const newPackage: PackageInfo = {
       name: packageName,
@@ -322,6 +400,7 @@ Make it modern, functional, and leverage the specified packages if any. Include 
     setConversationHistory([]);
     setPrompt("");
     setPackages([]);
+    setEditorFiles([]);
     setActiveRightTab('generator');
     toast({
       title: "New Project Started",
@@ -335,67 +414,17 @@ Make it modern, functional, and leverage the specified packages if any. Include 
     setConversationHistory([{ prompt: project.prompt, response: project.generatedApp }]);
     setPackages(project.generatedApp.dependencies || []);
     setPrompt("");
-    setActiveRightTab('files');
+    setActiveRightTab('editor');
   };
 
-  const downloadApp = () => {
-    if (!generatedApp) return;
-
-    const files = [
-      { name: 'index.html', content: generatedApp.html },
-      { name: 'styles.css', content: generatedApp.css },
-      { name: 'script.js', content: generatedApp.javascript },
-      { name: 'README.txt', content: `Generated Web App\n\nDescription: ${generatedApp.description}\n\nFeatures:\n${generatedApp.features.map(f => `- ${f}`).join('\n')}` }
-    ];
-
-    if (generatedApp.packageJson) {
-      files.push({ name: 'package.json', content: generatedApp.packageJson });
-    }
-
-    files.forEach(file => {
-      const blob = new Blob([file.content], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = file.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    });
-
-    toast({
-      title: "Files Downloaded",
-      description: "All web app files have been downloaded to your device.",
-    });
+  const projectData = {
+    id: currentProjectId || 'temp',
+    name: generatedApp?.description || 'Untitled Project',
+    files: editorFiles.reduce((acc, file) => ({ ...acc, [file.name]: file.content }), {}),
+    packages,
+    description: generatedApp?.description || '',
+    features: generatedApp?.features || []
   };
-
-  if (isFullscreen && generatedApp) {
-    return (
-      <div className="fixed inset-0 z-50 bg-background">
-        <div className="h-full flex flex-col">
-          <div className="flex items-center justify-between p-4 border-b border-prism-border">
-            <h2 className="text-xl font-semibold text-prism-text">Fullscreen Preview</h2>
-            <Button
-              onClick={() => setIsFullscreen(false)}
-              variant="outline"
-              size="sm"
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              Exit Fullscreen
-            </Button>
-          </div>
-          <div className="flex-1">
-            <WebAppPreview
-              html={generatedApp.html}
-              css={generatedApp.css}
-              javascript={generatedApp.javascript}
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -411,30 +440,44 @@ Make it modern, functional, and leverage the specified packages if any. Include 
                 AI Web App Generator
               </h2>
               <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-sm font-semibold rounded-full border border-orange-500/30 font-fira-code">
-                Beta
+                Enhanced
               </span>
             </div>
             <p className="text-prism-text-muted mt-2 font-inter">
-              Generate full-stack web applications with package management and terminal support
+              Generate full-stack applications with advanced code editing and cloud storage
             </p>
           </div>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex items-center space-x-2">
+          <ProjectCloudStorage 
+            projectData={projectData}
+            onProjectLoad={(data) => {
+              // Handle cloud project loading
+              const files = Object.entries(data.files).map(([name, content]) => ({
+                name,
+                content: content as string,
+                language: getLanguageFromFilename(name),
+                icon: getIconFromFilename(name)
+              }));
+              setEditorFiles(files);
+              setPackages(data.packages);
+              setCurrentProjectId(data.id);
+            }}
+          />
+          <FrameworkTemplates onTemplateSelect={handleTemplateSelect} />
           <ProjectHistory onLoadProject={loadProject} />
-          {generatedApp && (
-            <Button onClick={startNewProject} variant="outline" size="sm">
-              <Plus className="w-4 h-4 mr-2" />
-              New Project
-            </Button>
-          )}
+          <Button onClick={startNewProject} variant="outline" size="sm">
+            New Project
+          </Button>
         </div>
       </div>
 
-      {/* Beta Warning */}
+      {/* Enhanced Alert */}
       <Alert className="border-orange-500/30 bg-orange-500/5">
         <AlertTriangle className="h-4 w-4 text-orange-500" />
         <AlertDescription className="text-orange-300">
-          <strong>Enhanced Beta:</strong> Now with package management and terminal support! Generate full-stack applications with npm packages, build tools, and development workflows.
+          <strong>Phase 1 Enhanced:</strong> Now with Monaco code editor, framework templates, and cloud storage! 
+          Generate professional applications with full IDE capabilities.
         </AlertDescription>
       </Alert>
 
@@ -446,20 +489,6 @@ Make it modern, functional, and leverage the specified packages if any. Include 
             <div className="h-full flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-prism-text">Live Preview</h3>
-                <div className="flex space-x-2">
-                  <Button
-                    onClick={() => setIsFullscreen(true)}
-                    size="sm"
-                    variant="outline"
-                  >
-                    <Maximize className="w-4 h-4 mr-2" />
-                    Fullscreen
-                  </Button>
-                  <Button onClick={downloadApp} size="sm">
-                    <Download className="w-4 h-4 mr-2" />
-                    Download
-                  </Button>
-                </div>
               </div>
               <div className="flex-1">
                 <WebAppPreview
@@ -474,7 +503,7 @@ Make it modern, functional, and leverage the specified packages if any. Include 
               <CardContent className="text-center py-20">
                 <Globe className="w-16 h-16 text-prism-text-muted mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-prism-text mb-2">No Web App Generated Yet</h3>
-                <p className="text-prism-text-muted">Use the generator on the right to create your web application</p>
+                <p className="text-prism-text-muted">Use templates or AI generation to create your application</p>
               </CardContent>
             </Card>
           )}
@@ -483,14 +512,14 @@ Make it modern, functional, and leverage the specified packages if any. Include 
         {/* Right Side - Enhanced Tabs */}
         <div className="w-full lg:w-96 flex flex-col">
           <Tabs value={activeRightTab} onValueChange={setActiveRightTab} className="flex-1 flex flex-col">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="generator" className="flex items-center space-x-1">
-                <Wand2 className="w-4 h-4" />
-                <span className="hidden sm:inline">Gen</span>
+                <Code className="w-4 h-4" />
+                <span className="hidden sm:inline">AI</span>
               </TabsTrigger>
-              <TabsTrigger value="files" className="flex items-center space-x-1" disabled={!generatedApp}>
+              <TabsTrigger value="editor" className="flex items-center space-x-1" disabled={editorFiles.length === 0}>
                 <FileText className="w-4 h-4" />
-                <span className="hidden sm:inline">Files</span>
+                <span className="hidden sm:inline">Code</span>
               </TabsTrigger>
               <TabsTrigger value="packages" className="flex items-center space-x-1">
                 <Package className="w-4 h-4" />
@@ -500,14 +529,18 @@ Make it modern, functional, and leverage the specified packages if any. Include 
                 <TerminalIcon className="w-4 h-4" />
                 <span className="hidden sm:inline">Term</span>
               </TabsTrigger>
+              <TabsTrigger value="cloud" className="flex items-center space-x-1">
+                <Cloud className="w-4 h-4" />
+                <span className="hidden sm:inline">Cloud</span>
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="generator" className="flex-1 flex flex-col mt-4">
               <Card className="flex-1">
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
-                    <Wand2 className="w-5 h-5 text-prism-primary" />
-                    <span>{generatedApp ? 'Continue Working' : 'Describe Your Web App'}</span>
+                    <Code className="w-5 h-5 text-prism-primary" />
+                    <span>AI Generator</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -521,10 +554,7 @@ Make it modern, functional, and leverage the specified packages if any. Include 
                     <Textarea
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
-                      placeholder={generatedApp ? 
-                        "Describe how you want to modify or enhance the current web app..." : 
-                        "Describe the web application you want to create... For example: 'Create a todo list app with drag and drop functionality, dark mode toggle, and local storage. Include animations and a modern design.'"
-                      }
+                      placeholder="Describe the web application you want to create..."
                       className="min-h-[200px] resize-none bg-prism-surface/10 border-prism-border"
                       disabled={isGenerating}
                     />
@@ -535,53 +565,29 @@ Make it modern, functional, and leverage the specified packages if any. Include 
                     disabled={isGenerating || !prompt.trim()}
                     className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-semibold"
                   >
-                    {isGenerating ? (
-                      <>
-                        <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Wand2 className="w-4 h-4 mr-2" />
-                        {generatedApp ? 'Update Web App' : 'Generate Web App'}
-                      </>
-                    )}
+                    {isGenerating ? 'Generating...' : 'Generate Web App'}
                   </Button>
-
-                  {/* Generated App Info */}
-                  {generatedApp && (
-                    <div className="mt-4 p-3 bg-prism-surface/20 rounded-lg">
-                      <h4 className="font-semibold text-prism-text mb-2 text-sm">Current Project:</h4>
-                      <p className="text-prism-text-muted text-xs mb-3">{generatedApp.description}</p>
-
-                      <h4 className="font-semibold text-prism-text mb-2 text-sm">Features:</h4>
-                      <ul className="list-disc list-inside text-prism-text-muted text-xs space-y-1">
-                        {generatedApp.features.map((feature, index) => (
-                          <li key={index}>{feature}</li>
-                        ))}
-                      </ul>
-
-                      {conversationHistory.length > 1 && (
-                        <div className="mt-3 pt-2 border-t border-prism-border">
-                          <h4 className="font-semibold text-prism-text mb-1 text-xs">
-                            Iterations: {conversationHistory.length}
-                          </h4>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="files" className="flex-1 mt-4">
-              {generatedApp ? (
-                <FileViewer generatedApp={generatedApp} />
+            <TabsContent value="editor" className="flex-1 mt-4">
+              {editorFiles.length > 0 ? (
+                <AdvancedCodeEditor
+                  files={editorFiles}
+                  onFileChange={handleFileChange}
+                  onSave={() => {
+                    toast({
+                      title: "Files Saved",
+                      description: "All changes have been saved successfully.",
+                    });
+                  }}
+                />
               ) : (
                 <Card className="h-full flex items-center justify-center">
                   <CardContent className="text-center py-20">
                     <FileText className="w-12 h-12 text-prism-text-muted mx-auto mb-4" />
-                    <p className="text-prism-text-muted">Generate a web app to view files</p>
+                    <p className="text-prism-text-muted">Generate or load a project to edit code</p>
                   </CardContent>
                 </Card>
               )}
@@ -600,6 +606,36 @@ Make it modern, functional, and leverage the specified packages if any. Include 
                 projectPath={`/projects/${currentProjectId || 'untitled'}`}
                 onPackageInstall={handlePackageInstall}
               />
+            </TabsContent>
+
+            <TabsContent value="cloud" className="flex-1 mt-4">
+              <Card className="h-full">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Cloud className="w-5 h-5 text-blue-400" />
+                    <span>Cloud Storage</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-prism-text-muted">
+                    Save your projects to the cloud for backup and cross-device access.
+                  </p>
+                  <ProjectCloudStorage 
+                    projectData={projectData}
+                    onProjectLoad={(data) => {
+                      const files = Object.entries(data.files).map(([name, content]) => ({
+                        name,
+                        content: content as string,
+                        language: getLanguageFromFilename(name),
+                        icon: getIconFromFilename(name)
+                      }));
+                      setEditorFiles(files);
+                      setPackages(data.packages);
+                      setCurrentProjectId(data.id);
+                    }}
+                  />
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>
