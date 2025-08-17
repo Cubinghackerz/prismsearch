@@ -1,12 +1,13 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import Editor from '@monaco-editor/react';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Copy, Download, FileText, Code, Palette, Settings, Maximize2, Minimize2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { FileText, Download, Copy, Check, Code, FileCode, Palette } from 'lucide-react';
+import Editor from '@monaco-editor/react';
 import { useToast } from '@/hooks/use-toast';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CodingLanguage } from './LanguageSelector';
 
 interface GeneratedApp {
   html: string;
@@ -14,314 +15,213 @@ interface GeneratedApp {
   javascript: string;
   description: string;
   features: string[];
+  language?: CodingLanguage;
 }
 
 interface AdvancedCodeEditorProps {
   generatedApp: GeneratedApp;
-  onFileChange?: (fileType: string, content: string) => void;
+  onFileChange: (fileType: string, content: string) => void;
+  selectedLanguage?: CodingLanguage;
 }
 
 const AdvancedCodeEditor: React.FC<AdvancedCodeEditorProps> = ({ 
   generatedApp, 
-  onFileChange 
+  onFileChange,
+  selectedLanguage = 'javascript'
 }) => {
   const [activeTab, setActiveTab] = useState('html');
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [theme, setTheme] = useState('vs-dark');
-  const [fontSize, setFontSize] = useState(14);
+  const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
-  const editorRef = useRef<any>(null);
 
-  const files = [
-    { 
-      key: 'html', 
-      label: 'HTML', 
-      content: generatedApp.html, 
-      icon: FileText, 
-      language: 'html',
-      filename: 'index.html'
-    },
-    { 
-      key: 'css', 
-      label: 'CSS', 
-      content: generatedApp.css, 
-      icon: Palette, 
-      language: 'css',
-      filename: 'styles.css'
-    },
-    { 
-      key: 'javascript', 
-      label: 'JavaScript', 
-      content: generatedApp.javascript, 
-      icon: Code, 
-      language: 'javascript',
-      filename: 'script.js'
-    },
-  ];
-
-  const activeFile = files.find(f => f.key === activeTab);
-
-  const handleEditorDidMount = (editor: any, monaco: any) => {
-    editorRef.current = editor;
-    
-    // Configure Monaco Editor options
-    monaco.editor.defineTheme('prism-dark', {
-      base: 'vs-dark',
-      inherit: true,
-      rules: [
-        { token: 'comment', foreground: '6A9955' },
-        { token: 'keyword', foreground: '569CD6' },
-        { token: 'string', foreground: 'CE9178' },
-        { token: 'number', foreground: 'B5CEA8' },
-        { token: 'type', foreground: '4EC9B0' },
-      ],
-      colors: {
-        'editor.background': '#1E1E1E',
-        'editor.foreground': '#D4D4D4',
-        'editorLineNumber.foreground': '#858585',
-        'editor.selectionBackground': '#264F78',
-        'editor.inactiveSelectionBackground': '#3A3D41',
-      }
-    });
-
-    monaco.editor.setTheme('prism-dark');
-
-    // Add custom snippets and auto-completion
-    monaco.languages.registerCompletionItemProvider('html', {
-      provideCompletionItems: () => ({
-        suggestions: [
-          {
-            label: 'html5',
-            kind: monaco.languages.CompletionItemKind.Snippet,
-            insertText: '<!DOCTYPE html>\n<html lang="en">\n<head>\n\t<meta charset="UTF-8">\n\t<meta name="viewport" content="width=device-width, initial-scale=1.0">\n\t<title>${1:Document}</title>\n</head>\n<body>\n\t${2}\n</body>\n</html>',
-            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            documentation: 'HTML5 boilerplate'
-          }
-        ]
-      })
-    });
-
-    // Add error detection
-    monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
-      noSemanticValidation: false,
-      noSyntaxValidation: false,
-    });
-  };
-
-  const handleEditorChange = (value: string | undefined) => {
-    if (value !== undefined && onFileChange) {
-      onFileChange(activeTab, value);
+  const getLanguageExtension = (language: CodingLanguage) => {
+    switch (language) {
+      case 'python':
+        return 'py';
+      case 'typescript':
+        return 'ts';
+      case 'javascript':
+      default:
+        return 'js';
     }
   };
 
-  const copyToClipboard = (content: string, type: string) => {
-    navigator.clipboard.writeText(content);
-    toast({
-      title: "Copied!",
-      description: `${type} code copied to clipboard.`,
-    });
+  const getMonacoLanguage = (fileType: string) => {
+    switch (fileType) {
+      case 'html':
+        return 'html';
+      case 'css':
+        return 'css';
+      case 'javascript':
+        if (selectedLanguage === 'python') return 'python';
+        if (selectedLanguage === 'typescript') return 'typescript';
+        return 'javascript';
+      default:
+        return 'javascript';
+    }
   };
 
-  const downloadFile = (content: string, filename: string) => {
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  const getFileDisplayName = (fileType: string) => {
+    switch (fileType) {
+      case 'html':
+        return 'index.html';
+      case 'css':
+        return 'styles.css';
+      case 'javascript':
+        if (selectedLanguage === 'python') return 'app.py';
+        if (selectedLanguage === 'typescript') return 'script.ts';
+        return 'script.js';
+      default:
+        return fileType;
+    }
   };
 
-  const formatCode = () => {
-    if (editorRef.current) {
-      editorRef.current.getAction('editor.action.formatDocument').run();
+  const getFileIcon = (fileType: string) => {
+    switch (fileType) {
+      case 'html':
+        return <FileText className="w-4 h-4" />;
+      case 'css':
+        return <Palette className="w-4 h-4" />;
+      case 'javascript':
+        return <Code className="w-4 h-4" />;
+      default:
+        return <FileCode className="w-4 h-4" />;
+    }
+  };
+
+  const copyToClipboard = async (content: string, fileType: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedStates(prev => ({ ...prev, [fileType]: true }));
+      setTimeout(() => {
+        setCopiedStates(prev => ({ ...prev, [fileType]: false }));
+      }, 2000);
       toast({
-        title: "Code Formatted",
-        description: "Your code has been automatically formatted.",
+        title: "Copied!",
+        description: `${getFileDisplayName(fileType)} content copied to clipboard.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Copy Failed",
+        description: "Failed to copy content to clipboard.",
+        variant: "destructive"
       });
     }
   };
 
-  if (isFullscreen) {
-    return (
-      <div className="fixed inset-0 z-50 bg-background">
-        <div className="h-full flex flex-col">
-          <div className="flex items-center justify-between p-4 border-b border-prism-border bg-prism-surface/10">
-            <div className="flex items-center space-x-4">
-              <h2 className="text-xl font-semibold text-prism-text">Code Editor - {activeFile?.filename}</h2>
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="bg-prism-surface/20">
-                  {files.map((file) => {
-                    const IconComponent = file.icon;
-                    return (
-                      <TabsTrigger key={file.key} value={file.key} className="flex items-center space-x-1">
-                        <IconComponent className="w-4 h-4" />
-                        <span>{file.label}</span>
-                      </TabsTrigger>
-                    );
-                  })}
-                </TabsList>
-              </Tabs>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Select value={theme} onValueChange={setTheme}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="vs-dark">Dark</SelectItem>
-                  <SelectItem value="vs-light">Light</SelectItem>
-                  <SelectItem value="hc-black">High Contrast</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button onClick={formatCode} variant="outline" size="sm">
-                <Settings className="w-4 h-4 mr-2" />
-                Format
-              </Button>
-              <Button onClick={() => setIsFullscreen(false)} variant="outline" size="sm">
-                <Minimize2 className="w-4 h-4 mr-2" />
-                Exit Fullscreen
-              </Button>
-            </div>
-          </div>
-          <div className="flex-1">
-            <Editor
-              height="100%"
-              language={activeFile?.language}
-              value={activeFile?.content}
-              theme={theme}
-              onChange={handleEditorChange}
-              onMount={handleEditorDidMount}
-              options={{
-                fontSize,
-                minimap: { enabled: true },
-                scrollBeyondLastLine: false,
-                automaticLayout: true,
-                tabSize: 2,
-                insertSpaces: true,
-                wordWrap: 'on',
-                lineNumbers: 'on',
-                renderLineHighlight: 'all',
-                selectOnLineNumbers: true,
-                roundedSelection: false,
-                readOnly: false,
-                cursorStyle: 'line',
-                glyphMargin: true,
-                folding: true,
-                showFoldingControls: 'always',
-              }}
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const downloadFile = (content: string, fileType: string) => {
+    const fileName = getFileDisplayName(fileType);
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "File Downloaded",
+      description: `${fileName} has been downloaded.`,
+    });
+  };
+
+  const files = [
+    { type: 'html', content: generatedApp.html, language: 'html' },
+    { type: 'css', content: generatedApp.css, language: 'css' },
+    { type: 'javascript', content: generatedApp.javascript, language: getMonacoLanguage('javascript') }
+  ];
 
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center space-x-2 text-lg">
-            <Code className="w-5 h-5 text-green-400" />
-            <span>Advanced Code Editor</span>
+          <CardTitle className="flex items-center space-x-2">
+            <FileCode className="w-5 h-5 text-prism-primary" />
+            <span>Code Editor</span>
+            <Badge variant="outline" className="ml-2">
+              {selectedLanguage.charAt(0).toUpperCase() + selectedLanguage.slice(1)}
+            </Badge>
           </CardTitle>
-          <div className="flex items-center space-x-2">
-            <Select value={fontSize.toString()} onValueChange={(value) => setFontSize(parseInt(value))}>
-              <SelectTrigger className="w-16">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="12">12px</SelectItem>
-                <SelectItem value="14">14px</SelectItem>
-                <SelectItem value="16">16px</SelectItem>
-                <SelectItem value="18">18px</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button onClick={() => setIsFullscreen(true)} variant="outline" size="sm">
-              <Maximize2 className="w-4 h-4" />
-            </Button>
-          </div>
         </div>
       </CardHeader>
+      
       <CardContent className="flex-1 flex flex-col p-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
           <div className="px-6">
             <TabsList className="grid w-full grid-cols-3">
-              {files.map((file) => {
-                const IconComponent = file.icon;
-                return (
-                  <TabsTrigger key={file.key} value={file.key} className="flex items-center space-x-1">
-                    <IconComponent className="w-4 h-4" />
-                    <span>{file.label}</span>
-                  </TabsTrigger>
-                );
-              })}
+              {files.map((file) => (
+                <TabsTrigger key={file.type} value={file.type} className="flex items-center space-x-2">
+                  {getFileIcon(file.type)}
+                  <span>{getFileDisplayName(file.type)}</span>
+                </TabsTrigger>
+              ))}
             </TabsList>
           </div>
-          
+
           {files.map((file) => (
-            <TabsContent key={file.key} value={file.key} className="flex-1 flex flex-col mt-4">
+            <TabsContent key={file.type} value={file.type} className="flex-1 flex flex-col mt-4">
               <div className="flex items-center justify-between px-6 pb-2">
-                <span className="text-sm font-medium text-prism-text">
-                  {file.filename}
-                </span>
-                <div className="flex space-x-2">
+                <div className="flex items-center space-x-2">
+                  {getFileIcon(file.type)}
+                  <span className="text-sm font-medium text-prism-text">
+                    {getFileDisplayName(file.type)}
+                  </span>
+                  <Badge variant="outline" className="text-xs">
+                    {file.language}
+                  </Badge>
+                </div>
+                <div className="flex space-x-1">
                   <Button
                     size="sm"
-                    variant="outline"
-                    onClick={formatCode}
+                    variant="ghost"
+                    onClick={() => copyToClipboard(file.content, file.type)}
+                    className="h-8 px-2"
                   >
-                    <Settings className="w-3 h-3 mr-1" />
-                    Format
+                    {copiedStates[file.type] ? (
+                      <Check className="w-4 h-4 text-green-500" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
                   </Button>
                   <Button
                     size="sm"
-                    variant="outline"
-                    onClick={() => copyToClipboard(file.content, file.label)}
+                    variant="ghost"
+                    onClick={() => downloadFile(file.content, file.type)}
+                    className="h-8 px-2"
                   >
-                    <Copy className="w-3 h-3 mr-1" />
-                    Copy
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => downloadFile(file.content, file.filename)}
-                  >
-                    <Download className="w-3 h-3 mr-1" />
-                    Download
+                    <Download className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
               
-              <div className="flex-1 mx-6 mb-6 border border-prism-border rounded-lg overflow-hidden">
-                <Editor
-                  height="400px"
-                  language={file.language}
-                  value={file.content}
-                  theme={theme}
-                  onChange={handleEditorChange}
-                  onMount={handleEditorDidMount}
-                  options={{
-                    fontSize,
-                    minimap: { enabled: false },
-                    scrollBeyondLastLine: false,
-                    automaticLayout: true,
-                    tabSize: 2,
-                    insertSpaces: true,
-                    wordWrap: 'on',
-                    lineNumbers: 'on',
-                    renderLineHighlight: 'all',
-                    selectOnLineNumbers: true,
-                    roundedSelection: false,
-                    readOnly: false,
-                    cursorStyle: 'line',
-                    glyphMargin: true,
-                    folding: true,
-                    showFoldingControls: 'mouseover',
-                  }}
-                />
+              <div className="flex-1 px-6 pb-6">
+                <div className="border border-prism-border rounded-lg overflow-hidden h-full">
+                  <Editor
+                    height="100%"
+                    language={file.language}
+                    value={file.content}
+                    onChange={(value) => onFileChange(file.type, value || '')}
+                    theme="vs-dark"
+                    options={{
+                      minimap: { enabled: false },
+                      fontSize: 14,
+                      lineNumbers: 'on',
+                      roundedSelection: false,
+                      scrollBeyondLastLine: false,
+                      automaticLayout: true,
+                      tabSize: 2,
+                      insertSpaces: true,
+                      wordWrap: 'on',
+                      folding: true,
+                      lineDecorationsWidth: 0,
+                      lineNumbersMinChars: 3,
+                      renderLineHighlight: 'line',
+                      selectionHighlight: false,
+                      bracketPairColorization: { enabled: true }
+                    }}
+                  />
+                </div>
               </div>
             </TabsContent>
           ))}

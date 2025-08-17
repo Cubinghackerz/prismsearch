@@ -25,6 +25,7 @@ interface GeneratedApp {
   javascript: string;
   description: string;
   features: string[];
+  language?: CodingLanguage;
 }
 
 interface ProjectHistoryItem {
@@ -242,15 +243,10 @@ Focus on ${languageOption.name} and provide realistic time estimates and complex
 
   const handlePlanApproval = async () => {
     setShowThinkingPlan(false);
-    await generateWebApp();
+    await generateWebApp(selectedModel, false, true);
   };
 
-  const handlePlanRejection = () => {
-    setShowThinkingPlan(false);
-    setThinkingPlan(null);
-  };
-
-  const generateWebApp = async (modelToUse: AIModel = selectedModel, isRetry: boolean = false) => {
+  const generateWebApp = async (modelToUse: AIModel = selectedModel, isRetry: boolean = false, usePlan: boolean = false) => {
     if (!prompt.trim()) {
       toast({
         title: "Missing Prompt",
@@ -283,14 +279,38 @@ Focus on ${languageOption.name} and provide realistic time estimates and complex
     try {
       const languageOption = getCurrentLanguageOption();
       let contextPrompt = prompt;
-      const languageContext = `Use ${languageOption.name} to create the web app.
+      
+      const languageContext = `Use ${languageOption.name} as the primary programming language to create the web app.
 Available packages: ${languageOption.packages.join(', ')}
 Available frameworks: ${languageOption.frameworks.join(', ')}`;
+
+      let planContext = '';
+      if (usePlan && thinkingPlan) {
+        planContext = `
+
+APPROVED DEVELOPMENT PLAN:
+Title: ${thinkingPlan.title}
+Description: ${thinkingPlan.description}
+Complexity: ${thinkingPlan.complexity}
+
+Development Steps to Follow:
+${thinkingPlan.steps.map((step, index) => 
+  `${index + 1}. ${step.title} (${step.complexity} complexity, ~${step.estimatedTime})
+     - ${step.description}
+     - Packages: ${step.packages?.join(', ') || 'none'}
+     - Frameworks: ${step.frameworks?.join(', ') || 'none'}`
+).join('\n')}
+
+Recommended packages to prioritize: ${thinkingPlan.recommendedPackages.join(', ')}
+Recommended frameworks to prioritize: ${thinkingPlan.recommendedFrameworks.join(', ')}
+
+Please implement this plan step by step using ${languageOption.name}.`;
+      }
       
       if (conversationHistory.length > 0) {
         contextPrompt = `Based on the previous web application, ${prompt}. 
 
-${languageContext}
+${languageContext}${planContext}
 
 Previous conversation context:
 ${conversationHistory.slice(-3).map((item, index) => 
@@ -298,29 +318,31 @@ ${conversationHistory.slice(-3).map((item, index) =>
   Result: ${item.response.description}`
 ).join('\n\n')}
 
-Please modify or enhance the current application accordingly.`;
+Please modify or enhance the current application accordingly using ${languageOption.name}.`;
       } else {
         contextPrompt = `${prompt}
 
-${languageContext}`;
+${languageContext}${planContext}`;
       }
 
       const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
         body: { 
           query: `Generate a complete web application based on this description: ${contextPrompt}. 
 
+IMPORTANT: Use ${languageOption.name} as the primary programming language.
 ${languageContext}
 
 Please return ONLY a valid JSON object with this exact structure:
 {
   "html": "complete HTML content",
   "css": "complete CSS styles", 
-  "javascript": "complete ${languageOption.name} code",
+  "javascript": "complete ${languageOption.name} code (rename this field to match the language if not JavaScript)",
   "description": "brief description of the app",
-  "features": ["feature 1", "feature 2", "feature 3"]
+  "features": ["feature 1", "feature 2", "feature 3"],
+  "language": "${selectedLanguage}"
 }
 
-Make it responsive, modern, and fully functional. Do not include any markdown formatting or code blocks. Just the raw JSON.`,
+Make it responsive, modern, and fully functional. Focus on ${languageOption.name} best practices. Do not include any markdown formatting or code blocks. Just the raw JSON.`,
           model: modelToUse,
           chatId: currentProjectId || 'webapp-generation',
           chatHistory: []
@@ -336,25 +358,30 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
         const responseText = data.response || '';
         const cleanResponse = responseText.replace(/```json\n?|```\n?/g, '').trim();
         parsedApp = JSON.parse(cleanResponse);
+        
+        parsedApp.language = selectedLanguage;
       } catch (parseError) {
         const responseText = data.response || 'No response received';
+        const languageFileExtension = selectedLanguage === 'python' ? 'py' : 'js';
+        const languageScriptName = selectedLanguage === 'python' ? 'app.py' : 'script.js';
+        
         parsedApp = {
           html: `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generated Web App</title>
+    <title>Generated ${languageOption.name} Web App</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>Generated Web Application</h1>
+        <h1>Generated ${languageOption.name} Web Application</h1>
         <div class="content">
             ${responseText.replace(/\n/g, '<br>')}
         </div>
     </div>
-    <script src="script.js"></script>
+    ${selectedLanguage === 'python' ? '' : `<script src="${languageScriptName}"></script>`}
 </body>
 </html>`,
           css: `body {
@@ -375,9 +402,12 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
     margin-top: 20px;
     line-height: 1.6;
 }`,
-          javascript: `console.log('Web app generated successfully');`,
-          description: 'AI-generated web application',
-          features: ['Responsive design', 'Modern styling', 'Basic functionality']
+          javascript: selectedLanguage === 'python' 
+            ? `# ${languageOption.name} application code\nprint("Generated ${languageOption.name} web application")`
+            : `console.log('Generated ${languageOption.name} web app successfully');`,
+          description: `AI-generated ${languageOption.name} web application`,
+          features: ['Responsive design', 'Modern styling', `${languageOption.name} functionality`],
+          language: selectedLanguage
         };
       }
 
@@ -389,6 +419,10 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       saveProject(prompt, parsedApp, modelToUse);
       
       setPrompt("");
+      
+      if (usePlan) {
+        setThinkingPlan(null);
+      }
       
       toast({
         title: "Web App Generated!",
@@ -405,7 +439,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
           title: "Trying Alternative Model",
           description: `${modelToUse} failed. Attempting with ${nextModel}...`,
         });
-        await generateWebApp(nextModel, true);
+        await generateWebApp(nextModel, true, usePlan);
         return;
       }
       
@@ -745,6 +779,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                 <AdvancedCodeEditor 
                   generatedApp={generatedApp} 
                   onFileChange={handleFileChange}
+                  selectedLanguage={selectedLanguage}
                 />
               ) : (
                 <Card className="h-full flex items-center justify-center">
