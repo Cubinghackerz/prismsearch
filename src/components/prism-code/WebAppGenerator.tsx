@@ -269,8 +269,8 @@ Focus on the selected language/framework and provide realistic time estimates an
     
     try {
       let contextPrompt = prompt;
-      const languageContext = `Target Language/Framework: ${selectedLanguage}
-Available packages: ${getLanguagePackages(selectedLanguage).join(', ')}`;
+      const languageContext = `Use ${selectedLanguage.charAt(0).toUpperCase() + selectedLanguage.slice(1)} to create the web app.
+Available packages/modules: ${getLanguagePackages(selectedLanguage).join(', ')}`;
       
       if (conversationHistory.length > 0) {
         contextPrompt = `Based on the previous web application, ${prompt}. 
@@ -294,13 +294,13 @@ ${languageContext}`;
         body: { 
           query: `Generate a complete web application based on this description: ${contextPrompt}. 
 
-Make sure to use ${selectedLanguage} as the primary language/framework and incorporate relevant packages from: ${getLanguagePackages(selectedLanguage).join(', ')}
+${languageContext} and incorporate relevant packages/modules from: ${getLanguagePackages(selectedLanguage).join(', ')}
 
 Please return ONLY a valid JSON object with this exact structure:
 {
   "html": "complete HTML content",
   "css": "complete CSS styles", 
-  "javascript": "complete JavaScript code optimized for ${selectedLanguage}",
+  "javascript": "complete ${selectedLanguage} code",
   "description": "brief description of the app",
   "features": ["feature 1", "feature 2", "feature 3"]
 }
@@ -512,7 +512,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
               </span>
             </div>
             <p className="text-prism-text-muted mt-2 font-inter">
-              Generate {selectedLanguage} applications with advanced code editing and package management
+              Use {selectedLanguage.charAt(0).toUpperCase() + selectedLanguage.slice(1)} to create web applications with advanced code editing
             </p>
           </div>
         </div>
@@ -564,8 +564,8 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       <Alert className="border-blue-500/30 bg-blue-500/5">
         <Sparkles className="h-4 w-4 text-blue-500" />
         <AlertDescription className="text-blue-300">
-          <strong>Pro Tip:</strong> For better results, mention specific packages, libraries, or frameworks in your prompt. 
-          Example: "Create a todo app using React hooks, Tailwind CSS, and Framer Motion for animations."
+          <strong>Pro Tip:</strong> For better results, mention specific packages or modules in your prompt. 
+          Example: "Create a todo app using {selectedLanguage} with {getLanguagePackages(selectedLanguage).slice(0, 2).join(' and ')} for enhanced functionality."
         </AlertDescription>
       </Alert>
 
@@ -655,8 +655,8 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
                       placeholder={generatedApp ? 
-                        "Describe how you want to modify or enhance the current web app... Mention specific packages like 'Add Chart.js for data visualization' or 'Use Lodash for data manipulation'..." : 
-                        "Describe the web application you want to create... For example: 'Create a todo list app with drag and drop functionality using React Beautiful DnD, dark mode toggle, and local storage. Include animations with Framer Motion and use Tailwind CSS for styling.'"
+                        `Describe how you want to modify or enhance the current ${selectedLanguage} web app... Mention specific packages like 'Add ${getLanguagePackages(selectedLanguage)[0]} for enhanced functionality'...` : 
+                        `Describe the web application you want to create using ${selectedLanguage}... For example: 'Create a todo list app with drag and drop functionality, dark mode toggle, and local storage. Use ${getLanguagePackages(selectedLanguage).slice(0, 2).join(' and ')} for enhanced features.'`
                       }
                       className="min-h-[200px] resize-none bg-prism-surface/10 border-prism-border"
                       disabled={isGenerating || isThinking}
@@ -755,7 +755,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                 <CardContent>
                   <div className="space-y-4">
                     <div>
-                      <h4 className="font-semibold text-prism-text mb-2">Recommended for {selectedLanguage}:</h4>
+                      <h4 className="font-semibold text-prism-text mb-2">Available for {selectedLanguage}:</h4>
                       <div className="grid grid-cols-1 gap-2">
                         {getLanguagePackages(selectedLanguage).map((pkg) => (
                           <div key={pkg} className="flex items-center justify-between p-3 bg-prism-surface/10 rounded-lg border border-prism-border">
@@ -764,7 +764,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                               <span className="font-medium text-prism-text">{pkg}</span>
                             </div>
                             <Badge variant="outline" className="bg-green-500/10 text-green-400 border-green-500/30">
-                              Recommended
+                              Available
                             </Badge>
                           </div>
                         ))}
