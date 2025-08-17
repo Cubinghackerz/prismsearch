@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
+  // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -172,42 +172,6 @@ export type Database = {
         }
         Relationships: []
       }
-      prism_projects: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          features: string[] | null
-          files: Json
-          id: string
-          name: string
-          packages: Json
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          features?: string[] | null
-          files?: Json
-          id?: string
-          name: string
-          packages?: Json
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          features?: string[] | null
-          files?: Json
-          id?: string
-          name?: string
-          packages?: Json
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -330,8 +294,8 @@ export type Database = {
       }
       find_similar_notes: {
         Args: {
-          current_note_id: string
           note_tags: string[]
+          current_note_id: string
           user_id_param: string
         }
         Returns: string[]
