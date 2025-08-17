@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain } from "lucide-react";
+import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain, Rocket } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyQueryLimit } from "@/hooks/useDailyQueryLimit";
@@ -14,6 +14,7 @@ import AdvancedCodeEditor from "./AdvancedCodeEditor";
 import PackageManager from "./PackageManager";
 import ProjectHistory from "./ProjectHistory";
 import { v4 as uuidv4 } from 'uuid';
+import DeploymentDialog from "./DeploymentDialog";
 
 interface GeneratedApp {
   html: string;
@@ -472,6 +473,12 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                     <Maximize className="w-4 h-4 mr-2" />
                     Fullscreen
                   </Button>
+                  <DeploymentDialog generatedApp={generatedApp}>
+                    <Button size="sm" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600">
+                      <Rocket className="w-4 h-4 mr-2" />
+                      Deploy
+                    </Button>
+                  </DeploymentDialog>
                   <Button onClick={downloadApp} size="sm">
                     <Download className="w-4 h-4 mr-2" />
                     Download
