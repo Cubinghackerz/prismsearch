@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain, Rocket, Code, Layers } from "lucide-react";
+import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain, Rocket } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyQueryLimit } from "@/hooks/useDailyQueryLimit";
@@ -16,8 +15,6 @@ import PackageManager from "./PackageManager";
 import ProjectHistory from "./ProjectHistory";
 import { v4 as uuidv4 } from 'uuid';
 import DeploymentDialog from "./DeploymentDialog";
-import { CodingLanguage, LANGUAGE_OPTIONS } from "./LanguageSelector";
-import ThinkingPlanDialog, { ThinkingPlan } from "./ThinkingPlanDialog";
 
 interface GeneratedApp {
   html: string;
@@ -25,7 +22,6 @@ interface GeneratedApp {
   javascript: string;
   description: string;
   features: string[];
-  language?: CodingLanguage;
 }
 
 interface ProjectHistoryItem {
@@ -36,15 +32,7 @@ interface ProjectHistoryItem {
   timestamp: Date;
 }
 
-interface WebAppGeneratorProps {
-  selectedLanguage?: CodingLanguage;
-  onLanguageChange?: () => void;
-}
-
-const WebAppGenerator: React.FC<WebAppGeneratorProps> = ({ 
-  selectedLanguage = 'javascript', 
-  onLanguageChange 
-}) => {
+const WebAppGenerator = () => {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedApp, setGeneratedApp] = useState<GeneratedApp | null>(null);
@@ -54,25 +42,10 @@ const WebAppGenerator: React.FC<WebAppGeneratorProps> = ({
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [conversationHistory, setConversationHistory] = useState<Array<{ prompt: string; response: GeneratedApp }>>([]);
   const [isThinking, setIsThinking] = useState(false);
-  const [showThinkingPlan, setShowThinkingPlan] = useState(false);
-  const [thinkingPlan, setThinkingPlan] = useState<ThinkingPlan | null>(null);
-  const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
   const { toast } = useToast();
   const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
 
   const MODEL_FALLBACK_ORDER: AIModel[] = ['gemini', 'groq-llama4-maverick', 'groq-llama4-scout', 'groq-llama31-8b-instant'];
-
-  const getCurrentLanguageOption = () => {
-    return LANGUAGE_OPTIONS.find(opt => opt.id === selectedLanguage) || LANGUAGE_OPTIONS[0];
-  };
-
-  const getLanguagePackages = (): string[] => {
-    return getCurrentLanguageOption().packages;
-  };
-
-  const getLanguageFrameworks = (): string[] => {
-    return getCurrentLanguageOption().frameworks;
-  };
 
   const saveProject = (projectPrompt: string, app: GeneratedApp, model: string) => {
     const projectId = currentProjectId || uuidv4();
@@ -108,103 +81,6 @@ const WebAppGenerator: React.FC<WebAppGeneratorProps> = ({
     setCurrentProjectId(projectId);
   };
 
-  const generateThinkingPlan = async (): Promise<ThinkingPlan | null> => {
-    try {
-      const languageOption = getCurrentLanguageOption();
-      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
-        body: { 
-          query: `Create a detailed development plan for: ${prompt}
-
-Target Language: ${languageOption.name}
-Available packages: ${languageOption.packages.join(', ')}
-Available frameworks: ${languageOption.frameworks.join(', ')}
-
-Please analyze this request and provide a JSON response with this exact structure:
-{
-  "title": "Brief project title",
-  "description": "2-3 sentence project description",
-  "totalTime": "estimated total time (e.g., '2-3 hours')",
-  "complexity": "low|medium|high",
-  "steps": [
-    {
-      "id": "step1",
-      "title": "Step title",
-      "description": "What will be done in this step",
-      "estimatedTime": "time estimate",
-      "complexity": "low|medium|high",
-      "packages": ["package1", "package2"],
-      "frameworks": ["framework1"]
-    }
-  ],
-  "recommendedPackages": ["package1", "package2"],
-  "recommendedFrameworks": ["framework1", "framework2"],
-  "potentialChallenges": ["challenge1", "challenge2"]
-}
-
-Focus on ${languageOption.name} and provide realistic time estimates and complexity assessments.`,
-          model: selectedModel,
-          chatId: 'plan-generation',
-          chatHistory: []
-        }
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      const responseText = data.response || '';
-      const cleanResponse = responseText.replace(/```json\n?|```\n?/g, '').trim();
-      
-      try {
-        const plan = JSON.parse(cleanResponse);
-        return plan;
-      } catch (parseError) {
-        const languageOption = getCurrentLanguageOption();
-        return {
-          title: `${languageOption.name} Application`,
-          description: `A custom application built with ${languageOption.name} based on your requirements.`,
-          totalTime: "2-4 hours",
-          complexity: "medium" as const,
-          steps: [
-            {
-              id: "setup",
-              title: "Project Setup",
-              description: "Initialize project structure and dependencies",
-              estimatedTime: "15 minutes",
-              complexity: "low" as const,
-              packages: languageOption.packages.slice(0, 3),
-              frameworks: [languageOption.frameworks[0]]
-            },
-            {
-              id: "core",
-              title: "Core Development",
-              description: "Implement main functionality based on requirements",
-              estimatedTime: "1-2 hours",
-              complexity: "medium" as const
-            },
-            {
-              id: "styling",
-              title: "Styling & UI",
-              description: "Add responsive design and user interface elements",
-              estimatedTime: "30-45 minutes",
-              complexity: "low" as const
-            }
-          ],
-          recommendedPackages: languageOption.packages,
-          recommendedFrameworks: languageOption.frameworks,
-          potentialChallenges: [
-            "Browser compatibility across different devices",
-            "Performance optimization for larger datasets",
-            "Responsive design implementation"
-          ]
-        };
-      }
-    } catch (error) {
-      console.error('Error generating thinking plan:', error);
-      return null;
-    }
-  };
-
   const thinkAboutProject = async () => {
     if (!prompt.trim()) {
       toast({
@@ -233,29 +109,58 @@ Focus on ${languageOption.name} and provide realistic time estimates and complex
       return;
     }
 
-    setIsGeneratingPlan(true);
-    setShowThinkingPlan(true);
+    setIsThinking(true);
     
-    const plan = await generateThinkingPlan();
-    setThinkingPlan(plan);
-    setIsGeneratingPlan(false);
+    try {
+      const thinkingPrompt = `Analyze this web application idea and provide detailed thoughts: ${prompt}
+
+Please consider:
+1. Technical feasibility and complexity
+2. Recommended technologies, frameworks, and packages
+3. Potential challenges and solutions
+4. Architecture suggestions
+5. Feature breakdown and implementation approach
+6. Security considerations
+7. Performance optimization opportunities
+
+Provide a comprehensive analysis without generating code.`;
+
+      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
+        body: { 
+          query: thinkingPrompt,
+          model: selectedModel,
+          chatId: currentProjectId || 'webapp-thinking',
+          chatHistory: []
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      const analysis = data.response || 'No analysis received';
+      
+      toast({
+        title: "Analysis Complete",
+        description: "AI has analyzed your project idea. Check the chat for detailed insights.",
+      });
+
+      // You could display this analysis in a modal or dedicated area
+      console.log('Project Analysis:', analysis);
+      
+    } catch (error) {
+      console.error('Error analyzing project:', error);
+      toast({
+        title: "Analysis Failed",
+        description: `Failed to analyze project: ${error.message}`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsThinking(false);
+    }
   };
 
-  const handlePlanApproval = async () => {
-    setShowThinkingPlan(false);
-    await generateWebApp(selectedModel, false, true);
-  };
-
-  const handlePlanRejection = () => {
-    setShowThinkingPlan(false);
-    setThinkingPlan(null);
-    toast({
-      title: "Plan Rejected",
-      description: "You can modify your prompt and try again.",
-    });
-  };
-
-  const generateWebApp = async (modelToUse: AIModel = selectedModel, isRetry: boolean = false, usePlan: boolean = false) => {
+  const generateWebApp = async (modelToUse: AIModel = selectedModel, isRetry: boolean = false) => {
     if (!prompt.trim()) {
       toast({
         title: "Missing Prompt",
@@ -286,40 +191,9 @@ Focus on ${languageOption.name} and provide realistic time estimates and complex
     setIsGenerating(true);
     
     try {
-      const languageOption = getCurrentLanguageOption();
       let contextPrompt = prompt;
-      
-      const languageContext = `Use ${languageOption.name} as the primary programming language to create the web app.
-Available packages: ${languageOption.packages.join(', ')}
-Available frameworks: ${languageOption.frameworks.join(', ')}`;
-
-      let planContext = '';
-      if (usePlan && thinkingPlan) {
-        planContext = `
-
-APPROVED DEVELOPMENT PLAN:
-Title: ${thinkingPlan.title}
-Description: ${thinkingPlan.description}
-Complexity: ${thinkingPlan.complexity}
-
-Development Steps to Follow:
-${thinkingPlan.steps.map((step, index) => 
-  `${index + 1}. ${step.title} (${step.complexity} complexity, ~${step.estimatedTime})
-     - ${step.description}
-     - Packages: ${step.packages?.join(', ') || 'none'}
-     - Frameworks: ${step.frameworks?.join(', ') || 'none'}`
-).join('\n')}
-
-Recommended packages to prioritize: ${thinkingPlan.recommendedPackages.join(', ')}
-Recommended frameworks to prioritize: ${thinkingPlan.recommendedFrameworks.join(', ')}
-
-Please implement this plan step by step using ${languageOption.name}.`;
-      }
-      
       if (conversationHistory.length > 0) {
         contextPrompt = `Based on the previous web application, ${prompt}. 
-
-${languageContext}${planContext}
 
 Previous conversation context:
 ${conversationHistory.slice(-3).map((item, index) => 
@@ -327,31 +201,23 @@ ${conversationHistory.slice(-3).map((item, index) =>
   Result: ${item.response.description}`
 ).join('\n\n')}
 
-Please modify or enhance the current application accordingly using ${languageOption.name}.`;
-      } else {
-        contextPrompt = `${prompt}
-
-${languageContext}${planContext}`;
+Please modify or enhance the current application accordingly.`;
       }
 
       const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
         body: { 
           query: `Generate a complete web application based on this description: ${contextPrompt}. 
 
-IMPORTANT: Use ${languageOption.name} as the primary programming language.
-${languageContext}
-
 Please return ONLY a valid JSON object with this exact structure:
 {
   "html": "complete HTML content",
   "css": "complete CSS styles", 
-  "javascript": "complete ${languageOption.name} code (rename this field to match the language if not JavaScript)",
+  "javascript": "complete JavaScript code",
   "description": "brief description of the app",
-  "features": ["feature 1", "feature 2", "feature 3"],
-  "language": "${selectedLanguage}"
+  "features": ["feature 1", "feature 2", "feature 3"]
 }
 
-Make it responsive, modern, and fully functional. Focus on ${languageOption.name} best practices. Do not include any markdown formatting or code blocks. Just the raw JSON.`,
+Make it responsive, modern, and fully functional. Do not include any markdown formatting or code blocks. Just the raw JSON.`,
           model: modelToUse,
           chatId: currentProjectId || 'webapp-generation',
           chatHistory: []
@@ -367,30 +233,25 @@ Make it responsive, modern, and fully functional. Focus on ${languageOption.name
         const responseText = data.response || '';
         const cleanResponse = responseText.replace(/```json\n?|```\n?/g, '').trim();
         parsedApp = JSON.parse(cleanResponse);
-        
-        parsedApp.language = selectedLanguage;
       } catch (parseError) {
         const responseText = data.response || 'No response received';
-        const languageFileExtension = selectedLanguage === 'python' ? 'py' : 'js';
-        const languageScriptName = selectedLanguage === 'python' ? 'app.py' : 'script.js';
-        
         parsedApp = {
           html: `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generated ${languageOption.name} Web App</title>
+    <title>Generated Web App</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>Generated ${languageOption.name} Web Application</h1>
+        <h1>Generated Web Application</h1>
         <div class="content">
             ${responseText.replace(/\n/g, '<br>')}
         </div>
     </div>
-    ${selectedLanguage === 'python' ? '' : `<script src="${languageScriptName}"></script>`}
+    <script src="script.js"></script>
 </body>
 </html>`,
           css: `body {
@@ -411,12 +272,9 @@ Make it responsive, modern, and fully functional. Focus on ${languageOption.name
     margin-top: 20px;
     line-height: 1.6;
 }`,
-          javascript: selectedLanguage === 'python' 
-            ? `# ${languageOption.name} application code\nprint("Generated ${languageOption.name} web application")`
-            : `console.log('Generated ${languageOption.name} web app successfully');`,
-          description: `AI-generated ${languageOption.name} web application`,
-          features: ['Responsive design', 'Modern styling', `${languageOption.name} functionality`],
-          language: selectedLanguage
+          javascript: `console.log('Web app generated successfully');`,
+          description: 'AI-generated web application',
+          features: ['Responsive design', 'Modern styling', 'Basic functionality']
         };
       }
 
@@ -429,13 +287,9 @@ Make it responsive, modern, and fully functional. Focus on ${languageOption.name
       
       setPrompt("");
       
-      if (usePlan) {
-        setThinkingPlan(null);
-      }
-      
       toast({
         title: "Web App Generated!",
-        description: `Your ${languageOption.name} application has been created successfully using ${modelToUse}.`,
+        description: `Your web application has been created successfully using ${modelToUse}.`,
       });
     } catch (error) {
       console.error(`Error generating web app with ${modelToUse}:`, error);
@@ -448,7 +302,7 @@ Make it responsive, modern, and fully functional. Focus on ${languageOption.name
           title: "Trying Alternative Model",
           description: `${modelToUse} failed. Attempting with ${nextModel}...`,
         });
-        await generateWebApp(nextModel, true, usePlan);
+        await generateWebApp(nextModel, true);
         return;
       }
       
@@ -518,6 +372,7 @@ Make it responsive, modern, and fully functional. Focus on ${languageOption.name
       [fileType]: content
     }));
 
+    // Auto-save changes
     if (currentProjectId) {
       const updatedApp = { ...generatedApp, [fileType]: content };
       saveProject(conversationHistory[0]?.prompt || 'Modified project', updatedApp, selectedModel);
@@ -551,15 +406,13 @@ Make it responsive, modern, and fully functional. Focus on ${languageOption.name
     );
   }
 
-  const languageOption = getCurrentLanguageOption();
-
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/10 to-yellow-500/10 border border-orange-500/20">
-            <Code className="w-8 h-8 text-orange-400" />
+            <Globe className="w-8 h-8 text-orange-400" />
           </div>
           <div>
             <div className="flex items-center space-x-3">
@@ -571,7 +424,7 @@ Make it responsive, modern, and fully functional. Focus on ${languageOption.name
               </span>
             </div>
             <p className="text-prism-text-muted mt-2 font-inter">
-              Use {languageOption.name} to create web applications with advanced code editing
+              Generate fully functional web applications with advanced code editing and package management
             </p>
           </div>
         </div>
@@ -586,23 +439,6 @@ Make it responsive, modern, and fully functional. Focus on ${languageOption.name
         </div>
       </div>
 
-      {/* Language Selection Banner */}
-      <Alert className="border-blue-500/30 bg-blue-500/5">
-        <Code className="h-4 w-4 text-blue-500" />
-        <AlertDescription className="text-blue-300 flex items-center justify-between">
-          <span>
-            <strong>Current Language:</strong> {languageOption.name}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onLanguageChange}
-          >
-            Change Language
-          </Button>
-        </AlertDescription>
-      </Alert>
-
       {/* Beta Warning */}
       <Alert className="border-orange-500/30 bg-orange-500/5">
         <AlertTriangle className="h-4 w-4 text-orange-500" />
@@ -615,14 +451,14 @@ Make it responsive, modern, and fully functional. Focus on ${languageOption.name
       <Alert className="border-blue-500/30 bg-blue-500/5">
         <Sparkles className="h-4 w-4 text-blue-500" />
         <AlertDescription className="text-blue-300">
-          <strong>Pro Tip:</strong> For better results, mention specific frameworks or packages in your prompt. 
-          Example: "Create a todo app using {languageOption.name} with {languageOption.frameworks.slice(0, 1).join('')} framework and {languageOption.packages.slice(0, 2).join(' and ')} packages for enhanced functionality."
+          <strong>Pro Tip:</strong> For better results, mention specific packages, libraries, or frameworks in your prompt. 
+          Example: "Create a todo app using React hooks, Tailwind CSS, and Framer Motion for animations."
         </AlertDescription>
       </Alert>
 
-      {/* Split Layout */}
+      {/* Split Layout - Updated widths */}
       <div className="flex gap-6 h-[calc(100vh-20rem)]">
-        {/* Left Side - Preview */}
+        {/* Left Side - Preview - Reduced flex weight */}
         <div className="flex-1">
           {generatedApp ? (
             <div className="h-full flex flex-col">
@@ -668,10 +504,10 @@ Make it responsive, modern, and fully functional. Focus on ${languageOption.name
           )}
         </div>
 
-        {/* Right Side - Tabs */}
+        {/* Right Side - Tabs - Increased width significantly */}
         <div className="w-[32rem] flex flex-col">
           <Tabs value={activeRightTab} onValueChange={setActiveRightTab} className="flex-1 flex flex-col">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="generator" className="flex items-center space-x-1">
                 <Wand2 className="w-4 h-4" />
                 <span>Generate</span>
@@ -683,10 +519,6 @@ Make it responsive, modern, and fully functional. Focus on ${languageOption.name
               <TabsTrigger value="packages" className="flex items-center space-x-1">
                 <Package className="w-4 h-4" />
                 <span>Packages</span>
-              </TabsTrigger>
-              <TabsTrigger value="frameworks" className="flex items-center space-x-1">
-                <Layers className="w-4 h-4" />
-                <span>Frameworks</span>
               </TabsTrigger>
             </TabsList>
 
@@ -710,8 +542,8 @@ Make it responsive, modern, and fully functional. Focus on ${languageOption.name
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
                       placeholder={generatedApp ? 
-                        `Describe how you want to modify or enhance the current ${languageOption.name} web app... Mention specific frameworks like '${languageOption.frameworks[0]}' or packages like '${languageOption.packages[0]}' for enhanced functionality...` : 
-                        `Describe the web application you want to create using ${languageOption.name}... For example: 'Create a todo list app with ${languageOption.frameworks[0]} framework, drag and drop functionality, dark mode toggle, and local storage. Use ${languageOption.packages.slice(0, 2).join(' and ')} packages for enhanced features.'`
+                        "Describe how you want to modify or enhance the current web app... Mention specific packages like 'Add Chart.js for data visualization' or 'Use Lodash for data manipulation'..." : 
+                        "Describe the web application you want to create... For example: 'Create a todo list app with drag and drop functionality using React Beautiful DnD, dark mode toggle, and local storage. Include animations with Framer Motion and use Tailwind CSS for styling.'"
                       }
                       className="min-h-[200px] resize-none bg-prism-surface/10 border-prism-border"
                       disabled={isGenerating || isThinking}
@@ -788,7 +620,6 @@ Make it responsive, modern, and fully functional. Focus on ${languageOption.name
                 <AdvancedCodeEditor 
                   generatedApp={generatedApp} 
                   onFileChange={handleFileChange}
-                  selectedLanguage={selectedLanguage}
                 />
               ) : (
                 <Card className="h-full flex items-center justify-center">
@@ -801,75 +632,8 @@ Make it responsive, modern, and fully functional. Focus on ${languageOption.name
             </TabsContent>
 
             <TabsContent value="packages" className="flex-1 mt-4">
-              <Card className="h-full">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Package className="w-5 h-5 text-prism-primary" />
-                    <span>{languageOption.name} Packages</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-semibold text-prism-text mb-2">Available for {languageOption.name}:</h4>
-                      <div className="grid grid-cols-1 gap-2">
-                        {languageOption.packages.map((pkg) => (
-                          <div key={pkg} className="flex items-center justify-between p-3 bg-prism-surface/10 rounded-lg border border-prism-border">
-                            <div className="flex items-center space-x-3">
-                              <Package className="w-4 h-4 text-prism-accent" />
-                              <span className="font-medium text-prism-text">{pkg}</span>
-                            </div>
-                            <Badge variant="outline" className="bg-green-500/10 text-green-400 border-green-500/30">
-                              Available
-                            </Badge>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <PackageManager />
             </TabsContent>
-
-            <TabsContent value="frameworks" className="flex-1 mt-4">
-              <Card className="h-full">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Layers className="w-5 h-5 text-prism-primary" />
-                    <span>{languageOption.name} Frameworks</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-semibold text-prism-text mb-2">Available for {languageOption.name}:</h4>
-                      <div className="grid grid-cols-1 gap-2">
-                        {languageOption.frameworks.map((framework) => (
-                          <div key={framework} className="flex items-center justify-between p-3 bg-prism-surface/10 rounded-lg border border-prism-border">
-                            <div className="flex items-center space-x-3">
-                              <Layers className="w-4 h-4 text-purple-400" />
-                              <span className="font-medium text-prism-text">{framework}</span>
-                            </div>
-                            <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/30">
-                              Available
-                            </Badge>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Thinking Plan Dialog */}
-            <ThinkingPlanDialog
-              isOpen={showThinkingPlan}
-              plan={thinkingPlan}
-              isLoading={isGeneratingPlan}
-              onApprove={handlePlanApproval}
-              onReject={handlePlanRejection}
-            />
           </Tabs>
         </div>
       </div>
