@@ -267,7 +267,7 @@ const PackageManager: React.FC<PackageManagerProps> = ({
 
                 <div className="space-y-2">
                   {searchResults.map((pkg) => {
-                    const isInstalled = packages[pkg.name];
+                    const isInstalled = Boolean(packages[pkg.name]);
                     const isInstalling = installing === pkg.name;
                     
                     return (

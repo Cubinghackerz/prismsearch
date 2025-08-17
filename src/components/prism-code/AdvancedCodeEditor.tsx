@@ -209,7 +209,7 @@ const AdvancedCodeEditor: React.FC<AdvancedCodeEditorProps> = ({
               showFoldingControls: 'always',
               glyphMargin: true,
               lightbulb: {
-                enabled: true
+                enabled: 'on'
               }
             }}
           />
