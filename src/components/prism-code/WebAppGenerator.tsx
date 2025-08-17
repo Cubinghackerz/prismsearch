@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain, Rocket } from "lucide-react";
+import { Code2, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain, Rocket, Github, GitBranch, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyQueryLimit } from "@/hooks/useDailyQueryLimit";
@@ -15,6 +15,7 @@ import PackageManager from "./PackageManager";
 import ProjectHistory from "./ProjectHistory";
 import { v4 as uuidv4 } from 'uuid';
 import DeploymentDialog from "./DeploymentDialog";
+import GitHubSyncDialog from "./GitHubSyncDialog";
 
 interface GeneratedApp {
   html: string;
@@ -42,6 +43,7 @@ const WebAppGenerator = () => {
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [conversationHistory, setConversationHistory] = useState<Array<{ prompt: string; response: GeneratedApp }>>([]);
   const [isThinking, setIsThinking] = useState(false);
+  const [showGitHubSync, setShowGitHubSync] = useState(false);
   const { toast } = useToast();
   const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
 
@@ -316,6 +318,18 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
     }
   };
 
+  const syncToGitHub = async () => {
+    if (!generatedApp) {
+      toast({
+        title: "No Project to Sync",
+        description: "Generate a web app first to sync it to GitHub.",
+        variant: "destructive"
+      });
+      return;
+    }
+    setShowGitHubSync(true);
+  };
+
   const startNewProject = () => {
     setGeneratedApp(null);
     setCurrentProjectId(null);
@@ -412,7 +426,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/10 to-yellow-500/10 border border-orange-500/20">
-            <Globe className="w-8 h-8 text-orange-400" />
+            <Code2 className="w-8 h-8 text-orange-400" />
           </div>
           <div>
             <div className="flex items-center space-x-3">
@@ -424,26 +438,32 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
               </span>
             </div>
             <p className="text-prism-text-muted mt-2 font-inter">
-              Generate fully functional web applications with advanced code editing and package management
+              Generate fully functional web applications with code editing and GitHub sync
             </p>
           </div>
         </div>
         <div className="flex space-x-2">
           <ProjectHistory onLoadProject={loadProject} />
           {generatedApp && (
-            <Button onClick={startNewProject} variant="outline" size="sm">
-              <Plus className="w-4 h-4 mr-2" />
-              New Project
-            </Button>
+            <>
+              <Button onClick={syncToGitHub} variant="outline" size="sm">
+                <Github className="w-4 h-4 mr-2" />
+                Sync to GitHub
+              </Button>
+              <Button onClick={startNewProject} variant="outline" size="sm">
+                <Plus className="w-4 h-4 mr-2" />
+                New Project
+              </Button>
+            </>
           )}
         </div>
       </div>
 
-      {/* Beta Warning */}
+      {/* Enhanced Beta Warning */}
       <Alert className="border-orange-500/30 bg-orange-500/5">
         <AlertTriangle className="h-4 w-4 text-orange-500" />
         <AlertDescription className="text-orange-300">
-          <strong>Enhanced Features:</strong> Now with advanced Monaco Editor for professional code editing and package management capabilities.
+          <strong>Enhanced Features:</strong> Now with GitHub repository sync, advanced Monaco Editor, and package management capabilities.
         </AlertDescription>
       </Alert>
 
@@ -496,7 +516,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
           ) : (
             <Card className="h-full flex items-center justify-center">
               <CardContent className="text-center py-20">
-                <Globe className="w-16 h-16 text-prism-text-muted mx-auto mb-4" />
+                <Code2 className="w-16 h-16 text-prism-text-muted mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-prism-text mb-2">No Web App Generated Yet</h3>
                 <p className="text-prism-text-muted">Use the generator on the right to create your web application</p>
               </CardContent>
@@ -637,6 +657,14 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
           </Tabs>
         </div>
       </div>
+
+      {/* GitHub Sync Dialog */}
+      <GitHubSyncDialog 
+        isOpen={showGitHubSync}
+        onClose={() => setShowGitHubSync(false)}
+        generatedApp={generatedApp}
+        projectId={currentProjectId}
+      />
     </div>
   );
 };
