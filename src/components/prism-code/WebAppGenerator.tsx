@@ -366,10 +366,10 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
         </AlertDescription>
       </Alert>
 
-      {/* Split Layout */}
+      {/* Split Layout - Updated widths */}
       <div className="flex gap-6 h-[calc(100vh-20rem)]">
-        {/* Left Side - Preview */}
-        <div className="flex-1 lg:flex-[2]">
+        {/* Left Side - Preview - Reduced flex weight */}
+        <div className="flex-1">
           {generatedApp ? (
             <div className="h-full flex flex-col">
               <div className="flex items-center justify-between mb-4">
@@ -408,8 +408,8 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
           )}
         </div>
 
-        {/* Right Side - Tabs */}
-        <div className="w-full lg:w-96 flex flex-col">
+        {/* Right Side - Tabs - Increased width significantly */}
+        <div className="w-[32rem] flex flex-col">
           <Tabs value={activeRightTab} onValueChange={setActiveRightTab} className="flex-1 flex flex-col">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="generator" className="flex items-center space-x-1">
