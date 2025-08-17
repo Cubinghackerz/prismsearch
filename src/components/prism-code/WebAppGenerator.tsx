@@ -13,6 +13,7 @@ import ModelSelector, { AIModel } from "./ModelSelector";
 import AdvancedCodeEditor from "./AdvancedCodeEditor";
 import PackageManager from "./PackageManager";
 import ProjectHistory from "./ProjectHistory";
+import DevelopmentPlanDialog from "./DevelopmentPlanDialog";
 import { v4 as uuidv4 } from 'uuid';
 import DeploymentDialog from "./DeploymentDialog";
 
@@ -32,6 +33,30 @@ interface ProjectHistoryItem {
   timestamp: Date;
 }
 
+interface DevelopmentPlan {
+  projectOverview: string;
+  colorScheme: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    background: string;
+    text: string;
+  };
+  architecture: {
+    framework: string;
+    styling: string;
+    stateManagement: string;
+    routing: string;
+  };
+  features: string[];
+  packages: string[];
+  fileStructure: string[];
+  implementationSteps: string[];
+  securityConsiderations: string[];
+  performanceOptimizations: string[];
+  estimatedComplexity: 'Low' | 'Medium' | 'High';
+}
+
 const WebAppGenerator = () => {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -42,6 +67,8 @@ const WebAppGenerator = () => {
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [conversationHistory, setConversationHistory] = useState<Array<{ prompt: string; response: GeneratedApp }>>([]);
   const [isThinking, setIsThinking] = useState(false);
+  const [developmentPlan, setDevelopmentPlan] = useState<DevelopmentPlan | null>(null);
+  const [showPlanDialog, setShowPlanDialog] = useState(false);
   const { toast } = useToast();
   const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
 
@@ -81,6 +108,67 @@ const WebAppGenerator = () => {
     setCurrentProjectId(projectId);
   };
 
+  const parseDevelopmentPlan = (planText: string): DevelopmentPlan | null => {
+    try {
+      // Try to extract JSON from the response
+      const jsonMatch = planText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      }
+
+      // Fallback: parse structured text format
+      const lines = planText.split('\n').map(line => line.trim()).filter(line => line);
+      
+      return {
+        projectOverview: "AI-generated web application based on your requirements",
+        colorScheme: {
+          primary: "#3B82F6",
+          secondary: "#6B7280",
+          accent: "#10B981",
+          background: "#FFFFFF",
+          text: "#1F2937"
+        },
+        architecture: {
+          framework: "Vanilla JavaScript",
+          styling: "CSS3",
+          stateManagement: "Local Storage",
+          routing: "Single Page"
+        },
+        features: lines.filter(line => line.includes('feature') || line.includes('•')).slice(0, 6),
+        packages: ["Chart.js", "Animate.css", "Font Awesome"],
+        fileStructure: [
+          "index.html",
+          "styles.css",
+          "script.js",
+          "assets/",
+          "components/"
+        ],
+        implementationSteps: [
+          "Set up HTML structure",
+          "Create responsive CSS layout",
+          "Implement JavaScript functionality",
+          "Add interactive features",
+          "Optimize for performance",
+          "Test across devices"
+        ],
+        securityConsiderations: [
+          "Input validation and sanitization",
+          "XSS prevention",
+          "Secure data storage"
+        ],
+        performanceOptimizations: [
+          "Minified CSS and JavaScript",
+          "Optimized images",
+          "Lazy loading implementation"
+        ],
+        estimatedComplexity: 'Medium' as const
+      };
+    } catch (error) {
+      console.error('Error parsing development plan:', error);
+      return null;
+    }
+  };
+
   const thinkAboutProject = async () => {
     if (!prompt.trim()) {
       toast({
@@ -110,26 +198,44 @@ const WebAppGenerator = () => {
     }
 
     setIsThinking(true);
+    setShowPlanDialog(true);
+    setDevelopmentPlan(null);
     
     try {
-      const thinkingPrompt = `Analyze this web application idea and provide detailed thoughts: ${prompt}
+      const detailedPrompt = `Create a comprehensive development plan for this web application: "${prompt}"
 
-Please consider:
-1. Technical feasibility and complexity
-2. Recommended technologies, frameworks, and packages
-3. Potential challenges and solutions
-4. Architecture suggestions
-5. Feature breakdown and implementation approach
-6. Security considerations
-7. Performance optimization opportunities
+Please provide a detailed JSON response with the following structure:
+{
+  "projectOverview": "Detailed description of the project including purpose, target audience, and key objectives",
+  "colorScheme": {
+    "primary": "#hex-color",
+    "secondary": "#hex-color", 
+    "accent": "#hex-color",
+    "background": "#hex-color",
+    "text": "#hex-color"
+  },
+  "architecture": {
+    "framework": "recommended framework/library",
+    "styling": "CSS approach (CSS3, Tailwind, etc)",
+    "stateManagement": "state management approach",
+    "routing": "routing strategy"
+  },
+  "features": ["feature 1", "feature 2", "feature 3", "..."],
+  "packages": ["recommended npm packages/libraries"],
+  "fileStructure": ["file1.html", "file2.css", "folder/", "..."],
+  "implementationSteps": ["step 1", "step 2", "step 3", "..."],
+  "securityConsiderations": ["security measure 1", "security measure 2", "..."],
+  "performanceOptimizations": ["optimization 1", "optimization 2", "..."],
+  "estimatedComplexity": "Low|Medium|High"
+}
 
-Provide a comprehensive analysis without generating code.`;
+Focus on modern web development best practices, accessibility, and user experience.`;
 
       const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
         body: { 
-          query: thinkingPrompt,
+          query: detailedPrompt,
           model: selectedModel,
-          chatId: currentProjectId || 'webapp-thinking',
+          chatId: currentProjectId || 'webapp-planning',
           chatHistory: []
         }
       });
@@ -138,26 +244,66 @@ Provide a comprehensive analysis without generating code.`;
         throw new Error(error.message);
       }
 
-      const analysis = data.response || 'No analysis received';
+      const planText = data.response || '';
+      const plan = parseDevelopmentPlan(planText);
       
-      toast({
-        title: "Analysis Complete",
-        description: "AI has analyzed your project idea. Check the chat for detailed insights.",
-      });
-
-      // You could display this analysis in a modal or dedicated area
-      console.log('Project Analysis:', analysis);
+      if (plan) {
+        setDevelopmentPlan(plan);
+        toast({
+          title: "Plan Generated",
+          description: "Review the development plan and approve to start generation.",
+        });
+      } else {
+        throw new Error('Failed to parse development plan');
+      }
       
     } catch (error) {
-      console.error('Error analyzing project:', error);
+      console.error('Error creating development plan:', error);
       toast({
-        title: "Analysis Failed",
-        description: `Failed to analyze project: ${error.message}`,
+        title: "Planning Failed",
+        description: `Failed to create development plan: ${error.message}`,
         variant: "destructive"
       });
+      setShowPlanDialog(false);
     } finally {
       setIsThinking(false);
     }
+  };
+
+  const handlePlanApproval = async () => {
+    if (!developmentPlan) return;
+
+    setShowPlanDialog(false);
+    
+    // Create enhanced prompt with approved plan details
+    const enhancedPrompt = `Generate a web application based on this approved development plan:
+
+Original Request: ${prompt}
+
+Development Plan:
+- Overview: ${developmentPlan.projectOverview}
+- Color Scheme: Primary: ${developmentPlan.colorScheme.primary}, Secondary: ${developmentPlan.colorScheme.secondary}, Accent: ${developmentPlan.colorScheme.accent}, Background: ${developmentPlan.colorScheme.background}, Text: ${developmentPlan.colorScheme.text}
+- Architecture: ${developmentPlan.architecture.framework} with ${developmentPlan.architecture.styling} for styling
+- Key Features: ${developmentPlan.features.join(', ')}
+- Recommended Packages: ${developmentPlan.packages.join(', ')}
+- Implementation Steps: ${developmentPlan.implementationSteps.join(' -> ')}
+
+Please create a complete, functional web application that follows this plan exactly, using the specified color scheme and implementing all listed features.`;
+
+    // Use the existing generation function with the enhanced prompt
+    const originalPrompt = prompt;
+    setPrompt(enhancedPrompt);
+    await generateWebApp();
+    setPrompt(originalPrompt); // Restore original prompt for UI
+  };
+
+  const handlePlanRejection = () => {
+    setShowPlanDialog(false);
+    setDevelopmentPlan(null);
+    toast({
+      title: "Plan Rejected",
+      description: "You can modify your prompt and try thinking again.",
+    });
   };
 
   const generateWebApp = async (modelToUse: AIModel = selectedModel, isRetry: boolean = false) => {
@@ -321,6 +467,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
     setCurrentProjectId(null);
     setConversationHistory([]);
     setPrompt("");
+    setDevelopmentPlan(null);
     setActiveRightTab('generator');
     toast({
       title: "New Project Started",
@@ -408,6 +555,16 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
 
   return (
     <div className="space-y-6">
+      {/* Development Plan Dialog */}
+      <DevelopmentPlanDialog
+        isOpen={showPlanDialog}
+        plan={developmentPlan}
+        isLoading={isThinking}
+        onApprove={handlePlanApproval}
+        onReject={handlePlanRejection}
+        onClose={() => setShowPlanDialog(false)}
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
@@ -443,7 +600,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       <Alert className="border-orange-500/30 bg-orange-500/5">
         <AlertTriangle className="h-4 w-4 text-orange-500" />
         <AlertDescription className="text-orange-300">
-          <strong>Enhanced Features:</strong> Now with advanced Monaco Editor for professional code editing and package management capabilities.
+          <strong>Enhanced Features:</strong> Now with development planning, advanced Monaco Editor for professional code editing and package management capabilities.
         </AlertDescription>
       </Alert>
 
@@ -451,8 +608,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       <Alert className="border-blue-500/30 bg-blue-500/5">
         <Sparkles className="h-4 w-4 text-blue-500" />
         <AlertDescription className="text-blue-300">
-          <strong>Pro Tip:</strong> For better results, mention specific packages, libraries, or frameworks in your prompt. 
-          Example: "Create a todo app using React hooks, Tailwind CSS, and Framer Motion for animations."
+          <strong>Pro Tip:</strong> Use the "Think" button to generate a detailed development plan with color schemes, architecture, and implementation steps before generating your app.
         </AlertDescription>
       </Alert>
 
@@ -560,7 +716,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                       {isThinking ? (
                         <>
                           <Brain className="w-4 h-4 mr-2 animate-pulse" />
-                          Thinking...
+                          Planning...
                         </>
                       ) : (
                         <>
