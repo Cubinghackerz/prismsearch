@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Copy, Download, FileText, Code, Palette } from 'lucide-react';
+import { Copy, Download, FileText, Code, Palette, Package } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface GeneratedApp {
@@ -12,6 +12,7 @@ interface GeneratedApp {
   javascript: string;
   description: string;
   features: string[];
+  packageJson?: string;
 }
 
 interface FileViewerProps {
@@ -27,6 +28,17 @@ const FileViewer: React.FC<FileViewerProps> = ({ generatedApp }) => {
     { key: 'css', label: 'CSS', content: generatedApp.css, icon: Palette, language: 'css' },
     { key: 'javascript', label: 'JavaScript', content: generatedApp.javascript, icon: Code, language: 'javascript' },
   ];
+
+  // Add package.json if it exists
+  if (generatedApp.packageJson) {
+    files.push({
+      key: 'package',
+      label: 'package.json',
+      content: generatedApp.packageJson,
+      icon: Package,
+      language: 'json'
+    });
+  }
 
   const copyToClipboard = (content: string, type: string) => {
     navigator.clipboard.writeText(content);
@@ -48,6 +60,12 @@ const FileViewer: React.FC<FileViewerProps> = ({ generatedApp }) => {
     URL.revokeObjectURL(url);
   };
 
+  const getFileName = (file: typeof files[0]) => {
+    if (file.key === 'package') return 'package.json';
+    if (file.key === 'javascript') return 'script.js';
+    return `${file.key === 'html' ? 'index' : 'styles'}.${file.key}`;
+  };
+
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="pb-3">
@@ -59,13 +77,13 @@ const FileViewer: React.FC<FileViewerProps> = ({ generatedApp }) => {
       <CardContent className="flex-1 flex flex-col p-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
           <div className="px-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className={`grid w-full ${files.length === 4 ? 'grid-cols-4' : 'grid-cols-3'}`}>
               {files.map((file) => {
                 const IconComponent = file.icon;
                 return (
                   <TabsTrigger key={file.key} value={file.key} className="flex items-center space-x-1">
                     <IconComponent className="w-4 h-4" />
-                    <span>{file.label}</span>
+                    <span className="hidden sm:inline">{file.label}</span>
                   </TabsTrigger>
                 );
               })}
@@ -76,7 +94,7 @@ const FileViewer: React.FC<FileViewerProps> = ({ generatedApp }) => {
             <TabsContent key={file.key} value={file.key} className="flex-1 flex flex-col mt-4">
               <div className="flex items-center justify-between px-6 pb-2">
                 <span className="text-sm font-medium text-prism-text">
-                  {file.label.toLowerCase()}.{file.key === 'javascript' ? 'js' : file.key}
+                  {getFileName(file)}
                 </span>
                 <div className="flex space-x-2">
                   <Button
@@ -90,7 +108,7 @@ const FileViewer: React.FC<FileViewerProps> = ({ generatedApp }) => {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => downloadFile(file.content, `${file.label.toLowerCase()}.${file.key === 'javascript' ? 'js' : file.key}`)}
+                    onClick={() => downloadFile(file.content, getFileName(file))}
                   >
                     <Download className="w-3 h-3 mr-1" />
                     Download

@@ -1,10 +1,11 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle } from "lucide-react";
+import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Terminal as TerminalIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyQueryLimit } from "@/hooks/useDailyQueryLimit";
@@ -12,6 +13,8 @@ import WebAppPreview from "./WebAppPreview";
 import ModelSelector, { AIModel } from "./ModelSelector";
 import FileViewer from "./FileViewer";
 import ProjectHistory from "./ProjectHistory";
+import PackageManager from "./PackageManager";
+import Terminal from "./Terminal";
 import { v4 as uuidv4 } from 'uuid';
 
 interface GeneratedApp {
@@ -20,6 +23,15 @@ interface GeneratedApp {
   javascript: string;
   description: string;
   features: string[];
+  packageJson?: string;
+  dependencies?: PackageInfo[];
+}
+
+interface PackageInfo {
+  name: string;
+  version: string;
+  description?: string;
+  type: 'dependency' | 'devDependency';
 }
 
 interface ProjectHistoryItem {
@@ -39,6 +51,7 @@ const WebAppGenerator = () => {
   const [activeRightTab, setActiveRightTab] = useState('generator');
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [conversationHistory, setConversationHistory] = useState<Array<{ prompt: string; response: GeneratedApp }>>([]);
+  const [packages, setPackages] = useState<PackageInfo[]>([]);
   const { toast } = useToast();
   const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
 
@@ -49,7 +62,7 @@ const WebAppGenerator = () => {
     const project: ProjectHistoryItem = {
       id: projectId,
       prompt: projectPrompt,
-      generatedApp: app,
+      generatedApp: { ...app, dependencies: packages },
       model: model,
       timestamp: new Date()
     };
@@ -65,7 +78,6 @@ const WebAppGenerator = () => {
       }
     }
 
-    // Update existing project or add new one
     const existingIndex = projects.findIndex(p => p.id === projectId);
     if (existingIndex >= 0) {
       projects[existingIndex] = project;
@@ -73,11 +85,34 @@ const WebAppGenerator = () => {
       projects.unshift(project);
     }
 
-    // Keep only the last 50 projects
     projects = projects.slice(0, 50);
-    
     localStorage.setItem('prism-code-projects', JSON.stringify(projects));
     setCurrentProjectId(projectId);
+  };
+
+  const generatePackageJson = (dependencies: PackageInfo[]) => {
+    const deps = dependencies.filter(pkg => pkg.type === 'dependency').reduce(
+      (acc, pkg) => ({ ...acc, [pkg.name]: pkg.version }), {}
+    );
+    const devDeps = dependencies.filter(pkg => pkg.type === 'devDependency').reduce(
+      (acc, pkg) => ({ ...acc, [pkg.name]: pkg.version }), {}
+    );
+
+    return JSON.stringify({
+      name: "ai-generated-app",
+      version: "1.0.0",
+      description: "AI Generated Web Application",
+      main: "index.js",
+      scripts: {
+        start: "node server.js",
+        build: "webpack --mode production",
+        dev: "webpack serve --mode development"
+      },
+      dependencies: deps,
+      devDependencies: devDeps,
+      author: "AI Web App Generator",
+      license: "MIT"
+    }, null, 2);
   };
 
   const generateWebApp = async (modelToUse: AIModel = selectedModel, isRetry: boolean = false) => {
@@ -99,7 +134,6 @@ const WebAppGenerator = () => {
       return;
     }
 
-    // Check if we can increment the query count
     if (!incrementQueryCount()) {
       toast({
         title: "Daily Limit Reached",
@@ -112,7 +146,6 @@ const WebAppGenerator = () => {
     setIsGenerating(true);
     
     try {
-      // Build context from conversation history for continuation
       let contextPrompt = prompt;
       if (conversationHistory.length > 0) {
         contextPrompt = `Based on the previous web application, ${prompt}. 
@@ -126,9 +159,12 @@ ${conversationHistory.slice(-3).map((item, index) =>
 Please modify or enhance the current application accordingly.`;
       }
 
-      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
-        body: { 
-          query: `Generate a complete web application based on this description: ${contextPrompt}. 
+      // Include package information in the prompt
+      const packageContext = packages.length > 0 
+        ? `\n\nCurrent packages in the project: ${packages.map(p => `${p.name}@${p.version}`).join(', ')}`
+        : '';
+
+      const enhancedPrompt = `Generate a complete web application based on this description: ${contextPrompt}${packageContext}
 
 Please return ONLY a valid JSON object with this exact structure:
 {
@@ -136,10 +172,16 @@ Please return ONLY a valid JSON object with this exact structure:
   "css": "complete CSS styles", 
   "javascript": "complete JavaScript code",
   "description": "brief description of the app",
-  "features": ["feature 1", "feature 2", "feature 3"]
+  "features": ["feature 1", "feature 2", "feature 3"],
+  "packageJson": "complete package.json content if packages are needed",
+  "suggestedPackages": [{"name": "package-name", "version": "^1.0.0", "type": "dependency", "reason": "why this package is useful"}]
 }
 
-Make it responsive, modern, and fully functional. Do not include any markdown formatting or code blocks. Just the raw JSON.`,
+Make it modern, functional, and leverage the specified packages if any. Include package.json if the app would benefit from npm packages. Do not include any markdown formatting or code blocks. Just the raw JSON.`;
+
+      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
+        body: { 
+          query: enhancedPrompt,
           model: modelToUse,
           chatId: currentProjectId || 'webapp-generation',
           chatHistory: []
@@ -155,6 +197,20 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
         const responseText = data.response || '';
         const cleanResponse = responseText.replace(/```json\n?|```\n?/g, '').trim();
         parsedApp = JSON.parse(cleanResponse);
+
+        // Add suggested packages to the package list
+        if (parsedApp.suggestedPackages) {
+          const newPackages = parsedApp.suggestedPackages.map((pkg: any) => ({
+            name: pkg.name,
+            version: pkg.version || '^1.0.0',
+            type: pkg.type || 'dependency',
+            description: pkg.reason
+          }));
+          setPackages(prev => {
+            const existing = prev.map(p => p.name);
+            return [...prev, ...newPackages.filter((pkg: PackageInfo) => !existing.includes(pkg.name))];
+          });
+        }
       } catch (parseError) {
         const responseText = data.response || 'No response received';
         parsedApp = {
@@ -200,16 +256,16 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
         };
       }
 
+      // Generate package.json if packages are present
+      if (packages.length > 0) {
+        parsedApp.packageJson = generatePackageJson(packages);
+      }
+
       setGeneratedApp(parsedApp);
       setActiveRightTab('files');
       
-      // Add to conversation history
       setConversationHistory(prev => [...prev, { prompt, response: parsedApp }]);
-      
-      // Save project
       saveProject(prompt, parsedApp, modelToUse);
-      
-      // Clear the prompt for next iteration
       setPrompt("");
       
       toast({
@@ -241,11 +297,31 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
     }
   };
 
+  const handleAddPackage = (packageName: string, type: 'dependency' | 'devDependency') => {
+    const newPackage: PackageInfo = {
+      name: packageName,
+      version: '^1.0.0',
+      type: type
+    };
+    setPackages(prev => [...prev, newPackage]);
+  };
+
+  const handleRemovePackage = (packageName: string) => {
+    setPackages(prev => prev.filter(pkg => pkg.name !== packageName));
+  };
+
+  const handlePackageInstall = (packageName: string) => {
+    if (!packages.some(pkg => pkg.name === packageName)) {
+      handleAddPackage(packageName, 'dependency');
+    }
+  };
+
   const startNewProject = () => {
     setGeneratedApp(null);
     setCurrentProjectId(null);
     setConversationHistory([]);
     setPrompt("");
+    setPackages([]);
     setActiveRightTab('generator');
     toast({
       title: "New Project Started",
@@ -257,6 +333,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
     setGeneratedApp(project.generatedApp);
     setCurrentProjectId(project.id);
     setConversationHistory([{ prompt: project.prompt, response: project.generatedApp }]);
+    setPackages(project.generatedApp.dependencies || []);
     setPrompt("");
     setActiveRightTab('files');
   };
@@ -270,6 +347,10 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       { name: 'script.js', content: generatedApp.javascript },
       { name: 'README.txt', content: `Generated Web App\n\nDescription: ${generatedApp.description}\n\nFeatures:\n${generatedApp.features.map(f => `- ${f}`).join('\n')}` }
     ];
+
+    if (generatedApp.packageJson) {
+      files.push({ name: 'package.json', content: generatedApp.packageJson });
+    }
 
     files.forEach(file => {
       const blob = new Blob([file.content], { type: 'text/plain' });
@@ -334,7 +415,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
               </span>
             </div>
             <p className="text-prism-text-muted mt-2 font-inter">
-              Generate fully functional web applications using multiple AI models (10 queries/day)
+              Generate full-stack web applications with package management and terminal support
             </p>
           </div>
         </div>
@@ -353,14 +434,13 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       <Alert className="border-orange-500/30 bg-orange-500/5">
         <AlertTriangle className="h-4 w-4 text-orange-500" />
         <AlertDescription className="text-orange-300">
-          <strong>Beta Feature:</strong> This AI generator creates complete web applications with HTML, CSS, and JavaScript. 
-          Always review generated code before deployment. This feature uses advanced AI models and may consume significant resources.
+          <strong>Enhanced Beta:</strong> Now with package management and terminal support! Generate full-stack applications with npm packages, build tools, and development workflows.
         </AlertDescription>
       </Alert>
 
       {/* Split Layout */}
-      <div className="flex gap-6 h-[calc(100vh-20rem)]">
-        {/* Left Side - Preview (Takes up 2/3 of the space) */}
+      <div className="flex gap-6 h-[calc(100vh-24rem)]">
+        {/* Left Side - Preview */}
         <div className="flex-1 lg:flex-[2]">
           {generatedApp ? (
             <div className="h-full flex flex-col">
@@ -400,17 +480,25 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
           )}
         </div>
 
-        {/* Right Side - Tabs (Takes up 1/3 of the space) */}
+        {/* Right Side - Enhanced Tabs */}
         <div className="w-full lg:w-96 flex flex-col">
           <Tabs value={activeRightTab} onValueChange={setActiveRightTab} className="flex-1 flex flex-col">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="generator" className="flex items-center space-x-1">
                 <Wand2 className="w-4 h-4" />
-                <span>Generator</span>
+                <span className="hidden sm:inline">Gen</span>
               </TabsTrigger>
               <TabsTrigger value="files" className="flex items-center space-x-1" disabled={!generatedApp}>
                 <FileText className="w-4 h-4" />
-                <span>Files</span>
+                <span className="hidden sm:inline">Files</span>
+              </TabsTrigger>
+              <TabsTrigger value="packages" className="flex items-center space-x-1">
+                <Package className="w-4 h-4" />
+                <span className="hidden sm:inline">Pkg</span>
+              </TabsTrigger>
+              <TabsTrigger value="terminal" className="flex items-center space-x-1">
+                <TerminalIcon className="w-4 h-4" />
+                <span className="hidden sm:inline">Term</span>
               </TabsTrigger>
             </TabsList>
 
@@ -497,6 +585,21 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                   </CardContent>
                 </Card>
               )}
+            </TabsContent>
+
+            <TabsContent value="packages" className="flex-1 mt-4">
+              <PackageManager
+                packages={packages}
+                onAddPackage={handleAddPackage}
+                onRemovePackage={handleRemovePackage}
+              />
+            </TabsContent>
+
+            <TabsContent value="terminal" className="flex-1 mt-4">
+              <Terminal
+                projectPath={`/projects/${currentProjectId || 'untitled'}`}
+                onPackageInstall={handlePackageInstall}
+              />
             </TabsContent>
           </Tabs>
         </div>
