@@ -166,9 +166,7 @@ const DeploymentDialog: React.FC<DeploymentDialogProps> = ({
                 <CardContent>
                   <Alert className="mb-4 border-yellow-500/30 bg-yellow-500/5">
                     <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                    <AlertDescription className="text-yellow-300 text-sm">
-                      Requires Vercel API token configuration in project settings.
-                    </AlertDescription>
+                    <AlertDescription className="text-yellow-300 text-sm">Currently Unavailable</AlertDescription>
                   </Alert>
                   <Button onClick={() => handleDeploy('vercel')} disabled={isDeploying === 'vercel' || !projectName.trim()} className="w-full bg-green-500 hover:bg-green-600">
                     {isDeploying === 'vercel' ? <>
@@ -196,9 +194,7 @@ const DeploymentDialog: React.FC<DeploymentDialogProps> = ({
                 <CardContent>
                   <Alert className="mb-4 border-yellow-500/30 bg-yellow-500/5">
                     <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                    <AlertDescription className="text-yellow-300 text-sm">
-                      Requires Netlify API token configuration in project settings.
-                    </AlertDescription>
+                    <AlertDescription className="text-yellow-300 text-sm">Currently Unavailable</AlertDescription>
                   </Alert>
                   <Button onClick={() => handleDeploy('netlify')} disabled={isDeploying === 'netlify' || !projectName.trim()} className="w-full bg-purple-500 hover:bg-purple-600">
                     {isDeploying === 'netlify' ? <>
