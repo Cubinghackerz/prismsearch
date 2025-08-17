@@ -36,21 +36,12 @@ const Home = () => {
       gradient: 'from-purple-500 to-pink-500'
     },
     {
-      icon: FileText,
-      title: 'Prism Pages',
-      description: 'Rich-text document editor with real-time collaboration',
-      path: '/docs',
-      gradient: 'from-indigo-500 to-blue-500',
-      featured: false
-    },
-    {
       icon: Code,
-      title: 'Web App Generator',
-      description: 'Professional development environment with real package management',
+      title: 'Code Notebook',
+      description: 'Online notebook for coding, testing, and running code snippets',
       path: '/code',
       gradient: 'from-indigo-500 to-purple-500',
-      featured: true,
-      beta: false
+      beta: true
     },
     {
       icon: Lock,
@@ -153,18 +144,10 @@ const Home = () => {
             <Button 
               size="lg" 
               onClick={() => navigate('/code')}
-              className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 font-fira-code"
+              className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 font-fira-code"
             >
               <Sparkles className="mr-2 h-4 w-4" />
-              Try Web App Generator
-            </Button>
-            <Button 
-              size="lg" 
-              onClick={() => navigate('/docs')}
-              className="bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 font-fira-code"
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              Try Prism Pages
+              Try AI Web App Generator
             </Button>
             <Button 
               size="lg" 
