@@ -102,7 +102,10 @@ const PrismCode = () => {
           </TabsList>
 
           <TabsContent value="webapp" className="space-y-6">
-            <WebAppGenerator />
+            <WebAppGenerator 
+              selectedLanguage={selectedLanguage!} 
+              onLanguageChange={handleChangeLanguage}
+            />
           </TabsContent>
 
           <TabsContent value="conversions" className="space-y-6">

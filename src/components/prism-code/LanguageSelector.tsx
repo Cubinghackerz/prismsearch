@@ -18,16 +18,18 @@ interface LanguageOption {
   color: string;
   badges: string[];
   packages: string[];
+  frameworks: string[];
 }
 
-const LANGUAGE_OPTIONS: LanguageOption[] = [
+export const LANGUAGE_OPTIONS: LanguageOption[] = [
   {
     id: 'javascript',
     name: 'JavaScript',
     description: 'Build dynamic web applications with modern JavaScript',
     color: 'from-yellow-500 to-orange-500',
     badges: ['Frontend', 'Dynamic', 'Popular'],
-    packages: ['lodash', 'axios', 'moment', 'chart.js', 'anime.js', 'express', 'jquery', 'bootstrap']
+    packages: ['lodash', 'axios', 'moment', 'chart.js', 'anime.js', 'jquery'],
+    frameworks: ['React', 'Vue.js', 'Angular', 'Express.js', 'Node.js', 'Next.js']
   },
   {
     id: 'typescript',
@@ -35,7 +37,8 @@ const LANGUAGE_OPTIONS: LanguageOption[] = [
     description: 'Type-safe JavaScript development with enhanced tooling',
     color: 'from-blue-500 to-indigo-500',
     badges: ['Type-Safe', 'Scalable', 'Modern'],
-    packages: ['@types/node', 'typescript', 'ts-node', 'lodash', 'axios', 'express', 'mongoose', 'joi']
+    packages: ['@types/node', 'lodash', 'axios', 'zod', 'joi', 'mongoose'],
+    frameworks: ['React', 'Angular', 'NestJS', 'Express.js', 'Next.js', 'Svelte']
   },
   {
     id: 'python',
@@ -43,7 +46,8 @@ const LANGUAGE_OPTIONS: LanguageOption[] = [
     description: 'Versatile language for web development, data science, and automation',
     color: 'from-blue-600 to-yellow-500',
     badges: ['Versatile', 'Popular', 'AI-Ready'],
-    packages: ['flask', 'django', 'requests', 'pandas', 'numpy', 'fastapi', 'sqlalchemy', 'pytest']
+    packages: ['requests', 'pandas', 'numpy', 'sqlalchemy', 'pytest', 'beautifulsoup4'],
+    frameworks: ['Django', 'Flask', 'FastAPI', 'Streamlit', 'Tornado', 'Pyramid']
   }
 ];
 
@@ -125,19 +129,38 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ onLanguageSelect })
                         </Badge>
                       ))}
                     </div>
-                    <div className="space-y-2">
-                      <p className="text-xs font-medium text-prism-text-muted">Popular packages/modules:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {option.packages.slice(0, 4).map((pkg) => (
-                          <span key={pkg} className="text-xs bg-prism-surface/20 px-2 py-1 rounded">
-                            {pkg}
-                          </span>
-                        ))}
-                        {option.packages.length > 4 && (
-                          <span className="text-xs text-prism-text-muted">
-                            +{option.packages.length - 4} more
-                          </span>
-                        )}
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-xs font-medium text-prism-text-muted mb-1">Popular frameworks:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {option.frameworks.slice(0, 3).map((framework) => (
+                            <span key={framework} className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded border border-purple-500/30">
+                              {framework}
+                            </span>
+                          ))}
+                          {option.frameworks.length > 3 && (
+                            <span className="text-xs text-prism-text-muted">
+                              +{option.frameworks.length - 3} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <p className="text-xs font-medium text-prism-text-muted mb-1">Popular packages:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {option.packages.slice(0, 3).map((pkg) => (
+                            <span key={pkg} className="text-xs bg-prism-surface/20 px-2 py-1 rounded">
+                              {pkg}
+                            </span>
+                          ))}
+                          {option.packages.length > 3 && (
+                            <span className="text-xs text-prism-text-muted">
+                              +{option.packages.length - 3} more
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -169,4 +192,3 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ onLanguageSelect })
 };
 
 export default LanguageSelector;
-export { LANGUAGE_OPTIONS };
