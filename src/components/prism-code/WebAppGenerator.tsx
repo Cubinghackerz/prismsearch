@@ -1,13 +1,15 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Globe, Code, Download, Sparkles, FolderOpen, Save, History, Terminal, Loader2 } from 'lucide-react';
+import { Globe, Code, Download, Sparkles, FolderOpen, Save, History, Terminal, Loader2, FileText, Palette } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDailyQueryLimit } from '@/hooks/useDailyQueryLimit';
 import { supabase } from '@/integrations/supabase/client';
+import JSZip from 'jszip';
 import WebAppPreview from './WebAppPreview';
 import AdvancedCodeEditor from './AdvancedCodeEditor';
 import FrameworkTemplates from './FrameworkTemplates';
@@ -160,6 +162,23 @@ const WebAppGenerator = () => {
     });
   };
 
+  const handleFileChange = (fileName: string, content: string) => {
+    if (!generatedApp) return;
+    
+    setGeneratedApp(prev => {
+      if (!prev) return prev;
+      
+      if (fileName === 'index.html') {
+        return { ...prev, html: content };
+      } else if (fileName === 'style.css') {
+        return { ...prev, css: content };
+      } else if (fileName === 'script.js') {
+        return { ...prev, javascript: content };
+      }
+      return prev;
+    });
+  };
+
   const projectData = {
     id: 'project-' + Date.now(),
     name: 'Generated Web App',
@@ -172,6 +191,28 @@ const WebAppGenerator = () => {
     description: generatedApp?.description || '',
     features: generatedApp?.features || []
   };
+
+  // Create files array for AdvancedCodeEditor
+  const editorFiles = generatedApp ? [
+    {
+      name: 'index.html',
+      content: generatedApp.html,
+      language: 'html',
+      icon: FileText
+    },
+    {
+      name: 'style.css',
+      content: generatedApp.css,
+      language: 'css',
+      icon: Palette
+    },
+    {
+      name: 'script.js',
+      content: generatedApp.javascript,
+      language: 'javascript',
+      icon: Code
+    }
+  ] : [];
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -207,15 +248,19 @@ const WebAppGenerator = () => {
       {generatedApp && (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="flex items-center justify-between mb-4">
-            <TabsList className="grid w-full max-w-md grid-cols-5">
+            <TabsList className="grid w-full max-w-md grid-cols-3">
               <TabsTrigger value="preview">
                 <Globe className="w-4 h-4 mr-2" />
                 Preview
               </TabsTrigger>
-              <TabsTrigger value="html">HTML</TabsTrigger>
-              <TabsTrigger value="css">CSS</TabsTrigger>
-              <TabsTrigger value="js">JS</TabsTrigger>
-              <TabsTrigger value="files">Files</TabsTrigger>
+              <TabsTrigger value="editor">
+                <Code className="w-4 h-4 mr-2" />
+                Editor
+              </TabsTrigger>
+              <TabsTrigger value="files">
+                <FolderOpen className="w-4 h-4 mr-2" />
+                Files
+              </TabsTrigger>
             </TabsList>
 
             <div className="flex items-center space-x-2">
@@ -240,16 +285,11 @@ const WebAppGenerator = () => {
             <WebAppPreview html={generatedApp.html} css={generatedApp.css} javascript={generatedApp.javascript} />
           </TabsContent>
 
-          <TabsContent value="html" className="space-y-4">
-            <AdvancedCodeEditor code={generatedApp.html} language="html" />
-          </TabsContent>
-
-          <TabsContent value="css" className="space-y-4">
-            <AdvancedCodeEditor code={generatedApp.css} language="css" />
-          </TabsContent>
-
-          <TabsContent value="js" className="space-y-4">
-            <AdvancedCodeEditor code={generatedApp.javascript} language="javascript" />
+          <TabsContent value="editor" className="space-y-4">
+            <AdvancedCodeEditor 
+              files={editorFiles}
+              onFileChange={handleFileChange}
+            />
           </TabsContent>
 
           <TabsContent value="files" className="space-y-4">
