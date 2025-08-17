@@ -19,17 +19,10 @@ export interface DeploymentResult {
 export class DeploymentService {
   static async deployToVercel(options: DeploymentOptions): Promise<DeploymentResult> {
     try {
-      // Get API token from localStorage
-      const apiToken = localStorage.getItem('prism_vercel_token');
-      if (!apiToken) {
-        throw new Error('Vercel API token not configured. Please add it in deployment settings.');
-      }
-
       const { data, error } = await supabase.functions.invoke('deploy-webapp', {
         body: {
           platform: 'vercel',
           projectName: options.projectName,
-          apiToken,
           files: {
             'index.html': options.html,
             'styles.css': options.css,
@@ -66,17 +59,10 @@ export class DeploymentService {
 
   static async deployToNetlify(options: DeploymentOptions): Promise<DeploymentResult> {
     try {
-      // Get API token from localStorage
-      const apiToken = localStorage.getItem('prism_netlify_token');
-      if (!apiToken) {
-        throw new Error('Netlify access token not configured. Please add it in deployment settings.');
-      }
-
       const { data, error } = await supabase.functions.invoke('deploy-webapp', {
         body: {
           platform: 'netlify',
           projectName: options.projectName,
-          apiToken,
           files: {
             'index.html': options.html,
             'styles.css': options.css,

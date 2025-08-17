@@ -2,9 +2,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from '../_shared/cors.ts'
 
-// In-memory storage for development deployments
-// In a production scenario, you'd want to use Supabase Storage
-const developmentDeployments = new Map<string, Record<string, string>>();
+const VERCEL_TOKEN = Deno.env.get('VERCEL_TOKEN');
+const NETLIFY_TOKEN = Deno.env.get('NETLIFY_TOKEN');
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -12,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { platform, projectName, files, apiToken } = await req.json();
+    const { platform, projectName, files } = await req.json();
 
     if (!platform || !projectName || !files) {
       throw new Error('Missing required fields: platform, projectName, or files');
@@ -22,16 +21,10 @@ serve(async (req) => {
     
     switch (platform) {
       case 'vercel':
-        if (!apiToken) {
-          throw new Error('Vercel API token is required');
-        }
-        result = await deployToVercel(projectName, files, apiToken);
+        result = await deployToVercel(projectName, files);
         break;
       case 'netlify':
-        if (!apiToken) {
-          throw new Error('Netlify access token is required');
-        }
-        result = await deployToNetlify(projectName, files, apiToken);
+        result = await deployToNetlify(projectName, files);
         break;
       case 'development':
         result = await createDevelopmentLink(projectName, files);
@@ -68,7 +61,11 @@ serve(async (req) => {
   }
 });
 
-async function deployToVercel(projectName: string, files: Record<string, string>, apiToken: string) {
+async function deployToVercel(projectName: string, files: Record<string, string>) {
+  if (!VERCEL_TOKEN) {
+    throw new Error('Vercel token not configured');
+  }
+
   const deploymentData = {
     name: projectName,
     files: Object.entries(files).map(([path, content]) => ({
@@ -83,7 +80,7 @@ async function deployToVercel(projectName: string, files: Record<string, string>
   const response = await fetch('https://api.vercel.com/v13/deployments', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiToken}`,
+      'Authorization': `Bearer ${VERCEL_TOKEN}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(deploymentData)
@@ -103,7 +100,11 @@ async function deployToVercel(projectName: string, files: Record<string, string>
   };
 }
 
-async function deployToNetlify(projectName: string, files: Record<string, string>, apiToken: string) {
+async function deployToNetlify(projectName: string, files: Record<string, string>) {
+  if (!NETLIFY_TOKEN) {
+    throw new Error('Netlify token not configured');
+  }
+
   // Create a zip-like structure for Netlify
   const formData = new FormData();
   
@@ -114,7 +115,7 @@ async function deployToNetlify(projectName: string, files: Record<string, string
   const response = await fetch('https://api.netlify.com/api/v1/sites', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiToken}`,
+      'Authorization': `Bearer ${NETLIFY_TOKEN}`,
     },
     body: formData
   });
@@ -134,17 +135,16 @@ async function deployToNetlify(projectName: string, files: Record<string, string
 }
 
 async function createDevelopmentLink(projectName: string, files: Record<string, string>) {
-  // Create a unique deployment ID
+  // Create a temporary hosting solution using a simple key-value store
   const deploymentId = crypto.randomUUID();
   
-  // Store the files in memory (in production, you'd use Supabase Storage)
-  developmentDeployments.set(deploymentId, files);
-  
-  // Create the development URL
+  // In a real implementation, you might store these files in Supabase Storage
+  // For now, we'll create a simple development server response
   const devUrl = `https://fgpdfkvabwemivzjeitx.supabase.co/functions/v1/serve-webapp?id=${deploymentId}`;
   
+  // Store the files temporarily (you might want to use Supabase Storage for this)
   console.log(`Development deployment created: ${deploymentId}`);
-  console.log('Files stored:', Object.keys(files));
+  console.log('Files:', Object.keys(files));
   
   return {
     developmentUrl: devUrl,

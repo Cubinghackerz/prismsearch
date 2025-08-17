@@ -7,10 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Cloud, Globe, Rocket, ExternalLink, Copy, CheckCircle, AlertTriangle, Loader2, Settings } from 'lucide-react';
+import { Cloud, Globe, Rocket, ExternalLink, Copy, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { DeploymentService, DeploymentOptions } from '@/services/deploymentService';
-import DeploymentSettings from './DeploymentSettings';
 
 interface GeneratedApp {
   html: string;
@@ -108,9 +107,6 @@ const DeploymentDialog: React.FC<DeploymentDialogProps> = ({ generatedApp, child
     return name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 50);
   };
 
-  const hasVercelToken = !!localStorage.getItem('prism_vercel_token');
-  const hasNetlifyToken = !!localStorage.getItem('prism_netlify_token');
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -118,18 +114,10 @@ const DeploymentDialog: React.FC<DeploymentDialogProps> = ({ generatedApp, child
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center space-x-2">
-              <Rocket className="w-5 h-5 text-prism-primary" />
-              <span>Deploy Your Web App</span>
-            </DialogTitle>
-            <DeploymentSettings>
-              <Button variant="outline" size="sm">
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
-              </Button>
-            </DeploymentSettings>
-          </div>
+          <DialogTitle className="flex items-center space-x-2">
+            <Rocket className="w-5 h-5 text-prism-primary" />
+            <span>Deploy Your Web App</span>
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -180,7 +168,7 @@ const DeploymentDialog: React.FC<DeploymentDialogProps> = ({ generatedApp, child
                     <span>Development Link</span>
                   </CardTitle>
                   <CardDescription>
-                    Create a shareable development link for testing and sharing (no API key required)
+                    Create a shareable development link for testing and sharing
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -216,18 +204,16 @@ const DeploymentDialog: React.FC<DeploymentDialogProps> = ({ generatedApp, child
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {!hasVercelToken && (
-                    <Alert className="mb-4 border-yellow-500/30 bg-yellow-500/5">
-                      <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                      <AlertDescription className="text-yellow-300 text-sm">
-                        Vercel API token required. Configure it in Settings above.
-                      </AlertDescription>
-                    </Alert>
-                  )}
+                  <Alert className="mb-4 border-yellow-500/30 bg-yellow-500/5">
+                    <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                    <AlertDescription className="text-yellow-300 text-sm">
+                      Requires Vercel API token configuration in project settings.
+                    </AlertDescription>
+                  </Alert>
                   <Button
                     onClick={() => handleDeploy('vercel')}
-                    disabled={isDeploying === 'vercel' || !projectName.trim() || !hasVercelToken}
-                    className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-50"
+                    disabled={isDeploying === 'vercel' || !projectName.trim()}
+                    className="w-full bg-green-500 hover:bg-green-600"
                   >
                     {isDeploying === 'vercel' ? (
                       <>
@@ -256,18 +242,16 @@ const DeploymentDialog: React.FC<DeploymentDialogProps> = ({ generatedApp, child
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {!hasNetlifyToken && (
-                    <Alert className="mb-4 border-yellow-500/30 bg-yellow-500/5">
-                      <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                      <AlertDescription className="text-yellow-300 text-sm">
-                        Netlify access token required. Configure it in Settings above.
-                      </AlertDescription>
-                    </Alert>
-                  )}
+                  <Alert className="mb-4 border-yellow-500/30 bg-yellow-500/5">
+                    <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                    <AlertDescription className="text-yellow-300 text-sm">
+                      Requires Netlify API token configuration in project settings.
+                    </AlertDescription>
+                  </Alert>
                   <Button
                     onClick={() => handleDeploy('netlify')}
-                    disabled={isDeploying === 'netlify' || !projectName.trim() || !hasNetlifyToken}
-                    className="w-full bg-purple-500 hover:bg-purple-600 disabled:opacity-50"
+                    disabled={isDeploying === 'netlify' || !projectName.trim()}
+                    className="w-full bg-purple-500 hover:bg-purple-600"
                   >
                     {isDeploying === 'netlify' ? (
                       <>
