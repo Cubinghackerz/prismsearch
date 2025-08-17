@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import ModelSelector, { AIModel } from "./ModelSelector";
 import AdvancedCodeEditor from "./AdvancedCodeEditor";
 import PackageManager from "./PackageManager";
 import ProjectHistory from "./ProjectHistory";
+import VisualEditor from "./VisualEditor";
 import { v4 as uuidv4 } from 'uuid';
 import DeploymentDialog from "./DeploymentDialog";
 
@@ -507,7 +509,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
         {/* Right Side - Tabs - Increased width significantly */}
         <div className="w-[32rem] flex flex-col">
           <Tabs value={activeRightTab} onValueChange={setActiveRightTab} className="flex-1 flex flex-col">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="generator" className="flex items-center space-x-1">
                 <Wand2 className="w-4 h-4" />
                 <span>Generate</span>
@@ -515,6 +517,10 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
               <TabsTrigger value="editor" className="flex items-center space-x-1" disabled={!generatedApp}>
                 <FileText className="w-4 h-4" />
                 <span>Editor</span>
+              </TabsTrigger>
+              <TabsTrigger value="visual" className="flex items-center space-x-1" disabled={!generatedApp}>
+                <Eye className="w-4 h-4" />
+                <span>Visual</span>
               </TabsTrigger>
               <TabsTrigger value="packages" className="flex items-center space-x-1">
                 <Package className="w-4 h-4" />
@@ -626,6 +632,24 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                   <CardContent className="text-center py-20">
                     <FileText className="w-12 h-12 text-prism-text-muted mx-auto mb-4" />
                     <p className="text-prism-text-muted">Generate a web app to start editing</p>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            <TabsContent value="visual" className="flex-1 mt-4">
+              {generatedApp ? (
+                <VisualEditor
+                  html={generatedApp.html}
+                  css={generatedApp.css}
+                  javascript={generatedApp.javascript}
+                  onCodeChange={(type, content) => handleFileChange(type, content)}
+                />
+              ) : (
+                <Card className="h-full flex items-center justify-center">
+                  <CardContent className="text-center py-20">
+                    <Eye className="w-12 h-12 text-prism-text-muted mx-auto mb-4" />
+                    <p className="text-prism-text-muted">Generate a web app to start visual editing</p>
                   </CardContent>
                 </Card>
               )}
