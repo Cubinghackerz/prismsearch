@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle, Clock, Code, Package, Lightbulb, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+
 interface PlanStep {
   id: string;
   title: string;
@@ -11,7 +12,9 @@ interface PlanStep {
   estimatedTime: string;
   complexity: 'low' | 'medium' | 'high';
   packages?: string[];
+  frameworks?: string[];
 }
+
 interface ThinkingPlan {
   title: string;
   description: string;
@@ -19,8 +22,10 @@ interface ThinkingPlan {
   complexity: 'low' | 'medium' | 'high';
   steps: PlanStep[];
   recommendedPackages: string[];
+  recommendedFrameworks: string[];
   potentialChallenges: string[];
 }
+
 interface ThinkingPlanDialogProps {
   isOpen: boolean;
   plan: ThinkingPlan | null;
@@ -28,6 +33,7 @@ interface ThinkingPlanDialogProps {
   onApprove: () => void;
   onReject: () => void;
 }
+
 const ThinkingPlanDialog: React.FC<ThinkingPlanDialogProps> = ({
   isOpen,
   plan,
@@ -47,7 +53,9 @@ const ThinkingPlanDialog: React.FC<ThinkingPlanDialogProps> = ({
         return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
     }
   };
-  return <Dialog open={isOpen} onOpenChange={() => {}}>
+
+  return (
+    <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
@@ -56,12 +64,15 @@ const ThinkingPlanDialog: React.FC<ThinkingPlanDialogProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        {isLoading ? <div className="flex items-center justify-center py-12">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
             <div className="text-center space-y-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
               <p className="text-prism-text-muted">AI is analyzing your request and creating a development plan...</p>
             </div>
-          </div> : plan ? <div className="space-y-6">
+          </div>
+        ) : plan ? (
+          <div className="space-y-6">
             {/* Plan Overview */}
             <Card>
               <CardContent className="pt-6">
@@ -74,7 +85,6 @@ const ThinkingPlanDialog: React.FC<ThinkingPlanDialogProps> = ({
                     <Badge className={getComplexityColor(plan.complexity)}>
                       {plan.complexity.toUpperCase()} COMPLEXITY
                     </Badge>
-                    
                   </div>
                 </div>
               </CardContent>
@@ -87,7 +97,8 @@ const ThinkingPlanDialog: React.FC<ThinkingPlanDialogProps> = ({
                 Development Steps
               </h4>
               <div className="space-y-3">
-                {plan.steps.map((step, index) => <Card key={step.id} className="border-l-4 border-l-orange-500">
+                {plan.steps.map((step, index) => (
+                  <Card key={step.id} className="border-l-4 border-l-orange-500">
                     <CardContent className="pt-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -101,48 +112,91 @@ const ThinkingPlanDialog: React.FC<ThinkingPlanDialogProps> = ({
                             </Badge>
                           </div>
                           <p className="text-prism-text-muted text-sm ml-8">{step.description}</p>
-                          {step.packages && step.packages.length > 0 && <div className="ml-8 mt-2">
+                          {step.packages && step.packages.length > 0 && (
+                            <div className="ml-8 mt-2">
+                              <h6 className="text-xs font-medium text-prism-text mb-1">Packages:</h6>
                               <div className="flex flex-wrap gap-1">
-                                {step.packages.map(pkg => <span key={pkg} className="text-xs bg-prism-surface/20 px-2 py-1 rounded">
+                                {step.packages.map(pkg => (
+                                  <span key={pkg} className="text-xs bg-prism-surface/20 px-2 py-1 rounded">
                                     {pkg}
-                                  </span>)}
+                                  </span>
+                                ))}
                               </div>
-                            </div>}
+                            </div>
+                          )}
+                          {step.frameworks && step.frameworks.length > 0 && (
+                            <div className="ml-8 mt-2">
+                              <h6 className="text-xs font-medium text-prism-text mb-1">Frameworks:</h6>
+                              <div className="flex flex-wrap gap-1">
+                                {step.frameworks.map(framework => (
+                                  <span key={framework} className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded border border-purple-500/30">
+                                    {framework}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        
                       </div>
                     </CardContent>
-                  </Card>)}
+                  </Card>
+                ))}
               </div>
             </div>
 
             {/* Recommended Packages */}
-            {plan.recommendedPackages.length > 0 && <div>
+            {plan.recommendedPackages.length > 0 && (
+              <div>
                 <h4 className="text-lg font-semibold text-prism-text mb-4 flex items-center">
                   <Package className="w-5 h-5 mr-2 text-blue-400" />
                   Recommended Packages
                 </h4>
                 <div className="flex flex-wrap gap-2">
-                  {plan.recommendedPackages.map(pkg => <Badge key={pkg} variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/30">
+                  {plan.recommendedPackages.map(pkg => (
+                    <Badge key={pkg} variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/30">
                       {pkg}
-                    </Badge>)}
+                    </Badge>
+                  ))}
                 </div>
-              </div>}
+              </div>
+            )}
+
+            {/* Recommended Frameworks */}
+            {plan.recommendedFrameworks && plan.recommendedFrameworks.length > 0 && (
+              <div>
+                <h4 className="text-lg font-semibold text-prism-text mb-4 flex items-center">
+                  <Code className="w-5 h-5 mr-2 text-purple-400" />
+                  Recommended Frameworks
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {plan.recommendedFrameworks.map(framework => (
+                    <Badge key={framework} variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/30">
+                      {framework}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Potential Challenges */}
-            {plan.potentialChallenges.length > 0 && <div>
+            {plan.potentialChallenges.length > 0 && (
+              <div>
                 <h4 className="text-lg font-semibold text-prism-text mb-4 flex items-center">
                   <AlertTriangle className="w-5 h-5 mr-2 text-yellow-400" />
                   Potential Challenges
                 </h4>
                 <ul className="space-y-2">
-                  {plan.potentialChallenges.map((challenge, index) => <li key={index} className="flex items-start space-x-2 text-prism-text-muted">
+                  {plan.potentialChallenges.map((challenge, index) => (
+                    <li key={index} className="flex items-start space-x-2 text-prism-text-muted">
                       <AlertTriangle className="w-4 h-4 text-yellow-400 mt-0.5 flex-shrink-0" />
                       <span className="text-sm">{challenge}</span>
-                    </li>)}
+                    </li>
+                  ))}
                 </ul>
-              </div>}
-          </div> : null}
+              </div>
+            )}
+          </div>
+        ) : null}
 
         <DialogFooter className="flex space-x-2">
           <Button onClick={onReject} variant="outline" disabled={isLoading}>
@@ -154,7 +208,9 @@ const ThinkingPlanDialog: React.FC<ThinkingPlanDialogProps> = ({
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 };
+
 export default ThinkingPlanDialog;
 export type { ThinkingPlan, PlanStep };
