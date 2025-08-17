@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle } from "lucide-react";
+import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyQueryLimit } from "@/hooks/useDailyQueryLimit";
 import WebAppPreview from "./WebAppPreview";
 import ModelSelector, { AIModel } from "./ModelSelector";
-import FileViewer from "./FileViewer";
+import AdvancedCodeEditor from "./AdvancedCodeEditor";
+import PackageManager from "./PackageManager";
 import ProjectHistory from "./ProjectHistory";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -65,7 +66,6 @@ const WebAppGenerator = () => {
       }
     }
 
-    // Update existing project or add new one
     const existingIndex = projects.findIndex(p => p.id === projectId);
     if (existingIndex >= 0) {
       projects[existingIndex] = project;
@@ -73,7 +73,6 @@ const WebAppGenerator = () => {
       projects.unshift(project);
     }
 
-    // Keep only the last 50 projects
     projects = projects.slice(0, 50);
     
     localStorage.setItem('prism-code-projects', JSON.stringify(projects));
@@ -99,7 +98,6 @@ const WebAppGenerator = () => {
       return;
     }
 
-    // Check if we can increment the query count
     if (!incrementQueryCount()) {
       toast({
         title: "Daily Limit Reached",
@@ -112,7 +110,6 @@ const WebAppGenerator = () => {
     setIsGenerating(true);
     
     try {
-      // Build context from conversation history for continuation
       let contextPrompt = prompt;
       if (conversationHistory.length > 0) {
         contextPrompt = `Based on the previous web application, ${prompt}. 
@@ -201,15 +198,12 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       }
 
       setGeneratedApp(parsedApp);
-      setActiveRightTab('files');
+      setActiveRightTab('editor');
       
-      // Add to conversation history
       setConversationHistory(prev => [...prev, { prompt, response: parsedApp }]);
       
-      // Save project
       saveProject(prompt, parsedApp, modelToUse);
       
-      // Clear the prompt for next iteration
       setPrompt("");
       
       toast({
@@ -258,7 +252,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
     setCurrentProjectId(project.id);
     setConversationHistory([{ prompt: project.prompt, response: project.generatedApp }]);
     setPrompt("");
-    setActiveRightTab('files');
+    setActiveRightTab('editor');
   };
 
   const downloadApp = () => {
@@ -287,6 +281,21 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       title: "Files Downloaded",
       description: "All web app files have been downloaded to your device.",
     });
+  };
+
+  const handleFileChange = (fileType: string, content: string) => {
+    if (!generatedApp) return;
+
+    setGeneratedApp(prev => ({
+      ...prev!,
+      [fileType]: content
+    }));
+
+    // Auto-save changes
+    if (currentProjectId) {
+      const updatedApp = { ...generatedApp, [fileType]: content };
+      saveProject(conversationHistory[0]?.prompt || 'Modified project', updatedApp, selectedModel);
+    }
   };
 
   if (isFullscreen && generatedApp) {
@@ -334,7 +343,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
               </span>
             </div>
             <p className="text-prism-text-muted mt-2 font-inter">
-              Generate fully functional web applications using multiple AI models (10 queries/day)
+              Generate fully functional web applications with advanced code editing and package management
             </p>
           </div>
         </div>
@@ -353,14 +362,13 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       <Alert className="border-orange-500/30 bg-orange-500/5">
         <AlertTriangle className="h-4 w-4 text-orange-500" />
         <AlertDescription className="text-orange-300">
-          <strong>Beta Feature:</strong> This AI generator creates complete web applications with HTML, CSS, and JavaScript. 
-          Always review generated code before deployment. This feature uses advanced AI models and may consume significant resources.
+          <strong>Enhanced Features:</strong> Now with advanced Monaco Editor for professional code editing and package management capabilities.
         </AlertDescription>
       </Alert>
 
       {/* Split Layout */}
       <div className="flex gap-6 h-[calc(100vh-20rem)]">
-        {/* Left Side - Preview (Takes up 2/3 of the space) */}
+        {/* Left Side - Preview */}
         <div className="flex-1 lg:flex-[2]">
           {generatedApp ? (
             <div className="h-full flex flex-col">
@@ -400,17 +408,21 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
           )}
         </div>
 
-        {/* Right Side - Tabs (Takes up 1/3 of the space) */}
+        {/* Right Side - Tabs */}
         <div className="w-full lg:w-96 flex flex-col">
           <Tabs value={activeRightTab} onValueChange={setActiveRightTab} className="flex-1 flex flex-col">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="generator" className="flex items-center space-x-1">
                 <Wand2 className="w-4 h-4" />
-                <span>Generator</span>
+                <span>Generate</span>
               </TabsTrigger>
-              <TabsTrigger value="files" className="flex items-center space-x-1" disabled={!generatedApp}>
+              <TabsTrigger value="editor" className="flex items-center space-x-1" disabled={!generatedApp}>
                 <FileText className="w-4 h-4" />
-                <span>Files</span>
+                <span>Editor</span>
+              </TabsTrigger>
+              <TabsTrigger value="packages" className="flex items-center space-x-1">
+                <Package className="w-4 h-4" />
+                <span>Packages</span>
               </TabsTrigger>
             </TabsList>
 
@@ -486,17 +498,24 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
               </Card>
             </TabsContent>
 
-            <TabsContent value="files" className="flex-1 mt-4">
+            <TabsContent value="editor" className="flex-1 mt-4">
               {generatedApp ? (
-                <FileViewer generatedApp={generatedApp} />
+                <AdvancedCodeEditor 
+                  generatedApp={generatedApp} 
+                  onFileChange={handleFileChange}
+                />
               ) : (
                 <Card className="h-full flex items-center justify-center">
                   <CardContent className="text-center py-20">
                     <FileText className="w-12 h-12 text-prism-text-muted mx-auto mb-4" />
-                    <p className="text-prism-text-muted">Generate a web app to view files</p>
+                    <p className="text-prism-text-muted">Generate a web app to start editing</p>
                   </CardContent>
                 </Card>
               )}
+            </TabsContent>
+
+            <TabsContent value="packages" className="flex-1 mt-4">
+              <PackageManager />
             </TabsContent>
           </Tabs>
         </div>
