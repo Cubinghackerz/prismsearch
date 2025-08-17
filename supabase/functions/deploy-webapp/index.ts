@@ -5,6 +5,10 @@ import { corsHeaders } from '../_shared/cors.ts'
 const VERCEL_TOKEN = Deno.env.get('VERCEL_TOKEN');
 const NETLIFY_TOKEN = Deno.env.get('NETLIFY_TOKEN');
 
+// In-memory storage for development deployments
+// In a production scenario, you'd want to use Supabase Storage
+const developmentDeployments = new Map<string, Record<string, string>>();
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -135,16 +139,17 @@ async function deployToNetlify(projectName: string, files: Record<string, string
 }
 
 async function createDevelopmentLink(projectName: string, files: Record<string, string>) {
-  // Create a temporary hosting solution using a simple key-value store
+  // Create a unique deployment ID
   const deploymentId = crypto.randomUUID();
   
-  // In a real implementation, you might store these files in Supabase Storage
-  // For now, we'll create a simple development server response
+  // Store the files in memory (in production, you'd use Supabase Storage)
+  developmentDeployments.set(deploymentId, files);
+  
+  // Create the development URL
   const devUrl = `https://fgpdfkvabwemivzjeitx.supabase.co/functions/v1/serve-webapp?id=${deploymentId}`;
   
-  // Store the files temporarily (you might want to use Supabase Storage for this)
   console.log(`Development deployment created: ${deploymentId}`);
-  console.log('Files:', Object.keys(files));
+  console.log('Files stored:', Object.keys(files));
   
   return {
     developmentUrl: devUrl,
