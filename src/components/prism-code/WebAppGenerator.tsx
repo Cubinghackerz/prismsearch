@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain, Rocket } from "lucide-react";
+import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain, Rocket, Code } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyQueryLimit } from "@/hooks/useDailyQueryLimit";
@@ -15,6 +15,8 @@ import PackageManager from "./PackageManager";
 import ProjectHistory from "./ProjectHistory";
 import { v4 as uuidv4 } from 'uuid';
 import DeploymentDialog from "./DeploymentDialog";
+import { CodingLanguage, LANGUAGE_OPTIONS } from "./LanguageSelector";
+import ThinkingPlanDialog, { ThinkingPlan } from "./ThinkingPlanDialog";
 
 interface GeneratedApp {
   html: string;
@@ -42,10 +44,19 @@ const WebAppGenerator = () => {
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [conversationHistory, setConversationHistory] = useState<Array<{ prompt: string; response: GeneratedApp }>>([]);
   const [isThinking, setIsThinking] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<CodingLanguage>('javascript');
+  const [showThinkingPlan, setShowThinkingPlan] = useState(false);
+  const [thinkingPlan, setThinkingPlan] = useState<ThinkingPlan | null>(null);
+  const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
   const { toast } = useToast();
   const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
 
   const MODEL_FALLBACK_ORDER: AIModel[] = ['gemini', 'groq-llama4-maverick', 'groq-llama4-scout', 'groq-llama31-8b-instant'];
+
+  const getLanguagePackages = (language: CodingLanguage): string[] => {
+    const langOption = LANGUAGE_OPTIONS.find(opt => opt.id === language);
+    return langOption?.packages || [];
+  };
 
   const saveProject = (projectPrompt: string, app: GeneratedApp, model: string) => {
     const projectId = currentProjectId || uuidv4();
@@ -81,6 +92,104 @@ const WebAppGenerator = () => {
     setCurrentProjectId(projectId);
   };
 
+  const generateThinkingPlan = async (): Promise<ThinkingPlan | null> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
+        body: { 
+          query: `Create a detailed development plan for: ${prompt}
+
+Target Language/Framework: ${selectedLanguage}
+Available packages: ${getLanguagePackages(selectedLanguage).join(', ')}
+
+Please analyze this request and provide a JSON response with this exact structure:
+{
+  "title": "Brief project title",
+  "description": "2-3 sentence project description",
+  "totalTime": "estimated total time (e.g., '2-3 hours')",
+  "complexity": "low|medium|high",
+  "steps": [
+    {
+      "id": "step1",
+      "title": "Step title",
+      "description": "What will be done in this step",
+      "estimatedTime": "time estimate",
+      "complexity": "low|medium|high",
+      "packages": ["package1", "package2"]
+    }
+  ],
+  "recommendedPackages": ["package1", "package2"],
+  "potentialChallenges": ["challenge1", "challenge2"]
+}
+
+Focus on the selected language/framework and provide realistic time estimates and complexity assessments.`,
+          model: selectedModel,
+          chatId: 'plan-generation',
+          chatHistory: []
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      const responseText = data.response || '';
+      const cleanResponse = responseText.replace(/```json\n?|```\n?/g, '').trim();
+      
+      try {
+        const plan = JSON.parse(cleanResponse);
+        return plan;
+      } catch (parseError) {
+        // Fallback plan if parsing fails
+        return {
+          title: `${selectedLanguage.charAt(0).toUpperCase() + selectedLanguage.slice(1)} Application`,
+          description: `A custom application built with ${selectedLanguage} based on your requirements.`,
+          totalTime: "2-4 hours",
+          complexity: "medium" as const,
+          steps: [
+            {
+              id: "setup",
+              title: "Project Setup",
+              description: "Initialize project structure and dependencies",
+              estimatedTime: "15 minutes",
+              complexity: "low" as const,
+              packages: getLanguagePackages(selectedLanguage).slice(0, 3)
+            },
+            {
+              id: "core",
+              title: "Core Development",
+              description: "Implement main functionality based on requirements",
+              estimatedTime: "1-2 hours",
+              complexity: "medium" as const
+            },
+            {
+              id: "styling",
+              title: "Styling & UI",
+              description: "Add responsive design and user interface elements",
+              estimatedTime: "30-45 minutes",
+              complexity: "low" as const
+            },
+            {
+              id: "testing",
+              title: "Testing & Refinement",
+              description: "Test functionality and make final adjustments",
+              estimatedTime: "30 minutes",
+              complexity: "low" as const
+            }
+          ],
+          recommendedPackages: getLanguagePackages(selectedLanguage),
+          potentialChallenges: [
+            "Browser compatibility across different devices",
+            "Performance optimization for larger datasets",
+            "Responsive design implementation"
+          ]
+        };
+      }
+    } catch (error) {
+      console.error('Error generating thinking plan:', error);
+      return null;
+    }
+  };
+
   const thinkAboutProject = async () => {
     if (!prompt.trim()) {
       toast({
@@ -109,55 +218,22 @@ const WebAppGenerator = () => {
       return;
     }
 
-    setIsThinking(true);
+    setIsGeneratingPlan(true);
+    setShowThinkingPlan(true);
     
-    try {
-      const thinkingPrompt = `Analyze this web application idea and provide detailed thoughts: ${prompt}
+    const plan = await generateThinkingPlan();
+    setThinkingPlan(plan);
+    setIsGeneratingPlan(false);
+  };
 
-Please consider:
-1. Technical feasibility and complexity
-2. Recommended technologies, frameworks, and packages
-3. Potential challenges and solutions
-4. Architecture suggestions
-5. Feature breakdown and implementation approach
-6. Security considerations
-7. Performance optimization opportunities
+  const handlePlanApproval = async () => {
+    setShowThinkingPlan(false);
+    await generateWebApp();
+  };
 
-Provide a comprehensive analysis without generating code.`;
-
-      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
-        body: { 
-          query: thinkingPrompt,
-          model: selectedModel,
-          chatId: currentProjectId || 'webapp-thinking',
-          chatHistory: []
-        }
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      const analysis = data.response || 'No analysis received';
-      
-      toast({
-        title: "Analysis Complete",
-        description: "AI has analyzed your project idea. Check the chat for detailed insights.",
-      });
-
-      // You could display this analysis in a modal or dedicated area
-      console.log('Project Analysis:', analysis);
-      
-    } catch (error) {
-      console.error('Error analyzing project:', error);
-      toast({
-        title: "Analysis Failed",
-        description: `Failed to analyze project: ${error.message}`,
-        variant: "destructive"
-      });
-    } finally {
-      setIsThinking(false);
-    }
+  const handlePlanRejection = () => {
+    setShowThinkingPlan(false);
+    setThinkingPlan(null);
   };
 
   const generateWebApp = async (modelToUse: AIModel = selectedModel, isRetry: boolean = false) => {
@@ -192,8 +268,13 @@ Provide a comprehensive analysis without generating code.`;
     
     try {
       let contextPrompt = prompt;
+      const languageContext = `Target Language/Framework: ${selectedLanguage}
+Available packages: ${getLanguagePackages(selectedLanguage).join(', ')}`;
+      
       if (conversationHistory.length > 0) {
         contextPrompt = `Based on the previous web application, ${prompt}. 
+
+${languageContext}
 
 Previous conversation context:
 ${conversationHistory.slice(-3).map((item, index) => 
@@ -202,17 +283,23 @@ ${conversationHistory.slice(-3).map((item, index) =>
 ).join('\n\n')}
 
 Please modify or enhance the current application accordingly.`;
+      } else {
+        contextPrompt = `${prompt}
+
+${languageContext}`;
       }
 
       const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
         body: { 
           query: `Generate a complete web application based on this description: ${contextPrompt}. 
 
+Make sure to use ${selectedLanguage} as the primary language/framework and incorporate relevant packages from: ${getLanguagePackages(selectedLanguage).join(', ')}
+
 Please return ONLY a valid JSON object with this exact structure:
 {
   "html": "complete HTML content",
   "css": "complete CSS styles", 
-  "javascript": "complete JavaScript code",
+  "javascript": "complete JavaScript code optimized for ${selectedLanguage}",
   "description": "brief description of the app",
   "features": ["feature 1", "feature 2", "feature 3"]
 }
@@ -289,7 +376,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       
       toast({
         title: "Web App Generated!",
-        description: `Your web application has been created successfully using ${modelToUse}.`,
+        description: `Your ${selectedLanguage} application has been created successfully using ${modelToUse}.`,
       });
     } catch (error) {
       console.error(`Error generating web app with ${modelToUse}:`, error);
@@ -412,7 +499,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/10 to-yellow-500/10 border border-orange-500/20">
-            <Globe className="w-8 h-8 text-orange-400" />
+            <Code className="w-8 h-8 text-orange-400" />
           </div>
           <div>
             <div className="flex items-center space-x-3">
@@ -424,7 +511,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
               </span>
             </div>
             <p className="text-prism-text-muted mt-2 font-inter">
-              Generate fully functional web applications with advanced code editing and package management
+              Generate {selectedLanguage} applications with advanced code editing and package management
             </p>
           </div>
         </div>
@@ -438,6 +525,31 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
           )}
         </div>
       </div>
+
+      {/* Language Selection Banner */}
+      <Alert className="border-blue-500/30 bg-blue-500/5">
+        <Code className="h-4 w-4 text-blue-500" />
+        <AlertDescription className="text-blue-300 flex items-center justify-between">
+          <span>
+            <strong>Current Language:</strong> {LANGUAGE_OPTIONS.find(opt => opt.id === selectedLanguage)?.name || selectedLanguage}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              // Reset to allow language change
+              setGeneratedApp(null);
+              setCurrentProjectId(null);
+              setConversationHistory([]);
+              setPrompt("");
+              // This would trigger parent component to show language selector
+              window.location.reload();
+            }}
+          >
+            Change Language
+          </Button>
+        </AlertDescription>
+      </Alert>
 
       {/* Beta Warning */}
       <Alert className="border-orange-500/30 bg-orange-500/5">
@@ -632,8 +744,44 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
             </TabsContent>
 
             <TabsContent value="packages" className="flex-1 mt-4">
-              <PackageManager />
+              <Card className="h-full">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Package className="w-5 h-5 text-prism-primary" />
+                    <span>{selectedLanguage.charAt(0).toUpperCase() + selectedLanguage.slice(1)} Packages</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-semibold text-prism-text mb-2">Recommended for {selectedLanguage}:</h4>
+                      <div className="grid grid-cols-1 gap-2">
+                        {getLanguagePackages(selectedLanguage).map((pkg) => (
+                          <div key={pkg} className="flex items-center justify-between p-3 bg-prism-surface/10 rounded-lg border border-prism-border">
+                            <div className="flex items-center space-x-3">
+                              <Package className="w-4 h-4 text-prism-accent" />
+                              <span className="font-medium text-prism-text">{pkg}</span>
+                            </div>
+                            <Badge variant="outline" className="bg-green-500/10 text-green-400 border-green-500/30">
+                              Recommended
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
+
+            {/* Thinking Plan Dialog */}
+            <ThinkingPlanDialog
+              isOpen={showThinkingPlan}
+              plan={thinkingPlan}
+              isLoading={isGeneratingPlan}
+              onApprove={handlePlanApproval}
+              onReject={handlePlanRejection}
+            />
           </Tabs>
         </div>
       </div>
