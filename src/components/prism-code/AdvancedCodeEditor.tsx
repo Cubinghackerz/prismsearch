@@ -208,7 +208,6 @@ const AdvancedCodeEditor: React.FC<AdvancedCodeEditorProps> = ({
                 roundedSelection: false,
                 readOnly: false,
                 cursorStyle: 'line',
-                automaticLayout: true,
                 glyphMargin: true,
                 folding: true,
                 showFoldingControls: 'always',
