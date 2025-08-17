@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Template, Sparkles, Code, Globe, Server } from 'lucide-react';
+import { FolderOpen, Sparkles, Code, Globe, Server } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface FrameworkTemplate {
@@ -449,7 +449,7 @@ const FrameworkTemplates: React.FC<FrameworkTemplatesProps> = ({ onTemplateSelec
       case 'frontend': return Code;
       case 'backend': return Server;
       case 'fullstack': return Globe;
-      default: return Template;
+      default: return FolderOpen;
     }
   };
 
@@ -457,7 +457,7 @@ const FrameworkTemplates: React.FC<FrameworkTemplatesProps> = ({ onTemplateSelec
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
-          <Template className="w-4 h-4 mr-2" />
+          <FolderOpen className="w-4 h-4 mr-2" />
           Templates
         </Button>
       </DialogTrigger>

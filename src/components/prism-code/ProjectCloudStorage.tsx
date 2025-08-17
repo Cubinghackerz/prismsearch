@@ -106,12 +106,24 @@ const ProjectCloudStorage: React.FC<ProjectCloudStorageProps> = ({
         .eq('user_id', user.id)
         .order('updated_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') throw error;
 
       if (data) {
-        onProjectLoad(data);
+        const projectData: ProjectData = {
+          id: data.id,
+          name: data.name,
+          files: data.files as { [key: string]: string },
+          packages: data.packages as Array<{
+            name: string;
+            version: string;
+            type: 'dependency' | 'devDependency';
+          }>,
+          description: data.description || '',
+          features: data.features || []
+        };
+        onProjectLoad(projectData);
         toast({
           title: "Project Loaded",
           description: "Your latest project has been loaded from the cloud.",
