@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Code2, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain, Rocket, Github, GitBranch, Save } from "lucide-react";
+import { Settings, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain, Rocket, Github, GitBranch, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyQueryLimit } from "@/hooks/useDailyQueryLimit";
@@ -16,6 +16,7 @@ import ProjectHistory from "./ProjectHistory";
 import { v4 as uuidv4 } from 'uuid';
 import DeploymentDialog from "./DeploymentDialog";
 import GitHubSyncDialog from "./GitHubSyncDialog";
+import GitHubSyncService from "@/services/githubSyncService";
 
 interface GeneratedApp {
   html: string;
@@ -44,10 +45,40 @@ const WebAppGenerator = () => {
   const [conversationHistory, setConversationHistory] = useState<Array<{ prompt: string; response: GeneratedApp }>>([]);
   const [isThinking, setIsThinking] = useState(false);
   const [showGitHubSync, setShowGitHubSync] = useState(false);
+  const [isAutoSyncEnabled, setIsAutoSyncEnabled] = useState(false);
   const { toast } = useToast();
   const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
+  const githubSyncService = GitHubSyncService.getInstance();
 
   const MODEL_FALLBACK_ORDER: AIModel[] = ['gemini', 'groq-llama4-maverick', 'groq-llama4-scout', 'groq-llama31-8b-instant'];
+
+  useEffect(() => {
+    githubSyncService.loadSyncSettings();
+    setIsAutoSyncEnabled(githubSyncService.isAutoSyncEnabled());
+  }, []);
+
+  useEffect(() => {
+    if (generatedApp && isAutoSyncEnabled) {
+      const performAutoSync = async () => {
+        const success = await githubSyncService.syncGeneratedApp(
+          generatedApp.html,
+          generatedApp.css,
+          generatedApp.javascript,
+          generatedApp.description
+        );
+        
+        if (success) {
+          toast({
+            title: "Auto-Synced to GitHub",
+            description: "Your changes have been automatically pushed to GitHub.",
+          });
+        }
+      };
+
+      const timeoutId = setTimeout(performAutoSync, 2000);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [generatedApp, isAutoSyncEnabled, toast]);
 
   const saveProject = (projectPrompt: string, app: GeneratedApp, model: string) => {
     const projectId = currentProjectId || uuidv4();
@@ -330,6 +361,24 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
     setShowGitHubSync(true);
   };
 
+  const handleGitHubSyncComplete = (owner: string, repo: string, token: string) => {
+    githubSyncService.enableAutoSync(owner, repo, token);
+    setIsAutoSyncEnabled(true);
+    toast({
+      title: "Auto-Sync Enabled",
+      description: "Future changes will automatically sync to your GitHub repository.",
+    });
+  };
+
+  const disableAutoSync = () => {
+    githubSyncService.disableAutoSync();
+    setIsAutoSyncEnabled(false);
+    toast({
+      title: "Auto-Sync Disabled",
+      description: "Automatic GitHub syncing has been turned off.",
+    });
+  };
+
   const startNewProject = () => {
     setGeneratedApp(null);
     setCurrentProjectId(null);
@@ -381,16 +430,19 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
   const handleFileChange = (fileType: string, content: string) => {
     if (!generatedApp) return;
 
-    setGeneratedApp(prev => ({
-      ...prev!,
+    const updatedApp = {
+      ...generatedApp,
       [fileType]: content
-    }));
+    };
 
-    // Auto-save changes
+    setGeneratedApp(updatedApp);
+
+    // Auto-save changes to localStorage
     if (currentProjectId) {
-      const updatedApp = { ...generatedApp, [fileType]: content };
       saveProject(conversationHistory[0]?.prompt || 'Modified project', updatedApp, selectedModel);
     }
+
+    // Auto-sync will be triggered by useEffect
   };
 
   if (isFullscreen && generatedApp) {
@@ -426,7 +478,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/10 to-yellow-500/10 border border-orange-500/20">
-            <Code2 className="w-8 h-8 text-orange-400" />
+            <Settings className="w-8 h-8 text-orange-400" />
           </div>
           <div>
             <div className="flex items-center space-x-3">
@@ -436,9 +488,15 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
               <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-sm font-semibold rounded-full border border-orange-500/30 font-fira-code">
                 Beta
               </span>
+              {isAutoSyncEnabled && (
+                <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-semibold rounded-full border border-green-500/30 flex items-center">
+                  <Github className="w-3 h-3 mr-1" />
+                  Auto-Sync
+                </span>
+              )}
             </div>
             <p className="text-prism-text-muted mt-2 font-inter">
-              Generate fully functional web applications with code editing and GitHub sync
+              Generate fully functional web applications with automatic GitHub syncing
             </p>
           </div>
         </div>
@@ -446,10 +504,17 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
           <ProjectHistory onLoadProject={loadProject} />
           {generatedApp && (
             <>
-              <Button onClick={syncToGitHub} variant="outline" size="sm">
-                <Github className="w-4 h-4 mr-2" />
-                Sync to GitHub
-              </Button>
+              {isAutoSyncEnabled ? (
+                <Button onClick={disableAutoSync} variant="outline" size="sm">
+                  <Github className="w-4 h-4 mr-2" />
+                  Disable Auto-Sync
+                </Button>
+              ) : (
+                <Button onClick={syncToGitHub} variant="outline" size="sm">
+                  <Github className="w-4 h-4 mr-2" />
+                  Sync to GitHub
+                </Button>
+              )}
               <Button onClick={startNewProject} variant="outline" size="sm">
                 <Plus className="w-4 h-4 mr-2" />
                 New Project
@@ -463,7 +528,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       <Alert className="border-orange-500/30 bg-orange-500/5">
         <AlertTriangle className="h-4 w-4 text-orange-500" />
         <AlertDescription className="text-orange-300">
-          <strong>Enhanced Features:</strong> Now with GitHub repository sync, advanced Monaco Editor, and package management capabilities.
+          <strong>GitHub Integration:</strong> Connect your GitHub account to automatically sync all changes to your repository in real-time.
         </AlertDescription>
       </Alert>
 
@@ -658,12 +723,13 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
         </div>
       </div>
 
-      {/* GitHub Sync Dialog */}
+      {/* GitHub Sync Dialog with callback */}
       <GitHubSyncDialog 
         isOpen={showGitHubSync}
         onClose={() => setShowGitHubSync(false)}
         generatedApp={generatedApp}
         projectId={currentProjectId}
+        onSyncComplete={handleGitHubSyncComplete}
       />
     </div>
   );
