@@ -361,7 +361,7 @@ const FileConversionsPanel = () => {
         <AlertTriangle className="h-4 w-4 text-blue-500" />
         <AlertDescription className="text-blue-300">
           <strong>Note:</strong> File conversion is currently in beta. Some conversions may take longer than expected. 
-          Large files (>10MB) may have processing limits.
+          Large files ({'>'}10MB) may have processing limits.
         </AlertDescription>
       </Alert>
     </div>
