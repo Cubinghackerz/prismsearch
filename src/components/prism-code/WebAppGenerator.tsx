@@ -20,12 +20,20 @@ import LanguageSelector, { SupportedLanguage } from "./LanguageSelector";
 import { v4 as uuidv4 } from 'uuid';
 import DeploymentDialog from "./DeploymentDialog";
 
+interface GeneratedFile {
+  name: string;
+  content: string;
+  type: 'html' | 'css' | 'javascript' | 'typescript' | 'jsx' | 'tsx' | 'python' | 'json' | 'md';
+}
+
 interface GeneratedApp {
-  html: string;
-  css: string;
-  javascript: string;
+  files: GeneratedFile[];
   description: string;
   features: string[];
+  // Legacy support
+  html?: string;
+  css?: string;
+  javascript?: string;
 }
 
 interface ProjectHistoryItem {
@@ -213,6 +221,153 @@ const WebAppGenerator = () => {
     
     // Default to HTML/CSS/JS for basic apps
     return 'html-css-js';
+  };
+
+  const createTechStackPrompt = (basePrompt: string, language: SupportedLanguage): string => {
+    const actualLanguage = language === 'auto' ? selectOptimalLanguage(basePrompt) : language;
+    
+    let techPrompt = basePrompt + '\n\n';
+    
+    switch (actualLanguage) {
+      case 'react':
+        techPrompt += `Create a React application with TypeScript using the following structure:
+- Use functional components with hooks
+- Include proper TypeScript types and interfaces
+- Use modern React patterns (useState, useEffect, etc.)
+- Create multiple component files as needed
+- Include a package.json with required dependencies
+- Use CSS modules or styled-components for styling
+- Make it responsive and accessible
+
+Return a JSON object with this structure:
+{
+  "files": [
+    {"name": "package.json", "content": "...", "type": "json"},
+    {"name": "src/App.tsx", "content": "...", "type": "tsx"},
+    {"name": "src/components/ComponentName.tsx", "content": "...", "type": "tsx"},
+    {"name": "src/styles/App.css", "content": "...", "type": "css"},
+    {"name": "public/index.html", "content": "...", "type": "html"}
+  ],
+  "description": "...",
+  "features": [...]
+}`;
+        break;
+
+      case 'vue':
+        techPrompt += `Create a Vue.js 3 application using the following structure:
+- Use Composition API with <script setup>
+- Include TypeScript support
+- Create single-file components (.vue files)
+- Use Vue Router for navigation if needed
+- Include proper component structure
+- Make it responsive with modern CSS
+
+Return a JSON object with this structure:
+{
+  "files": [
+    {"name": "package.json", "content": "...", "type": "json"},
+    {"name": "src/App.vue", "content": "...", "type": "javascript"},
+    {"name": "src/components/ComponentName.vue", "content": "...", "type": "javascript"},
+    {"name": "src/main.ts", "content": "...", "type": "typescript"},
+    {"name": "index.html", "content": "...", "type": "html"}
+  ],
+  "description": "...",
+  "features": [...]
+}`;
+        break;
+
+      case 'svelte':
+        techPrompt += `Create a Svelte/SvelteKit application using the following structure:
+- Use modern Svelte syntax with reactive statements
+- Include TypeScript support
+- Create reusable Svelte components
+- Use Svelte's built-in state management
+- Make it responsive and accessible
+
+Return a JSON object with this structure:
+{
+  "files": [
+    {"name": "package.json", "content": "...", "type": "json"},
+    {"name": "src/App.svelte", "content": "...", "type": "javascript"},
+    {"name": "src/lib/ComponentName.svelte", "content": "...", "type": "javascript"},
+    {"name": "src/main.ts", "content": "...", "type": "typescript"},
+    {"name": "src/app.html", "content": "...", "type": "html"}
+  ],
+  "description": "...",
+  "features": [...]
+}`;
+        break;
+
+      case 'python-flask':
+        techPrompt += `Create a Python Flask web application using the following structure:
+- Use Flask with proper project structure
+- Include Jinja2 templates
+- Create multiple routes and views
+- Include requirements.txt
+- Use proper Flask patterns and blueprints if needed
+- Include static files (CSS/JS)
+
+Return a JSON object with this structure:
+{
+  "files": [
+    {"name": "app.py", "content": "...", "type": "python"},
+    {"name": "requirements.txt", "content": "...", "type": "md"},
+    {"name": "templates/index.html", "content": "...", "type": "html"},
+    {"name": "templates/base.html", "content": "...", "type": "html"},
+    {"name": "static/css/style.css", "content": "...", "type": "css"},
+    {"name": "static/js/main.js", "content": "...", "type": "javascript"}
+  ],
+  "description": "...",
+  "features": [...]
+}`;
+        break;
+
+      case 'node-express':
+        techPrompt += `Create a Node.js Express application using the following structure:
+- Use Express.js with proper MVC structure
+- Include EJS or React for frontend
+- Create API routes and middleware
+- Include package.json with dependencies
+- Use modern ES6+ JavaScript or TypeScript
+- Include database models if needed
+
+Return a JSON object with this structure:
+{
+  "files": [
+    {"name": "package.json", "content": "...", "type": "json"},
+    {"name": "server.js", "content": "...", "type": "javascript"},
+    {"name": "routes/index.js", "content": "...", "type": "javascript"},
+    {"name": "views/index.ejs", "content": "...", "type": "html"},
+    {"name": "public/css/style.css", "content": "...", "type": "css"},
+    {"name": "public/js/main.js", "content": "...", "type": "javascript"}
+  ],
+  "description": "...",
+  "features": [...]
+}`;
+        break;
+
+      default: // html-css-js
+        techPrompt += `Create a vanilla HTML/CSS/JavaScript application using the following structure:
+- Use semantic HTML5
+- Modern CSS3 with responsive design
+- Vanilla JavaScript (ES6+)
+- Separate files for better organization
+- Include any additional assets needed
+
+Return a JSON object with this structure:
+{
+  "files": [
+    {"name": "index.html", "content": "...", "type": "html"},
+    {"name": "css/style.css", "content": "...", "type": "css"},
+    {"name": "js/main.js", "content": "...", "type": "javascript"},
+    {"name": "js/utils.js", "content": "...", "type": "javascript"}
+  ],
+  "description": "...",
+  "features": [...]
+}`;
+    }
+
+    return techPrompt;
   };
 
   const thinkAboutProject = async () => {
@@ -421,9 +576,20 @@ Please create a complete, functional web application that follows this plan exac
     setIsGenerating(true);
     
     try {
-      let contextPrompt = enhancePromptWithSettings(prompt);
+      // Auto-select language if in auto mode
+      const actualLanguage = selectedLanguage === 'auto' ? selectOptimalLanguage(prompt) : selectedLanguage;
+      
+      if (selectedLanguage === 'auto') {
+        toast({
+          title: "Auto-Selected Language",
+          description: `Selected ${actualLanguage.replace('-', ' ').toUpperCase()} based on your requirements.`,
+        });
+      }
+
+      let contextPrompt = createTechStackPrompt(prompt, actualLanguage);
+      
       if (conversationHistory.length > 0) {
-        contextPrompt = `Based on the previous web application, ${contextPrompt}. 
+        contextPrompt = `Based on the previous web application, modify it according to this request: ${prompt}. 
 
 Previous conversation context:
 ${conversationHistory.slice(-3).map((item, index) => 
@@ -431,23 +597,12 @@ ${conversationHistory.slice(-3).map((item, index) =>
   Result: ${item.response.description}`
 ).join('\n\n')}
 
-Please modify or enhance the current application accordingly.`;
+Please modify or enhance the current application accordingly using the ${actualLanguage} technology stack.`;
       }
 
       const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
         body: { 
-          query: `Generate a complete web application based on this description: ${contextPrompt}. 
-
-Please return ONLY a valid JSON object with this exact structure:
-{
-  "html": "complete HTML content",
-  "css": "complete CSS styles", 
-  "javascript": "complete JavaScript code",
-  "description": "brief description of the app",
-  "features": ["feature 1", "feature 2", "feature 3"]
-}
-
-Make it responsive, modern, and fully functional. Do not include any markdown formatting or code blocks. Just the raw JSON.`,
+          query: contextPrompt,
           model: modelToUse,
           chatId: currentProjectId || 'webapp-generation',
           chatHistory: []
@@ -458,33 +613,71 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
         throw new Error(error.message);
       }
 
-      let parsedApp;
+      let parsedApp: GeneratedApp;
       try {
         const responseText = data.response || '';
         const cleanResponse = responseText.replace(/```json\n?|```\n?/g, '').trim();
-        parsedApp = JSON.parse(cleanResponse);
+        const jsonResponse = JSON.parse(cleanResponse);
+        
+        // Handle new file-based structure
+        if (jsonResponse.files && Array.isArray(jsonResponse.files)) {
+          parsedApp = {
+            files: jsonResponse.files,
+            description: jsonResponse.description || 'AI-generated web application',
+            features: jsonResponse.features || ['Modern design', 'Responsive layout', 'Interactive features']
+          };
+          
+          // Add legacy support for preview
+          const htmlFile = jsonResponse.files.find(f => f.name.includes('index.html') || f.type === 'html');
+          const cssFile = jsonResponse.files.find(f => f.type === 'css');
+          const jsFile = jsonResponse.files.find(f => f.type === 'javascript' || f.type === 'typescript');
+          
+          if (htmlFile) parsedApp.html = htmlFile.content;
+          if (cssFile) parsedApp.css = cssFile.content;
+          if (jsFile) parsedApp.javascript = jsFile.content;
+        } else {
+          // Fallback to old structure
+          parsedApp = {
+            files: [
+              { name: 'index.html', content: jsonResponse.html || '', type: 'html' },
+              { name: 'style.css', content: jsonResponse.css || '', type: 'css' },
+              { name: 'script.js', content: jsonResponse.javascript || '', type: 'javascript' }
+            ],
+            html: jsonResponse.html || '',
+            css: jsonResponse.css || '',
+            javascript: jsonResponse.javascript || '',
+            description: jsonResponse.description || 'AI-generated web application',
+            features: jsonResponse.features || ['Modern design', 'Responsive layout', 'Interactive features']
+          };
+        }
       } catch (parseError) {
-        const responseText = data.response || 'No response received';
+        console.error('Parse error:', parseError);
+        // Create fallback app
         parsedApp = {
-          html: `<!DOCTYPE html>
+          files: [
+            { 
+              name: 'index.html', 
+              content: `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generated Web App</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <h1>Generated Web Application</h1>
-        <div class="content">
-            ${responseText.replace(/\n/g, '<br>')}
-        </div>
+        <p>Your web application has been generated successfully!</p>
     </div>
     <script src="script.js"></script>
 </body>
-</html>`,
-          css: `body {
+</html>`, 
+              type: 'html' 
+            },
+            { 
+              name: 'style.css', 
+              content: `body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 20px;
@@ -497,15 +690,23 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-.content {
-    margin-top: 20px;
-    line-height: 1.6;
-}`,
-          javascript: `console.log('Web app generated successfully');`,
+}`, 
+              type: 'css' 
+            },
+            { 
+              name: 'script.js', 
+              content: `console.log('Web app generated successfully');`, 
+              type: 'javascript' 
+            }
+          ],
           description: 'AI-generated web application',
           features: ['Responsive design', 'Modern styling', 'Basic functionality']
         };
+        
+        // Add legacy support
+        parsedApp.html = parsedApp.files[0].content;
+        parsedApp.css = parsedApp.files[1].content;
+        parsedApp.javascript = parsedApp.files[2].content;
       }
 
       setGeneratedApp(parsedApp);
@@ -519,7 +720,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       
       toast({
         title: "Web App Generated!",
-        description: `Your web application has been created successfully using ${modelToUse}.`,
+        description: `Your ${actualLanguage.replace('-', ' ').toUpperCase()} application has been created successfully.`,
       });
     } catch (error) {
       console.error(`Error generating web app with ${modelToUse}:`, error);
@@ -579,11 +780,10 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
   const downloadApp = () => {
     if (!generatedApp) return;
 
-    const files = [
-      { name: 'index.html', content: generatedApp.html },
-      { name: 'styles.css', content: generatedApp.css },
-      { name: 'script.js', content: generatedApp.javascript },
-      { name: 'README.txt', content: `Generated Web App\n\nDescription: ${generatedApp.description}\n\nFeatures:\n${generatedApp.features.map(f => `- ${f}`).join('\n')}` }
+    const files = generatedApp.files || [
+      { name: 'index.html', content: generatedApp.html || '', type: 'html' },
+      { name: 'style.css', content: generatedApp.css || '', type: 'css' },
+      { name: 'script.js', content: generatedApp.javascript || '', type: 'javascript' }
     ];
 
     files.forEach(file => {
@@ -598,23 +798,50 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       URL.revokeObjectURL(url);
     });
 
+    // Also download README
+    const readmeContent = `# Generated Web App\n\nDescription: ${generatedApp.description}\n\nFeatures:\n${generatedApp.features.map(f => `- ${f}`).join('\n')}\n\nTechnology Stack: ${selectedLanguage.replace('-', ' ').toUpperCase()}`;
+    const readmeBlob = new Blob([readmeContent], { type: 'text/plain' });
+    const readmeUrl = URL.createObjectURL(readmeBlob);
+    const readmeLink = document.createElement('a');
+    readmeLink.href = readmeUrl;
+    readmeLink.download = 'README.md';
+    document.body.appendChild(readmeLink);
+    readmeLink.click();
+    document.body.removeChild(readmeLink);
+    URL.revokeObjectURL(readmeUrl);
+
     toast({
       title: "Files Downloaded",
-      description: "All web app files have been downloaded to your device.",
+      description: `All ${files.length} files have been downloaded to your device.`,
     });
   };
 
   const handleFileChange = (fileType: string, content: string) => {
     if (!generatedApp) return;
 
-    setGeneratedApp(prev => ({
-      ...prev!,
-      [fileType]: content
-    }));
+    if (generatedApp.files) {
+      // Handle new file structure
+      setGeneratedApp(prev => ({
+        ...prev!,
+        files: prev!.files.map(file => 
+          file.name === fileType ? { ...file, content } : file
+        )
+      }));
+    } else {
+      // Handle legacy structure
+      setGeneratedApp(prev => ({
+        ...prev!,
+        [fileType]: content
+      }));
+    }
 
     // Auto-save changes
     if (currentProjectId) {
-      const updatedApp = { ...generatedApp, [fileType]: content };
+      const updatedApp = generatedApp.files 
+        ? { ...generatedApp, files: generatedApp.files.map(file => 
+            file.name === fileType ? { ...file, content } : file
+          )}
+        : { ...generatedApp, [fileType]: content };
       saveProject(conversationHistory[0]?.prompt || 'Modified project', updatedApp, selectedModel);
     }
   };
@@ -647,9 +874,9 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
           </div>
           <div className="flex-1">
             <WebAppPreview
-              html={generatedApp.html}
-              css={generatedApp.css}
-              javascript={generatedApp.javascript}
+              html={generatedApp.html || generatedApp.files?.find(f => f.type === 'html')?.content || ''}
+              css={generatedApp.css || generatedApp.files?.find(f => f.type === 'css')?.content || ''}
+              javascript={generatedApp.javascript || generatedApp.files?.find(f => f.type === 'javascript')?.content || ''}
             />
           </div>
         </div>
@@ -722,7 +949,15 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
           {generatedApp ? (
             <div className="h-full flex flex-col">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-prism-text">Live Preview</h3>
+                <div className="flex items-center space-x-2">
+                  <h3 className="text-lg font-semibold text-prism-text">Live Preview</h3>
+                  <Badge variant="secondary" className="text-xs">
+                    {selectedLanguage === 'auto' ? 'AUTO' : selectedLanguage.replace('-', ' ').toUpperCase()}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {generatedApp.files?.length || 3} files
+                  </Badge>
+                </div>
                 <div className="flex space-x-2">
                   <Button
                     onClick={() => setIsFullscreen(true)}
@@ -746,9 +981,9 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
               </div>
               <div className="flex-1 bg-white rounded-lg border border-prism-border overflow-hidden">
                 <WebAppPreview
-                  html={generatedApp.html}
-                  css={generatedApp.css}
-                  javascript={generatedApp.javascript}
+                  html={generatedApp.html || generatedApp.files?.find(f => f.type === 'html')?.content || ''}
+                  css={generatedApp.css || generatedApp.files?.find(f => f.type === 'css')?.content || ''}
+                  javascript={generatedApp.javascript || generatedApp.files?.find(f => f.type === 'javascript')?.content || ''}
                 />
               </div>
             </div>
