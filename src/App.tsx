@@ -19,7 +19,6 @@ import PrismDetector from "./pages/PrismDetector";
 import ClerkAuth from "./pages/ClerkAuth";
 import SecureRedirect from "./pages/SecureRedirect";
 import PrismCode from "./pages/PrismCode";
-import PrismWebAppGenerator from "./pages/PrismWebAppGenerator";
 
 // Create QueryClient with optimized settings for better performance
 const queryClient = new QueryClient({
@@ -48,7 +47,6 @@ const AppContent: React.FC = () => {
         <Route path="/vault" element={<PrismVault />} />
         <Route path="/conversions" element={<PrismConversions />} />
         <Route path="/detector" element={<PrismDetector />} />
-        <Route path="/pages" element={<PrismWebAppGenerator />} />
         <Route path="/code" element={<PrismCode />} />
         <Route path="/auth" element={<ClerkAuth />} />
         <Route path="/secure-redirect" element={<SecureRedirect />} />
