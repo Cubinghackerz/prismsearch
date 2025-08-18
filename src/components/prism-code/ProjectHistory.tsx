@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge';
 import { History, Trash2, Eye, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { ProjectHistoryItem } from './types';
+
+interface GeneratedApp {
+  html: string;
+  css: string;
+  javascript: string;
+  description: string;
+  features: string[];
+}
+
+interface ProjectHistoryItem {
+  id: string;
+  prompt: string;
+  generatedApp: GeneratedApp;
+  model: string;
+  timestamp: Date;
+}
 
 interface ProjectHistoryProps {
   onLoadProject: (project: ProjectHistoryItem) => void;
@@ -26,32 +42,10 @@ const ProjectHistory: React.FC<ProjectHistoryProps> = ({ onLoadProject }) => {
     if (savedProjects) {
       try {
         const parsed = JSON.parse(savedProjects);
-        const convertedProjects = parsed.map((p: any) => {
-          // Convert legacy projects to new format
-          let generatedApp = p.generatedApp;
-          if (!generatedApp.files) {
-            generatedApp = {
-              files: [
-                { name: 'index.html', content: generatedApp.html || '', type: 'html' },
-                { name: 'style.css', content: generatedApp.css || '', type: 'css' },
-                { name: 'script.js', content: generatedApp.javascript || '', type: 'javascript' }
-              ].filter(file => file.content.trim()),
-              description: generatedApp.description || 'AI-generated web application',
-              features: generatedApp.features || ['Modern design', 'Responsive layout', 'Interactive features'],
-              // Keep legacy properties for backward compatibility
-              html: generatedApp.html,
-              css: generatedApp.css,
-              javascript: generatedApp.javascript
-            };
-          }
-          
-          return {
-            ...p,
-            generatedApp,
-            timestamp: new Date(p.timestamp)
-          };
-        });
-        setProjects(convertedProjects);
+        setProjects(parsed.map((p: any) => ({
+          ...p,
+          timestamp: new Date(p.timestamp)
+        })));
       } catch (error) {
         console.error('Error loading projects:', error);
       }
