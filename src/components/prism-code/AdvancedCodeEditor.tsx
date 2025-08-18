@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,22 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { FileText, Download, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
-
-interface GeneratedFile {
-  name: string;
-  content: string;
-  type: 'html' | 'css' | 'javascript' | 'typescript' | 'jsx' | 'tsx' | 'python' | 'json' | 'md';
-}
-
-interface GeneratedApp {
-  files?: GeneratedFile[];
-  // Legacy support
-  html?: string;
-  css?: string;
-  javascript?: string;
-  description: string;
-  features: string[];
-}
+import { GeneratedApp } from './types';
 
 interface AdvancedCodeEditorProps {
   generatedApp: GeneratedApp;
@@ -36,12 +20,8 @@ const AdvancedCodeEditor: React.FC<AdvancedCodeEditorProps> = ({
   const [copiedFile, setCopiedFile] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Get files from new structure or create from legacy structure
-  const files = generatedApp.files || [
-    { name: 'index.html', content: generatedApp.html || '', type: 'html' as const },
-    { name: 'style.css', content: generatedApp.css || '', type: 'css' as const },
-    { name: 'script.js', content: generatedApp.javascript || '', type: 'javascript' as const }
-  ].filter(file => file.content.trim()); // Only include files with content
+  // Get files from structure (guaranteed to exist now)
+  const files = generatedApp.files || [];
 
   const getFileIcon = (type: string) => {
     switch (type) {

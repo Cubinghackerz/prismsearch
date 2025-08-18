@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain, Rocket, Palette, Library, Zap } from "lucide-react";
+import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, Package, Brain, Rocket, Library } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyQueryLimit } from "@/hooks/useDailyQueryLimit";
@@ -19,54 +19,7 @@ import TemplateLibrary from "./TemplateLibrary";
 import LanguageSelector, { SupportedLanguage } from "./LanguageSelector";
 import { v4 as uuidv4 } from 'uuid';
 import DeploymentDialog from "./DeploymentDialog";
-
-interface GeneratedFile {
-  name: string;
-  content: string;
-  type: 'html' | 'css' | 'javascript' | 'typescript' | 'jsx' | 'tsx' | 'python' | 'json' | 'md';
-}
-
-interface GeneratedApp {
-  files: GeneratedFile[];
-  description: string;
-  features: string[];
-  // Legacy support
-  html?: string;
-  css?: string;
-  javascript?: string;
-}
-
-interface ProjectHistoryItem {
-  id: string;
-  prompt: string;
-  generatedApp: GeneratedApp;
-  model: string;
-  timestamp: Date;
-}
-
-interface DevelopmentPlan {
-  projectOverview: string;
-  colorScheme: {
-    primary: string;
-    secondary: string;
-    accent: string;
-    background: string;
-    text: string;
-  };
-  architecture: {
-    framework: string;
-    styling: string;
-    stateManagement: string;
-    routing: string;
-  };
-  features: string[];
-  packages: string[];
-  fileStructure: string[];
-  implementationSteps: string[];
-  securityConsiderations: string[];
-  performanceOptimizations: string[];
-  estimatedComplexity: 'Low' | 'Medium' | 'High';
-}
+import { GeneratedApp, ProjectHistoryItem, DevelopmentPlan } from "./types";
 
 const WebAppGenerator = () => {
   const [prompt, setPrompt] = useState("");
@@ -636,13 +589,13 @@ Please modify or enhance the current application accordingly using the ${actualL
           if (cssFile) parsedApp.css = cssFile.content;
           if (jsFile) parsedApp.javascript = jsFile.content;
         } else {
-          // Fallback to old structure
+          // Fallback to old structure - convert to new format
           parsedApp = {
             files: [
               { name: 'index.html', content: jsonResponse.html || '', type: 'html' },
               { name: 'style.css', content: jsonResponse.css || '', type: 'css' },
               { name: 'script.js', content: jsonResponse.javascript || '', type: 'javascript' }
-            ],
+            ].filter(file => file.content.trim()),
             html: jsonResponse.html || '',
             css: jsonResponse.css || '',
             javascript: jsonResponse.javascript || '',
