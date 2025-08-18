@@ -741,9 +741,18 @@ Please modify or enhance the current application accordingly using the ${actualL
 
   const loadProject = (project: ProjectHistoryItem) => {
     try {
-      setGeneratedApp(project.generatedApp);
+      // Ensure compatibility by providing default values for required legacy properties
+      const compatibleApp: GeneratedApp = {
+        ...project.generatedApp,
+        // Ensure required legacy properties are present
+        html: project.generatedApp.html || project.generatedApp.files?.find(f => f.type === 'html')?.content || '',
+        css: project.generatedApp.css || project.generatedApp.files?.find(f => f.type === 'css')?.content || '',
+        javascript: project.generatedApp.javascript || project.generatedApp.files?.find(f => f.type === 'javascript')?.content || ''
+      };
+
+      setGeneratedApp(compatibleApp);
       setCurrentProjectId(project.id);
-      setConversationHistory([{ prompt: project.prompt, response: project.generatedApp }]);
+      setConversationHistory([{ prompt: project.prompt, response: compatibleApp }]);
       setPrompt("");
       setActiveRightTab('editor');
     } catch (error) {
