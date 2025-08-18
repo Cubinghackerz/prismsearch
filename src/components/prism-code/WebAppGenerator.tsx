@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Copy, Download, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { saveAs } from 'file-saver';
+import JSZip from 'jszip';
 import { useAuth } from "@clerk/clerk-react";
 import {
   AlertDialog,
@@ -21,7 +22,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
-import { DeployDialog } from "@/components/prism-code/DeployDialog";
+import DeploymentDialog from "@/components/prism-code/DeploymentDialog";
 import ModelSelector, { AIModel } from "@/components/prism-code/ModelSelector";
 
 interface GeneratedApp {
@@ -243,16 +244,13 @@ const WebAppGenerator = () => {
         </div>
       )}
 
-      <DeployDialog
-        open={showDeploymentDialog}
-        setOpen={setShowDeploymentDialog}
-        html={generatedApp?.html || ''}
-        css={generatedApp?.css || ''}
-        javascript={generatedApp?.javascript || ''}
-      />
+      <DeploymentDialog generatedApp={generatedApp || { html: '', css: '', javascript: '', description: '', features: [] }}>
+        <Button variant="outline">
+          Deploy Web App <Upload className="ml-2 h-4 w-4" />
+        </Button>
+      </DeploymentDialog>
     </div>
   );
 };
 
 export default WebAppGenerator;
-import * as JSZip from 'jszip';
