@@ -544,21 +544,6 @@ Choose the most appropriate framework and file structure for the prompt. For sim
     });
   };
 
-  // Helper function to get preview content for legacy WebAppPreview component
-  const getPreviewContent = () => {
-    if (!generatedApp) return { html: '', css: '', javascript: '' };
-    
-    const htmlFile = generatedApp.files.find(f => f.language === 'html' || f.filename.endsWith('.html'));
-    const cssFile = generatedApp.files.find(f => f.language === 'css' || f.filename.endsWith('.css'));
-    const jsFile = generatedApp.files.find(f => f.language === 'javascript' || f.filename.endsWith('.js'));
-    
-    return {
-      html: htmlFile?.content || '',
-      css: cssFile?.content || '',
-      javascript: jsFile?.content || ''
-    };
-  };
-
   if (showCodeEditor && selectedFile) {
     return (
       <AdvancedCodeEditor
