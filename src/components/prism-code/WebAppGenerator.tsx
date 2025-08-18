@@ -613,11 +613,11 @@ Please modify or enhance the current application accordingly using the ${actualL
             javascript: typedFiles.find(f => f.type === 'javascript' || f.type === 'typescript')?.content || ''
           };
         } else {
-          // Fallback to old structure - convert to new format
+          // Fallback to old structure - convert to new format with proper typing
           const fallbackFiles: GeneratedFile[] = [
-            { name: 'index.html', content: jsonResponse.html || '', type: 'html' },
-            { name: 'style.css', content: jsonResponse.css || '', type: 'css' },
-            { name: 'script.js', content: jsonResponse.javascript || '', type: 'javascript' }
+            { name: 'index.html', content: jsonResponse.html || '', type: 'html' as const },
+            { name: 'style.css', content: jsonResponse.css || '', type: 'css' as const },
+            { name: 'script.js', content: jsonResponse.javascript || '', type: 'javascript' as const }
           ].filter(file => file.content.trim());
 
           parsedApp = {
@@ -631,7 +631,7 @@ Please modify or enhance the current application accordingly using the ${actualL
         }
       } catch (parseError) {
         console.error('Parse error:', parseError);
-        // Create fallback app
+        // Create fallback app with proper typing
         const fallbackFiles: GeneratedFile[] = [
           { 
             name: 'index.html', 
@@ -651,7 +651,7 @@ Please modify or enhance the current application accordingly using the ${actualL
     <script src="script.js"></script>
 </body>
 </html>`, 
-            type: 'html' 
+            type: 'html' as const
           },
           { 
             name: 'style.css', 
@@ -669,12 +669,12 @@ Please modify or enhance the current application accordingly using the ${actualL
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }`, 
-            type: 'css' 
+            type: 'css' as const
           },
           { 
             name: 'script.js', 
             content: `console.log('Web app generated successfully');`, 
-            type: 'javascript' 
+            type: 'javascript' as const
           }
         ];
 
@@ -741,9 +741,17 @@ Please modify or enhance the current application accordingly using the ${actualL
 
   const loadProject = (project: ProjectHistoryItem) => {
     try {
-      setGeneratedApp(project.generatedApp);
+      // Ensure the loaded project has the required properties
+      const loadedApp: GeneratedApp = {
+        ...project.generatedApp,
+        html: project.generatedApp.html || project.generatedApp.files?.find(f => f.type === 'html')?.content || '',
+        css: project.generatedApp.css || project.generatedApp.files?.find(f => f.type === 'css')?.content || '',
+        javascript: project.generatedApp.javascript || project.generatedApp.files?.find(f => f.type === 'javascript')?.content || ''
+      };
+      
+      setGeneratedApp(loadedApp);
       setCurrentProjectId(project.id);
-      setConversationHistory([{ prompt: project.prompt, response: project.generatedApp }]);
+      setConversationHistory([{ prompt: project.prompt, response: loadedApp }]);
       setPrompt("");
       setActiveRightTab('editor');
     } catch (error) {
