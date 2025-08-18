@@ -574,14 +574,14 @@ Please modify or enhance the current application accordingly using the ${actualL
         
         // Handle new file-based structure
         if (jsonResponse.files && Array.isArray(jsonResponse.files)) {
-          // Ensure all files have proper types
+          // Ensure all files have proper types with proper type assertion
           const typedFiles: GeneratedFile[] = jsonResponse.files.map((file: any) => {
             // Validate and fix file type
             const validTypes: Array<GeneratedFile['type']> = ['html', 'css', 'javascript', 'typescript', 'jsx', 'tsx', 'python', 'json', 'md'];
             let fileType: GeneratedFile['type'] = 'javascript'; // default
             
-            if (validTypes.includes(file.type)) {
-              fileType = file.type;
+            if (validTypes.includes(file.type as GeneratedFile['type'])) {
+              fileType = file.type as GeneratedFile['type'];
             } else {
               // Try to infer from file name
               const fileName = file.name.toLowerCase();
@@ -606,17 +606,12 @@ Please modify or enhance the current application accordingly using the ${actualL
           parsedApp = {
             files: typedFiles,
             description: jsonResponse.description || 'AI-generated web application',
-            features: jsonResponse.features || ['Modern design', 'Responsive layout', 'Interactive features']
+            features: jsonResponse.features || ['Modern design', 'Responsive layout', 'Interactive features'],
+            // Legacy support for preview
+            html: typedFiles.find(f => f.name.includes('index.html') || f.type === 'html')?.content || '',
+            css: typedFiles.find(f => f.type === 'css')?.content || '',
+            javascript: typedFiles.find(f => f.type === 'javascript' || f.type === 'typescript')?.content || ''
           };
-          
-          // Add legacy support for preview
-          const htmlFile = typedFiles.find(f => f.name.includes('index.html') || f.type === 'html');
-          const cssFile = typedFiles.find(f => f.type === 'css');
-          const jsFile = typedFiles.find(f => f.type === 'javascript' || f.type === 'typescript');
-          
-          if (htmlFile) parsedApp.html = htmlFile.content;
-          if (cssFile) parsedApp.css = cssFile.content;
-          if (jsFile) parsedApp.javascript = jsFile.content;
         } else {
           // Fallback to old structure - convert to new format
           const fallbackFiles: GeneratedFile[] = [
