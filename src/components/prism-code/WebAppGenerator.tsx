@@ -630,14 +630,6 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
     });
   };
 
-  const handleVisualDesignApply = (design: any) => {
-    setVisualDesignSettings(design);
-    toast({
-      title: "Design Applied",
-      description: "Visual design settings will be applied to your next generation.",
-    });
-  };
-
   if (isFullscreen && generatedApp) {
     return (
       <div className="fixed inset-0 z-50 bg-background">
