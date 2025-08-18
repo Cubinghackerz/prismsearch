@@ -19,7 +19,7 @@ import TemplateLibrary from "./TemplateLibrary";
 import LanguageSelector, { SupportedLanguage } from "./LanguageSelector";
 import { v4 as uuidv4 } from 'uuid';
 import DeploymentDialog from "./DeploymentDialog";
-import { GeneratedApp, ProjectHistoryItem, DevelopmentPlan } from "./types";
+import { GeneratedApp, ProjectHistoryItem, DevelopmentPlan, GeneratedFile } from "./types";
 
 const WebAppGenerator = () => {
   const [prompt, setPrompt] = useState("");
@@ -574,28 +574,59 @@ Please modify or enhance the current application accordingly using the ${actualL
         
         // Handle new file-based structure
         if (jsonResponse.files && Array.isArray(jsonResponse.files)) {
+          // Ensure all files have proper types
+          const typedFiles: GeneratedFile[] = jsonResponse.files.map((file: any) => {
+            // Validate and fix file type
+            const validTypes: Array<GeneratedFile['type']> = ['html', 'css', 'javascript', 'typescript', 'jsx', 'tsx', 'python', 'json', 'md'];
+            let fileType: GeneratedFile['type'] = 'javascript'; // default
+            
+            if (validTypes.includes(file.type)) {
+              fileType = file.type;
+            } else {
+              // Try to infer from file name
+              const fileName = file.name.toLowerCase();
+              if (fileName.endsWith('.html')) fileType = 'html';
+              else if (fileName.endsWith('.css')) fileType = 'css';
+              else if (fileName.endsWith('.tsx')) fileType = 'tsx';
+              else if (fileName.endsWith('.jsx')) fileType = 'jsx';
+              else if (fileName.endsWith('.ts')) fileType = 'typescript';
+              else if (fileName.endsWith('.js')) fileType = 'javascript';
+              else if (fileName.endsWith('.py')) fileType = 'python';
+              else if (fileName.endsWith('.json')) fileType = 'json';
+              else if (fileName.endsWith('.md')) fileType = 'md';
+            }
+
+            return {
+              name: file.name,
+              content: file.content || '',
+              type: fileType
+            };
+          });
+
           parsedApp = {
-            files: jsonResponse.files,
+            files: typedFiles,
             description: jsonResponse.description || 'AI-generated web application',
             features: jsonResponse.features || ['Modern design', 'Responsive layout', 'Interactive features']
           };
           
           // Add legacy support for preview
-          const htmlFile = jsonResponse.files.find(f => f.name.includes('index.html') || f.type === 'html');
-          const cssFile = jsonResponse.files.find(f => f.type === 'css');
-          const jsFile = jsonResponse.files.find(f => f.type === 'javascript' || f.type === 'typescript');
+          const htmlFile = typedFiles.find(f => f.name.includes('index.html') || f.type === 'html');
+          const cssFile = typedFiles.find(f => f.type === 'css');
+          const jsFile = typedFiles.find(f => f.type === 'javascript' || f.type === 'typescript');
           
           if (htmlFile) parsedApp.html = htmlFile.content;
           if (cssFile) parsedApp.css = cssFile.content;
           if (jsFile) parsedApp.javascript = jsFile.content;
         } else {
           // Fallback to old structure - convert to new format
+          const fallbackFiles: GeneratedFile[] = [
+            { name: 'index.html', content: jsonResponse.html || '', type: 'html' },
+            { name: 'style.css', content: jsonResponse.css || '', type: 'css' },
+            { name: 'script.js', content: jsonResponse.javascript || '', type: 'javascript' }
+          ].filter(file => file.content.trim());
+
           parsedApp = {
-            files: [
-              { name: 'index.html', content: jsonResponse.html || '', type: 'html' },
-              { name: 'style.css', content: jsonResponse.css || '', type: 'css' },
-              { name: 'script.js', content: jsonResponse.javascript || '', type: 'javascript' }
-            ].filter(file => file.content.trim()),
+            files: fallbackFiles,
             html: jsonResponse.html || '',
             css: jsonResponse.css || '',
             javascript: jsonResponse.javascript || '',
@@ -606,11 +637,10 @@ Please modify or enhance the current application accordingly using the ${actualL
       } catch (parseError) {
         console.error('Parse error:', parseError);
         // Create fallback app
-        parsedApp = {
-          files: [
-            { 
-              name: 'index.html', 
-              content: `<!DOCTYPE html>
+        const fallbackFiles: GeneratedFile[] = [
+          { 
+            name: 'index.html', 
+            content: `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -626,11 +656,11 @@ Please modify or enhance the current application accordingly using the ${actualL
     <script src="script.js"></script>
 </body>
 </html>`, 
-              type: 'html' 
-            },
-            { 
-              name: 'style.css', 
-              content: `body {
+            type: 'html' 
+          },
+          { 
+            name: 'style.css', 
+            content: `body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 20px;
@@ -644,22 +674,23 @@ Please modify or enhance the current application accordingly using the ${actualL
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }`, 
-              type: 'css' 
-            },
-            { 
-              name: 'script.js', 
-              content: `console.log('Web app generated successfully');`, 
-              type: 'javascript' 
-            }
-          ],
+            type: 'css' 
+          },
+          { 
+            name: 'script.js', 
+            content: `console.log('Web app generated successfully');`, 
+            type: 'javascript' 
+          }
+        ];
+
+        parsedApp = {
+          files: fallbackFiles,
           description: 'AI-generated web application',
-          features: ['Responsive design', 'Modern styling', 'Basic functionality']
+          features: ['Responsive design', 'Modern styling', 'Basic functionality'],
+          html: fallbackFiles[0].content,
+          css: fallbackFiles[1].content,
+          javascript: fallbackFiles[2].content
         };
-        
-        // Add legacy support
-        parsedApp.html = parsedApp.files[0].content;
-        parsedApp.css = parsedApp.files[1].content;
-        parsedApp.javascript = parsedApp.files[2].content;
       }
 
       setGeneratedApp(parsedApp);
@@ -734,9 +765,9 @@ Please modify or enhance the current application accordingly using the ${actualL
     if (!generatedApp) return;
 
     const files = generatedApp.files || [
-      { name: 'index.html', content: generatedApp.html || '', type: 'html' },
-      { name: 'style.css', content: generatedApp.css || '', type: 'css' },
-      { name: 'script.js', content: generatedApp.javascript || '', type: 'javascript' }
+      { name: 'index.html', content: generatedApp.html || '', type: 'html' as const },
+      { name: 'style.css', content: generatedApp.css || '', type: 'css' as const },
+      { name: 'script.js', content: generatedApp.javascript || '', type: 'javascript' as const }
     ];
 
     files.forEach(file => {
@@ -789,7 +820,7 @@ Please modify or enhance the current application accordingly using the ${actualL
     }
 
     // Auto-save changes
-    if (currentProjectId) {
+    if (currentProjectId && generatedApp) {
       const updatedApp = generatedApp.files 
         ? { ...generatedApp, files: generatedApp.files.map(file => 
             file.name === fileType ? { ...file, content } : file
