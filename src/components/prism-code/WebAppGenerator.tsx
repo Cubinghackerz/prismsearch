@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain, Rocket } from "lucide-react";
+import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain, Rocket, Palette, Library } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyQueryLimit } from "@/hooks/useDailyQueryLimit";
@@ -14,6 +14,9 @@ import AdvancedCodeEditor from "./AdvancedCodeEditor";
 import PackageManager from "./PackageManager";
 import ProjectHistory from "./ProjectHistory";
 import DevelopmentPlanDialog from "./DevelopmentPlanDialog";
+import TemplateLibrary from "./TemplateLibrary";
+import LanguageSelector, { SupportedLanguage } from "./LanguageSelector";
+import VisualDesignMode from "./VisualDesignMode";
 import { v4 as uuidv4 } from 'uuid';
 import DeploymentDialog from "./DeploymentDialog";
 
@@ -69,6 +72,10 @@ const WebAppGenerator = () => {
   const [isThinking, setIsThinking] = useState(false);
   const [developmentPlan, setDevelopmentPlan] = useState<DevelopmentPlan | null>(null);
   const [showPlanDialog, setShowPlanDialog] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>('html-css-js');
+  const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
+  const [showVisualDesign, setShowVisualDesign] = useState(false);
+  const [visualDesignSettings, setVisualDesignSettings] = useState(null);
   const { toast } = useToast();
   const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
 
@@ -306,6 +313,42 @@ Please create a complete, functional web application that follows this plan exac
     });
   };
 
+  const enhancePromptWithSettings = (basePrompt: string) => {
+    let enhancedPrompt = basePrompt;
+
+    // Add language/framework context
+    switch (selectedLanguage) {
+      case 'react':
+        enhancedPrompt += '\n\nTechnical Requirements: Use React with TypeScript, functional components with hooks, and modern React patterns. Include proper TypeScript types and interfaces.';
+        break;
+      case 'vue':
+        enhancedPrompt += '\n\nTechnical Requirements: Use Vue.js 3 with Composition API, TypeScript support, and single-file components. Include Vue Router for navigation.';
+        break;
+      case 'svelte':
+        enhancedPrompt += '\n\nTechnical Requirements: Use Svelte/SvelteKit with TypeScript. Leverage Svelte\'s built-in reactivity and compile-time optimizations.';
+        break;
+      case 'python-flask':
+        enhancedPrompt += '\n\nTechnical Requirements: Create a full-stack Python application using Flask, Jinja2 templates, and SQLAlchemy. Include proper project structure with blueprints.';
+        break;
+      case 'node-express':
+        enhancedPrompt += '\n\nTechnical Requirements: Build a full-stack Node.js application with Express.js backend, EJS or React frontend, and MongoDB/PostgreSQL database integration.';
+        break;
+      default:
+        enhancedPrompt += '\n\nTechnical Requirements: Use vanilla HTML5, CSS3, and modern JavaScript (ES6+). Focus on semantic HTML and responsive design.';
+    }
+
+    // Add visual design context
+    if (visualDesignSettings) {
+      enhancedPrompt += `\n\nDesign Requirements: 
+- Color Scheme: Primary: ${visualDesignSettings.colors.primary}, Secondary: ${visualDesignSettings.colors.secondary}, Accent: ${visualDesignSettings.colors.accent}, Background: ${visualDesignSettings.colors.background}, Text: ${visualDesignSettings.colors.text}
+- Typography: Heading font: ${visualDesignSettings.typography.headingFont}, Body font: ${visualDesignSettings.typography.bodyFont}, Font size: ${visualDesignSettings.typography.fontSize}
+- Layout: Container width: ${visualDesignSettings.layout.containerWidth}, Spacing: ${visualDesignSettings.layout.spacing}, Border radius: ${visualDesignSettings.layout.borderRadius}
+Apply these design specifications consistently throughout the application.`;
+    }
+
+    return enhancedPrompt;
+  };
+
   const generateWebApp = async (modelToUse: AIModel = selectedModel, isRetry: boolean = false) => {
     if (!prompt.trim()) {
       toast({
@@ -337,9 +380,9 @@ Please create a complete, functional web application that follows this plan exac
     setIsGenerating(true);
     
     try {
-      let contextPrompt = prompt;
+      let contextPrompt = enhancePromptWithSettings(prompt);
       if (conversationHistory.length > 0) {
-        contextPrompt = `Based on the previous web application, ${prompt}. 
+        contextPrompt = `Based on the previous web application, ${contextPrompt}. 
 
 Previous conversation context:
 ${conversationHistory.slice(-3).map((item, index) => 
@@ -526,6 +569,22 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
     }
   };
 
+  const handleTemplateSelect = (template: any) => {
+    setPrompt(template.prompt);
+    toast({
+      title: "Template Selected",
+      description: `Using ${template.name} template. You can modify the prompt before generating.`,
+    });
+  };
+
+  const handleVisualDesignApply = (design: any) => {
+    setVisualDesignSettings(design);
+    toast({
+      title: "Design Applied",
+      description: "Visual design settings will be applied to your next generation.",
+    });
+  };
+
   if (isFullscreen && generatedApp) {
     return (
       <div className="fixed inset-0 z-50 bg-background">
@@ -565,6 +624,20 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
         onClose={() => setShowPlanDialog(false)}
       />
 
+      {/* Template Library */}
+      <TemplateLibrary
+        isOpen={showTemplateLibrary}
+        onSelectTemplate={handleTemplateSelect}
+        onClose={() => setShowTemplateLibrary(false)}
+      />
+
+      {/* Visual Design Mode */}
+      <VisualDesignMode
+        isOpen={showVisualDesign}
+        onApplyDesign={handleVisualDesignApply}
+        onClose={() => setShowVisualDesign(false)}
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
@@ -577,11 +650,11 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                 AI Web App Generator
               </h2>
               <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-sm font-semibold rounded-full border border-orange-500/30 font-fira-code">
-                Beta
+                Enhanced
               </span>
             </div>
             <p className="text-prism-text-muted mt-2 font-inter">
-              Generate fully functional web applications with advanced code editing and package management
+              Generate web applications with templates, multi-language support, and visual design tools
             </p>
           </div>
         </div>
@@ -596,25 +669,17 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
         </div>
       </div>
 
-      {/* Beta Warning */}
-      <Alert className="border-orange-500/30 bg-orange-500/5">
-        <AlertTriangle className="h-4 w-4 text-orange-500" />
-        <AlertDescription className="text-orange-300">
-          <strong>Enhanced Features:</strong> Now with development planning, advanced Monaco Editor for professional code editing and package management capabilities.
-        </AlertDescription>
-      </Alert>
-
-      {/* Prompt Tips */}
+      {/* Enhanced Features Alert */}
       <Alert className="border-blue-500/30 bg-blue-500/5">
         <Sparkles className="h-4 w-4 text-blue-500" />
         <AlertDescription className="text-blue-300">
-          <strong>Pro Tip:</strong> Use the "Think" button to generate a detailed development plan with color schemes, architecture, and implementation steps before generating your app.
+          <strong>New Features:</strong> Template library, multi-language support, visual design mode, and enhanced development planning are now available!
         </AlertDescription>
       </Alert>
 
-      {/* Split Layout - Updated widths */}
+      {/* Split Layout */}
       <div className="flex gap-6 h-[calc(100vh-20rem)]">
-        {/* Left Side - Preview - Reduced flex weight */}
+        {/* Left Side - Preview */}
         <div className="flex-1">
           {generatedApp ? (
             <div className="h-full flex flex-col">
@@ -660,7 +725,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
           )}
         </div>
 
-        {/* Right Side - Tabs - Increased width significantly */}
+        {/* Right Side - Tabs */}
         <div className="w-[32rem] flex flex-col">
           <Tabs value={activeRightTab} onValueChange={setActiveRightTab} className="flex-1 flex flex-col">
             <TabsList className="grid w-full grid-cols-3">
@@ -683,10 +748,37 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Wand2 className="w-5 h-5 text-prism-primary" />
-                    <span>{generatedApp ? 'Continue Working' : 'Describe Your Web App'}</span>
+                    <span>{generatedApp ? 'Continue Working' : 'Create Your Web App'}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <div className="flex space-x-2">
+                    <Button
+                      onClick={() => setShowTemplateLibrary(true)}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                    >
+                      <Library className="w-4 h-4 mr-2" />
+                      Templates
+                    </Button>
+                    <Button
+                      onClick={() => setShowVisualDesign(true)}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                    >
+                      <Palette className="w-4 h-4 mr-2" />
+                      Design
+                    </Button>
+                  </div>
+
+                  <LanguageSelector
+                    selectedLanguage={selectedLanguage}
+                    onLanguageChange={setSelectedLanguage}
+                    disabled={isGenerating || isThinking}
+                  />
+
                   <ModelSelector
                     selectedModel={selectedModel}
                     onModelChange={setSelectedModel}
@@ -698,8 +790,8 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
                       placeholder={generatedApp ? 
-                        "Describe how you want to modify or enhance the current web app... Mention specific packages like 'Add Chart.js for data visualization' or 'Use Lodash for data manipulation'..." : 
-                        "Describe the web application you want to create... For example: 'Create a todo list app with drag and drop functionality using React Beautiful DnD, dark mode toggle, and local storage. Include animations with Framer Motion and use Tailwind CSS for styling.'"
+                        "Describe how you want to modify or enhance the current web app..." : 
+                        "Describe the web application you want to create... For example: 'Create a task management app with drag-and-drop functionality, user authentication, and real-time collaboration features.'"
                       }
                       className="min-h-[200px] resize-none bg-prism-surface/10 border-prism-border"
                       disabled={isGenerating || isThinking}
@@ -750,6 +842,13 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                     <div className="mt-4 p-3 bg-prism-surface/20 rounded-lg">
                       <h4 className="font-semibold text-prism-text mb-2 text-sm">Current Project:</h4>
                       <p className="text-prism-text-muted text-xs mb-3">{generatedApp.description}</p>
+
+                      <div className="flex items-center space-x-2 mb-2">
+                        <h4 className="font-semibold text-prism-text text-sm">Stack:</h4>
+                        <Badge variant="secondary" className="text-xs">
+                          {selectedLanguage.replace('-', ' ').toUpperCase()}
+                        </Badge>
+                      </div>
 
                       <h4 className="font-semibold text-prism-text mb-2 text-sm">Features:</h4>
                       <ul className="list-disc list-inside text-prism-text-muted text-xs space-y-1">
