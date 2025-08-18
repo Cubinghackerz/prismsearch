@@ -4,17 +4,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 
-export type SupportedLanguage = 'html-css-js' | 'react' | 'vue' | 'svelte' | 'python-flask' | 'node-express';
+export type SupportedLanguage = 'auto' | 'html-css-js' | 'react' | 'vue' | 'svelte' | 'python-flask' | 'node-express';
 
 interface Language {
   value: SupportedLanguage;
   label: string;
   description: string;
   features: string[];
-  complexity: 'Beginner' | 'Intermediate' | 'Advanced';
+  complexity: 'Auto' | 'Beginner' | 'Intermediate' | 'Advanced';
 }
 
 const LANGUAGES: Language[] = [
+  {
+    value: 'auto',
+    label: 'Auto Select',
+    description: 'AI chooses the best technology based on your requirements',
+    features: ['Smart Detection', 'Optimal Choice', 'Context Aware'],
+    complexity: 'Auto'
+  },
   {
     value: 'html-css-js',
     label: 'HTML/CSS/JavaScript',
@@ -89,8 +96,9 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                 <div className="flex items-center space-x-2">
                   <span className="font-medium">{language.label}</span>
                   <Badge 
-                    variant={language.complexity === 'Beginner' ? 'default' : 
-                            language.complexity === 'Intermediate' ? 'secondary' : 'destructive'}
+                    variant={language.complexity === 'Auto' ? 'default' :
+                            language.complexity === 'Beginner' ? 'secondary' : 
+                            language.complexity === 'Intermediate' ? 'outline' : 'destructive'}
                     className="text-xs"
                   >
                     {language.complexity}
@@ -112,7 +120,9 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
 
       {selectedLang && (
         <div className="p-3 bg-prism-surface/10 rounded-lg border border-prism-border">
-          <h4 className="text-sm font-medium text-prism-text mb-2">Selected Stack Features:</h4>
+          <h4 className="text-sm font-medium text-prism-text mb-2">
+            {selectedLang.value === 'auto' ? 'Auto Selection Features:' : 'Selected Stack Features:'}
+          </h4>
           <div className="flex flex-wrap gap-1">
             {selectedLang.features.map(feature => (
               <Badge key={feature} variant="secondary" className="text-xs">

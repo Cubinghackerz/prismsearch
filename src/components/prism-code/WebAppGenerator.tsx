@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain, Rocket, Palette, Library } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain, Rocket, Palette, Library, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyQueryLimit } from "@/hooks/useDailyQueryLimit";
@@ -16,7 +17,6 @@ import ProjectHistory from "./ProjectHistory";
 import DevelopmentPlanDialog from "./DevelopmentPlanDialog";
 import TemplateLibrary from "./TemplateLibrary";
 import LanguageSelector, { SupportedLanguage } from "./LanguageSelector";
-import VisualDesignMode from "./VisualDesignMode";
 import { v4 as uuidv4 } from 'uuid';
 import DeploymentDialog from "./DeploymentDialog";
 
@@ -72,47 +72,50 @@ const WebAppGenerator = () => {
   const [isThinking, setIsThinking] = useState(false);
   const [developmentPlan, setDevelopmentPlan] = useState<DevelopmentPlan | null>(null);
   const [showPlanDialog, setShowPlanDialog] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>('html-css-js');
+  const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>('auto');
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
-  const [showVisualDesign, setShowVisualDesign] = useState(false);
-  const [visualDesignSettings, setVisualDesignSettings] = useState(null);
   const { toast } = useToast();
   const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
 
   const MODEL_FALLBACK_ORDER: AIModel[] = ['gemini', 'groq-llama4-maverick', 'groq-llama4-scout', 'groq-llama31-8b-instant'];
 
   const saveProject = (projectPrompt: string, app: GeneratedApp, model: string) => {
-    const projectId = currentProjectId || uuidv4();
-    const project: ProjectHistoryItem = {
-      id: projectId,
-      prompt: projectPrompt,
-      generatedApp: app,
-      model: model,
-      timestamp: new Date()
-    };
+    try {
+      const projectId = currentProjectId || uuidv4();
+      const project: ProjectHistoryItem = {
+        id: projectId,
+        prompt: projectPrompt,
+        generatedApp: app,
+        model: model,
+        timestamp: new Date()
+      };
 
-    const savedProjects = localStorage.getItem('prism-code-projects');
-    let projects: ProjectHistoryItem[] = [];
-    
-    if (savedProjects) {
-      try {
-        projects = JSON.parse(savedProjects);
-      } catch (error) {
-        console.error('Error parsing saved projects:', error);
+      const savedProjects = localStorage.getItem('prism-code-projects');
+      let projects: ProjectHistoryItem[] = [];
+      
+      if (savedProjects) {
+        try {
+          projects = JSON.parse(savedProjects);
+        } catch (error) {
+          console.error('Error parsing saved projects:', error);
+          projects = [];
+        }
       }
-    }
 
-    const existingIndex = projects.findIndex(p => p.id === projectId);
-    if (existingIndex >= 0) {
-      projects[existingIndex] = project;
-    } else {
-      projects.unshift(project);
-    }
+      const existingIndex = projects.findIndex(p => p.id === projectId);
+      if (existingIndex >= 0) {
+        projects[existingIndex] = project;
+      } else {
+        projects.unshift(project);
+      }
 
-    projects = projects.slice(0, 50);
-    
-    localStorage.setItem('prism-code-projects', JSON.stringify(projects));
-    setCurrentProjectId(projectId);
+      projects = projects.slice(0, 50);
+      
+      localStorage.setItem('prism-code-projects', JSON.stringify(projects));
+      setCurrentProjectId(projectId);
+    } catch (error) {
+      console.error('Error saving project:', error);
+    }
   };
 
   const parseDevelopmentPlan = (planText: string): DevelopmentPlan | null => {
@@ -176,6 +179,42 @@ const WebAppGenerator = () => {
     }
   };
 
+  const selectOptimalLanguage = (promptText: string): SupportedLanguage => {
+    const lowerPrompt = promptText.toLowerCase();
+    
+    // Check for specific framework mentions
+    if (lowerPrompt.includes('react') || lowerPrompt.includes('jsx') || lowerPrompt.includes('component')) {
+      return 'react';
+    }
+    if (lowerPrompt.includes('vue') || lowerPrompt.includes('nuxt')) {
+      return 'vue';
+    }
+    if (lowerPrompt.includes('svelte') || lowerPrompt.includes('sveltekit')) {
+      return 'svelte';
+    }
+    if (lowerPrompt.includes('python') || lowerPrompt.includes('flask') || lowerPrompt.includes('django')) {
+      return 'python-flask';
+    }
+    if (lowerPrompt.includes('node') || lowerPrompt.includes('express') || lowerPrompt.includes('api') || lowerPrompt.includes('backend') || lowerPrompt.includes('database')) {
+      return 'node-express';
+    }
+    
+    // Check for complexity indicators
+    if (lowerPrompt.includes('dashboard') || lowerPrompt.includes('admin') || lowerPrompt.includes('management') || 
+        lowerPrompt.includes('crud') || lowerPrompt.includes('user auth') || lowerPrompt.includes('login')) {
+      return 'react';
+    }
+    
+    // Check for simple static site indicators
+    if (lowerPrompt.includes('landing') || lowerPrompt.includes('portfolio') || lowerPrompt.includes('blog') || 
+        lowerPrompt.includes('simple') || lowerPrompt.includes('static')) {
+      return 'html-css-js';
+    }
+    
+    // Default to HTML/CSS/JS for basic apps
+    return 'html-css-js';
+  };
+
   const thinkAboutProject = async () => {
     if (!prompt.trim()) {
       toast({
@@ -207,6 +246,16 @@ const WebAppGenerator = () => {
     setIsThinking(true);
     setShowPlanDialog(true);
     setDevelopmentPlan(null);
+
+    // Auto-select language if in auto mode
+    if (selectedLanguage === 'auto') {
+      const optimalLanguage = selectOptimalLanguage(prompt);
+      setSelectedLanguage(optimalLanguage);
+      toast({
+        title: "Auto-Selected Language",
+        description: `Selected ${optimalLanguage.replace('-', ' ').toUpperCase()} based on your requirements.`,
+      });
+    }
     
     try {
       const detailedPrompt = `Create a comprehensive development plan for this web application: "${prompt}"
@@ -315,9 +364,10 @@ Please create a complete, functional web application that follows this plan exac
 
   const enhancePromptWithSettings = (basePrompt: string) => {
     let enhancedPrompt = basePrompt;
+    const actualLanguage = selectedLanguage === 'auto' ? selectOptimalLanguage(basePrompt) : selectedLanguage;
 
     // Add language/framework context
-    switch (selectedLanguage) {
+    switch (actualLanguage) {
       case 'react':
         enhancedPrompt += '\n\nTechnical Requirements: Use React with TypeScript, functional components with hooks, and modern React patterns. Include proper TypeScript types and interfaces.';
         break;
@@ -335,15 +385,6 @@ Please create a complete, functional web application that follows this plan exac
         break;
       default:
         enhancedPrompt += '\n\nTechnical Requirements: Use vanilla HTML5, CSS3, and modern JavaScript (ES6+). Focus on semantic HTML and responsive design.';
-    }
-
-    // Add visual design context
-    if (visualDesignSettings) {
-      enhancedPrompt += `\n\nDesign Requirements: 
-- Color Scheme: Primary: ${visualDesignSettings.colors.primary}, Secondary: ${visualDesignSettings.colors.secondary}, Accent: ${visualDesignSettings.colors.accent}, Background: ${visualDesignSettings.colors.background}, Text: ${visualDesignSettings.colors.text}
-- Typography: Heading font: ${visualDesignSettings.typography.headingFont}, Body font: ${visualDesignSettings.typography.bodyFont}, Font size: ${visualDesignSettings.typography.fontSize}
-- Layout: Container width: ${visualDesignSettings.layout.containerWidth}, Spacing: ${visualDesignSettings.layout.spacing}, Border radius: ${visualDesignSettings.layout.borderRadius}
-Apply these design specifications consistently throughout the application.`;
     }
 
     return enhancedPrompt;
@@ -519,11 +560,20 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
   };
 
   const loadProject = (project: ProjectHistoryItem) => {
-    setGeneratedApp(project.generatedApp);
-    setCurrentProjectId(project.id);
-    setConversationHistory([{ prompt: project.prompt, response: project.generatedApp }]);
-    setPrompt("");
-    setActiveRightTab('editor');
+    try {
+      setGeneratedApp(project.generatedApp);
+      setCurrentProjectId(project.id);
+      setConversationHistory([{ prompt: project.prompt, response: project.generatedApp }]);
+      setPrompt("");
+      setActiveRightTab('editor');
+    } catch (error) {
+      console.error('Error loading project:', error);
+      toast({
+        title: "Error Loading Project",
+        description: "Failed to load the selected project. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const downloadApp = () => {
@@ -571,6 +621,9 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
 
   const handleTemplateSelect = (template: any) => {
     setPrompt(template.prompt);
+    if (template.language && template.language !== 'auto') {
+      setSelectedLanguage(template.language);
+    }
     toast({
       title: "Template Selected",
       description: `Using ${template.name} template. You can modify the prompt before generating.`,
@@ -631,13 +684,6 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
         onClose={() => setShowTemplateLibrary(false)}
       />
 
-      {/* Visual Design Mode */}
-      <VisualDesignMode
-        isOpen={showVisualDesign}
-        onApplyDesign={handleVisualDesignApply}
-        onClose={() => setShowVisualDesign(false)}
-      />
-
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
@@ -654,7 +700,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
               </span>
             </div>
             <p className="text-prism-text-muted mt-2 font-inter">
-              Generate web applications with templates, multi-language support, and visual design tools
+              Generate web applications with smart language selection and comprehensive planning
             </p>
           </div>
         </div>
@@ -673,7 +719,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       <Alert className="border-blue-500/30 bg-blue-500/5">
         <Sparkles className="h-4 w-4 text-blue-500" />
         <AlertDescription className="text-blue-300">
-          <strong>New Features:</strong> Template library, multi-language support, visual design mode, and enhanced development planning are now available!
+          <strong>New Features:</strong> Auto language selection, enhanced planning, and improved template library are now available!
         </AlertDescription>
       </Alert>
 
@@ -706,7 +752,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                   </Button>
                 </div>
               </div>
-              <div className="flex-1">
+              <div className="flex-1 bg-white rounded-lg border border-prism-border overflow-hidden">
                 <WebAppPreview
                   html={generatedApp.html}
                   css={generatedApp.css}
@@ -715,7 +761,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
               </div>
             </div>
           ) : (
-            <Card className="h-full flex items-center justify-center">
+            <Card className="h-full flex items-center justify-center bg-prism-surface/5">
               <CardContent className="text-center py-20">
                 <Globe className="w-16 h-16 text-prism-text-muted mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-prism-text mb-2">No Web App Generated Yet</h3>
@@ -744,7 +790,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
             </TabsList>
 
             <TabsContent value="generator" className="flex-1 flex flex-col mt-4">
-              <Card className="flex-1">
+              <Card className="flex-1 bg-prism-surface/5">
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Wand2 className="w-5 h-5 text-prism-primary" />
@@ -761,15 +807,6 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                     >
                       <Library className="w-4 h-4 mr-2" />
                       Templates
-                    </Button>
-                    <Button
-                      onClick={() => setShowVisualDesign(true)}
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                    >
-                      <Palette className="w-4 h-4 mr-2" />
-                      Design
                     </Button>
                   </div>
 
@@ -846,7 +883,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                       <div className="flex items-center space-x-2 mb-2">
                         <h4 className="font-semibold text-prism-text text-sm">Stack:</h4>
                         <Badge variant="secondary" className="text-xs">
-                          {selectedLanguage.replace('-', ' ').toUpperCase()}
+                          {selectedLanguage === 'auto' ? 'AUTO' : selectedLanguage.replace('-', ' ').toUpperCase()}
                         </Badge>
                       </div>
 
@@ -877,7 +914,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                   onFileChange={handleFileChange}
                 />
               ) : (
-                <Card className="h-full flex items-center justify-center">
+                <Card className="h-full flex items-center justify-center bg-prism-surface/5">
                   <CardContent className="text-center py-20">
                     <FileText className="w-12 h-12 text-prism-text-muted mx-auto mb-4" />
                     <p className="text-prism-text-muted">Generate a web app to start editing</p>
