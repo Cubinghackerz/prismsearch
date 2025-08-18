@@ -585,9 +585,7 @@ Choose the most appropriate framework and file structure for the prompt. For sim
             </Button>
           </div>
           <div className="flex-1">
-            <WebAppPreview
-              {...getPreviewContent()}
-            />
+            <WebAppPreview files={generatedApp.files} />
           </div>
         </div>
       </div>
@@ -683,9 +681,7 @@ Choose the most appropriate framework and file structure for the prompt. For sim
                 </div>
               </div>
               <div className="flex-1">
-                <WebAppPreview
-                  {...getPreviewContent()}
-                />
+                <WebAppPreview files={generatedApp.files} />
               </div>
             </div>
           ) : (
