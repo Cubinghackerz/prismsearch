@@ -39,13 +39,14 @@ const DeploymentDialog: React.FC<DeploymentDialogProps> = ({
       return;
     }
     setIsDeploying(platform);
-    const options: DeploymentOptions = {
-      platform,
+    
     // Convert GeneratedApp to deployment format
     const htmlFile = generatedApp.files.find(f => f.language === 'html' || f.filename.endsWith('.html'));
     const cssFile = generatedApp.files.find(f => f.language === 'css' || f.filename.endsWith('.css'));
     const jsFile = generatedApp.files.find(f => f.language === 'javascript' || f.filename.endsWith('.js'));
-    
+
+    const options: DeploymentOptions = {
+      platform,
       projectName: projectName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
       html: htmlFile?.content || '<html><body><h1>Generated App</h1></body></html>',
       css: cssFile?.content || 'body { font-family: Arial, sans-serif; }',
