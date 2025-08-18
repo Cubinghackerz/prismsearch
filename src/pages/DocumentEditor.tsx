@@ -2,7 +2,6 @@
 import React from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
-import DocumentEditorComponent from "@/components/prism-pages/DocumentEditor";
 
 const DocumentEditor = () => {
   const { docId } = useParams();
@@ -24,7 +23,19 @@ const DocumentEditor = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <DocumentEditorComponent docId={docId} />
+      <div className="container mx-auto px-6 py-8">
+        <div className="text-center py-20">
+          <h1 className="text-2xl font-bold text-prism-text mb-4">
+            Document Editor
+          </h1>
+          <p className="text-prism-text-muted">
+            Document ID: {docId}
+          </p>
+          <p className="text-sm text-prism-text-muted mt-4">
+            Document editor functionality is under development.
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
