@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from '../_shared/cors.ts'
 
@@ -247,35 +248,44 @@ async function generateWithOpenAI(prompt: string, model: string) {
 }
 
 function createSystemPrompt(): string {
-  return `You are a professional web developer AI that creates complete, functional web applications. 
+  return `You are a professional web developer AI that creates complete, functional web applications with modern frameworks and best practices.
 
-Given a user prompt, generate a complete web application with the following structure:
-- HTML: Complete, semantic HTML structure
-- CSS: Modern, responsive styling with animations and good UX
-- JavaScript: Functional, well-commented JavaScript code
-- Description: Brief description of the application
-- Features: Array of key features implemented
+Given a user prompt, analyze the requirements and choose the most appropriate framework and file structure:
 
-Guidelines:
-1. Use modern web standards (HTML5, CSS3, ES6+)
-2. Make it responsive and mobile-friendly
-3. Include proper accessibility features
-4. Use semantic HTML elements
-5. Implement smooth animations and transitions
-6. Ensure cross-browser compatibility
-7. Include error handling in JavaScript
-8. Make it visually appealing with modern design principles
-9. Use CSS Grid/Flexbox for layouts
-10. Include interactive elements and user feedback
+For simple apps: Use vanilla HTML/CSS/JavaScript
+For interactive apps: Use React, Vue, or Svelte based on complexity
+For enterprise apps: Consider Angular or React with TypeScript
 
 Return ONLY a valid JSON object with this exact structure:
 {
-  "html": "complete HTML content",
-  "css": "complete CSS styles",
-  "javascript": "complete JavaScript code",
+  "files": [
+    {
+      "filename": "string (e.g., index.html, App.tsx, main.css, package.json)",
+      "content": "string (complete file content)",
+      "language": "string (html, css, javascript, typescript, jsx, tsx, vue, svelte, json)",
+      "type": "string (component, style, config, asset, test)"
+    }
+  ],
   "description": "brief description of the app",
-  "features": ["feature 1", "feature 2", "feature 3"]
+  "features": ["feature 1", "feature 2", "feature 3"],
+  "framework": "string (vanilla, react, vue, svelte, angular)",
+  "packages": ["array of package names that would be npm installed"],
+  "devDependencies": ["array of dev packages like build tools, testing"],
+  "buildScript": "optional build command",
+  "startScript": "optional start command"
 }
+
+Guidelines:
+1. Choose appropriate framework based on complexity
+2. Include ALL necessary files for a complete, functional application
+3. Use modern web standards and best practices
+4. Make it responsive and accessible
+5. Include proper error handling
+6. Use semantic HTML and modern CSS (Grid/Flexbox)
+7. Include realistic package dependencies
+8. Ensure cross-browser compatibility
+9. Add TypeScript types when using React/Vue/Svelte
+10. Include build configuration when needed
 
 Do not include any markdown formatting or code blocks. Just the raw JSON.`;
 }
@@ -293,8 +303,15 @@ function parseAIResponse(content: string) {
   }
 
   // Validate the response structure
-  if (!parsedResponse.html || !parsedResponse.css || !parsedResponse.javascript) {
-    throw new Error('Incomplete web app generated');
+  if (!parsedResponse.files || !Array.isArray(parsedResponse.files)) {
+    throw new Error('Invalid files structure in web app response');
+  }
+
+  // Ensure each file has required properties
+  for (const file of parsedResponse.files) {
+    if (!file.filename || !file.content || !file.language) {
+      throw new Error('Incomplete file structure in web app response');
+    }
   }
 
   return parsedResponse;

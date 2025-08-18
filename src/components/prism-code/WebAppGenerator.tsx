@@ -11,51 +11,13 @@ import { useDailyQueryLimit } from "@/hooks/useDailyQueryLimit";
 import WebAppPreview from "./WebAppPreview";
 import ModelSelector, { AIModel } from "./ModelSelector";
 import AdvancedCodeEditor from "./AdvancedCodeEditor";
-import PackageManager from "./PackageManager";
+import FileExplorer from "./FileExplorer";
+import PackageDisplay from "./PackageDisplay";
 import ProjectHistory from "./ProjectHistory";
 import DevelopmentPlanDialog from "./DevelopmentPlanDialog";
 import { v4 as uuidv4 } from 'uuid';
 import DeploymentDialog from "./DeploymentDialog";
-
-interface GeneratedApp {
-  html: string;
-  css: string;
-  javascript: string;
-  description: string;
-  features: string[];
-}
-
-interface ProjectHistoryItem {
-  id: string;
-  prompt: string;
-  generatedApp: GeneratedApp;
-  model: string;
-  timestamp: Date;
-}
-
-interface DevelopmentPlan {
-  projectOverview: string;
-  colorScheme: {
-    primary: string;
-    secondary: string;
-    accent: string;
-    background: string;
-    text: string;
-  };
-  architecture: {
-    framework: string;
-    styling: string;
-    stateManagement: string;
-    routing: string;
-  };
-  features: string[];
-  packages: string[];
-  fileStructure: string[];
-  implementationSteps: string[];
-  securityConsiderations: string[];
-  performanceOptimizations: string[];
-  estimatedComplexity: 'Low' | 'Medium' | 'High';
-}
+import { GeneratedApp, GeneratedFile, ProjectHistoryItem, DevelopmentPlan } from './types';
 
 const WebAppGenerator = () => {
   const [prompt, setPrompt] = useState("");
@@ -69,6 +31,8 @@ const WebAppGenerator = () => {
   const [isThinking, setIsThinking] = useState(false);
   const [developmentPlan, setDevelopmentPlan] = useState<DevelopmentPlan | null>(null);
   const [showPlanDialog, setShowPlanDialog] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<GeneratedFile | null>(null);
+  const [showCodeEditor, setShowCodeEditor] = useState(false);
   const { toast } = useToast();
   const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
 
@@ -356,14 +320,24 @@ Please modify or enhance the current application accordingly.`;
 
 Please return ONLY a valid JSON object with this exact structure:
 {
-  "html": "complete HTML content",
-  "css": "complete CSS styles", 
-  "javascript": "complete JavaScript code",
+  "files": [
+    {
+      "filename": "string (e.g., index.html, App.tsx, main.css)",
+      "content": "string (complete file content)",
+      "language": "string (html, css, javascript, typescript, jsx, tsx, vue, svelte)",
+      "type": "string (component, style, config, asset, test)"
+    }
+  ],
   "description": "brief description of the app",
-  "features": ["feature 1", "feature 2", "feature 3"]
+  "features": ["feature 1", "feature 2", "feature 3"],
+  "framework": "string (vanilla, react, vue, svelte, angular)",
+  "packages": ["package names that would be installed"],
+  "devDependencies": ["dev package names"],
+  "buildScript": "string (optional build command)",
+  "startScript": "string (optional start command)"
 }
 
-Make it responsive, modern, and fully functional. Do not include any markdown formatting or code blocks. Just the raw JSON.`,
+Choose the most appropriate framework and file structure for the prompt. For simple apps use vanilla JS/HTML/CSS. For complex apps with state management use React/Vue/Svelte. Include all necessary files for a complete, functional application. Make it responsive, modern, and fully functional. Do not include any markdown formatting or code blocks. Just the raw JSON.`,
           model: modelToUse,
           chatId: currentProjectId || 'webapp-generation',
           chatHistory: []
@@ -380,15 +354,34 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
         const cleanResponse = responseText.replace(/```json\n?|```\n?/g, '').trim();
         parsedApp = JSON.parse(cleanResponse);
       } catch (parseError) {
+        // Fallback to old format
         const responseText = data.response || 'No response received';
         parsedApp = {
-          html: `<!DOCTYPE html>
+          files: [
+            {
+              filename: 'index.html',
+              content: `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generated Web App</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -397,35 +390,25 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
             ${responseText.replace(/\n/g, '<br>')}
         </div>
     </div>
-    <script src="script.js"></script>
+    <script>
+      console.log('Web app generated successfully');
+    </script>
 </body>
 </html>`,
-          css: `body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 20px;
-    background-color: #f5f5f5;
-}
-.container {
-    max-width: 800px;
-    margin: 0 auto;
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-.content {
-    margin-top: 20px;
-    line-height: 1.6;
-}`,
-          javascript: `console.log('Web app generated successfully');`,
+              language: 'html',
+              type: 'component'
+            }
+          ],
           description: 'AI-generated web application',
-          features: ['Responsive design', 'Modern styling', 'Basic functionality']
+          features: ['Responsive design', 'Modern styling', 'Basic functionality'],
+          framework: 'vanilla',
+          packages: [],
+          devDependencies: []
         };
       }
 
       setGeneratedApp(parsedApp);
-      setActiveRightTab('editor');
+      setActiveRightTab('files');
       
       setConversationHistory(prev => [...prev, { prompt, response: parsedApp }]);
       
@@ -435,7 +418,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       
       toast({
         title: "Web App Generated!",
-        description: `Your web application has been created successfully using ${modelToUse}.`,
+        description: `Your ${parsedApp.framework} application has been created successfully using ${modelToUse}.`,
       });
     } catch (error) {
       console.error(`Error generating web app with ${modelToUse}:`, error);
@@ -459,6 +442,30 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       });
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleFileSelect = (file: GeneratedFile) => {
+    setSelectedFile(file);
+    setShowCodeEditor(true);
+  };
+
+  const handleFileChange = (content: string) => {
+    if (!generatedApp || !selectedFile) return;
+
+    const updatedFiles = generatedApp.files.map(file => 
+      file.filename === selectedFile.filename 
+        ? { ...file, content }
+        : file
+    );
+
+    const updatedApp = { ...generatedApp, files: updatedFiles };
+    setGeneratedApp(updatedApp);
+    setSelectedFile({ ...selectedFile, content });
+
+    // Auto-save changes
+    if (currentProjectId) {
+      saveProject(conversationHistory[0]?.prompt || 'Modified project', updatedApp, selectedModel);
     }
   };
 
@@ -486,45 +493,66 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
   const downloadApp = () => {
     if (!generatedApp) return;
 
-    const files = [
-      { name: 'index.html', content: generatedApp.html },
-      { name: 'styles.css', content: generatedApp.css },
-      { name: 'script.js', content: generatedApp.javascript },
-      { name: 'README.txt', content: `Generated Web App\n\nDescription: ${generatedApp.description}\n\nFeatures:\n${generatedApp.features.map(f => `- ${f}`).join('\n')}` }
-    ];
-
-    files.forEach(file => {
+    generatedApp.files.forEach(file => {
       const blob = new Blob([file.content], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = file.name;
+      link.download = file.filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     });
 
+    // Also download package.json if packages exist
+    if (generatedApp.packages.length > 0) {
+      const packageJson = {
+        name: "generated-web-app",
+        version: "1.0.0",
+        description: generatedApp.description,
+        dependencies: generatedApp.packages.reduce((acc, pkg) => {
+          acc[pkg] = "latest";
+          return acc;
+        }, {} as Record<string, string>),
+        ...(generatedApp.devDependencies && generatedApp.devDependencies.length > 0 && {
+          devDependencies: generatedApp.devDependencies.reduce((acc, pkg) => {
+            acc[pkg] = "latest";   
+            return acc;
+          }, {} as Record<string, string>)
+        }),
+        scripts: {
+          ...(generatedApp.startScript && { start: generatedApp.startScript }),
+          ...(generatedApp.buildScript && { build: generatedApp.buildScript })
+        }
+      };
+
+      const blob = new Blob([JSON.stringify(packageJson, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'package.json';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
     toast({
       title: "Files Downloaded",
-      description: "All web app files have been downloaded to your device.",
+      description: `All ${generatedApp.files.length} files have been downloaded to your device.`,
     });
   };
 
-  const handleFileChange = (fileType: string, content: string) => {
-    if (!generatedApp) return;
-
-    setGeneratedApp(prev => ({
-      ...prev!,
-      [fileType]: content
-    }));
-
-    // Auto-save changes
-    if (currentProjectId) {
-      const updatedApp = { ...generatedApp, [fileType]: content };
-      saveProject(conversationHistory[0]?.prompt || 'Modified project', updatedApp, selectedModel);
-    }
-  };
+  if (showCodeEditor && selectedFile) {
+    return (
+      <AdvancedCodeEditor
+        file={selectedFile}
+        onFileChange={handleFileChange}
+        onClose={() => setShowCodeEditor(false)}
+      />
+    );
+  }
 
   if (isFullscreen && generatedApp) {
     return (
@@ -543,9 +571,9 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
           </div>
           <div className="flex-1">
             <WebAppPreview
-              html={generatedApp.html}
-              css={generatedApp.css}
-              javascript={generatedApp.javascript}
+              html={generatedApp.files.find(f => f.language === 'html')?.content || ''}
+              css={generatedApp.files.find(f => f.language === 'css')?.content || ''}
+              javascript={generatedApp.files.find(f => f.language === 'javascript')?.content || ''}
             />
           </div>
         </div>
@@ -612,9 +640,9 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
         </AlertDescription>
       </Alert>
 
-      {/* Split Layout - Updated widths */}
+      {/* Split Layout */}
       <div className="flex gap-6 h-[calc(100vh-20rem)]">
-        {/* Left Side - Preview - Reduced flex weight */}
+        {/* Left Side - Preview */}
         <div className="flex-1">
           {generatedApp ? (
             <div className="h-full flex flex-col">
@@ -643,9 +671,9 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
               </div>
               <div className="flex-1">
                 <WebAppPreview
-                  html={generatedApp.html}
-                  css={generatedApp.css}
-                  javascript={generatedApp.javascript}
+                  html={generatedApp.files.find(f => f.language === 'html')?.content || ''}
+                  css={generatedApp.files.find(f => f.language === 'css')?.content || ''}
+                  javascript={generatedApp.files.find(f => f.language === 'javascript')?.content || ''}
                 />
               </div>
             </div>
@@ -660,7 +688,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
           )}
         </div>
 
-        {/* Right Side - Tabs - Increased width significantly */}
+        {/* Right Side - Tabs */}
         <div className="w-[32rem] flex flex-col">
           <Tabs value={activeRightTab} onValueChange={setActiveRightTab} className="flex-1 flex flex-col">
             <TabsList className="grid w-full grid-cols-3">
@@ -668,11 +696,11 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                 <Wand2 className="w-4 h-4" />
                 <span>Generate</span>
               </TabsTrigger>
-              <TabsTrigger value="editor" className="flex items-center space-x-1" disabled={!generatedApp}>
+              <TabsTrigger value="files" className="flex items-center space-x-1" disabled={!generatedApp}>
                 <FileText className="w-4 h-4" />
-                <span>Editor</span>
+                <span>Files</span>
               </TabsTrigger>
-              <TabsTrigger value="packages" className="flex items-center space-x-1">
+              <TabsTrigger value="packages" className="flex items-center space-x-1" disabled={!generatedApp}>
                 <Package className="w-4 h-4" />
                 <span>Packages</span>
               </TabsTrigger>
@@ -771,24 +799,38 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
               </Card>
             </TabsContent>
 
-            <TabsContent value="editor" className="flex-1 mt-4">
+            <TabsContent value="files" className="flex-1 mt-4">
               {generatedApp ? (
-                <AdvancedCodeEditor 
-                  generatedApp={generatedApp} 
-                  onFileChange={handleFileChange}
+                <FileExplorer
+                  files={generatedApp.files}
+                  onFileSelect={handleFileSelect}
+                  selectedFile={selectedFile}
                 />
               ) : (
                 <Card className="h-full flex items-center justify-center">
                   <CardContent className="text-center py-20">
                     <FileText className="w-12 h-12 text-prism-text-muted mx-auto mb-4" />
-                    <p className="text-prism-text-muted">Generate a web app to start editing</p>
+                    <p className="text-prism-text-muted">Generate a web app to view files</p>
                   </CardContent>
                 </Card>
               )}
             </TabsContent>
 
             <TabsContent value="packages" className="flex-1 mt-4">
-              <PackageManager />
+              {generatedApp ? (
+                <PackageDisplay
+                  packages={generatedApp.packages}
+                  devDependencies={generatedApp.devDependencies}
+                  framework={generatedApp.framework}
+                />
+              ) : (
+                <Card className="h-full flex items-center justify-center">
+                  <CardContent className="text-center py-20">
+                    <Package className="w-12 h-12 text-prism-text-muted mx-auto mb-4" />
+                    <p className="text-prism-text-muted">Generate a web app to view packages</p>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
           </Tabs>
         </div>
