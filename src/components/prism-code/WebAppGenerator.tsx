@@ -741,17 +741,9 @@ Please modify or enhance the current application accordingly using the ${actualL
 
   const loadProject = (project: ProjectHistoryItem) => {
     try {
-      // Ensure the loaded project has the required properties
-      const loadedApp: GeneratedApp = {
-        ...project.generatedApp,
-        html: project.generatedApp.html || project.generatedApp.files?.find(f => f.type === 'html')?.content || '',
-        css: project.generatedApp.css || project.generatedApp.files?.find(f => f.type === 'css')?.content || '',
-        javascript: project.generatedApp.javascript || project.generatedApp.files?.find(f => f.type === 'javascript')?.content || ''
-      };
-      
-      setGeneratedApp(loadedApp);
+      setGeneratedApp(project.generatedApp);
       setCurrentProjectId(project.id);
-      setConversationHistory([{ prompt: project.prompt, response: loadedApp }]);
+      setConversationHistory([{ prompt: project.prompt, response: project.generatedApp }]);
       setPrompt("");
       setActiveRightTab('editor');
     } catch (error) {
