@@ -61,7 +61,7 @@ const WebAppGenerator = () => {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedApp, setGeneratedApp] = useState<GeneratedApp | null>(null);
-  const [selectedModel, setSelectedModel] = useState<AIModel>('gemini');
+  const [selectedModel, setSelectedModel] = useState<AIModel>('gemini-2.5-pro-exp-03-25');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeRightTab, setActiveRightTab] = useState('generator');
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
@@ -72,7 +72,7 @@ const WebAppGenerator = () => {
   const { toast } = useToast();
   const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
 
-  const MODEL_FALLBACK_ORDER: AIModel[] = ['gemini', 'groq-llama4-maverick', 'groq-llama4-scout', 'groq-llama31-8b-instant'];
+  const MODEL_FALLBACK_ORDER: AIModel[] = ['gemini-2.5-pro-exp-03-25', 'gemini', 'groq-llama4-maverick', 'groq-llama4-scout', 'groq-llama31-8b-instant'];
 
   const saveProject = (projectPrompt: string, app: GeneratedApp, model: string) => {
     const projectId = currentProjectId || uuidv4();

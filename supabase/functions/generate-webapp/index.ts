@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from '../_shared/cors.ts'
 
@@ -12,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, model = 'gemini' } = await req.json();
+    const { prompt, model = 'gemini-2.5-pro-exp-03-25' } = await req.json();
 
     if (!prompt) {
       throw new Error('Prompt is required');
@@ -21,6 +20,9 @@ serve(async (req) => {
     let response;
     
     switch (model) {
+      case 'gemini-2.5-pro-exp-03-25':
+        response = await generateWithGeminiProExp(prompt);
+        break;
       case 'gemini':
         response = await generateWithGemini(prompt);
         break;
@@ -67,6 +69,49 @@ serve(async (req) => {
     );
   }
 });
+
+async function generateWithGeminiProExp(prompt: string) {
+  if (!GEMINI_API_KEY) {
+    throw new Error('Gemini API key not configured');
+  }
+
+  const systemPrompt = createSystemPrompt();
+  
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      contents: [{
+        parts: [{
+          text: `${systemPrompt}\n\nUser Request: ${prompt}`
+        }]
+      }],
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 8192,
+      }
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Gemini Pro Exp API error:', response.status, errorText);
+    throw new Error(`Gemini Pro Exp API request failed: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  
+  if (!content) {
+    throw new Error('No content received from Gemini Pro Exp API');
+  }
+
+  return parseAIResponse(content);
+}
 
 async function generateWithGemini(prompt: string) {
   if (!GEMINI_API_KEY) {
