@@ -3,7 +3,7 @@ import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 
-export type AIModel = 'gemini-2.5-pro-exp-03-25' | 'gemini' | 'groq-llama4-maverick' | 'groq-llama4-scout' | 'groq-llama31-8b-instant';
+export type AIModel = 'gemini' | 'groq-llama4-maverick' | 'groq-llama4-scout' | 'groq-llama31-8b-instant';
 
 interface ModelSelectorProps {
   selectedModel: AIModel;
@@ -12,7 +12,6 @@ interface ModelSelectorProps {
 }
 
 const MODEL_OPTIONS = [
-  { value: 'gemini-2.5-pro-exp-03-25' as AIModel, label: 'Gemini 2.5 Pro Experimental', description: 'Google\'s most advanced experimental model - best for complex coding' },
   { value: 'gemini' as AIModel, label: 'Gemini 2.5 Flash', description: 'Google\'s latest model - excellent for coding' },
   { value: 'groq-llama4-maverick' as AIModel, label: 'Llama 4 Maverick', description: 'Meta\'s powerful coding model' },
   { value: 'groq-llama4-scout' as AIModel, label: 'Llama 4 Scout', description: 'Fast and efficient for development' },

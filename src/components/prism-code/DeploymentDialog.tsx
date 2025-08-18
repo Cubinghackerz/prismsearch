@@ -9,7 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Cloud, Globe, Rocket, ExternalLink, Copy, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { DeploymentService, DeploymentOptions } from '@/services/deploymentService';
-import { GeneratedApp } from './types';
+interface GeneratedApp {
+  html: string;
+  css: string;
+  javascript: string;
+  description: string;
+  features: string[];
+}
 interface DeploymentDialogProps {
   generatedApp: GeneratedApp;
   children: React.ReactNode;
@@ -39,18 +45,12 @@ const DeploymentDialog: React.FC<DeploymentDialogProps> = ({
       return;
     }
     setIsDeploying(platform);
-    
-    // Convert GeneratedApp to deployment format
-    const htmlFile = generatedApp.files.find(f => f.language === 'html' || f.filename.endsWith('.html'));
-    const cssFile = generatedApp.files.find(f => f.language === 'css' || f.filename.endsWith('.css'));
-    const jsFile = generatedApp.files.find(f => f.language === 'javascript' || f.filename.endsWith('.js'));
-
     const options: DeploymentOptions = {
       platform,
       projectName: projectName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-      html: htmlFile?.content || '<html><body><h1>Generated App</h1></body></html>',
-      css: cssFile?.content || 'body { font-family: Arial, sans-serif; }',
-      javascript: jsFile?.content || 'console.log("Generated app loaded");'
+      html: generatedApp.html,
+      css: generatedApp.css,
+      javascript: generatedApp.javascript
     };
     try {
       let result;

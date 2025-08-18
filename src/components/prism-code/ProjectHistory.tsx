@@ -7,7 +7,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge';
 import { History, Trash2, Eye, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { ProjectHistoryItem } from './types';
+
+interface GeneratedApp {
+  html: string;
+  css: string;
+  javascript: string;
+  description: string;
+  features: string[];
+}
+
+interface ProjectHistoryItem {
+  id: string;
+  prompt: string;
+  generatedApp: GeneratedApp;
+  model: string;
+  timestamp: Date;
+}
 
 interface ProjectHistoryProps {
   onLoadProject: (project: ProjectHistoryItem) => void;
@@ -92,9 +107,6 @@ const ProjectHistory: React.FC<ProjectHistoryProps> = ({ onLoadProject }) => {
                           <Badge variant="secondary" className="text-xs">
                             {project.model}
                           </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            {project.generatedApp.framework}
-                          </Badge>
                           <div className="flex items-center text-xs text-prism-text-muted">
                             <Calendar className="w-3 h-3 mr-1" />
                             {project.timestamp.toLocaleDateString()}
@@ -136,11 +148,6 @@ const ProjectHistory: React.FC<ProjectHistoryProps> = ({ onLoadProject }) => {
                         </Badge>
                       )}
                     </div>
-                    {project.generatedApp.files && (
-                      <div className="mt-2 text-xs text-prism-text-muted">
-                        {project.generatedApp.files.length} files
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
               ))

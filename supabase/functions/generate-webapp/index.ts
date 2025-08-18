@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, model = 'gemini-2.5-pro-exp-03-25' } = await req.json();
+    const { prompt, model = 'gemini' } = await req.json();
 
     if (!prompt) {
       throw new Error('Prompt is required');
@@ -21,9 +21,6 @@ serve(async (req) => {
     let response;
     
     switch (model) {
-      case 'gemini-2.5-pro-exp-03-25':
-        response = await generateWithGeminiProExp(prompt);
-        break;
       case 'gemini':
         response = await generateWithGemini(prompt);
         break;
@@ -70,49 +67,6 @@ serve(async (req) => {
     );
   }
 });
-
-async function generateWithGeminiProExp(prompt: string) {
-  if (!GEMINI_API_KEY) {
-    throw new Error('Gemini API key not configured');
-  }
-
-  const systemPrompt = createSystemPrompt();
-  
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      contents: [{
-        parts: [{
-          text: `${systemPrompt}\n\nUser Request: ${prompt}`
-        }]
-      }],
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 8192,
-      }
-    })
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('Gemini Pro Exp API error:', response.status, errorText);
-    throw new Error(`Gemini Pro Exp API request failed: ${response.status} - ${errorText}`);
-  }
-
-  const data = await response.json();
-  const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  
-  if (!content) {
-    throw new Error('No content received from Gemini Pro Exp API');
-  }
-
-  return parseAIResponse(content);
-}
 
 async function generateWithGemini(prompt: string) {
   if (!GEMINI_API_KEY) {
@@ -248,44 +202,35 @@ async function generateWithOpenAI(prompt: string, model: string) {
 }
 
 function createSystemPrompt(): string {
-  return `You are a professional web developer AI that creates complete, functional web applications with modern frameworks and best practices.
+  return `You are a professional web developer AI that creates complete, functional web applications. 
 
-Given a user prompt, analyze the requirements and choose the most appropriate framework and file structure:
+Given a user prompt, generate a complete web application with the following structure:
+- HTML: Complete, semantic HTML structure
+- CSS: Modern, responsive styling with animations and good UX
+- JavaScript: Functional, well-commented JavaScript code
+- Description: Brief description of the application
+- Features: Array of key features implemented
 
-For simple apps: Use vanilla HTML/CSS/JavaScript
-For interactive apps: Use React, Vue, or Svelte based on complexity
-For enterprise apps: Consider Angular or React with TypeScript
+Guidelines:
+1. Use modern web standards (HTML5, CSS3, ES6+)
+2. Make it responsive and mobile-friendly
+3. Include proper accessibility features
+4. Use semantic HTML elements
+5. Implement smooth animations and transitions
+6. Ensure cross-browser compatibility
+7. Include error handling in JavaScript
+8. Make it visually appealing with modern design principles
+9. Use CSS Grid/Flexbox for layouts
+10. Include interactive elements and user feedback
 
 Return ONLY a valid JSON object with this exact structure:
 {
-  "files": [
-    {
-      "filename": "string (e.g., index.html, App.tsx, main.css, package.json)",
-      "content": "string (complete file content)",
-      "language": "string (html, css, javascript, typescript, jsx, tsx, vue, svelte, json)",
-      "type": "string (component, style, config, asset, test)"
-    }
-  ],
+  "html": "complete HTML content",
+  "css": "complete CSS styles",
+  "javascript": "complete JavaScript code",
   "description": "brief description of the app",
-  "features": ["feature 1", "feature 2", "feature 3"],
-  "framework": "string (vanilla, react, vue, svelte, angular)",
-  "packages": ["array of package names that would be npm installed"],
-  "devDependencies": ["array of dev packages like build tools, testing"],
-  "buildScript": "optional build command",
-  "startScript": "optional start command"
+  "features": ["feature 1", "feature 2", "feature 3"]
 }
-
-Guidelines:
-1. Choose appropriate framework based on complexity
-2. Include ALL necessary files for a complete, functional application
-3. Use modern web standards and best practices
-4. Make it responsive and accessible
-5. Include proper error handling
-6. Use semantic HTML and modern CSS (Grid/Flexbox)
-7. Include realistic package dependencies
-8. Ensure cross-browser compatibility
-9. Add TypeScript types when using React/Vue/Svelte
-10. Include build configuration when needed
 
 Do not include any markdown formatting or code blocks. Just the raw JSON.`;
 }
@@ -303,15 +248,8 @@ function parseAIResponse(content: string) {
   }
 
   // Validate the response structure
-  if (!parsedResponse.files || !Array.isArray(parsedResponse.files)) {
-    throw new Error('Invalid files structure in web app response');
-  }
-
-  // Ensure each file has required properties
-  for (const file of parsedResponse.files) {
-    if (!file.filename || !file.content || !file.language) {
-      throw new Error('Incomplete file structure in web app response');
-    }
+  if (!parsedResponse.html || !parsedResponse.css || !parsedResponse.javascript) {
+    throw new Error('Incomplete web app generated');
   }
 
   return parsedResponse;
