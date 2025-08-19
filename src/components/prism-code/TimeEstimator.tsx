@@ -11,11 +11,7 @@ interface TimeEstimatorProps {
 
 const MODEL_SPEEDS = {
   'gemini-2.5-pro-exp-03-25': { baseTime: 15, complexity: 1.2 },
-  'gemini': { baseTime: 8, complexity: 1.0 },
-  'claude-sonnet': { baseTime: 12, complexity: 1.1 },
-  'claude-haiku': { baseTime: 6, complexity: 0.9 },
-  'gpt-4o': { baseTime: 10, complexity: 1.0 },
-  'gpt-4o-mini': { baseTime: 5, complexity: 0.8 },
+  'gemini': { baseTime: 8, complexity: 1.0 }
 };
 
 const TimeEstimator: React.FC<TimeEstimatorProps> = ({ prompt, model, isVisible }) => {

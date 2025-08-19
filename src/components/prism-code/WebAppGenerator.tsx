@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,10 +31,6 @@ interface GeneratedApp {
     development: string[];
   };
   scripts?: Record<string, string>;
-  // Legacy support for old format
-  html?: string;
-  css?: string;
-  javascript?: string;
 }
 
 interface ProjectHistoryItem {
@@ -84,12 +81,38 @@ const WebAppGenerator = () => {
   const { toast } = useToast();
   const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
 
+  // Ensure all file contents are strings
+  const normalizeFileContents = (files: Record<string, any>): Record<string, string> => {
+    const normalized: Record<string, string> = {};
+    Object.entries(files).forEach(([fileName, content]) => {
+      if (typeof content === 'string') {
+        normalized[fileName] = content;
+      } else if (content !== null && content !== undefined) {
+        try {
+          normalized[fileName] = typeof content === 'object' ? JSON.stringify(content, null, 2) : String(content);
+        } catch (error) {
+          console.error(`Error converting content for file ${fileName}:`, error);
+          normalized[fileName] = String(content || '');
+        }
+      } else {
+        normalized[fileName] = '';
+      }
+    });
+    return normalized;
+  };
+
   const saveProject = (projectPrompt: string, app: GeneratedApp, model: string) => {
+    // Ensure app has proper string file contents
+    const normalizedApp = {
+      ...app,
+      files: normalizeFileContents(app.files || {})
+    };
+
     const projectId = currentProjectId || uuidv4();
     const project: ProjectHistoryItem = {
       id: projectId,
       prompt: projectPrompt,
-      generatedApp: app,
+      generatedApp: normalizedApp,
       model: model,
       timestamp: new Date()
     };
@@ -247,30 +270,20 @@ Focus on creating a beautiful, functional application with proper architecture a
         throw new Error(error.message);
       }
 
-      const parsedApp: GeneratedApp = data;
+      let parsedApp: GeneratedApp = data;
       
-      // Convert legacy format to new format if needed
-      if (parsedApp.html && parsedApp.css && parsedApp.javascript && !parsedApp.files) {
-        parsedApp.files = {
-          'index.html': parsedApp.html,
-          'styles.css': parsedApp.css,
-          'script.js': parsedApp.javascript
-        };
-        parsedApp.framework = parsedApp.framework || 'vanilla';
-        parsedApp.language = parsedApp.language || 'javascript';
-      }
-
-      // Ensure files property exists and is properly formatted
+      // Ensure files property exists and normalize all file contents to strings
       if (!parsedApp.files) {
         parsedApp.files = {};
       }
 
-      // Convert any object values to strings
-      Object.keys(parsedApp.files).forEach(fileName => {
-        if (typeof parsedApp.files[fileName] !== 'string') {
-          parsedApp.files[fileName] = String(parsedApp.files[fileName] || '');
-        }
-      });
+      // Normalize file contents to ensure they're all strings
+      parsedApp.files = normalizeFileContents(parsedApp.files);
+
+      // Ensure required fields exist
+      if (!parsedApp.framework) parsedApp.framework = 'vanilla';
+      if (!parsedApp.language) parsedApp.language = 'javascript';
+      if (!parsedApp.features) parsedApp.features = [];
 
       const generationTime = Math.round((Date.now() - startTime) / 1000);
 
@@ -326,14 +339,20 @@ Focus on creating a beautiful, functional application with proper architecture a
   };
 
   const loadProject = (project: ProjectHistoryItem) => {
-    setGeneratedApp(project.generatedApp);
+    // Normalize file contents when loading
+    const normalizedApp = {
+      ...project.generatedApp,
+      files: normalizeFileContents(project.generatedApp.files || {})
+    };
+
+    setGeneratedApp(normalizedApp);
     setCurrentProjectId(project.id);
-    setConversationHistory([{ prompt: project.prompt, response: project.generatedApp }]);
+    setConversationHistory([{ prompt: project.prompt, response: normalizedApp }]);
     setPrompt("");
     setActiveRightTab('editor');
     
     // Set the first file as selected
-    const fileNames = Object.keys(project.generatedApp.files || {});
+    const fileNames = Object.keys(normalizedApp.files || {});
     if (fileNames.length > 0) {
       const mainFile = fileNames.find(name => 
         name.includes('index.html') || 
@@ -347,27 +366,15 @@ Focus on creating a beautiful, functional application with proper architecture a
   const downloadApp = () => {
     if (!generatedApp) return;
 
-    let files: { name: string; content: string }[] = [];
-
-    if (generatedApp.files) {
-      // New multi-file format
-      files = Object.entries(generatedApp.files).map(([name, content]) => ({
-        name,
-        content: String(content)
-      }));
-    } else {
-      // Legacy format support
-      files = [
-        { name: 'index.html', content: generatedApp.html || '' },
-        { name: 'styles.css', content: generatedApp.css || '' },
-        { name: 'script.js', content: generatedApp.javascript || '' }
-      ];
-    }
+    const files = Object.entries(generatedApp.files || {}).map(([name, content]) => ({
+      name,
+      content: String(content || '')
+    }));
 
     // Add README
     files.push({
       name: 'README.md',
-      content: `# Generated Web App\n\n**Framework:** ${generatedApp.framework || 'Vanilla'}\n**Language:** ${generatedApp.language || 'JavaScript'}\n\n## Description\n${generatedApp.description}\n\n## Features\n${generatedApp.features.map(f => `- ${f}`).join('\n')}\n\n## Dependencies\n${generatedApp.dependencies ? `\n### Production\n${generatedApp.dependencies.production?.map(d => `- ${d}`).join('\n') || 'None'}\n\n### Development\n${generatedApp.dependencies.development?.map(d => `- ${d}`).join('\n') || 'None'}` : 'No additional dependencies'}`
+      content: `# Generated Web App\n\n**Framework:** ${generatedApp.framework}\n**Language:** ${generatedApp.language}\n\n## Description\n${generatedApp.description}\n\n## Features\n${generatedApp.features.map(f => `- ${f}`).join('\n')}\n\n## Dependencies\n${generatedApp.dependencies ? `\n### Production\n${generatedApp.dependencies.production?.map(d => `- ${d}`).join('\n') || 'None'}\n\n### Development\n${generatedApp.dependencies.development?.map(d => `- ${d}`).join('\n') || 'None'}` : 'No additional dependencies'}`
     });
 
     files.forEach(file => {
@@ -423,9 +430,9 @@ Focus on creating a beautiful, functional application with proper architecture a
           </div>
           <div className="flex-1">
             <WebAppPreview
-              html={generatedApp.files?.['index.html'] || generatedApp.html || ''}
-              css={generatedApp.files?.['styles.css'] || generatedApp.css || ''}
-              javascript={generatedApp.files?.['script.js'] || generatedApp.javascript || ''}
+              html={generatedApp.files?.['index.html'] || ''}
+              css={generatedApp.files?.['styles.css'] || ''}
+              javascript={generatedApp.files?.['script.js'] || ''}
             />
           </div>
         </div>
@@ -495,16 +502,14 @@ Focus on creating a beautiful, functional application with proper architecture a
                   <h3 className="text-lg font-semibold text-prism-text">Live Preview</h3>
                   <div className="flex space-x-2">
                     <Badge variant="outline" className="text-xs">
-                      {generatedApp.framework || 'Vanilla'}
+                      {generatedApp.framework}
                     </Badge>
                     <Badge variant="outline" className="text-xs">
-                      {generatedApp.language || 'JavaScript'}
+                      {generatedApp.language}
                     </Badge>
-                    {generatedApp.files && (
-                      <Badge variant="outline" className="text-xs">
-                        {Object.keys(generatedApp.files).length} files
-                      </Badge>
-                    )}
+                    <Badge variant="outline" className="text-xs">
+                      {Object.keys(generatedApp.files).length} files
+                    </Badge>
                   </div>
                 </div>
                 <div className="flex space-x-2">
@@ -530,9 +535,9 @@ Focus on creating a beautiful, functional application with proper architecture a
               </div>
               <div className="flex-1">
                 <WebAppPreview
-                  html={generatedApp.files?.['index.html'] || generatedApp.html || ''}
-                  css={generatedApp.files?.['styles.css'] || generatedApp.css || ''}
-                  javascript={generatedApp.files?.['script.js'] || generatedApp.javascript || ''}
+                  html={generatedApp.files?.['index.html'] || ''}
+                  css={generatedApp.files?.['styles.css'] || ''}
+                  javascript={generatedApp.files?.['script.js'] || ''}
                 />
               </div>
             </div>
@@ -625,7 +630,7 @@ Focus on creating a beautiful, functional application with proper architecture a
                         <div className="flex space-x-1">
                           <Badge variant="outline" className="text-xs">
                             <Code className="w-3 h-3 mr-1" />
-                            {generatedApp.framework || 'Vanilla'}
+                            {generatedApp.framework}
                           </Badge>
                         </div>
                       </div>
@@ -638,13 +643,11 @@ Focus on creating a beautiful, functional application with proper architecture a
                         ))}
                       </ul>
 
-                      {generatedApp.files && (
-                        <div className="mt-3 pt-2 border-t border-prism-border">
-                          <h4 className="font-semibold text-prism-text mb-1 text-xs">
-                            Files: {Object.keys(generatedApp.files).length}
-                          </h4>
-                        </div>
-                      )}
+                      <div className="mt-3 pt-2 border-t border-prism-border">
+                        <h4 className="font-semibold text-prism-text mb-1 text-xs">
+                          Files: {Object.keys(generatedApp.files).length}
+                        </h4>
+                      </div>
                     </div>
                   )}
                 </CardContent>
