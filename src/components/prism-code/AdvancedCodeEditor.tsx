@@ -86,6 +86,13 @@ const AdvancedCodeEditor: React.FC<AdvancedCodeEditorProps> = ({
   const organizedFiles = organizeFilesByDirectory();
   const selectedFileData = generatedApp.files?.find(f => f.path === selectedFile);
 
+  // Auto-select first file if none selected
+  React.useEffect(() => {
+    if (!selectedFile && generatedApp.files && generatedApp.files.length > 0) {
+      setSelectedFile(generatedApp.files[0].path);
+    }
+  }, [generatedApp.files, selectedFile]);
+
   if (!generatedApp.files || generatedApp.files.length === 0) {
     return (
       <Card className="h-full flex items-center justify-center">

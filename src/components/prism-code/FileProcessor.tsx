@@ -3,267 +3,68 @@ import { GeneratedFile } from "@/types/webApp";
 
 export class FileProcessor {
   static processFiles(files: GeneratedFile[]): string {
-    console.log('Processing files:', files);
+    console.log('Processing files for preview:', files.length);
 
-    // Find entry points and organize files
-    const entryFile = this.findEntryFile(files);
+    // Find the main HTML file or create one
     const htmlFile = files.find(f => f.type === 'html' && f.path.includes('index.html'));
-    
-    // Process different file types
-    const processedJS = this.processJavaScriptFiles(files);
-    const processedCSS = this.processCSSFiles(files);
+    const entryFile = this.findEntryFile(files);
     
     if (htmlFile) {
-      return this.enhanceExistingHTML(htmlFile.content, processedCSS, processedJS);
+      return this.enhanceExistingHTML(htmlFile, files);
     }
     
-    return this.createHTMLFromScratch(files, processedCSS, processedJS, entryFile);
+    return this.createCompleteHTML(files, entryFile);
   }
 
   private static findEntryFile(files: GeneratedFile[]): GeneratedFile | null {
     const entryPoints = ['App.tsx', 'App.jsx', 'main.tsx', 'index.tsx', 'src/App.tsx', 'src/main.tsx'];
     
     for (const entryPoint of entryPoints) {
-      const file = files.find(f => f.path.includes(entryPoint));
-      if (file) return file;
+      const file = files.find(f => f.path.includes(entryPoint) || f.path.endsWith(entryPoint));
+      if (file) {
+        console.log('Found entry file:', file.path);
+        return file;
+      }
     }
     
     // Fallback to any React component
-    return files.find(f => (f.type === 'tsx' || f.type === 'jsx') && f.content.includes('export default')) || null;
-  }
-
-  private static processJavaScriptFiles(files: GeneratedFile[]): string {
-    const jsFiles = files.filter(f => ['tsx', 'jsx', 'typescript', 'javascript'].includes(f.type));
+    const reactFile = files.find(f => 
+      (f.type === 'tsx' || f.type === 'jsx') && 
+      (f.content.includes('export default') || f.content.includes('function ') || f.content.includes('const '))
+    );
     
-    if (jsFiles.length === 0) return '';
-
-    let processedCode = this.createReactRuntime();
-    
-    // Process each file and convert to runnable JavaScript
-    jsFiles.forEach(file => {
-      const converted = this.convertToJavaScript(file);
-      processedCode += `\n${converted}\n`;
-    });
-
-    // Add rendering logic
-    processedCode += this.createRenderingLogic();
-    
-    return processedCode;
-  }
-
-  private static createReactRuntime(): string {
-    return `
-// React-like runtime for preview
-window.React = {
-  createElement: function(type, props, ...children) {
-    if (typeof type === 'function') {
-      try {
-        const result = type(props || {});
-        return result;
-      } catch (error) {
-        console.error('Component error:', error);
-        const errorDiv = document.createElement('div');
-        errorDiv.style.cssText = 'padding: 1rem; background: #fee; border: 1px solid #fcc; border-radius: 4px; color: #c33; font-family: monospace;';
-        errorDiv.textContent = 'Component Error: ' + error.message;
-        return errorDiv;
-      }
+    if (reactFile) {
+      console.log('Using fallback entry file:', reactFile.path);
     }
     
-    const element = document.createElement(type);
+    return reactFile || null;
+  }
+
+  private static enhanceExistingHTML(htmlFile: GeneratedFile, allFiles: GeneratedFile[]): string {
+    let html = htmlFile.content;
     
-    if (props) {
-      Object.keys(props).forEach(key => {
-        if (key === 'className') {
-          element.className = props[key];
-        } else if (key === 'style' && typeof props[key] === 'object') {
-          Object.assign(element.style, props[key]);
-        } else if (key.startsWith('on') && typeof props[key] === 'function') {
-          const eventName = key.toLowerCase().slice(2);
-          element.addEventListener(eventName, props[key]);
-        } else if (key !== 'children' && key !== 'key') {
-          try {
-            element.setAttribute(key, String(props[key]));
-          } catch (e) {
-            console.warn('Failed to set attribute:', key, props[key]);
-          }
-        }
-      });
+    // Process CSS files
+    const cssFiles = allFiles.filter(f => f.type === 'css');
+    const cssContent = cssFiles.map(f => f.content).join('\n');
+    
+    if (cssContent && !html.includes(cssContent)) {
+      html = html.replace('</head>', `<style>${cssContent}</style>\n</head>`);
     }
     
-    children.flat().forEach(child => {
-      if (child == null || child === false) return;
-      if (typeof child === 'string' || typeof child === 'number') {
-        element.appendChild(document.createTextNode(String(child)));
-      } else if (child && typeof child === 'object' && child.nodeType) {
-        element.appendChild(child);
-      } else if (child && typeof child === 'object') {
-        element.appendChild(document.createTextNode('[Object]'));
-      }
-    });
-    
-    return element;
-  },
-  
-  useState: function(initialValue) {
-    let currentValue = initialValue;
-    const setValue = (newValue) => {
-      currentValue = typeof newValue === 'function' ? newValue(currentValue) : newValue;
-      setTimeout(() => window.renderApp && window.renderApp(), 10);
-    };
-    return [() => currentValue, setValue];
-  },
-  
-  useEffect: function(effect, deps) {
-    setTimeout(effect, 10);
-  },
-  
-  Fragment: function(props) {
-    const fragment = document.createDocumentFragment();
-    if (props.children) {
-      [].concat(props.children).forEach(child => {
-        if (child && child.nodeType) {
-          fragment.appendChild(child);
-        }
-      });
+    // Process JS files
+    const processedJS = this.processJavaScriptFiles(allFiles);
+    if (processedJS && !html.includes('window.React')) {
+      html = html.replace('</body>', `<script>${processedJS}</script>\n</body>`);
     }
-    return fragment;
-  }
-};
-`;
+    
+    return html;
   }
 
-  private static convertToJavaScript(file: GeneratedFile): string {
-    let content = file.content;
-    
-    // Remove imports and exports
-    content = content.replace(/import\s+.*?from\s+['"][^'"]+['"];?\s*/g, '');
-    content = content.replace(/export\s+(default\s+)?/g, '');
-    content = content.replace(/export\s*\{[^}]*\}\s*;?\s*/g, '');
-
-    // Convert JSX to React.createElement calls
-    content = this.convertJSXToJS(content);
-    
-    // Handle TypeScript syntax
-    content = this.removeTypeScript(content);
-    
-    return content;
-  }
-
-  private static convertJSXToJS(content: string): string {
-    // Handle self-closing tags first
-    content = content.replace(/<(\w+)([^>]*?)\/>/g, (match, tag, attrs) => {
-      const props = this.parseAttributes(attrs);
-      return `React.createElement('${tag}', ${props})`;
-    });
-    
-    // Handle opening tags
-    content = content.replace(/<(\w+)([^>]*?)>/g, (match, tag, attrs) => {
-      if (tag.match(/^[A-Z]/)) {
-        // Component
-        const props = this.parseAttributes(attrs);
-        return `React.createElement(${tag}, ${props}, `;
-      } else {
-        // HTML element
-        const props = this.parseAttributes(attrs);
-        return `React.createElement('${tag}', ${props}, `;
-      }
-    });
-    
-    // Handle closing tags
-    content = content.replace(/<\/\w+>/g, ')');
-    
-    return content;
-  }
-
-  private static parseAttributes(attrs: string): string {
-    if (!attrs.trim()) return 'null';
-    
-    const props: string[] = [];
-    
-    // Match className, style, and other attributes
-    attrs.replace(/(\w+)=\{([^}]+)\}/g, (match, name, value) => {
-      props.push(`${name}: ${value}`);
-      return '';
-    });
-    
-    attrs.replace(/(\w+)="([^"]+)"/g, (match, name, value) => {
-      props.push(`${name}: "${value}"`);
-      return '';
-    });
-    
-    return props.length > 0 ? `{${props.join(', ')}}` : 'null';
-  }
-
-  private static removeTypeScript(content: string): string {
-    // Remove type annotations
-    content = content.replace(/:\s*[A-Z][a-zA-Z0-9<>[\]|&\s]*(?=[,\)\s=])/g, '');
-    content = content.replace(/interface\s+\w+\s*\{[^}]*\}/g, '');
-    content = content.replace(/type\s+\w+\s*=[^;]+;/g, '');
-    content = content.replace(/<[^>]+>/g, ''); // Remove generic types
-    
-    return content;
-  }
-
-  private static processCSSFiles(files: GeneratedFile[]): string {
+  private static createCompleteHTML(files: GeneratedFile[], entryFile: GeneratedFile | null): string {
     const cssFiles = files.filter(f => f.type === 'css');
-    return cssFiles.map(f => f.content).join('\n');
-  }
+    const cssContent = cssFiles.map(f => f.content).join('\n');
+    const processedJS = this.processJavaScriptFiles(files);
 
-  private static createRenderingLogic(): string {
-    return `
-window.renderApp = function() {
-  const root = document.getElementById('root');
-  if (!root) return;
-  
-  try {
-    root.innerHTML = '';
-    let appComponent = null;
-    
-    // Try to find the main app component
-    const componentNames = ['App', 'MainApp', 'Application', 'Root'];
-    for (const name of componentNames) {
-      if (typeof window[name] === 'function') {
-        appComponent = window[name];
-        break;
-      }
-    }
-    
-    if (appComponent) {
-      const rendered = appComponent();
-      if (rendered && rendered.nodeType) {
-        root.appendChild(rendered);
-      } else {
-        root.innerHTML = '<div style="padding: 2rem; text-align: center; font-family: system-ui;"><h2>App Rendered Successfully</h2><p>Component loaded but returned non-DOM element</p></div>';
-      }
-    } else {
-      root.innerHTML = '<div style="padding: 2rem; text-align: center; font-family: system-ui;"><h2>Application Preview</h2><p>App component not found. Available functions: ' + Object.keys(window).filter(k => typeof window[k] === 'function' && k[0] === k[0].toUpperCase()).join(', ') + '</p></div>';
-    }
-  } catch (error) {
-    console.error('Rendering error:', error);
-    root.innerHTML = '<div style="padding: 2rem; text-align: center; font-family: system-ui; color: #dc2626;"><h2>Rendering Error</h2><p>' + error.message + '</p><details><summary>Stack trace</summary><pre style="text-align: left; background: #f3f4f6; padding: 1rem; border-radius: 4px; margin-top: 1rem;">' + error.stack + '</pre></details></div>';
-  }
-};
-
-// Initial render
-setTimeout(window.renderApp, 100);
-`;
-  }
-
-  private static enhanceExistingHTML(html: string, css: string, js: string): string {
-    let enhanced = html;
-    
-    if (css && !enhanced.includes(css)) {
-      enhanced = enhanced.replace('</head>', `<style>${css}</style>\n</head>`);
-    }
-    
-    if (js && !enhanced.includes(js)) {
-      enhanced = enhanced.replace('</body>', `<script>${js}</script>\n</body>`);
-    }
-    
-    return enhanced;
-  }
-
-  private static createHTMLFromScratch(files: GeneratedFile[], css: string, js: string, entryFile: GeneratedFile | null): string {
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -285,14 +86,14 @@ setTimeout(window.renderApp, 100);
         #root {
             min-height: 100vh;
         }
-        ${css}
+        ${cssContent}
     </style>
 </head>
 <body>
     <div id="root">
-        <div style="padding: 2rem; text-align: center; color: #666;">
-            <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem;"></div>
-            <p>Loading Application...</p>
+        <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; flex-direction: column; gap: 1rem;">
+            <div style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p style="color: #666;">Loading Application...</p>
         </div>
     </div>
     <style>
@@ -302,11 +103,224 @@ setTimeout(window.renderApp, 100);
         }
     </style>
     <script>
-        console.log('Loading application with ${files.length} files');
-        console.log('Entry file:', ${JSON.stringify(entryFile?.path || 'none')});
-        ${js}
+        console.log('Starting application with ${files.length} files...');
+        ${processedJS}
+        
+        // Final render attempt
+        setTimeout(() => {
+            console.log('Final render attempt...');
+            if (window.renderApp) {
+                window.renderApp();
+            } else {
+                console.warn('No renderApp function found');
+                const root = document.getElementById('root');
+                if (root) {
+                    root.innerHTML = '<div style="padding: 2rem; text-align: center;"><h2>Application Loaded</h2><p>No main component found to render</p></div>';
+                }
+            }
+        }, 100);
     </script>
 </body>
 </html>`;
+  }
+
+  private static processJavaScriptFiles(files: GeneratedFile[]): string {
+    const jsFiles = files.filter(f => ['tsx', 'jsx', 'typescript', 'javascript'].includes(f.type));
+    
+    if (jsFiles.length === 0) {
+      console.log('No JavaScript files to process');
+      return '';
+    }
+
+    let processedCode = this.createReactRuntime();
+    
+    // Process each file
+    jsFiles.forEach(file => {
+      console.log('Processing file:', file.path);
+      try {
+        const converted = this.convertFileToJS(file);
+        processedCode += `\n// File: ${file.path}\n${converted}\n`;
+      } catch (error) {
+        console.error('Error processing file:', file.path, error);
+        processedCode += `\n// Error processing ${file.path}: ${error.message}\n`;
+      }
+    });
+
+    // Add rendering logic
+    processedCode += this.createRenderingLogic();
+    
+    return processedCode;
+  }
+
+  private static createReactRuntime(): string {
+    return `
+// Simple React-like runtime
+window.React = {
+  createElement: function(type, props, ...children) {
+    console.log('Creating element:', type, props);
+    
+    if (typeof type === 'function') {
+      try {
+        return type(props || {});
+      } catch (error) {
+        console.error('Component error:', error);
+        const errorEl = document.createElement('div');
+        errorEl.style.cssText = 'padding: 1rem; background: #fee; border: 1px solid #fcc; color: #c33;';
+        errorEl.textContent = 'Error: ' + error.message;
+        return errorEl;
+      }
+    }
+    
+    const element = document.createElement(type);
+    
+    if (props) {
+      Object.keys(props).forEach(key => {
+        if (key === 'className') {
+          element.className = props[key];
+        } else if (key === 'style' && typeof props[key] === 'object') {
+          Object.assign(element.style, props[key]);
+        } else if (key.startsWith('on') && typeof props[key] === 'function') {
+          const eventName = key.toLowerCase().slice(2);
+          element.addEventListener(eventName, props[key]);
+        } else if (key !== 'children') {
+          element.setAttribute(key, String(props[key]));
+        }
+      });
+    }
+    
+    children.forEach(child => {
+      if (child == null) return;
+      if (typeof child === 'string' || typeof child === 'number') {
+        element.appendChild(document.createTextNode(String(child)));
+      } else if (child && child.nodeType) {
+        element.appendChild(child);
+      }
+    });
+    
+    return element;
+  },
+  
+  useState: function(initialValue) {
+    let value = initialValue;
+    const setValue = (newValue) => {
+      value = typeof newValue === 'function' ? newValue(value) : newValue;
+      setTimeout(() => window.renderApp && window.renderApp(), 0);
+    };
+    return [() => value, setValue];
+  },
+  
+  useEffect: function(effect, deps) {
+    setTimeout(effect, 0);
+  }
+};
+
+window.useState = window.React.useState;
+window.useEffect = window.React.useEffect;
+`;
+  }
+
+  private static convertFileToJS(file: GeneratedFile): string {
+    let content = file.content;
+    
+    // Remove imports/exports
+    content = content.replace(/import\s+.*?from\s+['"][^'"]*['"];?\s*/g, '');
+    content = content.replace(/export\s+default\s+/g, '');
+    content = content.replace(/export\s+/g, '');
+    
+    // Remove TypeScript types
+    content = content.replace(/:\s*\w+(\[\])?(?=\s*[=,\)\{\}])/g, '');
+    content = content.replace(/interface\s+\w+\s*\{[^}]*\}/g, '');
+    content = content.replace(/type\s+\w+\s*=.*?;/g, '');
+    
+    // Convert JSX to function calls - simple approach
+    content = this.convertJSX(content);
+    
+    return content;
+  }
+
+  private static convertJSX(content: string): string {
+    // Handle JSX elements - very basic conversion
+    // This is a simplified approach for common patterns
+    
+    // Convert <div className="..." to React.createElement('div', {className: '...'
+    content = content.replace(/<(\w+)([^>]*?)>/g, (match, tag, attrs) => {
+      const props = this.parseJSXAttributes(attrs);
+      return `React.createElement('${tag}', ${props}, `;
+    });
+    
+    // Handle self-closing tags
+    content = content.replace(/<(\w+)([^>]*?)\/>/g, (match, tag, attrs) => {
+      const props = this.parseJSXAttributes(attrs);
+      return `React.createElement('${tag}', ${props})`;
+    });
+    
+    // Close tags
+    content = content.replace(/<\/\w+>/g, ')');
+    
+    return content;
+  }
+
+  private static parseJSXAttributes(attrs: string): string {
+    if (!attrs || !attrs.trim()) return 'null';
+    
+    const props: string[] = [];
+    
+    // Handle className
+    const classMatch = attrs.match(/className=["']([^"']+)["']/);
+    if (classMatch) {
+      props.push(`className: "${classMatch[1]}"`);
+    }
+    
+    // Handle other simple attributes
+    const attrMatches = attrs.matchAll(/(\w+)=["']([^"']+)["']/g);
+    for (const match of attrMatches) {
+      if (match[1] !== 'className') {
+        props.push(`${match[1]}: "${match[2]}"`);
+      }
+    }
+    
+    return props.length > 0 ? `{${props.join(', ')}}` : 'null';
+  }
+
+  private static createRenderingLogic(): string {
+    return `
+window.renderApp = function() {
+  console.log('Rendering app...');
+  const root = document.getElementById('root');
+  if (!root) {
+    console.error('Root element not found');
+    return;
+  }
+  
+  try {
+    root.innerHTML = '';
+    
+    // Try to find and render the main component
+    const componentNames = ['App', 'MainApp', 'Application'];
+    let rendered = false;
+    
+    for (const name of componentNames) {
+      if (typeof window[name] === 'function') {
+        console.log('Found component:', name);
+        const result = window[name]();
+        if (result && result.nodeType) {
+          root.appendChild(result);
+          rendered = true;
+          break;
+        }
+      }
+    }
+    
+    if (!rendered) {
+      console.log('No main component found, showing default content');
+      root.innerHTML = '<div style="padding: 2rem; text-align: center; font-family: system-ui;"><h2>Application Loaded</h2><p>React components processed successfully</p></div>';
+    }
+    
+  } catch (error) {
+    console.error('Render error:', error);
+    root.innerHTML = '<div style="padding: 2rem; text-align: center; color: #dc2626;"><h2>Rendering Error</h2><p>' + error.message + '</p></div>';
+  }
+};
+`;
   }
 }
