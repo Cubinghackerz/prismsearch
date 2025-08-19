@@ -1,119 +1,243 @@
 
-import React, { useState } from 'react';
+import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Settings } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import { DevelopmentPlan } from '@/types/webApp';
+import { Separator } from '@/components/ui/separator';
+import { CheckCircle, XCircle, Palette, Code, Package, Layout, Shield, Zap } from 'lucide-react';
 
-interface DevelopmentPlanDialogProps {
-  onPlanGenerated: (plan: DevelopmentPlan) => void;
+interface DevelopmentPlan {
+  projectOverview: string;
+  colorScheme: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    background: string;
+    text: string;
+  };
+  architecture: {
+    framework: string;
+    styling: string;
+    stateManagement: string;
+    routing: string;
+  };
+  features: string[];
+  packages: string[];
+  fileStructure: string[];
+  implementationSteps: string[];
+  securityConsiderations: string[];
+  performanceOptimizations: string[];
+  estimatedComplexity: 'Low' | 'Medium' | 'High';
 }
 
-const DevelopmentPlanDialog: React.FC<DevelopmentPlanDialogProps> = ({ onPlanGenerated }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [plan, setPlan] = useState<DevelopmentPlan | null>(null);
-  const { toast } = useToast();
+interface DevelopmentPlanDialogProps {
+  isOpen: boolean;
+  plan: DevelopmentPlan | null;
+  isLoading: boolean;
+  onApprove: () => void;
+  onReject: () => void;
+  onClose: () => void;
+}
 
-  const generatePlan = async () => {
-    setIsGenerating(true);
-    try {
-      // Simulate plan generation for now
-      const mockPlan: DevelopmentPlan = {
-        projectOverview: "A modern web application with responsive design",
-        colorScheme: {
-          primary: "#3b82f6",
-          secondary: "#6366f1",
-          accent: "#f59e0b",
-          background: "#ffffff",
-          text: "#1f2937"
-        },
-        architecture: {
-          framework: "React",
-          styling: "Tailwind CSS",
-          stateManagement: "React Hooks",
-          routing: "React Router"
-        },
-        features: ["Responsive Design", "Dark Mode", "Authentication"],
-        packages: ["react", "tailwindcss", "react-router-dom"],
-        fileStructure: ["src/App.tsx", "src/components/", "src/styles/"],
-        implementationSteps: ["Setup project", "Create components", "Add styling"],
-        securityConsiderations: ["Input validation", "Authentication"],
-        performanceOptimizations: ["Code splitting", "Lazy loading"],
-        estimatedComplexity: "Medium"
-      };
-      
-      setPlan(mockPlan);
-      onPlanGenerated(mockPlan);
-      
-      toast({
-        title: "Plan Generated",
-        description: "Development plan has been created successfully.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to generate development plan.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+const DevelopmentPlanDialog: React.FC<DevelopmentPlanDialogProps> = ({
+  isOpen,
+  plan,
+  isLoading,
+  onApprove,
+  onReject,
+  onClose,
+}) => {
+  if (!plan && !isLoading) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Settings className="w-4 h-4 mr-2" />
-          Development Plan
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle>Development Plan</DialogTitle>
+          <DialogTitle className="flex items-center space-x-2">
+            <Code className="w-5 h-5 text-prism-primary" />
+            <span>Development Plan</span>
+          </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          {!plan ? (
-            <div className="text-center py-8">
-              <Button
-                onClick={generatePlan}
-                disabled={isGenerating}
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating Plan...
-                  </>
-                ) : (
-                  'Generate Development Plan'
-                )}
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-prism-primary"></div>
+            <span className="ml-4 text-prism-text-muted">Analyzing your project...</span>
+          </div>
+        ) : plan ? (
+          <ScrollArea className="max-h-[70vh] pr-4">
+            <div className="space-y-6">
+              {/* Project Overview */}
               <div>
-                <h4 className="font-semibold mb-2">Architecture</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <p><strong>Framework:</strong> {plan.architecture.framework}</p>
-                  <p><strong>Styling:</strong> {plan.architecture.styling}</p>
+                <h3 className="text-lg font-semibold text-prism-text mb-3 flex items-center">
+                  <Layout className="w-4 h-4 mr-2" />
+                  Project Overview
+                </h3>
+                <p className="text-prism-text-muted leading-relaxed">{plan.projectOverview}</p>
+                <div className="mt-2">
+                  <Badge variant={plan.estimatedComplexity === 'Low' ? 'default' : plan.estimatedComplexity === 'Medium' ? 'secondary' : 'destructive'}>
+                    {plan.estimatedComplexity} Complexity
+                  </Badge>
                 </div>
               </div>
+
+              <Separator />
+
+              {/* Color Scheme */}
               <div>
-                <h4 className="font-semibold mb-2">Features</h4>
-                <div className="flex flex-wrap gap-1">
-                  {plan.features.map((feature, index) => (
-                    <Badge key={index} variant="secondary">
-                      {feature}
-                    </Badge>
+                <h3 className="text-lg font-semibold text-prism-text mb-3 flex items-center">
+                  <Palette className="w-4 h-4 mr-2" />
+                  Color Scheme
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  {Object.entries(plan.colorScheme).map(([key, color]) => (
+                    <div key={key} className="text-center">
+                      <div 
+                        className="w-16 h-16 rounded-lg border-2 border-prism-border mx-auto mb-2"
+                        style={{ backgroundColor: color }}
+                      ></div>
+                      <p className="text-sm font-medium text-prism-text capitalize">{key}</p>
+                      <p className="text-xs text-prism-text-muted">{color}</p>
+                    </div>
                   ))}
                 </div>
               </div>
+
+              <Separator />
+
+              {/* Architecture */}
+              <div>
+                <h3 className="text-lg font-semibold text-prism-text mb-3 flex items-center">
+                  <Code className="w-4 h-4 mr-2" />
+                  Technical Architecture
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(plan.architecture).map(([key, value]) => (
+                    <div key={key} className="flex justify-between items-center">
+                      <span className="text-prism-text-muted capitalize">{key.replace(/([A-Z])/g, ' $1')}:</span>
+                      <Badge variant="outline">{value}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Features */}
+              <div>
+                <h3 className="text-lg font-semibold text-prism-text mb-3">Key Features</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {plan.features.map((feature, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      <span className="text-prism-text-muted text-sm">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Packages */}
+              <div>
+                <h3 className="text-lg font-semibold text-prism-text mb-3 flex items-center">
+                  <Package className="w-4 h-4 mr-2" />
+                  Recommended Packages
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {plan.packages.map((pkg, index) => (
+                    <Badge key={index} variant="secondary">{pkg}</Badge>
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* File Structure */}
+              <div>
+                <h3 className="text-lg font-semibold text-prism-text mb-3">File Structure</h3>
+                <div className="bg-prism-surface/20 rounded-lg p-4 font-mono text-sm">
+                  {plan.fileStructure.map((file, index) => (
+                    <div key={index} className="text-prism-text-muted">{file}</div>
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Implementation Steps */}
+              <div>
+                <h3 className="text-lg font-semibold text-prism-text mb-3">Implementation Steps</h3>
+                <div className="space-y-3">
+                  {plan.implementationSteps.map((step, index) => (
+                    <div key={index} className="flex items-start space-x-3">
+                      <div className="flex-shrink-0 w-6 h-6 bg-prism-primary/20 text-prism-primary rounded-full flex items-center justify-center text-xs font-semibold">
+                        {index + 1}
+                      </div>
+                      <span className="text-prism-text-muted text-sm">{step}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Security & Performance */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-prism-text mb-3 flex items-center">
+                    <Shield className="w-4 h-4 mr-2" />
+                    Security Considerations
+                  </h3>
+                  <ul className="space-y-2">
+                    {plan.securityConsiderations.map((item, index) => (
+                      <li key={index} className="flex items-start space-x-2">
+                        <Shield className="w-3 h-3 text-green-500 mt-1 flex-shrink-0" />
+                        <span className="text-prism-text-muted text-sm">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-prism-text mb-3 flex items-center">
+                    <Zap className="w-4 h-4 mr-2" />
+                    Performance Optimizations
+                  </h3>
+                  <ul className="space-y-2">
+                    {plan.performanceOptimizations.map((item, index) => (
+                      <li key={index} className="flex items-start space-x-2">
+                        <Zap className="w-3 h-3 text-yellow-500 mt-1 flex-shrink-0" />
+                        <span className="text-prism-text-muted text-sm">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
             </div>
-          )}
-        </div>
+          </ScrollArea>
+        ) : null}
+
+        <DialogFooter className="flex justify-between">
+          <Button 
+            onClick={onReject} 
+            variant="outline"
+            disabled={isLoading}
+            className="flex items-center space-x-2"
+          >
+            <XCircle className="w-4 h-4" />
+            <span>Reject Plan</span>
+          </Button>
+          <Button 
+            onClick={onApprove}
+            disabled={isLoading || !plan}
+            className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 flex items-center space-x-2"
+          >
+            <CheckCircle className="w-4 h-4" />
+            <span>Approve & Generate</span>
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

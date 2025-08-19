@@ -1,19 +1,9 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from '../_shared/cors.ts'
 
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-
-// Fallback Gemini API keys
-const FALLBACK_GEMINI_KEYS = [
-  Deno.env.get('FALLBACK_GEMINI_API_KEY_1'),
-  Deno.env.get('FALLBACK_GEMINI_API_KEY_2'),
-  Deno.env.get('FALLBACK_GEMINI_API_KEY_3'),
-  Deno.env.get('FALLBACK_GEMINI_API_KEY_4'),
-  Deno.env.get('FALLBACK_GEMINI_API_KEY_5'),
-].filter(Boolean); // Remove null/undefined values
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -81,73 +71,51 @@ serve(async (req) => {
 });
 
 async function generateWithGemini(prompt: string, modelVersion: string = 'gemini-2.0-flash-exp') {
+  if (!GEMINI_API_KEY) {
+    throw new Error('Gemini API key not configured');
+  }
+
   const systemPrompt = createSystemPrompt();
   
+  // Map model versions to API endpoints
   const modelEndpoint = modelVersion === 'gemini-2.5-pro-exp-03-25' 
     ? 'gemini-2.5-pro-exp-03-25'
     : 'gemini-2.0-flash-exp';
   
-  // Try main API key first, then fallbacks
-  const allKeys = [GEMINI_API_KEY, ...FALLBACK_GEMINI_KEYS].filter(Boolean);
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelEndpoint}:generateContent?key=${GEMINI_API_KEY}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      contents: [{
+        parts: [{
+          text: `${systemPrompt}\n\nUser Request: ${prompt}`
+        }]
+      }],
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 8192,
+      }
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Gemini API error:', response.status, errorText);
+    throw new Error(`Gemini API request failed: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
   
-  if (allKeys.length === 0) {
-    throw new Error('No Gemini API keys configured');
+  if (!content) {
+    throw new Error('No content received from Gemini API');
   }
 
-  let lastError: Error | null = null;
-
-  for (let i = 0; i < allKeys.length; i++) {
-    const apiKey = allKeys[i];
-    console.log(`Trying Gemini API key ${i + 1}/${allKeys.length}`);
-    
-    try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelEndpoint}:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `${systemPrompt}\n\nUser Request: ${prompt}`
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 8192,
-          }
-        })
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Gemini API key ${i + 1} failed:`, response.status, errorText);
-        lastError = new Error(`Gemini API request failed: ${response.status} - ${errorText}`);
-        continue; // Try next key
-      }
-
-      const data = await response.json();
-      const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      
-      if (!content) {
-        lastError = new Error('No content received from Gemini API');
-        continue; // Try next key
-      }
-
-      console.log(`Successfully used Gemini API key ${i + 1}`);
-      return parseAIResponse(content);
-
-    } catch (error) {
-      console.error(`Error with Gemini API key ${i + 1}:`, error);
-      lastError = error;
-      continue; // Try next key
-    }
-  }
-
-  // If we get here, all keys failed
-  throw lastError || new Error('All Gemini API keys failed');
+  return parseAIResponse(content);
 }
 
 async function generateWithClaude(prompt: string, model: string) {
@@ -241,74 +209,54 @@ async function generateWithOpenAI(prompt: string, model: string) {
 }
 
 function createSystemPrompt(): string {
-  return `You are a world-class full-stack developer and UI/UX designer AI that creates modern, production-ready web applications with multiple files and proper project structure.
+  return `You are a world-class UI/UX designer and frontend developer AI that creates exceptionally beautiful, modern web applications. 
 
-Given a user prompt, generate a complete web application with the following enhanced structure:
+Given a user prompt, generate a complete, visually stunning web application with the following structure:
+- HTML: Complete, semantic HTML structure with accessibility in mind
+- CSS: Beautiful, modern styling with stunning visual design, animations, and responsive layout
+- JavaScript: Functional, smooth JavaScript with delightful interactions
+- Description: Brief description emphasizing the visual appeal and user experience
+- Features: Array of key features implemented with focus on UI/UX excellence
 
-SUPPORTED FRAMEWORKS & TECHNOLOGIES:
-- React with TypeScript (recommended for complex apps)
-- Vue.js with TypeScript
-- Angular with TypeScript  
-- Svelte/SvelteKit
-- Next.js (React framework)
-- Nuxt.js (Vue framework)
-- Vanilla JavaScript/TypeScript
-- Modern CSS (Grid, Flexbox, Custom Properties)
-- Popular packages: Tailwind CSS, Lodash, Chart.js, Framer Motion, etc.
+DESIGN EXCELLENCE GUIDELINES:
+1. Create visually stunning interfaces with modern design principles
+2. Use beautiful color palettes, gradients, and sophisticated styling
+3. Implement smooth animations, transitions, and micro-interactions
+4. Apply contemporary design trends (glassmorphism, neumorphism, modern minimalism)
+5. Ensure perfect responsive design for all screen sizes
+6. Use modern typography with proper hierarchy and spacing
+7. Include delightful hover effects and interactive feedback
+8. Apply proper shadows, depth, and visual layering
+9. Ensure high contrast and accessibility compliance
+10. Create intuitive user flows and navigation
 
-MULTI-FILE ARCHITECTURE:
-- Generate proper project structure with multiple files
-- Include package.json with appropriate dependencies
-- Add TypeScript configuration when using TypeScript
-- Create component files for frameworks like React/Vue
-- Include utility files, styles, and assets as needed
-- Follow modern development practices and file organization
-
-TECHNICAL EXCELLENCE:
-1. Use modern ES6+ syntax and TypeScript when appropriate
-2. Implement proper component architecture for frameworks
-3. Include error handling and loading states
-4. Ensure responsive design and accessibility
-5. Use modern CSS techniques and design systems
-6. Include proper type definitions for TypeScript projects
-7. Follow framework-specific best practices
-8. Implement proper state management patterns
-
-DESIGN EXCELLENCE:
-1. Create beautiful, modern interfaces with stunning visual design
-2. Use sophisticated color schemes and typography
-3. Implement smooth animations and micro-interactions
-4. Apply contemporary design trends appropriately
-5. Ensure perfect responsive layouts
-6. Include proper spacing, shadows, and visual hierarchy
-7. Focus on excellent user experience and usability
+TECHNICAL EXCELLENCE GUIDELINES:
+1. Use modern web standards (HTML5, CSS3, ES6+)
+2. Implement CSS Grid and Flexbox for perfect layouts
+3. Include CSS custom properties for consistent theming
+4. Use semantic HTML elements and ARIA labels
+5. Ensure cross-browser compatibility and performance
+6. Include proper meta tags and viewport configuration
+7. Implement smooth scrolling and optimized animations
+8. Use modern JavaScript features and clean code structure
 
 Return ONLY a valid JSON object with this exact structure:
 {
-  "html": "main HTML file content with semantic structure",
-  "css": "main CSS file with beautiful, responsive design",
-  "javascript": "main JavaScript/TypeScript file with modern code",
-  "description": "brief description emphasizing technology stack and features",
-  "features": ["feature 1 with tech focus", "feature 2", "feature 3"],
-  "files": [
-    {
-      "name": "component.tsx",
-      "content": "component code",
-      "type": "tsx",
-      "path": "src/components/component.tsx"
-    }
-  ],
-  "framework": "specific framework used (React, Vue, Angular, etc.)",
-  "packages": ["package1", "package2", "package3"],
-  "fileStructure": ["index.html", "src/", "src/components/", "package.json"]
+  "html": "complete HTML content with semantic structure and accessibility",
+  "css": "stunning, modern CSS with beautiful animations and responsive design",
+  "javascript": "clean, functional JavaScript with smooth interactions",
+  "description": "brief description emphasizing visual appeal and user experience",
+  "features": ["UI-focused feature 1", "UX-focused feature 2", "visual feature 3"]
 }
 
-Focus on creating production-ready applications with proper architecture, beautiful design, and modern development practices. Always consider the appropriate technology stack for the requested application complexity.`;
+Focus on creating something that users will find visually impressive, highly functional, and delightful to use. Prioritize beautiful design, smooth interactions, and modern aesthetics.`;
 }
 
 function parseAIResponse(content: string) {
+  // Parse the JSON response
   let parsedResponse;
   try {
+    // Clean the response in case there's any markdown formatting
     const cleanContent = content.replace(/```json\n?|```\n?/g, '').trim();
     parsedResponse = JSON.parse(cleanContent);
   } catch (parseError) {
@@ -316,15 +264,10 @@ function parseAIResponse(content: string) {
     throw new Error('Invalid JSON response from AI model');
   }
 
+  // Validate the response structure
   if (!parsedResponse.html || !parsedResponse.css || !parsedResponse.javascript) {
     throw new Error('Incomplete web app generated');
   }
-
-  // Ensure required fields have defaults
-  parsedResponse.files = parsedResponse.files || [];
-  parsedResponse.framework = parsedResponse.framework || 'Vanilla JavaScript';
-  parsedResponse.packages = parsedResponse.packages || [];
-  parsedResponse.fileStructure = parsedResponse.fileStructure || ['index.html', 'styles.css', 'script.js'];
 
   return parsedResponse;
 }

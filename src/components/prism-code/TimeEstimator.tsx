@@ -6,28 +6,23 @@ import { AIModel } from './ModelSelector';
 interface TimeEstimatorProps {
   prompt: string;
   model: AIModel;
-  onEstimateChange?: (estimate: number) => void;
+  isVisible: boolean;
 }
 
-const MODEL_SPEEDS: Record<AIModel, { baseTime: number; complexity: number }> = {
+const MODEL_SPEEDS = {
   'gemini-2.5-pro-exp-03-25': { baseTime: 15, complexity: 1.2 },
   'gemini': { baseTime: 8, complexity: 1.0 },
   'groq-llama4-maverick': { baseTime: 12, complexity: 1.1 },
   'groq-llama4-scout': { baseTime: 6, complexity: 0.9 },
   'groq-llama31-8b-instant': { baseTime: 4, complexity: 0.8 },
-  'claude-sonnet': { baseTime: 10, complexity: 1.1 },
-  'claude-haiku': { baseTime: 5, complexity: 0.85 },
-  'gpt-4o': { baseTime: 12, complexity: 1.15 },
-  'gpt-4o-mini': { baseTime: 7, complexity: 0.95 },
 };
 
-const TimeEstimator: React.FC<TimeEstimatorProps> = ({ prompt, model, onEstimateChange }) => {
+const TimeEstimator: React.FC<TimeEstimatorProps> = ({ prompt, model, isVisible }) => {
   const [estimatedTime, setEstimatedTime] = useState(0);
 
   useEffect(() => {
     if (!prompt.trim()) {
       setEstimatedTime(0);
-      onEstimateChange?.(0);
       return;
     }
 
@@ -54,15 +49,13 @@ const TimeEstimator: React.FC<TimeEstimatorProps> = ({ prompt, model, onEstimate
       const baseTime = modelConfig.baseTime;
       const finalTime = Math.round(baseTime * modelConfig.complexity * complexityMultiplier);
       
-      const estimate = Math.max(finalTime, 3); // Minimum 3 seconds
-      setEstimatedTime(estimate);
-      onEstimateChange?.(estimate);
+      setEstimatedTime(Math.max(finalTime, 3)); // Minimum 3 seconds
     };
 
     calculateEstimate();
-  }, [prompt, model, onEstimateChange]);
+  }, [prompt, model]);
 
-  if (estimatedTime === 0) return null;
+  if (!isVisible || estimatedTime === 0) return null;
 
   return (
     <div className="flex items-center space-x-2 text-sm text-prism-text-muted bg-prism-surface/20 px-3 py-2 rounded-lg">
