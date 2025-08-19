@@ -18,7 +18,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   readOnly = false 
 }) => {
   return (
-    <div className="w-full h-full border border-prism-border rounded-lg overflow-hidden">
+    <div className="w-full h-full border rounded-lg overflow-hidden">
       <Editor
         height={height}
         language={language}

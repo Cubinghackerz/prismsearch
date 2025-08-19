@@ -8,7 +8,7 @@ import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertT
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyQueryLimit } from "@/hooks/useDailyQueryLimit";
-import WebAppPreview from "./WebAppPreview";
+import LivePreview from "./LivePreview";
 import ModelSelector, { AIModel } from "./ModelSelector";
 import AdvancedCodeEditor from "./AdvancedCodeEditor";
 import PackageManager from "./PackageManager";
@@ -17,15 +17,7 @@ import DevelopmentPlanDialog from "./DevelopmentPlanDialog";
 import { v4 as uuidv4 } from 'uuid';
 import DeploymentDialog from "./DeploymentDialog";
 import TimeEstimator from "./TimeEstimator";
-import { GeneratedApp, GeneratedFile, DevelopmentPlan } from "@/types/webApp";
-
-interface ProjectHistoryItem {
-  id: string;
-  prompt: string;
-  generatedApp: GeneratedApp;
-  model: string;
-  timestamp: Date;
-}
+import { GeneratedApp, DevelopmentPlan, ProjectHistoryItem } from "@/types/webApp";
 
 const WebAppGenerator = () => {
   const [prompt, setPrompt] = useState("");
@@ -39,6 +31,7 @@ const WebAppGenerator = () => {
   const [isThinking, setIsThinking] = useState(false);
   const [developmentPlan, setDevelopmentPlan] = useState<DevelopmentPlan | null>(null);
   const [showPlanDialog, setShowPlanDialog] = useState(false);
+  const [previewVisible, setPreviewVisible] = useState(true);
   const { toast } = useToast();
   const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
 
@@ -290,193 +283,6 @@ Create a complete, production-ready application with proper file organization an
     }
   };
 
-  const thinkAboutProject = async () => {
-    if (!prompt.trim()) {
-      toast({
-        title: "Missing Prompt",
-        description: "Please describe the web app you want to analyze.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (isLimitReached) {
-      toast({
-        title: "Daily Limit Reached",
-        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!incrementQueryCount()) {
-      toast({
-        title: "Daily Limit Reached",
-        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsThinking(true);
-    setShowPlanDialog(true);
-    setDevelopmentPlan(null);
-    
-    try {
-      const detailedPrompt = `Create a comprehensive development plan for this modern web application: "${prompt}"
-
-Please provide a detailed JSON response with the following structure:
-{
-  "projectOverview": "Detailed description including purpose, target audience, and objectives",
-  "colorScheme": {
-    "primary": "#hex-color",
-    "secondary": "#hex-color", 
-    "accent": "#hex-color",
-    "background": "#hex-color",
-    "text": "#hex-color"
-  },
-  "architecture": {
-    "framework": "React|Vue|Angular|Svelte with TypeScript",
-    "styling": "Tailwind CSS|Styled Components|SCSS",
-    "stateManagement": "Redux|Zustand|Pinia|Context API",
-    "routing": "React Router|Vue Router|Angular Router"
-  },
-  "features": ["feature 1", "feature 2", "feature 3"],
-  "packages": ["@types/react", "typescript", "tailwindcss", "other packages"],
-  "fileStructure": [
-    "src/App.tsx",
-    "src/components/",
-    "src/types/",
-    "src/hooks/",
-    "src/utils/",
-    "package.json",
-    "tsconfig.json"
-  ],
-  "implementationSteps": ["step 1", "step 2", "step 3"],
-  "securityConsiderations": ["TypeScript strict mode", "input validation"],
-  "performanceOptimizations": ["code splitting", "lazy loading"],
-  "estimatedComplexity": "Low|Medium|High"
-}
-
-Focus on modern TypeScript development, component architecture, and scalable file structure.`;
-
-      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
-        body: { 
-          query: detailedPrompt,
-          model: selectedModel,
-          chatId: currentProjectId || 'webapp-planning',
-          chatHistory: []
-        }
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      const planText = data.response || '';
-      const plan = parseDevelopmentPlan(planText);
-      
-      if (plan) {
-        setDevelopmentPlan(plan);
-        toast({
-          title: "Plan Generated",
-          description: "Review the development plan and approve to start generation.",
-        });
-      } else {
-        throw new Error('Failed to parse development plan');
-      }
-      
-    } catch (error) {
-      console.error('Error creating development plan:', error);
-      toast({
-        title: "Planning Failed",
-        description: `Failed to create development plan: ${error.message}`,
-        variant: "destructive"
-      });
-      setShowPlanDialog(false);
-    } finally {
-      setIsThinking(false);
-    }
-  };
-
-  const handlePlanApproval = async () => {
-    if (!developmentPlan) return;
-
-    setShowPlanDialog(false);
-    
-    const enhancedPrompt = `Generate a web application based on this approved development plan:
-
-Original Request: ${prompt}
-
-Development Plan:
-- Overview: ${developmentPlan.projectOverview}
-- Framework: ${developmentPlan.architecture.framework}
-- File Structure: ${developmentPlan.fileStructure.join(', ')}
-- Packages: ${developmentPlan.packages.join(', ')}
-- Color Scheme: ${Object.entries(developmentPlan.colorScheme).map(([key, value]) => `${key}: ${value}`).join(', ')}
-- Features: ${developmentPlan.features.join(', ')}
-
-Please create a complete, functional web application that follows this plan exactly, implementing all files in the specified structure.`;
-
-    const originalPrompt = prompt;
-    setPrompt(enhancedPrompt);
-    await generateWebApp();
-    setPrompt(originalPrompt);
-  };
-
-  const handlePlanRejection = () => {
-    setShowPlanDialog(false);
-    setDevelopmentPlan(null);
-    toast({
-      title: "Plan Rejected",
-      description: "You can modify your prompt and try thinking again.",
-    });
-  };
-
-  const downloadApp = () => {
-    if (!generatedApp || !generatedApp.files || generatedApp.files.length === 0) return;
-
-    generatedApp.files.forEach(file => {
-      const blob = new Blob([file.content], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = file.path.split('/').pop() || 'file.txt';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    });
-
-    // Download package.json if not included
-    const hasPackageJson = generatedApp.files.some(f => f.path.includes('package.json'));
-    if (!hasPackageJson && generatedApp.packages && generatedApp.packages.length > 0) {
-      const packageJson = {
-        name: "generated-web-app",
-        version: "1.0.0",
-        dependencies: generatedApp.packages.reduce((acc, pkg) => {
-          acc[pkg] = "latest";
-          return acc;
-        }, {} as Record<string, string>)
-      };
-      
-      const blob = new Blob([JSON.stringify(packageJson, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'package.json';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    }
-
-    toast({
-      title: "Files Downloaded",
-      description: `All ${generatedApp.files.length} files have been downloaded.`,
-    });
-  };
-
   const startNewProject = () => {
     setGeneratedApp(null);
     setCurrentProjectId(null);
@@ -523,8 +329,8 @@ Please create a complete, functional web application that follows this plan exac
     return (
       <div className="fixed inset-0 z-50 bg-background">
         <div className="h-full flex flex-col">
-          <div className="flex items-center justify-between p-4 border-b border-prism-border">
-            <h2 className="text-xl font-semibold text-prism-text">Fullscreen Preview</h2>
+          <div className="flex items-center justify-between p-4 border-b">
+            <h2 className="text-xl font-semibold">Fullscreen Preview</h2>
             <Button
               onClick={() => setIsFullscreen(false)}
               variant="outline"
@@ -535,7 +341,7 @@ Please create a complete, functional web application that follows this plan exac
             </Button>
           </div>
           <div className="flex-1">
-            <WebAppPreview files={generatedApp.files || []} />
+            <LivePreview generatedApp={generatedApp} />
           </div>
         </div>
       </div>
@@ -568,7 +374,7 @@ Please create a complete, functional web application that follows this plan exac
                 Beta
               </span>
             </div>
-            <p className="text-prism-text-muted mt-2 font-inter">
+            <p className="text-muted-foreground mt-2 font-inter">
               Generate full-stack TypeScript applications with unlimited files and modern frameworks
             </p>
           </div>
@@ -587,7 +393,7 @@ Please create a complete, functional web application that follows this plan exac
       {/* Enhanced Features Alert */}
       <Alert className="border-blue-500/30 bg-blue-500/5">
         <Sparkles className="h-4 w-4 text-blue-500" />
-        <AlertDescription className="text-blue-300">
+        <AlertDescription className="text-blue-600">
           <strong>Enhanced Features:</strong> Now supports TypeScript, React, Vue, Angular with unlimited files, package management, and complete project structures following development plans.
         </AlertDescription>
       </Alert>
@@ -600,12 +406,23 @@ Please create a complete, functional web application that follows this plan exac
             <div className="h-full flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-4">
-                  <h3 className="text-lg font-semibold text-prism-text">Live Preview</h3>
-                  <span className="px-2 py-1 bg-prism-primary/20 text-prism-primary text-xs rounded-full">
+                  <h3 className="text-lg font-semibold">Live Preview</h3>
+                  <span className="px-2 py-1 bg-primary/20 text-primary text-xs rounded-full">
                     {generatedApp.framework} • {generatedApp.files?.length || 0} files
                   </span>
                 </div>
                 <div className="flex space-x-2">
+                  <Button
+                    onClick={() => setPreviewVisible(!previewVisible)}
+                    size="sm"
+                    variant="outline"
+                  >
+                    {previewVisible ? (
+                      <><EyeOff className="w-4 h-4 mr-2" />Hide</>
+                    ) : (
+                      <><Eye className="w-4 h-4 mr-2" />Show</>
+                    )}
+                  </Button>
                   <Button
                     onClick={() => setIsFullscreen(true)}
                     size="sm"
@@ -627,15 +444,19 @@ Please create a complete, functional web application that follows this plan exac
                 </div>
               </div>
               <div className="flex-1">
-                <WebAppPreview files={generatedApp.files || []} />
+                <LivePreview 
+                  generatedApp={generatedApp} 
+                  isVisible={previewVisible}
+                  onToggleVisibility={() => setPreviewVisible(!previewVisible)}
+                />
               </div>
             </div>
           ) : (
             <Card className="h-full flex items-center justify-center">
               <CardContent className="text-center py-20">
-                <Globe className="w-16 h-16 text-prism-text-muted mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-prism-text mb-2">No Web App Generated Yet</h3>
-                <p className="text-prism-text-muted">Use the generator to create your TypeScript web application</p>
+                <Globe className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-semibold mb-2">No Web App Generated Yet</h3>
+                <p className="text-muted-foreground">Use the generator to create your TypeScript web application</p>
               </CardContent>
             </Card>
           )}
@@ -663,7 +484,7 @@ Please create a complete, functional web application that follows this plan exac
               <Card className="flex-1">
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
-                    <Wand2 className="w-5 h-5 text-prism-primary" />
+                    <Wand2 className="w-5 h-5 text-primary" />
                     <span>{generatedApp ? 'Continue Working' : 'Describe Your Modern Web Application'}</span>
                   </CardTitle>
                 </CardHeader>
@@ -682,7 +503,7 @@ Please create a complete, functional web application that follows this plan exac
                         "Describe how you want to enhance your application... Add new features, components, or modify the structure..." : 
                         "Describe the modern web application you want to create... For example: 'Create a TypeScript React dashboard with user authentication, data visualization charts, responsive design, and dark/light theme toggle. Use Tailwind CSS for styling and include proper type definitions.'"
                       }
-                      className="min-h-[200px] resize-none bg-prism-surface/10 border-prism-border"
+                      className="min-h-[200px] resize-none"
                       disabled={isGenerating || isThinking}
                     />
                   </div>
@@ -734,45 +555,45 @@ Please create a complete, functional web application that follows this plan exac
 
                   {/* Generated App Info */}
                   {generatedApp && generatedApp.files && (
-                    <div className="mt-4 p-3 bg-prism-surface/20 rounded-lg">
-                      <h4 className="font-semibold text-prism-text mb-2 text-sm">Current Project:</h4>
-                      <p className="text-prism-text-muted text-xs mb-3">{generatedApp.description}</p>
+                    <div className="mt-4 p-3 bg-muted/20 rounded-lg">
+                      <h4 className="font-semibold text-sm">Current Project:</h4>
+                      <p className="text-muted-foreground text-xs mb-3">{generatedApp.description}</p>
 
                       <div className="grid grid-cols-2 gap-4 mb-3">
                         <div>
-                          <h5 className="font-semibold text-prism-text text-xs mb-1">Framework:</h5>
-                          <p className="text-prism-text-muted text-xs">{generatedApp.framework}</p>
+                          <h5 className="font-semibold text-sm mb-1">Framework:</h5>
+                          <p className="text-muted-foreground text-xs">{generatedApp.framework}</p>
                         </div>
                         <div>
-                          <h5 className="font-semibold text-prism-text text-xs mb-1">Files:</h5>
-                          <p className="text-prism-text-muted text-xs">{generatedApp.files.length} files</p>
+                          <h5 className="font-semibold text-sm mb-1">Files:</h5>
+                          <p className="text-muted-foreground text-xs">{generatedApp.files.length} files</p>
                         </div>
                       </div>
 
-                      <h4 className="font-semibold text-prism-text mb-2 text-sm">Features:</h4>
-                      <ul className="list-disc list-inside text-prism-text-muted text-xs space-y-1 mb-3">
+                      <h4 className="font-semibold text-sm mb-2">Features:</h4>
+                      <ul className="list-disc list-inside text-muted-foreground text-xs space-y-1 mb-3">
                         {(generatedApp.features || []).map((feature, index) => (
                           <li key={index}>{feature}</li>
                         ))}
                       </ul>
 
-                      <h4 className="font-semibold text-prism-text mb-2 text-sm">Packages:</h4>
+                      <h4 className="font-semibold text-sm mb-2">Packages:</h4>
                       <div className="flex flex-wrap gap-1">
                         {(generatedApp.packages || []).slice(0, 6).map((pkg, index) => (
-                          <span key={index} className="px-2 py-1 bg-prism-primary/20 text-prism-primary text-xs rounded">
+                          <span key={index} className="px-2 py-1 bg-primary/20 text-primary text-xs rounded">
                             {pkg}
                           </span>
                         ))}
                         {(generatedApp.packages || []).length > 6 && (
-                          <span className="px-2 py-1 bg-prism-surface/30 text-prism-text-muted text-xs rounded">
+                          <span className="px-2 py-1 bg-muted/30 text-muted-foreground text-xs rounded">
                             +{generatedApp.packages.length - 6} more
                           </span>
                         )}
                       </div>
 
                       {conversationHistory.length > 1 && (
-                        <div className="mt-3 pt-2 border-t border-prism-border">
-                          <h4 className="font-semibold text-prism-text mb-1 text-xs">
+                        <div className="mt-3 pt-2 border-t border-muted">
+                          <h4 className="font-semibold text-sm mb-1">
                             Iterations: {conversationHistory.length}
                           </h4>
                         </div>
@@ -792,8 +613,8 @@ Please create a complete, functional web application that follows this plan exac
               ) : (
                 <Card className="h-full flex items-center justify-center">
                   <CardContent className="text-center py-20">
-                    <FileText className="w-12 h-12 text-prism-text-muted mx-auto mb-4" />
-                    <p className="text-prism-text-muted">Generate a web app to start editing</p>
+                    <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">Generate a web app to start editing</p>
                   </CardContent>
                 </Card>
               )}
