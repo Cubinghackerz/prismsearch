@@ -7,7 +7,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge';
 import { History, Trash2, Eye, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { GeneratedApp, ProjectHistoryItem } from '@/types/webApp';
+
+interface GeneratedApp {
+  html: string;
+  css: string;
+  javascript: string;
+  description: string;
+  features: string[];
+}
+
+interface ProjectHistoryItem {
+  id: string;
+  prompt: string;
+  generatedApp: GeneratedApp;
+  model: string;
+  timestamp: Date;
+}
 
 interface ProjectHistoryProps {
   onLoadProject: (project: ProjectHistoryItem) => void;
@@ -67,32 +82,32 @@ const ProjectHistory: React.FC<ProjectHistoryProps> = ({ onLoadProject }) => {
       <DialogContent className="max-w-4xl max-h-[80vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
-            <History className="w-5 h-5 text-primary" />
+            <History className="w-5 h-5 text-prism-primary" />
             <span>Project History</span>
           </DialogTitle>
         </DialogHeader>
         <ScrollArea className="max-h-[60vh]">
           <div className="space-y-4 p-2">
             {projects.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-8 text-prism-text-muted">
                 <History className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>No projects saved yet</p>
                 <p className="text-sm">Generate your first web app to see it here</p>
               </div>
             ) : (
               projects.map((project) => (
-                <Card key={project.id} className="border">
+                <Card key={project.id} className="border-prism-border bg-prism-surface/5">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <CardTitle className="text-sm font-medium line-clamp-2">
+                        <CardTitle className="text-sm font-medium text-prism-text line-clamp-2">
                           {project.generatedApp.description}
                         </CardTitle>
                         <div className="flex items-center space-x-2 mt-2">
                           <Badge variant="secondary" className="text-xs">
                             {project.model}
                           </Badge>
-                          <div className="flex items-center text-xs text-muted-foreground">
+                          <div className="flex items-center text-xs text-prism-text-muted">
                             <Calendar className="w-3 h-3 mr-1" />
                             {project.timestamp.toLocaleDateString()}
                           </div>
@@ -118,7 +133,7 @@ const ProjectHistory: React.FC<ProjectHistoryProps> = ({ onLoadProject }) => {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
+                    <p className="text-xs text-prism-text-muted line-clamp-2 mb-2">
                       {project.prompt}
                     </p>
                     <div className="flex flex-wrap gap-1">

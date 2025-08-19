@@ -70,82 +70,6 @@ serve(async (req) => {
   }
 });
 
-function createSystemPrompt(): string {
-  return `You are a world-class full-stack developer AI that creates exceptional modern web applications with unlimited file support and complete project structures.
-
-Given a user prompt, generate a complete, professional web application with the following NEW structure:
-- Files: Array of file objects with path, content, and type
-- Description: Brief description emphasizing functionality and architecture  
-- Features: Array of key features implemented
-- Framework: The framework/technology used (React, Vue, Angular, etc.)
-- Packages: Array of npm packages/dependencies used
-
-TECHNICAL EXCELLENCE GUIDELINES:
-1. Create COMPLETE project structures with unlimited files
-2. Support TypeScript, React, Vue, Angular, and other modern frameworks
-3. Generate proper configuration files (package.json, tsconfig.json, etc.)
-4. Include component files, utility files, type definitions
-5. Use modern development patterns and best practices
-6. Create proper file organization and folder structure
-7. Include proper error handling and validation
-8. Implement responsive design and accessibility
-9. Use semantic file paths and naming conventions
-10. Generate production-ready code structure
-
-DESIGN EXCELLENCE GUIDELINES:
-1. Create visually stunning interfaces with modern design principles
-2. Use beautiful color palettes, gradients, and sophisticated styling
-3. Implement smooth animations, transitions, and micro-interactions
-4. Apply contemporary design trends (glassmorphism, modern minimalism)
-5. Ensure perfect responsive design for all screen sizes
-6. Use modern typography with proper hierarchy and spacing
-7. Include delightful hover effects and interactive feedback
-8. Apply proper shadows, depth, and visual layering
-9. Ensure high contrast and accessibility compliance
-10. Create intuitive user flows and navigation
-
-FILE STRUCTURE REQUIREMENTS:
-1. Always include package.json with proper dependencies
-2. Create tsconfig.json for TypeScript projects
-3. Organize components in logical folder structures
-4. Include proper type definitions and interfaces
-5. Create utility functions and custom hooks
-6. Include configuration files as needed
-7. Add README.md with setup instructions
-8. Structure files for scalability and maintainability
-
-SUPPORTED FILE TYPES:
-- typescript (.ts, .tsx)
-- javascript (.js, .jsx) 
-- html (.html)
-- css (.css, .scss)
-- json (.json)
-- markdown (.md)
-- text (.txt)
-
-Return ONLY a valid JSON object with this EXACT structure:
-{
-  "files": [
-    {
-      "path": "src/App.tsx",
-      "content": "complete file content with proper imports and exports",
-      "type": "typescript"
-    },
-    {
-      "path": "package.json", 
-      "content": "complete package.json with all dependencies",
-      "type": "json"
-    }
-  ],
-  "description": "brief description emphasizing architecture and user experience",
-  "features": ["TypeScript support", "Modern React components", "Responsive design"],
-  "framework": "React|Vue|Angular|Svelte|Vanilla",
-  "packages": ["react", "typescript", "@types/react", "tailwindcss"]
-}
-
-Focus on creating complete, production-ready applications with proper file structures, modern development practices, and beautiful user interfaces. Always include ALL necessary files for a working application.`;
-}
-
 async function generateWithGemini(prompt: string, modelVersion: string = 'gemini-2.0-flash-exp') {
   if (!GEMINI_API_KEY) {
     throw new Error('Gemini API key not configured');
@@ -153,6 +77,7 @@ async function generateWithGemini(prompt: string, modelVersion: string = 'gemini
 
   const systemPrompt = createSystemPrompt();
   
+  // Map model versions to API endpoints
   const modelEndpoint = modelVersion === 'gemini-2.5-pro-exp-03-25' 
     ? 'gemini-2.5-pro-exp-03-25'
     : 'gemini-2.0-flash-exp';
@@ -283,9 +208,55 @@ async function generateWithOpenAI(prompt: string, model: string) {
   return parseAIResponse(content);
 }
 
+function createSystemPrompt(): string {
+  return `You are a world-class UI/UX designer and frontend developer AI that creates exceptionally beautiful, modern web applications. 
+
+Given a user prompt, generate a complete, visually stunning web application with the following structure:
+- HTML: Complete, semantic HTML structure with accessibility in mind
+- CSS: Beautiful, modern styling with stunning visual design, animations, and responsive layout
+- JavaScript: Functional, smooth JavaScript with delightful interactions
+- Description: Brief description emphasizing the visual appeal and user experience
+- Features: Array of key features implemented with focus on UI/UX excellence
+
+DESIGN EXCELLENCE GUIDELINES:
+1. Create visually stunning interfaces with modern design principles
+2. Use beautiful color palettes, gradients, and sophisticated styling
+3. Implement smooth animations, transitions, and micro-interactions
+4. Apply contemporary design trends (glassmorphism, neumorphism, modern minimalism)
+5. Ensure perfect responsive design for all screen sizes
+6. Use modern typography with proper hierarchy and spacing
+7. Include delightful hover effects and interactive feedback
+8. Apply proper shadows, depth, and visual layering
+9. Ensure high contrast and accessibility compliance
+10. Create intuitive user flows and navigation
+
+TECHNICAL EXCELLENCE GUIDELINES:
+1. Use modern web standards (HTML5, CSS3, ES6+)
+2. Implement CSS Grid and Flexbox for perfect layouts
+3. Include CSS custom properties for consistent theming
+4. Use semantic HTML elements and ARIA labels
+5. Ensure cross-browser compatibility and performance
+6. Include proper meta tags and viewport configuration
+7. Implement smooth scrolling and optimized animations
+8. Use modern JavaScript features and clean code structure
+
+Return ONLY a valid JSON object with this exact structure:
+{
+  "html": "complete HTML content with semantic structure and accessibility",
+  "css": "stunning, modern CSS with beautiful animations and responsive design",
+  "javascript": "clean, functional JavaScript with smooth interactions",
+  "description": "brief description emphasizing visual appeal and user experience",
+  "features": ["UI-focused feature 1", "UX-focused feature 2", "visual feature 3"]
+}
+
+Focus on creating something that users will find visually impressive, highly functional, and delightful to use. Prioritize beautiful design, smooth interactions, and modern aesthetics.`;
+}
+
 function parseAIResponse(content: string) {
+  // Parse the JSON response
   let parsedResponse;
   try {
+    // Clean the response in case there's any markdown formatting
     const cleanContent = content.replace(/```json\n?|```\n?/g, '').trim();
     parsedResponse = JSON.parse(cleanContent);
   } catch (parseError) {
@@ -293,30 +264,9 @@ function parseAIResponse(content: string) {
     throw new Error('Invalid JSON response from AI model');
   }
 
-  // Validate the new response structure
-  if (!parsedResponse.files || !Array.isArray(parsedResponse.files) || parsedResponse.files.length === 0) {
-    throw new Error('No files generated in response');
-  }
-
-  // Validate each file has required properties
-  for (const file of parsedResponse.files) {
-    if (!file.path || !file.content || !file.type) {
-      throw new Error('Invalid file structure in response');
-    }
-  }
-
-  // Set defaults for missing properties
-  if (!parsedResponse.description) {
-    parsedResponse.description = 'AI-generated web application';
-  }
-  if (!parsedResponse.features || !Array.isArray(parsedResponse.features)) {
-    parsedResponse.features = ['Modern web application'];
-  }
-  if (!parsedResponse.framework) {
-    parsedResponse.framework = 'Vanilla';
-  }
-  if (!parsedResponse.packages || !Array.isArray(parsedResponse.packages)) {
-    parsedResponse.packages = [];
+  // Validate the response structure
+  if (!parsedResponse.html || !parsedResponse.css || !parsedResponse.javascript) {
+    throw new Error('Incomplete web app generated');
   }
 
   return parsedResponse;
