@@ -17,7 +17,7 @@ const AdvancedCodeEditor: React.FC<AdvancedCodeEditorProps> = ({
   generatedApp, 
   onFileChange 
 }) => {
-  const [selectedFile, setSelectedFile] = useState(generatedApp.files[0]?.path || '');
+  const [selectedFile, setSelectedFile] = useState(generatedApp.files?.[0]?.path || '');
 
   const getFileIcon = (type: string) => {
     switch (type) {
@@ -64,6 +64,10 @@ const AdvancedCodeEditor: React.FC<AdvancedCodeEditorProps> = ({
   };
 
   const organizeFilesByDirectory = () => {
+    if (!generatedApp.files || generatedApp.files.length === 0) {
+      return {};
+    }
+
     const organized: Record<string, typeof generatedApp.files> = {};
     
     generatedApp.files.forEach(file => {
@@ -81,7 +85,19 @@ const AdvancedCodeEditor: React.FC<AdvancedCodeEditorProps> = ({
   };
 
   const organizedFiles = organizeFilesByDirectory();
-  const selectedFileData = generatedApp.files.find(f => f.path === selectedFile);
+  const selectedFileData = generatedApp.files?.find(f => f.path === selectedFile);
+
+  if (!generatedApp.files || generatedApp.files.length === 0) {
+    return (
+      <Card className="h-full flex items-center justify-center">
+        <CardContent className="text-center py-20">
+          <FileText className="w-16 h-16 text-prism-text-muted mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-prism-text mb-2">No Files Available</h3>
+          <p className="text-prism-text-muted">Generate an application to see files here</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="h-full flex flex-col">
@@ -112,7 +128,7 @@ const AdvancedCodeEditor: React.FC<AdvancedCodeEditorProps> = ({
                       </div>
                     )}
                     
-                    {files.map((file) => (
+                    {files?.map((file) => (
                       <button
                         key={file.path}
                         onClick={() => setSelectedFile(file.path)}

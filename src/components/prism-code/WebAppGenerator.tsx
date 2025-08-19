@@ -434,7 +434,7 @@ Please create a complete, functional web application that follows this plan exac
   };
 
   const downloadApp = () => {
-    if (!generatedApp) return;
+    if (!generatedApp || !generatedApp.files || generatedApp.files.length === 0) return;
 
     generatedApp.files.forEach(file => {
       const blob = new Blob([file.content], { type: 'text/plain' });
@@ -450,7 +450,7 @@ Please create a complete, functional web application that follows this plan exac
 
     // Download package.json if not included
     const hasPackageJson = generatedApp.files.some(f => f.path.includes('package.json'));
-    if (!hasPackageJson && generatedApp.packages.length > 0) {
+    if (!hasPackageJson && generatedApp.packages && generatedApp.packages.length > 0) {
       const packageJson = {
         name: "generated-web-app",
         version: "1.0.0",
@@ -499,7 +499,7 @@ Please create a complete, functional web application that follows this plan exac
   };
 
   const handleFileChange = (filePath: string, content: string) => {
-    if (!generatedApp) return;
+    if (!generatedApp || !generatedApp.files) return;
 
     setGeneratedApp(prev => ({
       ...prev!,
@@ -535,7 +535,7 @@ Please create a complete, functional web application that follows this plan exac
             </Button>
           </div>
           <div className="flex-1">
-            <WebAppPreview files={generatedApp.files} />
+            <WebAppPreview files={generatedApp.files || []} />
           </div>
         </div>
       </div>
@@ -602,7 +602,7 @@ Please create a complete, functional web application that follows this plan exac
                 <div className="flex items-center space-x-4">
                   <h3 className="text-lg font-semibold text-prism-text">Live Preview</h3>
                   <span className="px-2 py-1 bg-prism-primary/20 text-prism-primary text-xs rounded-full">
-                    {generatedApp.framework} • {generatedApp.files.length} files
+                    {generatedApp.framework} • {generatedApp.files?.length || 0} files
                   </span>
                 </div>
                 <div className="flex space-x-2">
@@ -627,7 +627,7 @@ Please create a complete, functional web application that follows this plan exac
                 </div>
               </div>
               <div className="flex-1">
-                <WebAppPreview files={generatedApp.files} />
+                <WebAppPreview files={generatedApp.files || []} />
               </div>
             </div>
           ) : (
@@ -733,7 +733,7 @@ Please create a complete, functional web application that follows this plan exac
                   </div>
 
                   {/* Generated App Info */}
-                  {generatedApp && (
+                  {generatedApp && generatedApp.files && (
                     <div className="mt-4 p-3 bg-prism-surface/20 rounded-lg">
                       <h4 className="font-semibold text-prism-text mb-2 text-sm">Current Project:</h4>
                       <p className="text-prism-text-muted text-xs mb-3">{generatedApp.description}</p>
@@ -751,19 +751,19 @@ Please create a complete, functional web application that follows this plan exac
 
                       <h4 className="font-semibold text-prism-text mb-2 text-sm">Features:</h4>
                       <ul className="list-disc list-inside text-prism-text-muted text-xs space-y-1 mb-3">
-                        {generatedApp.features.map((feature, index) => (
+                        {(generatedApp.features || []).map((feature, index) => (
                           <li key={index}>{feature}</li>
                         ))}
                       </ul>
 
                       <h4 className="font-semibold text-prism-text mb-2 text-sm">Packages:</h4>
                       <div className="flex flex-wrap gap-1">
-                        {generatedApp.packages.slice(0, 6).map((pkg, index) => (
+                        {(generatedApp.packages || []).slice(0, 6).map((pkg, index) => (
                           <span key={index} className="px-2 py-1 bg-prism-primary/20 text-prism-primary text-xs rounded">
                             {pkg}
                           </span>
                         ))}
-                        {generatedApp.packages.length > 6 && (
+                        {(generatedApp.packages || []).length > 6 && (
                           <span className="px-2 py-1 bg-prism-surface/30 text-prism-text-muted text-xs rounded">
                             +{generatedApp.packages.length - 6} more
                           </span>
