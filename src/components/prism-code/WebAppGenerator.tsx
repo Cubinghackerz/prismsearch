@@ -17,14 +17,7 @@ import DevelopmentPlanDialog from "./DevelopmentPlanDialog";
 import { v4 as uuidv4 } from 'uuid';
 import DeploymentDialog from "./DeploymentDialog";
 import TimeEstimator from "./TimeEstimator";
-
-interface GeneratedApp {
-  html: string;
-  css: string;
-  javascript: string;
-  description: string;
-  features: string[];
-}
+import { GeneratedApp, GeneratedFile, DevelopmentPlan } from "@/types/webApp";
 
 interface ProjectHistoryItem {
   id: string;
@@ -32,30 +25,6 @@ interface ProjectHistoryItem {
   generatedApp: GeneratedApp;
   model: string;
   timestamp: Date;
-}
-
-interface DevelopmentPlan {
-  projectOverview: string;
-  colorScheme: {
-    primary: string;
-    secondary: string;
-    accent: string;
-    background: string;
-    text: string;
-  };
-  architecture: {
-    framework: string;
-    styling: string;
-    stateManagement: string;
-    routing: string;
-  };
-  features: string[];
-  packages: string[];
-  fileStructure: string[];
-  implementationSteps: string[];
-  securityConsiderations: string[];
-  performanceOptimizations: string[];
-  estimatedComplexity: 'Low' | 'Medium' | 'High';
 }
 
 const WebAppGenerator = () => {
@@ -111,13 +80,11 @@ const WebAppGenerator = () => {
 
   const parseDevelopmentPlan = (planText: string): DevelopmentPlan | null => {
     try {
-      // Try to extract JSON from the response
       const jsonMatch = planText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         return JSON.parse(jsonMatch[0]);
       }
 
-      // Fallback: parse structured text format
       const lines = planText.split('\n').map(line => line.trim()).filter(line => line);
       
       return {
@@ -130,37 +97,40 @@ const WebAppGenerator = () => {
           text: "#1F2937"
         },
         architecture: {
-          framework: "Vanilla JavaScript",
-          styling: "CSS3",
-          stateManagement: "Local Storage",
-          routing: "Single Page"
+          framework: "React with TypeScript",
+          styling: "Tailwind CSS",
+          stateManagement: "React Hooks",
+          routing: "React Router"
         },
         features: lines.filter(line => line.includes('feature') || line.includes('•')).slice(0, 6),
-        packages: ["Chart.js", "Animate.css", "Font Awesome"],
+        packages: ["@types/react", "@types/node", "typescript", "tailwindcss"],
         fileStructure: [
-          "index.html",
-          "styles.css",
-          "script.js",
-          "assets/",
-          "components/"
+          "src/App.tsx",
+          "src/components/",
+          "src/types/",
+          "src/hooks/",
+          "src/utils/",
+          "package.json",
+          "tsconfig.json",
+          "tailwind.config.ts"
         ],
         implementationSteps: [
-          "Set up HTML structure",
-          "Create responsive CSS layout",
-          "Implement JavaScript functionality",
-          "Add interactive features",
-          "Optimize for performance",
-          "Test across devices"
+          "Set up TypeScript React project",
+          "Configure Tailwind CSS",
+          "Create component structure",
+          "Implement core functionality",
+          "Add type definitions",
+          "Optimize for performance"
         ],
         securityConsiderations: [
           "Input validation and sanitization",
-          "XSS prevention",
-          "Secure data storage"
+          "TypeScript strict mode",
+          "Secure data handling"
         ],
         performanceOptimizations: [
-          "Minified CSS and JavaScript",
-          "Optimized images",
-          "Lazy loading implementation"
+          "Code splitting with React.lazy",
+          "Memoization with useMemo/useCallback",
+          "Optimized bundle size"
         ],
         estimatedComplexity: 'Medium' as const
       };
@@ -168,143 +138,6 @@ const WebAppGenerator = () => {
       console.error('Error parsing development plan:', error);
       return null;
     }
-  };
-
-  const thinkAboutProject = async () => {
-    if (!prompt.trim()) {
-      toast({
-        title: "Missing Prompt",
-        description: "Please describe the web app you want to analyze.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (isLimitReached) {
-      toast({
-        title: "Daily Limit Reached",
-        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!incrementQueryCount()) {
-      toast({
-        title: "Daily Limit Reached",
-        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsThinking(true);
-    setShowPlanDialog(true);
-    setDevelopmentPlan(null);
-    
-    try {
-      const detailedPrompt = `Create a comprehensive development plan for this web application: "${prompt}"
-
-Please provide a detailed JSON response with the following structure:
-{
-  "projectOverview": "Detailed description of the project including purpose, target audience, and key objectives",
-  "colorScheme": {
-    "primary": "#hex-color",
-    "secondary": "#hex-color", 
-    "accent": "#hex-color",
-    "background": "#hex-color",
-    "text": "#hex-color"
-  },
-  "architecture": {
-    "framework": "recommended framework/library",
-    "styling": "CSS approach (CSS3, Tailwind, etc)",
-    "stateManagement": "state management approach",
-    "routing": "routing strategy"
-  },
-  "features": ["feature 1", "feature 2", "feature 3", "..."],
-  "packages": ["recommended npm packages/libraries"],
-  "fileStructure": ["file1.html", "file2.css", "folder/", "..."],
-  "implementationSteps": ["step 1", "step 2", "step 3", "..."],
-  "securityConsiderations": ["security measure 1", "security measure 2", "..."],
-  "performanceOptimizations": ["optimization 1", "optimization 2", "..."],
-  "estimatedComplexity": "Low|Medium|High"
-}
-
-Focus on modern web development best practices, accessibility, and user experience.`;
-
-      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
-        body: { 
-          query: detailedPrompt,
-          model: selectedModel,
-          chatId: currentProjectId || 'webapp-planning',
-          chatHistory: []
-        }
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      const planText = data.response || '';
-      const plan = parseDevelopmentPlan(planText);
-      
-      if (plan) {
-        setDevelopmentPlan(plan);
-        toast({
-          title: "Plan Generated",
-          description: "Review the development plan and approve to start generation.",
-        });
-      } else {
-        throw new Error('Failed to parse development plan');
-      }
-      
-    } catch (error) {
-      console.error('Error creating development plan:', error);
-      toast({
-        title: "Planning Failed",
-        description: `Failed to create development plan: ${error.message}`,
-        variant: "destructive"
-      });
-      setShowPlanDialog(false);
-    } finally {
-      setIsThinking(false);
-    }
-  };
-
-  const handlePlanApproval = async () => {
-    if (!developmentPlan) return;
-
-    setShowPlanDialog(false);
-    
-    // Create enhanced prompt with approved plan details
-    const enhancedPrompt = `Generate a web application based on this approved development plan:
-
-Original Request: ${prompt}
-
-Development Plan:
-- Overview: ${developmentPlan.projectOverview}
-- Color Scheme: Primary: ${developmentPlan.colorScheme.primary}, Secondary: ${developmentPlan.colorScheme.secondary}, Accent: ${developmentPlan.colorScheme.accent}, Background: ${developmentPlan.colorScheme.background}, Text: ${developmentPlan.colorScheme.text}
-- Architecture: ${developmentPlan.architecture.framework} with ${developmentPlan.architecture.styling} for styling
-- Key Features: ${developmentPlan.features.join(', ')}
-- Recommended Packages: ${developmentPlan.packages.join(', ')}
-- Implementation Steps: ${developmentPlan.implementationSteps.join(' -> ')}
-
-Please create a complete, functional web application that follows this plan exactly, using the specified color scheme and implementing all listed features.`;
-
-    // Use the existing generation function with the enhanced prompt
-    const originalPrompt = prompt;
-    setPrompt(enhancedPrompt);
-    await generateWebApp();
-    setPrompt(originalPrompt); // Restore original prompt for UI
-  };
-
-  const handlePlanRejection = () => {
-    setShowPlanDialog(false);
-    setDevelopmentPlan(null);
-    toast({
-      title: "Plan Rejected",
-      description: "You can modify your prompt and try thinking again.",
-    });
   };
 
   const generateWebApp = async (modelToUse: AIModel = selectedModel, isRetry: boolean = false) => {
@@ -352,45 +185,64 @@ ${conversationHistory.slice(-3).map((item, index) =>
 Please modify or enhance the current application accordingly.`;
       }
 
-      // Enhanced prompt for beautiful UI generation
       const enhancedPrompt = `Generate a stunning, modern web application with exceptional UI/UX design based on this description: ${contextPrompt}
 
-CRITICAL DESIGN REQUIREMENTS:
-- Create a visually stunning, modern interface with beautiful aesthetics
-- Use contemporary design principles: proper spacing, typography hierarchy, and visual balance
-- Implement smooth animations and micro-interactions for enhanced user experience
-- Apply modern color schemes with gradients, shadows, and depth
-- Ensure responsive design that works perfectly on all devices
-- Use modern CSS techniques: flexbox, grid, transforms, and transitions
-- Include hover effects, loading states, and interactive feedback
-- Apply glassmorphism, neumorphism, or other modern design trends where appropriate
-- Ensure accessibility with proper contrast ratios and ARIA labels
-- Create an intuitive, user-friendly interface with clear visual hierarchy
+${developmentPlan ? `
+APPROVED DEVELOPMENT PLAN:
+- Framework: ${developmentPlan.architecture.framework}
+- Styling: ${developmentPlan.architecture.styling}
+- File Structure: ${developmentPlan.fileStructure.join(', ')}
+- Packages: ${developmentPlan.packages.join(', ')}
+- Color Scheme: Primary: ${developmentPlan.colorScheme.primary}, Secondary: ${developmentPlan.colorScheme.secondary}
+` : ''}
+
+CRITICAL REQUIREMENTS:
+1. Generate a COMPLETE file structure following modern development practices
+2. Support TypeScript, React, Vue, Angular, or other modern frameworks as appropriate
+3. Create all necessary files including:
+   - Main application files (App.tsx, main.tsx, etc.)
+   - Component files with proper TypeScript types
+   - Configuration files (package.json, tsconfig.json, etc.)
+   - Styling files (CSS, SCSS, or framework-specific)
+   - Type definition files
+   - Utility and helper files
+
+DESIGN REQUIREMENTS:
+- Create visually stunning, modern interfaces with beautiful aesthetics
+- Use contemporary design principles and modern CSS techniques
+- Implement smooth animations and micro-interactions
+- Apply modern color schemes with gradients and depth
+- Ensure responsive design for all devices
+- Include hover effects and interactive feedback
 
 TECHNICAL REQUIREMENTS:
-- Generate clean, semantic HTML5 structure
-- Use modern CSS3 with custom properties (CSS variables)
-- Implement vanilla JavaScript with ES6+ features
-- Ensure cross-browser compatibility and optimal performance
-- Include proper meta tags and responsive viewport configuration
+- Generate clean, semantic code structure
+- Use modern framework patterns and best practices
+- Implement proper TypeScript types throughout
+- Include proper error handling and validation
+- Ensure optimal performance and accessibility
 
 Please return ONLY a valid JSON object with this exact structure:
 {
-  "html": "complete HTML content with semantic structure",
-  "css": "beautiful, modern CSS with animations and responsive design", 
-  "javascript": "clean, functional JavaScript with smooth interactions",
-  "description": "brief description emphasizing the visual appeal and functionality",
-  "features": ["feature 1 with UI focus", "feature 2 with UX emphasis", "feature 3"]
+  "files": [
+    {
+      "path": "relative/file/path",
+      "content": "file content",
+      "type": "typescript|javascript|html|css|json|md|txt"
+    }
+  ],
+  "description": "brief description emphasizing visual appeal and functionality",
+  "features": ["feature 1", "feature 2", "feature 3"],
+  "framework": "React|Vue|Angular|Vanilla",
+  "packages": ["package1", "package2", "package3"]
 }
 
-Focus on creating something visually impressive that users will love to interact with. Make it modern, beautiful, and highly functional.`;
+Create a complete, production-ready application with proper file organization and modern development practices.`;
 
-      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
+      const { data, error } = await supabase.functions.invoke('generate-webapp', {
         body: { 
-          query: enhancedPrompt,
-          model: modelToUse,
-          chatId: currentProjectId || 'webapp-generation',
-          chatHistory: []
+          prompt: enhancedPrompt,
+          model: modelToUse
         }
       });
 
@@ -398,70 +250,20 @@ Focus on creating something visually impressive that users will love to interact
         throw new Error(error.message);
       }
 
-      let parsedApp;
-      try {
-        const responseText = data.response || '';
-        const cleanResponse = responseText.replace(/```json\n?|```\n?/g, '').trim();
-        parsedApp = JSON.parse(cleanResponse);
-      } catch (parseError) {
-        const responseText = data.response || 'No response received';
-        parsedApp = {
-          html: `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generated Web App</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <div class="container">
-        <h1>Generated Web Application</h1>
-        <div class="content">
-            ${responseText.replace(/\n/g, '<br>')}
-        </div>
-    </div>
-    <script src="script.js"></script>
-</body>
-</html>`,
-          css: `body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 20px;
-    background-color: #f5f5f5;
-}
-.container {
-    max-width: 800px;
-    margin: 0 auto;
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-.content {
-    margin-top: 20px;
-    line-height: 1.6;
-}`,
-          javascript: `console.log('Web app generated successfully');`,
-          description: 'AI-generated web application',
-          features: ['Responsive design', 'Modern styling', 'Basic functionality']
-        };
-      }
-
       const generationTime = Math.round((Date.now() - startTime) / 1000);
 
-      setGeneratedApp(parsedApp);
+      setGeneratedApp(data);
       setActiveRightTab('editor');
       
-      setConversationHistory(prev => [...prev, { prompt, response: parsedApp }]);
+      setConversationHistory(prev => [...prev, { prompt, response: data }]);
       
-      saveProject(prompt, parsedApp, modelToUse);
+      saveProject(prompt, data, modelToUse);
       
       setPrompt("");
       
       toast({
         title: "Beautiful Web App Generated!",
-        description: `Your stunning web application was created in ${generationTime}s using ${modelToUse}.`,
+        description: `Your ${data.framework} application was created in ${generationTime}s using ${modelToUse}.`,
       });
     } catch (error) {
       console.error(`Error generating web app with ${modelToUse}:`, error);
@@ -488,6 +290,193 @@ Focus on creating something visually impressive that users will love to interact
     }
   };
 
+  const thinkAboutProject = async () => {
+    if (!prompt.trim()) {
+      toast({
+        title: "Missing Prompt",
+        description: "Please describe the web app you want to analyze.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (isLimitReached) {
+      toast({
+        title: "Daily Limit Reached",
+        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!incrementQueryCount()) {
+      toast({
+        title: "Daily Limit Reached",
+        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsThinking(true);
+    setShowPlanDialog(true);
+    setDevelopmentPlan(null);
+    
+    try {
+      const detailedPrompt = `Create a comprehensive development plan for this modern web application: "${prompt}"
+
+Please provide a detailed JSON response with the following structure:
+{
+  "projectOverview": "Detailed description including purpose, target audience, and objectives",
+  "colorScheme": {
+    "primary": "#hex-color",
+    "secondary": "#hex-color", 
+    "accent": "#hex-color",
+    "background": "#hex-color",
+    "text": "#hex-color"
+  },
+  "architecture": {
+    "framework": "React|Vue|Angular|Svelte with TypeScript",
+    "styling": "Tailwind CSS|Styled Components|SCSS",
+    "stateManagement": "Redux|Zustand|Pinia|Context API",
+    "routing": "React Router|Vue Router|Angular Router"
+  },
+  "features": ["feature 1", "feature 2", "feature 3"],
+  "packages": ["@types/react", "typescript", "tailwindcss", "other packages"],
+  "fileStructure": [
+    "src/App.tsx",
+    "src/components/",
+    "src/types/",
+    "src/hooks/",
+    "src/utils/",
+    "package.json",
+    "tsconfig.json"
+  ],
+  "implementationSteps": ["step 1", "step 2", "step 3"],
+  "securityConsiderations": ["TypeScript strict mode", "input validation"],
+  "performanceOptimizations": ["code splitting", "lazy loading"],
+  "estimatedComplexity": "Low|Medium|High"
+}
+
+Focus on modern TypeScript development, component architecture, and scalable file structure.`;
+
+      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
+        body: { 
+          query: detailedPrompt,
+          model: selectedModel,
+          chatId: currentProjectId || 'webapp-planning',
+          chatHistory: []
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      const planText = data.response || '';
+      const plan = parseDevelopmentPlan(planText);
+      
+      if (plan) {
+        setDevelopmentPlan(plan);
+        toast({
+          title: "Plan Generated",
+          description: "Review the development plan and approve to start generation.",
+        });
+      } else {
+        throw new Error('Failed to parse development plan');
+      }
+      
+    } catch (error) {
+      console.error('Error creating development plan:', error);
+      toast({
+        title: "Planning Failed",
+        description: `Failed to create development plan: ${error.message}`,
+        variant: "destructive"
+      });
+      setShowPlanDialog(false);
+    } finally {
+      setIsThinking(false);
+    }
+  };
+
+  const handlePlanApproval = async () => {
+    if (!developmentPlan) return;
+
+    setShowPlanDialog(false);
+    
+    const enhancedPrompt = `Generate a web application based on this approved development plan:
+
+Original Request: ${prompt}
+
+Development Plan:
+- Overview: ${developmentPlan.projectOverview}
+- Framework: ${developmentPlan.architecture.framework}
+- File Structure: ${developmentPlan.fileStructure.join(', ')}
+- Packages: ${developmentPlan.packages.join(', ')}
+- Color Scheme: ${Object.entries(developmentPlan.colorScheme).map(([key, value]) => `${key}: ${value}`).join(', ')}
+- Features: ${developmentPlan.features.join(', ')}
+
+Please create a complete, functional web application that follows this plan exactly, implementing all files in the specified structure.`;
+
+    const originalPrompt = prompt;
+    setPrompt(enhancedPrompt);
+    await generateWebApp();
+    setPrompt(originalPrompt);
+  };
+
+  const handlePlanRejection = () => {
+    setShowPlanDialog(false);
+    setDevelopmentPlan(null);
+    toast({
+      title: "Plan Rejected",
+      description: "You can modify your prompt and try thinking again.",
+    });
+  };
+
+  const downloadApp = () => {
+    if (!generatedApp) return;
+
+    generatedApp.files.forEach(file => {
+      const blob = new Blob([file.content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = file.path.split('/').pop() || 'file.txt';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    });
+
+    // Download package.json if not included
+    const hasPackageJson = generatedApp.files.some(f => f.path.includes('package.json'));
+    if (!hasPackageJson && generatedApp.packages.length > 0) {
+      const packageJson = {
+        name: "generated-web-app",
+        version: "1.0.0",
+        dependencies: generatedApp.packages.reduce((acc, pkg) => {
+          acc[pkg] = "latest";
+          return acc;
+        }, {} as Record<string, string>)
+      };
+      
+      const blob = new Blob([JSON.stringify(packageJson, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'package.json';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    toast({
+      title: "Files Downloaded",
+      description: `All ${generatedApp.files.length} files have been downloaded.`,
+    });
+  };
+
   const startNewProject = () => {
     setGeneratedApp(null);
     setCurrentProjectId(null);
@@ -509,45 +498,23 @@ Focus on creating something visually impressive that users will love to interact
     setActiveRightTab('editor');
   };
 
-  const downloadApp = () => {
-    if (!generatedApp) return;
-
-    const files = [
-      { name: 'index.html', content: generatedApp.html },
-      { name: 'styles.css', content: generatedApp.css },
-      { name: 'script.js', content: generatedApp.javascript },
-      { name: 'README.txt', content: `Generated Web App\n\nDescription: ${generatedApp.description}\n\nFeatures:\n${generatedApp.features.map(f => `- ${f}`).join('\n')}` }
-    ];
-
-    files.forEach(file => {
-      const blob = new Blob([file.content], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = file.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    });
-
-    toast({
-      title: "Files Downloaded",
-      description: "All web app files have been downloaded to your device.",
-    });
-  };
-
-  const handleFileChange = (fileType: string, content: string) => {
+  const handleFileChange = (filePath: string, content: string) => {
     if (!generatedApp) return;
 
     setGeneratedApp(prev => ({
       ...prev!,
-      [fileType]: content
+      files: prev!.files.map(file => 
+        file.path === filePath ? { ...file, content } : file
+      )
     }));
 
-    // Auto-save changes
     if (currentProjectId) {
-      const updatedApp = { ...generatedApp, [fileType]: content };
+      const updatedApp = { 
+        ...generatedApp, 
+        files: generatedApp.files.map(file => 
+          file.path === filePath ? { ...file, content } : file
+        )
+      };
       saveProject(conversationHistory[0]?.prompt || 'Modified project', updatedApp, selectedModel);
     }
   };
@@ -568,11 +535,7 @@ Focus on creating something visually impressive that users will love to interact
             </Button>
           </div>
           <div className="flex-1">
-            <WebAppPreview
-              html={generatedApp.html}
-              css={generatedApp.css}
-              javascript={generatedApp.javascript}
-            />
+            <WebAppPreview files={generatedApp.files} />
           </div>
         </div>
       </div>
@@ -581,7 +544,6 @@ Focus on creating something visually impressive that users will love to interact
 
   return (
     <div className="space-y-6">
-      {/* Development Plan Dialog */}
       <DevelopmentPlanDialog
         isOpen={showPlanDialog}
         plan={developmentPlan}
@@ -607,7 +569,7 @@ Focus on creating something visually impressive that users will love to interact
               </span>
             </div>
             <p className="text-prism-text-muted mt-2 font-inter">
-              Generate fully functional web applications with advanced code editing and package management
+              Generate full-stack TypeScript applications with unlimited files and modern frameworks
             </p>
           </div>
         </div>
@@ -622,30 +584,27 @@ Focus on creating something visually impressive that users will love to interact
         </div>
       </div>
 
-      {/* Beta Warning */}
-      <Alert className="border-orange-500/30 bg-orange-500/5">
-        <AlertTriangle className="h-4 w-4 text-orange-500" />
-        <AlertDescription className="text-orange-300">
-          <strong>Enhanced Features:</strong> Now optimized for stunning UI generation with Gemini 2.5 Pro Experimental, featuring real-time generation time estimates and beautiful design focus.
-        </AlertDescription>
-      </Alert>
-
-      {/* Prompt Tips */}
+      {/* Enhanced Features Alert */}
       <Alert className="border-blue-500/30 bg-blue-500/5">
         <Sparkles className="h-4 w-4 text-blue-500" />
         <AlertDescription className="text-blue-300">
-          <strong>Pro Tip:</strong> Use the "Think" button to generate a detailed development plan with color schemes, architecture, and implementation steps before generating your app.
+          <strong>Enhanced Features:</strong> Now supports TypeScript, React, Vue, Angular with unlimited files, package management, and complete project structures following development plans.
         </AlertDescription>
       </Alert>
 
-      {/* Split Layout - Updated widths */}
+      {/* Split Layout */}
       <div className="flex gap-6 h-[calc(100vh-20rem)]">
-        {/* Left Side - Preview - Reduced flex weight */}
+        {/* Left Side - Preview */}
         <div className="flex-1">
           {generatedApp ? (
             <div className="h-full flex flex-col">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-prism-text">Live Preview</h3>
+                <div className="flex items-center space-x-4">
+                  <h3 className="text-lg font-semibold text-prism-text">Live Preview</h3>
+                  <span className="px-2 py-1 bg-prism-primary/20 text-prism-primary text-xs rounded-full">
+                    {generatedApp.framework} • {generatedApp.files.length} files
+                  </span>
+                </div>
                 <div className="flex space-x-2">
                   <Button
                     onClick={() => setIsFullscreen(true)}
@@ -668,11 +627,7 @@ Focus on creating something visually impressive that users will love to interact
                 </div>
               </div>
               <div className="flex-1">
-                <WebAppPreview
-                  html={generatedApp.html}
-                  css={generatedApp.css}
-                  javascript={generatedApp.javascript}
-                />
+                <WebAppPreview files={generatedApp.files} />
               </div>
             </div>
           ) : (
@@ -680,13 +635,13 @@ Focus on creating something visually impressive that users will love to interact
               <CardContent className="text-center py-20">
                 <Globe className="w-16 h-16 text-prism-text-muted mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-prism-text mb-2">No Web App Generated Yet</h3>
-                <p className="text-prism-text-muted">Use the generator on the right to create your web application</p>
+                <p className="text-prism-text-muted">Use the generator to create your TypeScript web application</p>
               </CardContent>
             </Card>
           )}
         </div>
 
-        {/* Right Side - Tabs - Increased width significantly */}
+        {/* Right Side - Tabs */}
         <div className="w-[32rem] flex flex-col">
           <Tabs value={activeRightTab} onValueChange={setActiveRightTab} className="flex-1 flex flex-col">
             <TabsList className="grid w-full grid-cols-3">
@@ -709,7 +664,7 @@ Focus on creating something visually impressive that users will love to interact
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Wand2 className="w-5 h-5 text-prism-primary" />
-                    <span>{generatedApp ? 'Continue Working' : 'Describe Your Beautiful Web App'}</span>
+                    <span>{generatedApp ? 'Continue Working' : 'Describe Your Modern Web Application'}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -724,8 +679,8 @@ Focus on creating something visually impressive that users will love to interact
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
                       placeholder={generatedApp ? 
-                        "Describe how you want to enhance the visual design or add beautiful new features... Focus on UI improvements, animations, or modern design elements..." : 
-                        "Describe the beautiful web application you want to create... For example: 'Create a stunning portfolio website with smooth scrolling animations, glassmorphism cards, gradient backgrounds, and interactive hover effects. Include a modern dark/light theme toggle with beautiful transitions.'"
+                        "Describe how you want to enhance your application... Add new features, components, or modify the structure..." : 
+                        "Describe the modern web application you want to create... For example: 'Create a TypeScript React dashboard with user authentication, data visualization charts, responsive design, and dark/light theme toggle. Use Tailwind CSS for styling and include proper type definitions.'"
                       }
                       className="min-h-[200px] resize-none bg-prism-surface/10 border-prism-border"
                       disabled={isGenerating || isThinking}
@@ -783,12 +738,37 @@ Focus on creating something visually impressive that users will love to interact
                       <h4 className="font-semibold text-prism-text mb-2 text-sm">Current Project:</h4>
                       <p className="text-prism-text-muted text-xs mb-3">{generatedApp.description}</p>
 
+                      <div className="grid grid-cols-2 gap-4 mb-3">
+                        <div>
+                          <h5 className="font-semibold text-prism-text text-xs mb-1">Framework:</h5>
+                          <p className="text-prism-text-muted text-xs">{generatedApp.framework}</p>
+                        </div>
+                        <div>
+                          <h5 className="font-semibold text-prism-text text-xs mb-1">Files:</h5>
+                          <p className="text-prism-text-muted text-xs">{generatedApp.files.length} files</p>
+                        </div>
+                      </div>
+
                       <h4 className="font-semibold text-prism-text mb-2 text-sm">Features:</h4>
-                      <ul className="list-disc list-inside text-prism-text-muted text-xs space-y-1">
+                      <ul className="list-disc list-inside text-prism-text-muted text-xs space-y-1 mb-3">
                         {generatedApp.features.map((feature, index) => (
                           <li key={index}>{feature}</li>
                         ))}
                       </ul>
+
+                      <h4 className="font-semibold text-prism-text mb-2 text-sm">Packages:</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {generatedApp.packages.slice(0, 6).map((pkg, index) => (
+                          <span key={index} className="px-2 py-1 bg-prism-primary/20 text-prism-primary text-xs rounded">
+                            {pkg}
+                          </span>
+                        ))}
+                        {generatedApp.packages.length > 6 && (
+                          <span className="px-2 py-1 bg-prism-surface/30 text-prism-text-muted text-xs rounded">
+                            +{generatedApp.packages.length - 6} more
+                          </span>
+                        )}
+                      </div>
 
                       {conversationHistory.length > 1 && (
                         <div className="mt-3 pt-2 border-t border-prism-border">
