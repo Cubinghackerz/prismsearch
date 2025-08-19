@@ -11,10 +11,14 @@ export interface GeneratedApp {
   features: string[];
   framework: string;
   packages: string[];
-  // Legacy properties for backward compatibility
-  html?: string;
-  css?: string;
-  javascript?: string;
+}
+
+export interface ProjectHistoryItem {
+  id: string;
+  prompt: string;
+  generatedApp: GeneratedApp;
+  model: string;
+  timestamp: Date;
 }
 
 export interface DevelopmentPlan {

@@ -1,6 +1,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { GeneratedFile } from "@/types/webApp";
+import { FileProcessor } from "./FileProcessor";
 
 interface WebAppPreviewProps {
   files: GeneratedFile[];
@@ -9,240 +10,62 @@ interface WebAppPreviewProps {
 const WebAppPreview: React.FC<WebAppPreviewProps> = ({ files }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [previewContent, setPreviewContent] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!files || files.length === 0) return;
-
-    console.log('Processing files for preview:', files);
-
-    // Find entry points
-    const htmlFile = files.find(f => 
-      f.type === 'html' && (
-        f.path.includes('index.html') || 
-        f.path.includes('public/index.html') ||
-        f.path === 'index.html'
-      )
-    );
-
-    const mainAppFile = files.find(f => 
-      f.path.includes('App.tsx') || 
-      f.path.includes('App.jsx') ||
-      f.path.includes('main.tsx') ||
-      f.path.includes('index.tsx') ||
-      f.path.includes('src/App')
-    );
-
-    // Collect all CSS
-    const cssFiles = files.filter(f => f.type === 'css');
-    const allCSS = cssFiles.map(f => f.content).join('\n');
-
-    // Process JavaScript/TypeScript files
-    let processedJS = '';
-    
-    if (files.some(f => f.type === 'tsx' || f.type === 'jsx')) {
-      // Handle React/JSX files
-      processedJS = generateReactPreview(files);
-    } else {
-      // Handle vanilla JS
-      const jsFiles = files.filter(f => f.type === 'javascript' || f.type === 'typescript');
-      processedJS = jsFiles.map(f => f.content).join('\n');
+    if (!files || files.length === 0) {
+      setPreviewContent("");
+      return;
     }
 
-    let finalHTML = '';
+    console.log('WebAppPreview: Processing files for preview:', files);
+    setIsLoading(true);
 
-    if (htmlFile) {
-      // Use existing HTML file as base
-      finalHTML = htmlFile.content;
-      
-      // Inject additional CSS
-      if (allCSS && !finalHTML.includes(allCSS)) {
-        finalHTML = finalHTML.replace('</head>', `<style>${allCSS}</style>\n</head>`);
-      }
-      
-      // Inject processed JS
-      if (processedJS && !finalHTML.includes(processedJS)) {
-        finalHTML = finalHTML.replace('</body>', `<script>${processedJS}</script>\n</body>`);
-      }
-    } else {
-      // Create HTML from scratch
-      finalHTML = createHTMLFromFiles(files, allCSS, processedJS);
+    try {
+      const processedHTML = FileProcessor.processFiles(files);
+      console.log('WebAppPreview: Generated HTML length:', processedHTML.length);
+      setPreviewContent(processedHTML);
+    } catch (error) {
+      console.error('WebAppPreview: Error processing files:', error);
+      setPreviewContent(createErrorHTML(error.message));
+    } finally {
+      setIsLoading(false);
     }
-
-    console.log('Generated preview HTML:', finalHTML);
-    setPreviewContent(finalHTML);
   }, [files]);
 
-  const generateReactPreview = (files: GeneratedFile[]) => {
-    const reactFiles = files.filter(f => f.type === 'tsx' || f.type === 'jsx');
-    
-    // Simple React simulation for preview
-    let jsCode = `
-// Simple React-like simulation for preview
-const React = {
-  createElement: function(type, props, ...children) {
-    if (typeof type === 'function') {
-      return type(props || {});
-    }
-    
-    const element = document.createElement(type);
-    
-    if (props) {
-      Object.keys(props).forEach(key => {
-        if (key === 'className') {
-          element.className = props[key];
-        } else if (key === 'style' && typeof props[key] === 'object') {
-          Object.assign(element.style, props[key]);
-        } else if (key.startsWith('on') && typeof props[key] === 'function') {
-          element.addEventListener(key.toLowerCase().slice(2), props[key]);
-        } else if (key !== 'children') {
-          element.setAttribute(key, props[key]);
-        }
-      });
-    }
-    
-    children.flat().forEach(child => {
-      if (child == null) return;
-      if (typeof child === 'string' || typeof child === 'number') {
-        element.appendChild(document.createTextNode(String(child)));
-      } else if (child && typeof child === 'object' && child.nodeType) {
-        element.appendChild(child);
-      }
-    });
-    
-    return element;
-  },
-  
-  useState: function(initialValue) {
-    let value = initialValue;
-    const setValue = (newValue) => {
-      value = typeof newValue === 'function' ? newValue(value) : newValue;
-      // Trigger re-render
-      setTimeout(renderApp, 0);
-    };
-    return [() => value, setValue];
-  },
-  
-  useEffect: function(effect, deps) {
-    setTimeout(effect, 0);
-  }
-};
-
-`;
-
-    // Process each React file
-    reactFiles.forEach(file => {
-      let content = file.content;
-      
-      // Remove imports and exports
-      content = content.replace(/import.*from.*['"].*['"];?\s*/g, '');
-      content = content.replace(/export\s+(default\s+)?/g, '');
-      
-      // Simple JSX to JS conversion
-      content = content.replace(/<(\w+)([^>]*?)>/g, (match, tag, attrs) => {
-        if (!attrs.trim()) {
-          return `React.createElement('${tag}', null,`;
-        }
-        
-        // Parse attributes
-        let propsStr = attrs.replace(/(\w+)=\{([^}]+)\}/g, '$1: $2')
-                           .replace(/(\w+)="([^"]+)"/g, '$1: "$2"')
-                           .replace(/className/g, 'className');
-        
-        return `React.createElement('${tag}', {${propsStr}},`;
-      });
-      
-      content = content.replace(/<\/\w+>/g, ')');
-      
-      // Handle self-closing tags
-      content = content.replace(/<(\w+)([^>]*?)\/>/g, (match, tag, attrs) => {
-        if (!attrs.trim()) {
-          return `React.createElement('${tag}', null)`;
-        }
-        let propsStr = attrs.replace(/(\w+)=\{([^}]+)\}/g, '$1: $2')
-                           .replace(/(\w+)="([^"]+)"/g, '$1: "$2"');
-        return `React.createElement('${tag}', {${propsStr}})`;
-      });
-      
-      jsCode += `\n${content}\n`;
-    });
-
-    // Add rendering logic
-    jsCode += `
-function renderApp() {
-  const root = document.getElementById('root');
-  if (!root) return;
-  
-  try {
-    root.innerHTML = '';
-    let appElement;
-    
-    if (typeof App === 'function') {
-      appElement = App();
-    } else if (typeof MainApp === 'function') {
-      appElement = MainApp();
-    } else {
-      // Try to find any component function
-      const componentNames = ['Component', 'TodoApp', 'Calculator', 'Dashboard'];
-      for (const name of componentNames) {
-        if (typeof window[name] === 'function') {
-          appElement = window[name]();
-          break;
-        }
-      }
-    }
-    
-    if (appElement && appElement.nodeType) {
-      root.appendChild(appElement);
-    } else {
-      root.innerHTML = '<div style="padding: 2rem; text-align: center; font-family: system-ui;"><h2>Generated Application</h2><p>Component rendered successfully!</p></div>';
-    }
-  } catch (error) {
-    console.error('Rendering error:', error);
-    root.innerHTML = '<div style="padding: 2rem; text-align: center; font-family: system-ui; color: #dc2626;"><h2>Rendering Error</h2><p>There was an issue rendering the component. Check the console for details.</p></div>';
-  }
-}
-
-// Initial render
-setTimeout(renderApp, 100);
-`;
-
-    return jsCode;
-  };
-
-  const createHTMLFromFiles = (files: GeneratedFile[], css: string, js: string) => {
+  const createErrorHTML = (errorMessage: string) => {
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generated Application Preview</title>
+    <title>Preview Error</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: #fff;
+            font-family: system-ui, sans-serif;
+            padding: 2rem;
+            background: #f9f9f9;
         }
-        #root {
-            min-height: 100vh;
+        .error-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            border-left: 4px solid #dc2626;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        ${css}
     </style>
 </head>
 <body>
-    <div id="root">
-        <div style="padding: 2rem; text-align: center;">
-            <h2>Loading Application...</h2>
-        </div>
+    <div class="error-container">
+        <h2 style="color: #dc2626; margin-bottom: 1rem;">Preview Generation Error</h2>
+        <p style="margin-bottom: 1rem;">There was an issue generating the preview:</p>
+        <code style="background: #f3f4f6; padding: 0.5rem; border-radius: 4px; display: block; word-break: break-word;">
+            ${errorMessage}
+        </code>
+        <p style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
+            Try regenerating the application or check the console for more details.
+        </p>
     </div>
-    <script>
-        ${js}
-    </script>
 </body>
 </html>`;
   };
@@ -250,16 +73,36 @@ setTimeout(renderApp, 100);
   useEffect(() => {
     if (iframeRef.current && previewContent) {
       const iframe = iframeRef.current;
-      const doc = iframe.contentDocument || iframe.contentWindow?.document;
       
-      if (doc) {
-        doc.open();
-        doc.write(previewContent);
-        doc.close();
+      try {
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
         
-        iframe.onload = () => {
-          console.log('Preview loaded successfully');
-        };
+        if (doc) {
+          doc.open();
+          doc.write(previewContent);
+          doc.close();
+          
+          // Add error handling to the iframe
+          iframe.onload = () => {
+            try {
+              const iframeWindow = iframe.contentWindow;
+              if (iframeWindow) {
+                iframeWindow.onerror = (msg, url, line, col, error) => {
+                  console.error('Preview runtime error:', { msg, url, line, col, error });
+                };
+                
+                iframeWindow.addEventListener('unhandledrejection', (event) => {
+                  console.error('Preview unhandled promise rejection:', event.reason);
+                });
+              }
+              console.log('Preview loaded successfully');
+            } catch (e) {
+              console.warn('Could not add error handlers to iframe:', e);
+            }
+          };
+        }
+      } catch (error) {
+        console.error('Error writing to iframe:', error);
       }
     }
   }, [previewContent]);
@@ -276,7 +119,15 @@ setTimeout(renderApp, 100);
   }
 
   return (
-    <div className="w-full h-full bg-white rounded-lg overflow-hidden border border-prism-border">
+    <div className="w-full h-full bg-white rounded-lg overflow-hidden border border-prism-border relative">
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-prism-primary mx-auto mb-2"></div>
+            <p className="text-prism-text-muted">Processing application...</p>
+          </div>
+        </div>
+      )}
       <iframe
         ref={iframeRef}
         className="w-full h-full"

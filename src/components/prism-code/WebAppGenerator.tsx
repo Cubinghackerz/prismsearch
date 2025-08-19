@@ -588,7 +588,7 @@ Please create a complete, functional web application that follows this plan exac
       <Alert className="border-blue-500/30 bg-blue-500/5">
         <Sparkles className="h-4 w-4 text-blue-500" />
         <AlertDescription className="text-blue-300">
-          <strong>Enhanced Features:</strong> Now supports TypeScript, React, Vue, Angular with unlimited files, package management, and complete project structures following development plans.
+          <strong>Enhanced Preview Engine:</strong> Rebuilt preview system with robust JSX/TypeScript processing, better error handling, and improved React component rendering.
         </AlertDescription>
       </Alert>
 
