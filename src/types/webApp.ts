@@ -11,10 +11,6 @@ export interface GeneratedApp {
   features: string[];
   framework: string;
   packages: string[];
-  // Legacy properties for backward compatibility
-  html?: string;
-  css?: string;
-  javascript?: string;
 }
 
 export interface DevelopmentPlan {

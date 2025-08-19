@@ -473,7 +473,7 @@ Please create a complete, functional web application that follows this plan exac
 
     toast({
       title: "Files Downloaded",
-      description: `All ${generatedApp.files?.length || 0} files have been downloaded.`,
+      description: `All ${generatedApp.files.length} files have been downloaded.`,
     });
   };
 
@@ -745,7 +745,7 @@ Please create a complete, functional web application that follows this plan exac
                         </div>
                         <div>
                           <h5 className="font-semibold text-prism-text text-xs mb-1">Files:</h5>
-                          <p className="text-prism-text-muted text-xs">{generatedApp.files?.length || 0} files</p>
+                          <p className="text-prism-text-muted text-xs">{generatedApp.files.length} files</p>
                         </div>
                       </div>
 
