@@ -446,7 +446,7 @@ Focus on creating a beautiful, functional application with proper architecture a
 
   // Helper function to extract file content based on type
   const getFileContent = (app: GeneratedApp, type: 'html' | 'css' | 'javascript'): string => {
-    if (!app.files) {
+    if (!app || !app.files) {
       return '';
     }
 
@@ -454,41 +454,86 @@ Focus on creating a beautiful, functional application with proper architecture a
     
     switch (type) {
       case 'html':
-        return files['index.html'] || 
+        // Look for HTML files in common locations
+        const htmlContent = files['index.html'] || 
                files['src/index.html'] || 
                files['public/index.html'] || 
+               files['src/App.html'] ||
+               files['public/app.html'] ||
+               // Find any .html file
+               Object.entries(files).find(([name, content]) => 
+                 name.endsWith('.html') && typeof content === 'string'
+               )?.[1] ||
+               // Find content that looks like HTML
                Object.values(files).find(content => 
-                 typeof content === 'string' && content.includes('<!DOCTYPE html>')
+                 typeof content === 'string' && (
+                   content.includes('<!DOCTYPE html>') ||
+                   content.includes('<html') ||
+                   content.includes('<body') ||
+                   content.includes('<div')
+                 )
                ) || '';
+        
+        return String(htmlContent || '');
                
       case 'css':
-        return files['styles.css'] || 
+        // Look for CSS files in common locations
+        const cssContent = files['styles.css'] || 
                files['style.css'] || 
                files['src/styles.css'] || 
                files['src/style.css'] || 
                files['src/index.css'] || 
+               files['public/styles.css'] ||
+               files['assets/style.css'] ||
+               // Find any .css file
+               Object.entries(files).find(([name, content]) => 
+                 name.endsWith('.css') && typeof content === 'string'
+               )?.[1] ||
+               // Find content that looks like CSS
                Object.values(files).find(content => 
-                 typeof content === 'string' && (
-                   content.includes('body {') || 
-                   content.includes('.') || 
-                   content.includes('#')
-                 )
+                 typeof content === 'string' && content.includes('{') && (
+                   content.includes('body') || 
+                   content.includes('.') ||
+                   content.includes('#') ||
+                   content.includes('color:') ||
+                   content.includes('font-')
+                 ) && !content.includes('function')
                ) || '';
+        
+        return String(cssContent || '');
                
       case 'javascript':
-        return files['script.js'] || 
+        // Look for JavaScript files in common locations
+        const jsContent = files['script.js'] || 
                files['main.js'] || 
                files['index.js'] || 
                files['src/main.js'] || 
                files['src/index.js'] || 
                files['src/app.js'] || 
+               files['src/main.ts'] ||
+               files['src/index.ts'] ||
+               files['src/App.js'] ||
+               files['src/App.ts'] ||
+               files['src/App.tsx'] ||
+               // Find any .js/.ts/.jsx/.tsx file
+               Object.entries(files).find(([name, content]) => 
+                 (name.endsWith('.js') || name.endsWith('.ts') || name.endsWith('.jsx') || name.endsWith('.tsx')) && 
+                 typeof content === 'string' && !name.includes('config') && !name.includes('test')
+               )?.[1] ||
+               // Find content that looks like JavaScript
                Object.values(files).find(content => 
                  typeof content === 'string' && (
                    content.includes('function') || 
                    content.includes('const ') || 
-                   content.includes('document.')
+                   content.includes('let ') ||
+                   content.includes('var ') ||
+                   content.includes('document.') ||
+                   content.includes('console.') ||
+                   content.includes('=>')
                  )
                ) || '';
+        
+        return String(jsContent || '');
                
       default:
         return '';

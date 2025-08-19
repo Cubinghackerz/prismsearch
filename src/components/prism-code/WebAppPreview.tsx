@@ -13,266 +13,139 @@ interface WebAppPreviewProps {
 
 const WebAppPreview = ({ html, css, javascript, onConsoleMessage }: WebAppPreviewProps) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [debugInfo, setDebugInfo] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log('WebAppPreview - Received props:', { 
-      htmlLength: html?.length || 0, 
-      cssLength: css?.length || 0, 
-      jsLength: javascript?.length || 0 
-    });
+    setIsLoading(true);
+    onConsoleMessage?.('Building preview application...');
 
     if (iframeRef.current) {
       const iframe = iframeRef.current;
       const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
       
       if (iframeDoc) {
-        // Check if we have any meaningful content
-        const hasContent = (html && html.trim()) || (css && css.trim()) || (javascript && javascript.trim());
+        // Always try to build preview, even with minimal content
+        const hasHtml = html && html.trim();
+        const hasCss = css && css.trim();
+        const hasJs = javascript && javascript.trim();
         
-        if (!hasContent) {
-          console.log('WebAppPreview - No content provided, showing fallback');
-          onConsoleMessage?.('No content provided, showing fallback message', 'warn');
-          setDebugInfo(`No content: HTML(${html?.length || 0}), CSS(${css?.length || 0}), JS(${javascript?.length || 0})`);
+        onConsoleMessage?.(`Building with content: HTML(${hasHtml ? 'YES' : 'NO'}), CSS(${hasCss ? 'YES' : 'NO'}), JS(${hasJs ? 'YES' : 'NO'})`);
+        
+        // Build the complete HTML document
+        let completeHTML = '';
+        
+        if (hasHtml) {
+          // Use provided HTML as base
+          completeHTML = html;
           
-          const fallbackHTML = `
+          // If CSS is provided separately, inject it
+          if (hasCss && !html.includes('<style>') && !html.includes('stylesheet')) {
+            completeHTML = completeHTML.replace(
+              '</head>', 
+              `<style>${css}</style>\n</head>`
+            );
+          }
+          
+          // If JavaScript is provided separately, inject it
+          if (hasJs && !html.includes('<script>')) {
+            completeHTML = completeHTML.replace(
+              '</body>', 
+              `<script>${javascript}</script>\n</body>`
+            );
+          }
+        } else {
+          // Build HTML from scratch
+          completeHTML = `
             <!DOCTYPE html>
             <html lang="en">
             <head>
               <meta charset="UTF-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>Preview</title>
+              <title>Generated Web App</title>
+              <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https: http:;">
+              ${hasCss ? `<style>${css}</style>` : ''}
             </head>
-            <body style="font-family: system-ui; padding: 20px; text-align: center; color: #666;">
-              <h2>No content to preview</h2>
-              <p>Generate a web app to see the live preview here.</p>
+            <body>
+              ${hasJs || hasCss ? '<div id="app">Loading...</div>' : '<h1>Hello World</h1><p>Your web app will appear here.</p>'}
+              ${hasJs ? `<script>${javascript}</script>` : ''}
             </body>
             </html>
           `;
-          iframeDoc.open();
-          iframeDoc.write(fallbackHTML);
-          iframeDoc.close();
-          return;
         }
-
-        console.log('WebAppPreview - Generating preview with content');
-        onConsoleMessage?.(`Building preview: HTML(${html?.length || 0} chars), CSS(${css?.length || 0} chars), JS(${javascript?.length || 0} chars)`);
-        setDebugInfo(`Content loaded: HTML(${html?.length || 0}), CSS(${css?.length || 0}), JS(${javascript?.length || 0})`);
-
-        // Handle React/JSX content by adding Babel transpilation
-        let processedJS = javascript || '';
         
-        // Check if content contains JSX/React code
-        if (processedJS.includes('React') || processedJS.includes('jsx') || (processedJS.includes('<') && processedJS.includes('/>'))) {
-          console.log('WebAppPreview - Detected React/JSX content, adding Babel');
-          onConsoleMessage?.('Detected React/JSX content, setting up transpilation');
-          
-          // For React components, we need to handle JSX properly
-          processedJS = `
-            // React app initialization
-            try {
-              ${processedJS}
-            } catch (error) {
-              console.error('React component error:', error);
-              throw error;
-            }
+        // Ensure we have valid HTML structure
+        if (!completeHTML.includes('<!DOCTYPE html>')) {
+          completeHTML = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Generated Web App</title>
+              <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https: http:;">
+            </head>
+            <body>
+              ${completeHTML}
+            </body>
+            </html>
           `;
         }
-
-        // Enhanced HTML with better error handling and console capture
-        const fullHTML = `
-          <!DOCTYPE html>
-          <html lang="en">
-          <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https: http:;">
-            <title>Generated Web App Preview</title>
-            
-            <!-- Load React and other libraries if needed -->
-            ${(javascript && (javascript.includes('React') || javascript.includes('jsx'))) ? `
-            <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-            <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-            <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-            ` : ''}
-            
-            <style>
-              body {
-                margin: 0;
-                padding: 20px;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-                line-height: 1.6;
-              }
-              
-              /* Error display styles */
-              .preview-error {
-                background: #fee;
-                color: #c33;
-                padding: 15px;
-                margin: 15px 0;
-                border-radius: 6px;
-                border: 1px solid #c33;
-                font-family: monospace;
-                font-size: 14px;
-                white-space: pre-wrap;
-              }
-              
-              ${css || ''}
-            </style>
-          </head>
-          <body>
-            ${html || ''}
-            
-            <script>
-              // Enhanced console capture and error handling
-              const originalConsole = {
-                log: console.log,
-                error: console.error,
-                warn: console.warn,
-                info: console.info
-              };
-              
-              // Override console methods to capture output
-              console.log = function(...args) {
-                originalConsole.log.apply(console, args);
-                try {
-                  window.parent.postMessage({
-                    type: 'console',
-                    level: 'log',
-                    message: args.map(arg => 
-                      typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-                    ).join(' ')
-                  }, '*');
-                } catch(e) {}
-              };
-              
-              console.error = function(...args) {
-                originalConsole.error.apply(console, args);
-                try {
-                  window.parent.postMessage({
-                    type: 'console',
-                    level: 'error',
-                    message: args.map(arg => 
-                      typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-                    ).join(' ')
-                  }, '*');
-                } catch(e) {}
-              };
-              
-              console.warn = function(...args) {
-                originalConsole.warn.apply(console, args);
-                try {
-                  window.parent.postMessage({
-                    type: 'console',
-                    level: 'warn',
-                    message: args.map(arg => 
-                      typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-                    ).join(' ')
-                  }, '*');
-                } catch(e) {}
-              };
-
-              // Global error handler
-              window.onerror = function(message, source, lineno, colno, error) {
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'preview-error';
-                errorDiv.textContent = \`JavaScript Error: \${message}\nLine: \${lineno}, Column: \${colno}\`;
-                document.body.appendChild(errorDiv);
-                
-                console.error('Global error caught:', message, 'at', source, lineno, colno);
-                return false;
-              };
-
-              // Unhandled promise rejection handler
-              window.addEventListener('unhandledrejection', function(event) {
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'preview-error';
-                errorDiv.textContent = \`Unhandled Promise Rejection: \${event.reason}\`;
-                document.body.appendChild(errorDiv);
-                
-                console.error('Unhandled promise rejection:', event.reason);
-              });
-
-              // Initial load message
-              console.log('🚀 Preview application loaded successfully');
-              console.log('📊 Content stats:', {
-                html: ${html?.length || 0},
-                css: ${css?.length || 0}, 
-                javascript: ${javascript?.length || 0}
-              });
-            </script>
-            
-            <script>
-              // Main application script with enhanced error handling
-              try {
-                ${processedJS}
-                console.log('✅ Application JavaScript executed successfully');
-              } catch (error) {
-                console.error('❌ Application JavaScript Error:', error);
-                
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'preview-error';
-                errorDiv.innerHTML = \`
-                  <strong>JavaScript Execution Error:</strong><br>
-                  \${error.message}<br><br>
-                  <strong>Stack:</strong><br>
-                  \${error.stack || 'No stack trace available'}
-                \`;
-                document.body.appendChild(errorDiv);
-                
-                throw error;
-              }
-            </script>
-          </body>
-          </html>
-        `;
         
-        console.log('WebAppPreview - Writing enhanced content to iframe');
-        onConsoleMessage?.('Writing application content to preview iframe');
+        onConsoleMessage?.('Writing complete HTML document to iframe...');
         
-        iframeDoc.open();
-        iframeDoc.write(fullHTML);
-        iframeDoc.close();
-        
-        // Set up message listener for console output from iframe
-        const handleMessage = (event: MessageEvent) => {
-          if (event.data && event.data.type === 'console') {
-            onConsoleMessage?.(event.data.message, event.data.level);
-          }
-        };
-        
-        window.addEventListener('message', handleMessage);
-        
-        // Add load event listener
-        iframe.onload = () => {
-          console.log('WebAppPreview - Iframe loaded successfully');
-          onConsoleMessage?.('Preview iframe loaded and ready for interaction');
+        try {
+          iframeDoc.open();
+          iframeDoc.write(completeHTML);
+          iframeDoc.close();
           
-          const iframeWindow = iframe.contentWindow;
-          if (iframeWindow) {
-            // Check content after a brief delay
+          onConsoleMessage?.('Preview iframe content written successfully');
+          setIsLoading(false);
+          
+          // Set up iframe load listener first
+          iframe.onload = () => {
+            onConsoleMessage?.('Preview loaded successfully');
+            setIsLoading(false);
+            
+            // Verify content after load
             setTimeout(() => {
               try {
-                const bodyContent = iframeDoc.body?.innerHTML || '';
-                console.log('WebAppPreview - Iframe body content length:', bodyContent.length);
-                onConsoleMessage?.(`Preview content rendered: ${bodyContent.length} characters`);
-                
-                if (bodyContent.length < 50) {
-                  console.warn('WebAppPreview - Very little content in iframe body');
-                  onConsoleMessage?.('Warning: Very little content rendered in preview', 'warn');
+                const bodyText = iframeDoc.body?.textContent || '';
+                if (bodyText.trim().length > 0) {
+                  onConsoleMessage?.(`Content verified: ${bodyText.length} characters rendered`);
+                } else {
+                  onConsoleMessage?. ('Warning: No visible content detected', 'warn');
                 }
               } catch (e) {
-                console.error('WebAppPreview - Error checking iframe content:', e);
-                onConsoleMessage?.('Error checking preview content', 'error');
+                onConsoleMessage?.('Error verifying content', 'error');
               }
-            }, 100);
+            }, 500);
+          };
+          
+          // Set up message listener for console output
+          const handleMessage = (event: MessageEvent) => {
+            if (event.data && event.data.type === 'console') {
+              onConsoleMessage?.(event.data.message, event.data.level);
+            }
+          };
+          window.addEventListener('message', handleMessage);
+          
+          // Write content to iframe
+          try {
+            iframeDoc.open();
+            iframeDoc.write(completeHTML);
+            iframeDoc.close();
+          } catch (error) {
+            onConsoleMessage?.(`Error writing to iframe: ${error.message}`, 'error');
           }
-        };
-
-        // Cleanup function
-        return () => {
-          window.removeEventListener('message', handleMessage);
-        };
+          
+          // Cleanup function
+          return () => {
+            window.removeEventListener('message', handleMessage);
+          };
+        } catch (error) {
+          onConsoleMessage?.(`Preview generation error: ${error.message}`, 'error');
+          setIsLoading(false);
+        }
       }
     }
   }, [html, css, javascript, onConsoleMessage]);
@@ -296,10 +169,12 @@ const WebAppPreview = ({ html, css, javascript, onConsoleMessage }: WebAppPrevie
         </Alert>
         
         <div className="flex-1 mx-6 mb-6 border border-prism-border rounded-lg overflow-hidden bg-white">
-          {/* Debug info for development */}
-          {process.env.NODE_ENV === 'development' && debugInfo && (
-            <div className="text-xs text-prism-text-muted p-2 bg-gray-100 border-b">
-              Debug: {debugInfo}
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-prism-primary mx-auto mb-2"></div>
+                <p className="text-sm text-prism-text-muted">Building preview...</p>
+              </div>
             </div>
           )}
           <iframe
