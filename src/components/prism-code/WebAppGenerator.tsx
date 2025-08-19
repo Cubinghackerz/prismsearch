@@ -1,411 +1,211 @@
-import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Wand2, FileText, Package, Rocket, Download, Badge } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useDailyQueryLimit } from "@/hooks/useDailyQueryLimit";
-import ModelSelector, { AIModel } from "./ModelSelector";
-import PackageManager from "./PackageManager";
-import ProjectHistory from "./ProjectHistory";
-import DevelopmentPlanDialog from "./DevelopmentPlanDialog";
-import FileManager from "./FileManager";
-import { FileContent, GeneratedApp, ProjectHistoryItem, DevelopmentPlan } from "@/types/webApp";
-import { v4 as uuidv4 } from 'uuid';
-import DeploymentDialog from "./DeploymentDialog";
 
-const WebAppGenerator = () => {
-  const [prompt, setPrompt] = useState("");
+import React, { useState, useRef } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/components/ui/use-toast';
+import { Loader2, Wand2, Download, Eye, EyeOff, FileText, Settings, Clock, Sparkles } from 'lucide-react';
+import { GeneratedApp, FileContent, ProjectHistoryItem, DevelopmentPlan } from '@/types/webApp';
+import { supabase } from '@/integrations/supabase/client';
+import FileManager from './FileManager';
+import ProjectHistory from './ProjectHistory';
+import DevelopmentPlanDialog from './DevelopmentPlanDialog';
+import TimeEstimator from './TimeEstimator';
+import LivePreview from './LivePreview';
+
+const WebAppGenerator: React.FC = () => {
+  const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedApp, setGeneratedApp] = useState<GeneratedApp | null>(null);
-  const [selectedModel, setSelectedModel] = useState<AIModel>('gemini-2.5-pro-exp-03-25');
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [activeRightTab, setActiveRightTab] = useState('generator');
-  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
-  const [conversationHistory, setConversationHistory] = useState<Array<{ prompt: string; response: GeneratedApp }>>([]);
-  const [isThinking, setIsThinking] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('gemini-2.5-pro-exp-03-25');
+  const [showPreview, setShowPreview] = useState(true);
+  const [projectHistory, setProjectHistory] = useState<ProjectHistoryItem[]>([]);
   const [developmentPlan, setDevelopmentPlan] = useState<DevelopmentPlan | null>(null);
   const [showPlanDialog, setShowPlanDialog] = useState(false);
+  const [estimatedTime, setEstimatedTime] = useState<number>(0);
+  const [progress, setProgress] = useState(0);
   const { toast } = useToast();
-  const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
 
-  const MODEL_FALLBACK_ORDER: AIModel[] = ['gemini', 'groq-llama4-maverick', 'groq-llama4-scout', 'groq-llama31-8b-instant'];
-
-  const saveProject = (projectPrompt: string, app: GeneratedApp, model: string) => {
-    const projectId = currentProjectId || uuidv4();
-    const project: ProjectHistoryItem = {
-      id: projectId,
-      prompt: projectPrompt,
-      generatedApp: app,
-      model: model,
-      timestamp: new Date()
-    };
-
-    const savedProjects = localStorage.getItem('prism-code-projects');
-    let projects: ProjectHistoryItem[] = [];
-    
-    if (savedProjects) {
-      try {
-        projects = JSON.parse(savedProjects);
-      } catch (error) {
-        console.error('Error parsing saved projects:', error);
-      }
+  const models = [
+    { 
+      value: 'gemini-2.5-pro-exp-03-25', 
+      label: 'Gemini 2.5 Pro (Experimental)', 
+      description: 'Latest experimental model with enhanced capabilities'
+    },
+    { 
+      value: 'gemini', 
+      label: 'Gemini 2.0 Flash', 
+      description: 'Fast and efficient for most web applications'
+    },
+    { 
+      value: 'claude-sonnet', 
+      label: 'Claude 3.5 Sonnet', 
+      description: 'Excellent for complex applications and detailed code'
+    },
+    { 
+      value: 'claude-haiku', 
+      label: 'Claude 3.5 Haiku', 
+      description: 'Fast and cost-effective for simpler applications'
+    },
+    { 
+      value: 'gpt-4o', 
+      label: 'GPT-4o', 
+      description: 'OpenAI\'s flagship model with strong coding abilities'
+    },
+    { 
+      value: 'gpt-4o-mini', 
+      label: 'GPT-4o Mini', 
+      description: 'Faster and more affordable version of GPT-4o'
     }
+  ];
 
-    const existingIndex = projects.findIndex(p => p.id === projectId);
-    if (existingIndex >= 0) {
-      projects[existingIndex] = project;
-    } else {
-      projects.unshift(project);
-    }
-
-    projects = projects.slice(0, 50);
-    
-    localStorage.setItem('prism-code-projects', JSON.stringify(projects));
-    setCurrentProjectId(projectId);
-  };
-
-  const parseDevelopmentPlan = (planText: string): DevelopmentPlan | null => {
-    try {
-      // Try to extract JSON from the response
-      const jsonMatch = planText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
-      }
-
-      // Fallback: parse structured text format
-      const lines = planText.split('\n').map(line => line.trim()).filter(line => line);
-      
-      return {
-        projectOverview: "AI-generated web application based on your requirements",
-        colorScheme: {
-          primary: "#3B82F6",
-          secondary: "#6B7280",
-          accent: "#10B981",
-          background: "#FFFFFF",
-          text: "#1F2937"
-        },
-        architecture: {
-          framework: "Vanilla JavaScript",
-          styling: "CSS3",
-          stateManagement: "Local Storage",
-          routing: "Single Page"
-        },
-        features: lines.filter(line => line.includes('feature') || line.includes('•')).slice(0, 6),
-        packages: ["Chart.js", "Animate.css", "Font Awesome"],
-        fileStructure: [
-          "index.html",
-          "styles.css",
-          "script.js",
-          "assets/",
-          "components/"
-        ],
-        implementationSteps: [
-          "Set up HTML structure",
-          "Create responsive CSS layout",
-          "Implement JavaScript functionality",
-          "Add interactive features",
-          "Optimize for performance",
-          "Test across devices"
-        ],
-        securityConsiderations: [
-          "Input validation and sanitization",
-          "XSS prevention",
-          "Secure data storage"
-        ],
-        performanceOptimizations: [
-          "Minified CSS and JavaScript",
-          "Optimized images",
-          "Lazy loading implementation"
-        ],
-        estimatedComplexity: 'Medium' as const
-      };
-    } catch (error) {
-      console.error('Error parsing development plan:', error);
-      return null;
-    }
-  };
-
-  const createFilesFromStructure = (app: GeneratedApp, plan?: DevelopmentPlan): FileContent[] => {
-    const files: FileContent[] = [];
-    
-    // Always include the main files
-    files.push({
-      name: 'index.html',
-      content: app.html,
-      type: 'html',
-      path: 'index.html'
-    });
-    
-    files.push({
-      name: 'styles.css',
-      content: app.css,
-      type: 'css',
-      path: 'styles.css'
-    });
-    
-    // Determine if we should use TypeScript based on framework
-    const useTypeScript = plan?.architecture.framework.toLowerCase().includes('react') || 
-                         plan?.architecture.framework.toLowerCase().includes('vue') ||
-                         plan?.architecture.framework.toLowerCase().includes('angular');
-    
-    files.push({
-      name: useTypeScript ? 'script.ts' : 'script.js',
-      content: app.javascript,
-      type: useTypeScript ? 'typescript' : 'javascript',
-      path: useTypeScript ? 'script.ts' : 'script.js'
-    });
-
-    // Add package.json if we have packages
-    if (plan?.packages && plan.packages.length > 0) {
-      const packageJson = {
-        name: "generated-webapp",
-        version: "1.0.0",
-        description: app.description,
-        main: useTypeScript ? "script.ts" : "script.js",
-        scripts: {
-          build: "npm run build",
-          dev: "npm run dev",
-          start: "npm run start"
-        },
-        dependencies: plan.packages.reduce((acc, pkg) => {
-          acc[pkg] = "latest";
-          return acc;
-        }, {} as Record<string, string>),
-        ...(useTypeScript && {
-          devDependencies: {
-            typescript: "latest",
-            "@types/node": "latest"
-          }
-        })
-      };
-      
-      files.push({
-        name: 'package.json',
-        content: JSON.stringify(packageJson, null, 2),
-        type: 'json',
-        path: 'package.json'
-      });
-    }
-
-    // Add TypeScript config if using TypeScript
-    if (useTypeScript) {
-      const tsConfig = {
-        compilerOptions: {
-          target: "ES2020",
-          lib: ["ES2020", "DOM", "DOM.Iterable"],
-          module: "ESNext",
-          skipLibCheck: true,
-          moduleResolution: "bundler",
-          allowImportingTsExtensions: true,
-          resolveJsonModule: true,
-          isolatedModules: true,
-          noEmit: true,
-          jsx: "react-jsx",
-          strict: true,
-          noUnusedLocals: true,
-          noUnusedParameters: true,
-          noFallthroughCasesInSwitch: true
-        },
-        include: ["src"],
-        references: [{ path: "./tsconfig.node.json" }]
-      };
-      
-      files.push({
-        name: 'tsconfig.json',
-        content: JSON.stringify(tsConfig, null, 2),
-        type: 'json',
-        path: 'tsconfig.json'
-      });
-    }
-
-    // Add README
-    files.push({
-      name: 'README.md',
-      content: `# ${app.description}\n\n## Features\n${app.features.map(f => `- ${f}`).join('\n')}\n\n## Framework\n${plan?.architecture.framework || 'Vanilla JavaScript'}\n\n## Getting Started\n\n1. Install dependencies: \`npm install\`\n2. Start development: \`npm run dev\``,
-      type: 'md',
-      path: 'README.md'
-    });
-
-    return files;
-  };
-
-  const generateWebApp = async (modelToUse: AIModel = selectedModel, isRetry: boolean = false) => {
+  const generateApp = async () => {
     if (!prompt.trim()) {
       toast({
-        title: "Missing Prompt",
-        description: "Please describe the web app you want to create.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (isLimitReached) {
-      toast({
-        title: "Daily Limit Reached",
-        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!incrementQueryCount()) {
-      toast({
-        title: "Daily Limit Reached", 
-        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
-        variant: "destructive"
+        title: "Error",
+        description: "Please enter a prompt to generate your web application.",
+        variant: "destructive",
       });
       return;
     }
 
     setIsGenerating(true);
-    const startTime = Date.now();
-    
+    setProgress(0);
+
     try {
-      let contextPrompt = prompt;
-      if (conversationHistory.length > 0) {
-        contextPrompt = `Based on the previous web application, ${prompt}. 
-
-Previous conversation context:
-${conversationHistory.slice(-3).map((item, index) => 
-  `Request ${index + 1}: ${item.prompt}
-  Result: ${item.response.description}`
-).join('\n\n')}
-
-Please modify or enhance the current application accordingly.`;
-      }
-
-      // Enhanced prompt with framework and TypeScript support
-      const enhancedPrompt = `Generate a modern web application with the following requirements:
-
-${contextPrompt}
-
-${developmentPlan ? `
-APPROVED DEVELOPMENT PLAN:
-- Framework: ${developmentPlan.architecture.framework}
-- Styling: ${developmentPlan.architecture.styling}  
-- State Management: ${developmentPlan.architecture.stateManagement}
-- Packages: ${developmentPlan.packages.join(', ')}
-- File Structure: ${developmentPlan.fileStructure.join(', ')}
-- Features: ${developmentPlan.features.join(', ')}
-- Color Scheme: Primary: ${developmentPlan.colorScheme.primary}, Secondary: ${developmentPlan.colorScheme.secondary}
-
-FOLLOW THIS PLAN EXACTLY. Use the specified framework and include all listed packages.
-` : ''}
-
-CRITICAL REQUIREMENTS:
-- Generate modern, production-ready code with the latest best practices
-- If using React/Vue/Angular, use TypeScript and modern component patterns
-- Include proper package.json with all necessary dependencies
-- Use modern CSS (CSS Grid, Flexbox, CSS Variables)
-- Ensure responsive design and accessibility
-- Include proper error handling and loading states
-- Follow the file structure from the development plan if provided
-
-SUPPORTED FRAMEWORKS: React, Vue, Angular, Svelte, Vanilla JS/TS, Next.js, Nuxt.js
-
-Please return ONLY a valid JSON object with this structure:
-{
-  "html": "complete HTML content",
-  "css": "modern CSS with responsive design", 
-  "javascript": "modern JavaScript/TypeScript code",
-  "description": "brief description of the application",
-  "features": ["feature 1", "feature 2", "feature 3"],
-  "files": [],
-  "framework": "${developmentPlan?.architecture.framework || 'Vanilla JavaScript'}",
-  "packages": ${JSON.stringify(developmentPlan?.packages || [])},
-  "fileStructure": ${JSON.stringify(developmentPlan?.fileStructure || ['index.html', 'styles.css', 'script.js'])}
-}`;
+      // Simulate progress updates
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 500);
 
       const { data, error } = await supabase.functions.invoke('generate-webapp', {
-        body: { 
-          prompt: enhancedPrompt,
-          model: modelToUse
+        body: {
+          prompt,
+          model: selectedModel
         }
       });
 
-      if (error) {
-        throw new Error(error.message);
-      }
+      clearInterval(progressInterval);
+      setProgress(100);
 
-      const parsedApp: GeneratedApp = {
-        ...data,
-        files: [],
-        framework: developmentPlan?.architecture.framework || 'Vanilla JavaScript',
-        packages: developmentPlan?.packages || [],
-        fileStructure: developmentPlan?.fileStructure || ['index.html', 'styles.css', 'script.js']
-      };
+      if (error) throw error;
 
-      // Create files based on the structure and framework
-      const files = createFilesFromStructure(parsedApp, developmentPlan);
-      parsedApp.files = files;
+      if (data) {
+        // Transform the response to match our FileContent structure
+        const files: FileContent[] = [];
+        
+        // Add main files
+        if (data.html) {
+          files.push({
+            name: 'index.html',
+            content: data.html,
+            type: 'html',
+            path: 'index.html'
+          });
+        }
+        
+        if (data.css) {
+          files.push({
+            name: 'styles.css',
+            content: data.css,
+            type: 'css',
+            path: 'styles.css'
+          });
+        }
+        
+        if (data.javascript) {
+          const isTypeScript = data.framework?.toLowerCase().includes('typescript') || 
+                              data.packages?.some((pkg: string) => pkg.includes('typescript'));
+          files.push({
+            name: isTypeScript ? 'script.ts' : 'script.js',
+            content: data.javascript,
+            type: isTypeScript ? 'typescript' : 'javascript',
+            path: isTypeScript ? 'script.ts' : 'script.js'
+          });
+        }
 
-      const generationTime = Math.round((Date.now() - startTime) / 1000);
+        // Add additional files if present
+        if (data.files && Array.isArray(data.files)) {
+          files.push(...data.files);
+        }
 
-      setGeneratedApp(parsedApp);
-      setActiveRightTab('editor');
-      
-      setConversationHistory(prev => [...prev, { prompt, response: parsedApp }]);
-      
-      saveProject(prompt, parsedApp, modelToUse);
-      
-      setPrompt("");
-      
-      toast({
-        title: "Multi-File Web App Generated!",
-        description: `Your ${parsedApp.framework} application with ${files.length} files was created in ${generationTime}s using ${modelToUse}.`,
-      });
-    } catch (error) {
-      console.error(`Error generating web app with ${modelToUse}:`, error);
-      
-      const currentIndex = MODEL_FALLBACK_ORDER.indexOf(modelToUse);
-      const nextModel = MODEL_FALLBACK_ORDER[currentIndex + 1];
-      
-      if (nextModel && !isRetry) {
+        const app: GeneratedApp = {
+          html: data.html || '',
+          css: data.css || '',
+          javascript: data.javascript || '',
+          description: data.description || 'Generated web application',
+          features: data.features || [],
+          files: files,
+          framework: data.framework || 'Vanilla JavaScript',
+          packages: data.packages || [],
+          fileStructure: data.fileStructure || ['index.html', 'styles.css', 'script.js']
+        };
+
+        setGeneratedApp(app);
+
+        // Add to project history
+        const historyItem: ProjectHistoryItem = {
+          id: Date.now().toString(),
+          prompt,
+          generatedApp: app,
+          model: selectedModel,
+          timestamp: new Date()
+        };
+        setProjectHistory(prev => [historyItem, ...prev]);
+
         toast({
-          title: "Trying Alternative Model",
-          description: `${modelToUse} failed. Attempting with ${nextModel}...`,
+          title: "Success!",
+          description: "Your web application has been generated successfully.",
         });
-        await generateWebApp(nextModel, true);
-        return;
       }
-      
+    } catch (error) {
+      console.error('Error generating app:', error);
       toast({
         title: "Generation Failed",
-        description: `Failed to generate web app with all available models: ${error.message}`,
-        variant: "destructive"
+        description: error instanceof Error ? error.message : "Failed to generate web application. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsGenerating(false);
+      setProgress(0);
     }
   };
 
   const handleFileChange = (filePath: string, content: string) => {
     if (!generatedApp) return;
 
-    const updatedFiles = generatedApp.files.map(file => 
+    const updatedFiles = generatedApp.files.map(file =>
       file.path === filePath ? { ...file, content } : file
     );
-    
-    // Also update the main properties for backward compatibility
+
+    // Update main content if it's a primary file
     const updatedApp = { ...generatedApp, files: updatedFiles };
-    const mainFile = updatedFiles.find(f => f.name === 'index.html');
-    const cssFile = updatedFiles.find(f => f.name === 'styles.css');
-    const jsFile = updatedFiles.find(f => f.type === 'javascript' || f.type === 'typescript');
+    const file = updatedFiles.find(f => f.path === filePath);
     
-    if (mainFile) updatedApp.html = mainFile.content;
-    if (cssFile) updatedApp.css = cssFile.content;
-    if (jsFile) updatedApp.javascript = jsFile.content;
+    if (file) {
+      if (file.type === 'html' && filePath === 'index.html') {
+        updatedApp.html = content;
+      } else if (file.type === 'css' && filePath === 'styles.css') {
+        updatedApp.css = content;
+      } else if ((file.type === 'javascript' || file.type === 'typescript') && 
+                 (filePath === 'script.js' || filePath === 'script.ts')) {
+        updatedApp.javascript = content;
+      }
+    }
 
     setGeneratedApp(updatedApp);
-
-    // Auto-save changes
-    if (currentProjectId) {
-      saveProject(conversationHistory[0]?.prompt || 'Modified project', updatedApp, selectedModel);
-    }
   };
 
   const handleFileAdd = (file: FileContent) => {
@@ -422,441 +222,285 @@ Please return ONLY a valid JSON object with this structure:
   const handleFileDelete = (filePath: string) => {
     if (!generatedApp) return;
 
-    const updatedApp = {
+    const updatedFiles = generatedApp.files.filter(file => file.path !== filePath);
+    setGeneratedApp({
       ...generatedApp,
-      files: generatedApp.files.filter(f => f.path !== filePath)
-    };
-
-    setGeneratedApp(updatedApp);
-  };
-
-  const thinkAboutProject = async () => {
-    if (!prompt.trim()) {
-      toast({
-        title: "Missing Prompt",
-        description: "Please describe the web app you want to analyze.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (isLimitReached) {
-      toast({
-        title: "Daily Limit Reached",
-        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!incrementQueryCount()) {
-      toast({
-        title: "Daily Limit Reached",
-        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsThinking(true);
-    setShowPlanDialog(true);
-    setDevelopmentPlan(null);
-    
-    try {
-      const detailedPrompt = `Create a comprehensive development plan for this web application: "${prompt}"
-
-Please provide a detailed JSON response with the following structure:
-{
-  "projectOverview": "Detailed description of the project including purpose, target audience, and key objectives",
-  "colorScheme": {
-    "primary": "#hex-color",
-    "secondary": "#hex-color", 
-    "accent": "#hex-color",
-    "background": "#hex-color",
-    "text": "#hex-color"
-  },
-  "architecture": {
-    "framework": "React|Vue|Angular|Svelte|Next.js|Nuxt.js|Vanilla JavaScript|Vanilla TypeScript",
-    "styling": "CSS3|Tailwind CSS|Styled Components|SCSS|CSS Modules",
-    "stateManagement": "Redux|Zustand|Pinia|Context API|Local Storage|None",
-    "routing": "React Router|Vue Router|Angular Router|Page.js|Hash Router|None"
-  },
-  "features": ["feature 1", "feature 2", "feature 3", "..."],
-  "packages": ["package1", "package2", "package3", "..."],
-  "fileStructure": ["src/", "src/components/", "src/utils/", "index.html", "package.json", "..."],
-  "implementationSteps": ["step 1", "step 2", "step 3", "..."],
-  "securityConsiderations": ["security measure 1", "security measure 2", "..."],
-  "performanceOptimizations": ["optimization 1", "optimization 2", "..."],
-  "estimatedComplexity": "Low|Medium|High"
-}
-
-Focus on modern web development with TypeScript support, latest framework versions, and production-ready architecture.`;
-
-      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
-        body: { 
-          query: detailedPrompt,
-          model: selectedModel,
-          chatId: currentProjectId || 'webapp-planning',
-          chatHistory: []
-        }
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      const planText = data.response || '';
-      const plan = parseDevelopmentPlan(planText);
-      
-      if (plan) {
-        setDevelopmentPlan(plan);
-        toast({
-          title: "Plan Generated",
-          description: "Review the development plan and approve to start generation.",
-        });
-      } else {
-        throw new Error('Failed to parse development plan');
-      }
-      
-    } catch (error) {
-      console.error('Error creating development plan:', error);
-      toast({
-        title: "Planning Failed",
-        description: `Failed to create development plan: ${error.message}`,
-        variant: "destructive"
-      });
-      setShowPlanDialog(false);
-    } finally {
-      setIsThinking(false);
-    }
-  };
-
-  const handlePlanApproval = async () => {
-    if (!developmentPlan) return;
-
-    setShowPlanDialog(false);
-    
-    // The enhanced prompt will use the development plan
-    await generateWebApp();
-  };
-
-  const handlePlanRejection = () => {
-    setShowPlanDialog(false);
-    setDevelopmentPlan(null);
-    toast({
-      title: "Plan Rejected",
-      description: "You can modify your prompt and try thinking again.",
-    });
-  };
-
-  const startNewProject = () => {
-    setGeneratedApp(null);
-    setCurrentProjectId(null);
-    setConversationHistory([]);
-    setPrompt("");
-    setDevelopmentPlan(null);
-    setActiveRightTab('generator');
-    toast({
-      title: "New Project Started",
-      description: "You can now create a fresh web application.",
+      files: updatedFiles
     });
   };
 
   const loadProject = (project: ProjectHistoryItem) => {
     setGeneratedApp(project.generatedApp);
-    setCurrentProjectId(project.id);
-    setConversationHistory([{ prompt: project.prompt, response: project.generatedApp }]);
-    setPrompt("");
-    setActiveRightTab('editor');
+    setPrompt(project.prompt);
+    setSelectedModel(project.model);
   };
 
   const downloadApp = () => {
     if (!generatedApp) return;
 
-    // Download all files
+    // Create a zip-like structure (for now just download main files)
     generatedApp.files.forEach(file => {
       const blob = new Blob([file.content], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = file.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     });
 
     toast({
-      title: "Files Downloaded",
-      description: `All ${generatedApp.files.length} project files have been downloaded.`,
+      title: "Download Started",
+      description: "Your application files are being downloaded.",
     });
   };
 
-  if (isFullscreen && generatedApp) {
-    return (
-      <div className="fixed inset-0 z-50 bg-background">
-        <div className="h-full flex flex-col">
-          <div className="flex items-center justify-between p-4 border-b border-prism-border">
-            <h2 className="text-xl font-semibold text-prism-text">Fullscreen Preview</h2>
-            <Button
-              onClick={() => setIsFullscreen(false)}
-              variant="outline"
-              size="sm"
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              Exit Fullscreen
-            </Button>
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Wand2 className="w-6 h-6 text-blue-400" />
+            <span>AI Web App Generator</span>
+            <Badge variant="secondary">Multi-Framework</Badge>
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">AI Model</label>
+              <Select value={selectedModel} onValueChange={setSelectedModel}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {models.map((model) => (
+                    <SelectItem key={model.value} value={model.value}>
+                      <div className="flex flex-col">
+                        <span>{model.label}</span>
+                        <span className="text-xs text-prism-text-muted">{model.description}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium flex items-center space-x-2">
+                <Clock className="w-4 h-4" />
+                <span>Estimated Time</span>
+              </label>
+              <TimeEstimator 
+                prompt={prompt} 
+                model={selectedModel}
+                onEstimateChange={setEstimatedTime}
+              />
+            </div>
           </div>
-          <div className="flex-1 overflow-auto p-6 bg-white">
-            {/* Render the main HTML file content as preview */}
-            <iframe
-              title="Fullscreen Preview"
-              srcDoc={generatedApp.html}
-              className="w-full h-full border-0"
-              sandbox="allow-scripts allow-same-origin"
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Describe your web application</label>
+            <Textarea
+              placeholder="E.g., Create a React todo app with dark mode, local storage, and drag-and-drop functionality using TypeScript and Tailwind CSS..."
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              className="min-h-24 resize-none"
             />
           </div>
-        </div>
-      </div>
-    );
-  }
 
-  return (
-    <div className="space-y-6">
-      {/* Development Plan Dialog */}
-      <DevelopmentPlanDialog
-        isOpen={showPlanDialog}
-        plan={developmentPlan}
-        isLoading={isThinking}
-        onApprove={handlePlanApproval}
-        onReject={handlePlanRejection}
-        onClose={() => setShowPlanDialog(false)}
-      />
-
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/10 to-yellow-500/10 border border-orange-500/20">
-            <Globe className="w-8 h-8 text-orange-400" />
-          </div>
-          <div>
-            <div className="flex items-center space-x-3">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent font-fira-code">
-                AI Web App Generator
-              </h2>
-              <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-sm font-semibold rounded-full border border-orange-500/30 font-fira-code">
-                Beta
-              </span>
-            </div>
-            <p className="text-prism-text-muted mt-2 font-inter">
-              Generate fully functional web applications with advanced code editing and package management
-            </p>
-          </div>
-        </div>
-        <div className="flex space-x-2">
-          <ProjectHistory onLoadProject={loadProject} />
-          {generatedApp && (
-            <Button onClick={startNewProject} variant="outline" size="sm">
-              <FileText className="w-4 h-4 mr-2" />
-              New Project
+          <div className="flex items-center space-x-4">
+            <Button
+              onClick={generateApp}
+              disabled={isGenerating}
+              className="flex-1"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Generate Application
+                </>
+              )}
             </Button>
-          )}
-        </div>
-      </div>
 
-      {/* Split Layout */}
-      <div className="flex gap-6 h-[calc(100vh-20rem)]">
-        {/* Left Side - Preview */}
-        <div className="flex-1">
-          {generatedApp ? (
-            <div className="h-full flex flex-col">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-4">
-                  <h3 className="text-lg font-semibold text-prism-text">Project Overview</h3>
-                  <Badge variant="secondary">{generatedApp.framework}</Badge>
-                  <Badge variant="outline">{generatedApp.files.length} files</Badge>
-                </div>
-                <div className="flex space-x-2">
-                  <DeploymentDialog generatedApp={generatedApp}>
-                    <Button size="sm" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600">
-                      <Rocket className="w-4 h-4 mr-2" />
-                      Deploy
-                    </Button>
-                  </DeploymentDialog>
-                  <Button onClick={downloadApp} size="sm">
-                    <Download className="w-4 h-4 mr-2" />
-                    Download All
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="flex-1 bg-prism-surface/10 rounded-lg p-6">
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-semibold text-prism-text mb-2">Description</h4>
-                    <p className="text-prism-text-muted">{generatedApp.description}</p>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-semibold text-prism-text mb-2">Features</h4>
-                    <ul className="list-disc list-inside text-prism-text-muted space-y-1">
-                      {generatedApp.features.map((feature, index) => (
-                        <li key={index}>{feature}</li>
-                      ))}
-                    </ul>
-                  </div>
+            <DevelopmentPlanDialog
+              prompt={prompt}
+              model={selectedModel}
+              onPlanGenerated={setDevelopmentPlan}
+            />
 
-                  {generatedApp.packages.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold text-prism-text mb-2">Packages</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {generatedApp.packages.map((pkg, index) => (
-                          <Badge key={index} variant="outline">{pkg}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+            <ProjectHistory 
+              projects={projectHistory}
+              onLoadProject={loadProject}
+            />
+          </div>
+
+          {isGenerating && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Generating your application...</span>
+                <span>{progress}%</span>
               </div>
+              <Progress value={progress} className="w-full" />
             </div>
-          ) : (
-            <Card className="h-full flex items-center justify-center">
-              <CardContent className="text-center py-20">
-                <Globe className="w-16 h-16 text-prism-text-muted mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-prism-text mb-2">No Web App Generated Yet</h3>
-                <p className="text-prism-text-muted">Use the generator on the right to create your web application</p>
-              </CardContent>
-            </Card>
           )}
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Right Side - Tabs */}
-        <div className="w-[32rem] flex flex-col">
-          <Tabs value={activeRightTab} onValueChange={setActiveRightTab} className="flex-1 flex flex-col">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="generator" className="flex items-center space-x-1">
-                <Wand2 className="w-4 h-4" />
-                <span>Generate</span>
-              </TabsTrigger>
-              <TabsTrigger value="editor" className="flex items-center space-x-1" disabled={!generatedApp}>
-                <FileText className="w-4 h-4" />
-                <span>Files</span>
-              </TabsTrigger>
-              <TabsTrigger value="packages" className="flex items-center space-x-1">
-                <Package className="w-4 h-4" />
-                <span>Packages</span>
-              </TabsTrigger>
-            </TabsList>
+      {/* Development Plan Display */}
+      {developmentPlan && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Settings className="w-5 h-5" />
+              <span>Development Plan</span>
+              <Badge variant="outline">
+                {developmentPlan.estimatedComplexity}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold mb-2">Framework & Architecture</h4>
+                  <div className="space-y-1 text-sm">
+                    <p><strong>Framework:</strong> {developmentPlan.architecture.framework}</p>
+                    <p><strong>Styling:</strong> {developmentPlan.architecture.styling}</p>
+                    <p><strong>State Management:</strong> {developmentPlan.architecture.stateManagement}</p>
+                  </div>
+                </div>
 
-            <TabsContent value="generator" className="flex-1 flex flex-col mt-4">
-              <Card className="flex-1">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Wand2 className="w-5 h-5 text-prism-primary" />
-                    <span>{generatedApp ? 'Continue Working' : 'Describe Your Beautiful Web App'}</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <ModelSelector
-                    selectedModel={selectedModel}
-                    onModelChange={setSelectedModel}
-                    disabled={isGenerating || isThinking}
-                  />
+                <div>
+                  <h4 className="font-semibold mb-2">Key Features</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {developmentPlan.features.map((feature, index) => (
+                      <Badge key={index} variant="secondary">
+                        {feature}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
-                  <div>
-                    <Textarea
-                      value={prompt}
-                      onChange={(e) => setPrompt(e.target.value)}
-                      placeholder={generatedApp ? 
-                        "Describe how you want to enhance the visual design or add beautiful new features... Focus on UI improvements, animations, or modern design elements..." : 
-                        "Describe the beautiful web application you want to create... For example: 'Create a stunning portfolio website with smooth scrolling animations, glassmorphism cards, gradient backgrounds, and interactive hover effects. Include a modern dark/light theme toggle with beautiful transitions.'"
-                      }
-                      className="min-h-[200px] resize-none bg-prism-surface/10 border-prism-border"
-                      disabled={isGenerating || isThinking}
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold mb-2">Color Scheme</h4>
+                  <div className="flex space-x-2">
+                    <div 
+                      className="w-6 h-6 rounded border"
+                      style={{ backgroundColor: developmentPlan.colorScheme.primary }}
+                      title="Primary"
+                    />
+                    <div 
+                      className="w-6 h-6 rounded border"
+                      style={{ backgroundColor: developmentPlan.colorScheme.secondary }}
+                      title="Secondary"
+                    />
+                    <div 
+                      className="w-6 h-6 rounded border"
+                      style={{ backgroundColor: developmentPlan.colorScheme.accent }}
+                      title="Accent"
                     />
                   </div>
+                </div>
 
-                  <div className="flex space-x-2">
-                    <Button
-                      onClick={thinkAboutProject}
-                      disabled={isThinking || isGenerating || !prompt.trim()}
-                      variant="outline"
-                      className="flex-1 bg-gradient-to-r from-purple-500/20 to-blue-500/20 hover:from-purple-500/30 hover:to-blue-500/30 border-purple-500/30"
-                    >
-                      {isThinking ? (
-                        <>
-                          <Wand2 className="w-4 h-4 mr-2 animate-pulse" />
-                          Planning...
-                        </>
-                      ) : (
-                        <>
-                          <Wand2 className="w-4 h-4 mr-2" />
-                          Think
-                        </>
-                      )}
-                    </Button>
-
-                    <Button
-                      onClick={() => generateWebApp()}
-                      disabled={isGenerating || isThinking || !prompt.trim()}
-                      className="flex-1 bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-semibold"
-                    >
-                      {isGenerating ? (
-                        <>
-                          <Wand2 className="w-4 h-4 mr-2 animate-spin" />
-                          Generating...
-                        </>
-                      ) : (
-                        <>
-                          <Wand2 className="w-4 h-4 mr-2" />
-                          {generatedApp ? 'Update' : 'Generate'}
-                        </>
-                      )}
-                    </Button>
+                <div>
+                  <h4 className="font-semibold mb-2">Packages</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {developmentPlan.packages.slice(0, 6).map((pkg, index) => (
+                      <Badge key={index} variant="outline">
+                        {pkg}
+                      </Badge>
+                    ))}
+                    {developmentPlan.packages.length > 6 && (
+                      <Badge variant="outline">
+                        +{developmentPlan.packages.length - 6} more
+                      </Badge>
+                    )}
                   </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-                  {/* Generated App Info */}
-                  {generatedApp && (
-                    <div className="mt-4 p-3 bg-prism-surface/20 rounded-lg">
-                      <h4 className="font-semibold text-prism-text mb-2 text-sm">Current Project:</h4>
-                      <p className="text-prism-text-muted text-xs mb-3">{generatedApp.description}</p>
+      {/* Generated Application */}
+      {generatedApp && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <FileText className="w-5 h-5 text-green-400" />
+                  <span>Generated Application</span>
+                  <Badge variant="secondary">{generatedApp.framework}</Badge>
+                  <Badge variant="outline">
+                    {generatedApp.files.length} files
+                  </Badge>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowPreview(!showPreview)}
+                  >
+                    {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPreview ? 'Hide Preview' : 'Show Preview'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={downloadApp}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download
+                  </Button>
+                </div>
+              </CardTitle>
+            </CardHeader>
 
-                      <h4 className="font-semibold text-prism-text mb-2 text-sm">Features:</h4>
-                      <ul className="list-disc list-inside text-prism-text-muted text-xs space-y-1">
-                        {generatedApp.features.map((feature, index) => (
-                          <li key={index}>{feature}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
+            <CardContent>
+              <div className="mb-4">
+                <p className="text-sm text-prism-text-muted mb-2">{generatedApp.description}</p>
+                <div className="flex flex-wrap gap-2">
+                  {generatedApp.features.map((feature, index) => (
+                    <Badge key={index} variant="secondary">
+                      {feature}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
 
-            <TabsContent value="editor" className="flex-1 mt-4">
-              {generatedApp ? (
-                <FileManager
-                  files={generatedApp.files}
-                  onFileChange={handleFileChange}
-                  onFileAdd={handleFileAdd}
-                  onFileDelete={handleFileDelete}
-                />
-              ) : (
-                <Card className="h-full flex items-center justify-center">
-                  <CardContent className="text-center py-20">
-                    <FileText className="w-12 h-12 text-prism-text-muted mx-auto mb-4" />
-                    <p className="text-prism-text-muted">Generate a web app to start editing files</p>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <FileManager
+                    files={generatedApp.files}
+                    onFileChange={handleFileChange}
+                    onFileAdd={handleFileAdd}
+                    onFileDelete={handleFileDelete}
+                  />
+                </div>
 
-            <TabsContent value="packages" className="flex-1 mt-4">
-              <PackageManager />
-            </TabsContent>
-          </Tabs>
+                {showPreview && (
+                  <div className="space-y-4">
+                    <LivePreview app={generatedApp} />
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </div>
+      )}
     </div>
   );
 };

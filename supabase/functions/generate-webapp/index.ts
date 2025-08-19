@@ -6,6 +6,15 @@ const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
+// Fallback Gemini API keys
+const FALLBACK_GEMINI_KEYS = [
+  Deno.env.get('FALLBACK_GEMINI_API_KEY_1'),
+  Deno.env.get('FALLBACK_GEMINI_API_KEY_2'),
+  Deno.env.get('FALLBACK_GEMINI_API_KEY_3'),
+  Deno.env.get('FALLBACK_GEMINI_API_KEY_4'),
+  Deno.env.get('FALLBACK_GEMINI_API_KEY_5'),
+].filter(Boolean); // Remove null/undefined values
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -72,50 +81,73 @@ serve(async (req) => {
 });
 
 async function generateWithGemini(prompt: string, modelVersion: string = 'gemini-2.0-flash-exp') {
-  if (!GEMINI_API_KEY) {
-    throw new Error('Gemini API key not configured');
-  }
-
   const systemPrompt = createSystemPrompt();
   
   const modelEndpoint = modelVersion === 'gemini-2.5-pro-exp-03-25' 
     ? 'gemini-2.5-pro-exp-03-25'
     : 'gemini-2.0-flash-exp';
   
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelEndpoint}:generateContent?key=${GEMINI_API_KEY}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      contents: [{
-        parts: [{
-          text: `${systemPrompt}\n\nUser Request: ${prompt}`
-        }]
-      }],
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 8192,
-      }
-    })
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('Gemini API error:', response.status, errorText);
-    throw new Error(`Gemini API request failed: ${response.status} - ${errorText}`);
-  }
-
-  const data = await response.json();
-  const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  // Try main API key first, then fallbacks
+  const allKeys = [GEMINI_API_KEY, ...FALLBACK_GEMINI_KEYS].filter(Boolean);
   
-  if (!content) {
-    throw new Error('No content received from Gemini API');
+  if (allKeys.length === 0) {
+    throw new Error('No Gemini API keys configured');
   }
 
-  return parseAIResponse(content);
+  let lastError: Error | null = null;
+
+  for (let i = 0; i < allKeys.length; i++) {
+    const apiKey = allKeys[i];
+    console.log(`Trying Gemini API key ${i + 1}/${allKeys.length}`);
+    
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelEndpoint}:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `${systemPrompt}\n\nUser Request: ${prompt}`
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 8192,
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Gemini API key ${i + 1} failed:`, response.status, errorText);
+        lastError = new Error(`Gemini API request failed: ${response.status} - ${errorText}`);
+        continue; // Try next key
+      }
+
+      const data = await response.json();
+      const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      
+      if (!content) {
+        lastError = new Error('No content received from Gemini API');
+        continue; // Try next key
+      }
+
+      console.log(`Successfully used Gemini API key ${i + 1}`);
+      return parseAIResponse(content);
+
+    } catch (error) {
+      console.error(`Error with Gemini API key ${i + 1}:`, error);
+      lastError = error;
+      continue; // Try next key
+    }
+  }
+
+  // If we get here, all keys failed
+  throw lastError || new Error('All Gemini API keys failed');
 }
 
 async function generateWithClaude(prompt: string, model: string) {
@@ -258,10 +290,17 @@ Return ONLY a valid JSON object with this exact structure:
   "javascript": "main JavaScript/TypeScript file with modern code",
   "description": "brief description emphasizing technology stack and features",
   "features": ["feature 1 with tech focus", "feature 2", "feature 3"],
-  "files": [],
+  "files": [
+    {
+      "name": "component.tsx",
+      "content": "component code",
+      "type": "tsx",
+      "path": "src/components/component.tsx"
+    }
+  ],
   "framework": "specific framework used (React, Vue, Angular, etc.)",
   "packages": ["package1", "package2", "package3"],
-  "fileStructure": ["file1.html", "src/", "src/components/", "package.json"]
+  "fileStructure": ["index.html", "src/", "src/components/", "package.json"]
 }
 
 Focus on creating production-ready applications with proper architecture, beautiful design, and modern development practices. Always consider the appropriate technology stack for the requested application complexity.`;

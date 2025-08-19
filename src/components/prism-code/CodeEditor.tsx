@@ -4,11 +4,14 @@ import { Textarea } from "@/components/ui/textarea";
 
 interface CodeEditorProps {
   language: string;
-  code: string;
+  value?: string;
+  code?: string;
   onChange: (code: string) => void;
 }
 
-const CodeEditor = ({ language, code, onChange }: CodeEditorProps) => {
+const CodeEditor = ({ language, value, code, onChange }: CodeEditorProps) => {
+  const currentValue = value || code || '';
+
   const getLanguageComment = (lang: string) => {
     switch (lang) {
       case 'python':
@@ -16,13 +19,17 @@ const CodeEditor = ({ language, code, onChange }: CodeEditorProps) => {
       case 'javascript':
         return '// Write your JavaScript code here\n// Use prompt("message") to get user input';
       case 'typescript':
-        return '// Write your TypeScript code here (Beta)';
+        return '// Write your TypeScript code here';
       case 'html':
-        return '<!-- Write your HTML code here (Beta) -->';
+        return '<!-- Write your HTML code here -->';
       case 'css':
-        return '/* Write your CSS code here (Beta) */';
+        return '/* Write your CSS code here */';
       case 'json':
-        return '// Write your JSON here (Beta)';
+        return '// Write your JSON here';
+      case 'jsx':
+        return '// Write your JSX code here';
+      case 'tsx':
+        return '// Write your TSX code here';
       default:
         return '// Write your code here';
     }
@@ -31,7 +38,7 @@ const CodeEditor = ({ language, code, onChange }: CodeEditorProps) => {
   return (
     <div className="relative">
       <Textarea
-        value={code}
+        value={currentValue}
         onChange={(e) => onChange(e.target.value)}
         placeholder={getLanguageComment(language)}
         className="min-h-[200px] font-mono text-sm resize-none border-0 bg-prism-surface/10 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
