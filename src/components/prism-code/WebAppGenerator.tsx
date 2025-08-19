@@ -413,6 +413,70 @@ Focus on creating a beautiful, functional application with proper architecture a
     }
   };
 
+  // Helper function to extract file content based on type
+  const getFileContent = (app: GeneratedApp, type: 'html' | 'css' | 'javascript'): string => {
+    if (!app.files) {
+      // Fallback to legacy format
+      switch (type) {
+        case 'html':
+          return (app as any).html || '';
+        case 'css':
+          return (app as any).css || '';
+        case 'javascript':
+          return (app as any).javascript || '';
+        default:
+          return '';
+      }
+    }
+
+    const files = app.files;
+    
+    switch (type) {
+      case 'html':
+        // Look for HTML files in common locations
+        return files['index.html'] || 
+               files['src/index.html'] || 
+               files['public/index.html'] || 
+               Object.values(files).find(content => 
+                 typeof content === 'string' && content.includes('<!DOCTYPE html>')
+               ) || '';
+               
+      case 'css':
+        // Look for CSS files in common locations
+        return files['styles.css'] || 
+               files['style.css'] || 
+               files['src/styles.css'] || 
+               files['src/style.css'] || 
+               files['src/index.css'] || 
+               Object.values(files).find(content => 
+                 typeof content === 'string' && (
+                   content.includes('body {') || 
+                   content.includes('.') || 
+                   content.includes('#')
+                 )
+               ) || '';
+               
+      case 'javascript':
+        // Look for JavaScript files in common locations
+        return files['script.js'] || 
+               files['main.js'] || 
+               files['index.js'] || 
+               files['src/main.js'] || 
+               files['src/index.js'] || 
+               files['src/app.js'] || 
+               Object.values(files).find(content => 
+                 typeof content === 'string' && (
+                   content.includes('function') || 
+                   content.includes('const ') || 
+                   content.includes('document.')
+                 )
+               ) || '';
+               
+      default:
+        return '';
+    }
+  };
+
   if (isFullscreen && generatedApp) {
     return (
       <div className="fixed inset-0 z-50 bg-background">
@@ -508,7 +572,7 @@ Focus on creating a beautiful, functional application with proper architecture a
                       {generatedApp.language}
                     </Badge>
                     <Badge variant="outline" className="text-xs">
-                      {Object.keys(generatedApp.files).length} files
+                      {Object.keys(generatedApp.files || {}).length} files
                     </Badge>
                   </div>
                 </div>
@@ -535,9 +599,9 @@ Focus on creating a beautiful, functional application with proper architecture a
               </div>
               <div className="flex-1">
                 <WebAppPreview
-                  html={generatedApp.files?.['index.html'] || ''}
-                  css={generatedApp.files?.['styles.css'] || ''}
-                  javascript={generatedApp.files?.['script.js'] || ''}
+                  html={getFileContent(generatedApp, 'html')}
+                  css={getFileContent(generatedApp, 'css')}
+                  javascript={getFileContent(generatedApp, 'javascript')}
                 />
               </div>
             </div>
