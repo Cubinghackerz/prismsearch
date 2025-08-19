@@ -19,6 +19,28 @@ const WebAppPreview = ({ html, css, javascript }: WebAppPreviewProps) => {
       const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
       
       if (iframeDoc) {
+        // Ensure we have content to display
+        if (!html && !css && !javascript) {
+          const fallbackHTML = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Preview</title>
+            </head>
+            <body style="font-family: system-ui; padding: 20px; text-align: center; color: #666;">
+              <h2>No content to preview</h2>
+              <p>Generate a web app to see the live preview here.</p>
+            </body>
+            </html>
+          `;
+          iframeDoc.open();
+          iframeDoc.write(fallbackHTML);
+          iframeDoc.close();
+          return;
+        }
+
         const fullHTML = `
           <!DOCTYPE html>
           <html lang="en">
