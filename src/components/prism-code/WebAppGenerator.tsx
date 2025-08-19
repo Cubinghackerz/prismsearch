@@ -61,7 +61,7 @@ const WebAppGenerator = () => {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedApp, setGeneratedApp] = useState<GeneratedApp | null>(null);
-  const [selectedModel, setSelectedModel] = useState<AIModel>('gemini-2.5-pro-exp-03-25');
+  const [selectedModel, setSelectedModel] = useState<AIModel>('gemini');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeRightTab, setActiveRightTab] = useState('generator');
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
@@ -72,7 +72,7 @@ const WebAppGenerator = () => {
   const { toast } = useToast();
   const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
 
-  const MODEL_FALLBACK_ORDER: AIModel[] = ['gemini-2.5-pro-exp-03-25', 'gemini-2.0-flash-exp'];
+  const MODEL_FALLBACK_ORDER: AIModel[] = ['gemini', 'groq-llama4-maverick', 'groq-llama4-scout', 'groq-llama31-8b-instant'];
 
   const saveProject = (projectPrompt: string, app: GeneratedApp, model: string) => {
     const projectId = currentProjectId || uuidv4();
@@ -231,10 +231,12 @@ Please provide a detailed JSON response with the following structure:
 
 Focus on modern web development best practices, accessibility, and user experience.`;
 
-      const { data, error } = await supabase.functions.invoke('generate-webapp', {
+      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
         body: { 
-          prompt: detailedPrompt,
-          model: selectedModel
+          query: detailedPrompt,
+          model: selectedModel,
+          chatId: currentProjectId || 'webapp-planning',
+          chatHistory: []
         }
       });
 
@@ -348,10 +350,23 @@ ${conversationHistory.slice(-3).map((item, index) =>
 Please modify or enhance the current application accordingly.`;
       }
 
-      const { data, error } = await supabase.functions.invoke('generate-webapp', {
+      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
         body: { 
-          prompt: contextPrompt,
-          model: modelToUse
+          query: `Generate a complete web application based on this description: ${contextPrompt}. 
+
+Please return ONLY a valid JSON object with this exact structure:
+{
+  "html": "complete HTML content",
+  "css": "complete CSS styles", 
+  "javascript": "complete JavaScript code",
+  "description": "brief description of the app",
+  "features": ["feature 1", "feature 2", "feature 3"]
+}
+
+Make it responsive, modern, and fully functional. Do not include any markdown formatting or code blocks. Just the raw JSON.`,
+          model: modelToUse,
+          chatId: currentProjectId || 'webapp-generation',
+          chatHistory: []
         }
       });
 
