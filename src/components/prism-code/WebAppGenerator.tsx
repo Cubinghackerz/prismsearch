@@ -357,8 +357,8 @@ Focus on creating a beautiful, functional application with proper architecture a
           'styles.css': parsedApp.css,
           'script.js': parsedApp.javascript
         };
-        parsedApp.framework = 'vanilla';
-        parsedApp.language = 'javascript';
+        parsedApp.framework = parsedApp.framework || 'vanilla';
+        parsedApp.language = parsedApp.language || 'javascript';
       }
 
       const generationTime = Math.round((Date.now() - startTime) / 1000);

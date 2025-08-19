@@ -5,7 +5,7 @@ const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
-// Fallback Gemini API keys
+// Fallback Gemini API keys with correct names
 const FALLBACK_GEMINI_KEYS = [
   Deno.env.get('FALLBACK_GEMINI_API_KEY_1'),
   Deno.env.get('FALLBACK_GEMINI_API_KEY_2'),
@@ -120,7 +120,7 @@ async function generateWithGemini(prompt: string, modelVersion: string = 'gemini
   const systemPrompt = createSystemPrompt();
   
   const modelEndpoint = modelVersion === 'gemini-2.5-pro-exp-03-25' 
-    ? 'gemini-2.5-pro-exp-03-25'
+    ? 'gemini-2.0-flash-exp'  // Use available model instead of experimental one
     : 'gemini-2.0-flash-exp';
   
   const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelEndpoint}:generateContent?key=${apiKey}`, {
