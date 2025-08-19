@@ -13,81 +13,139 @@ const WebAppPreview: React.FC<WebAppPreviewProps> = ({ files }) => {
   useEffect(() => {
     if (!files || files.length === 0) return;
 
-    // Find the main HTML file or create one from the generated files
-    let htmlFile = files.find(f => f.type === 'html' && (f.path.includes('index.html') || f.path.includes('public/index.html')));
+    // Find the main HTML file or create one
+    let htmlFile = files.find(f => 
+      f.type === 'html' && (
+        f.path.includes('index.html') || 
+        f.path.includes('public/index.html') ||
+        f.path === 'index.html'
+      )
+    );
     
     if (!htmlFile) {
-      // If no HTML file exists, create a complete HTML document from the generated files
+      // Create HTML from React/JS files
       const cssFiles = files.filter(f => f.type === 'css');
       const jsFiles = files.filter(f => f.type === 'javascript');
-      const tsFiles = files.filter(f => f.type === 'typescript');
       const reactFiles = files.filter(f => f.type === 'jsx' || f.type === 'tsx');
       
-      // Get the main app component
-      const appFile = files.find(f => 
+      // Find main component
+      const mainComponent = files.find(f => 
         f.path.includes('App.tsx') || 
-        f.path.includes('App.jsx') || 
-        f.path.includes('main.tsx') || 
-        f.path.includes('main.jsx') ||
-        f.path.includes('index.tsx') ||
-        f.path.includes('index.jsx')
+        f.path.includes('App.jsx') ||
+        f.path.includes('main.tsx') ||
+        f.path.includes('index.tsx')
       );
 
-      // Combine all CSS content
-      const cssContent = cssFiles.map(f => f.content).join('\n');
-      
-      // For React/TypeScript apps, transpile and create executable JS
       let jsContent = '';
       
-      if (reactFiles.length > 0 || tsFiles.length > 0) {
-        // Create executable JavaScript from React/TypeScript files
+      if (reactFiles.length > 0 || mainComponent) {
+        // Simple React to vanilla JS conversion for preview
         jsContent = `
-          // React App Implementation
-          const { useState, useEffect, createElement: h } = React;
+          // Simple React-like rendering for preview
+          const React = {
+            createElement: (tag, props, ...children) => {
+              if (typeof tag === 'function') {
+                return tag(props || {});
+              }
+              const element = document.createElement(tag);
+              if (props) {
+                Object.keys(props).forEach(key => {
+                  if (key === 'className') {
+                    element.className = props[key];
+                  } else if (key === 'style' && typeof props[key] === 'object') {
+                    Object.assign(element.style, props[key]);
+                  } else if (key.startsWith('on') && typeof props[key] === 'function') {
+                    element.addEventListener(key.toLowerCase().slice(2), props[key]);
+                  } else {
+                    element.setAttribute(key, props[key]);
+                  }
+                });
+              }
+              children.flat().forEach(child => {
+                if (typeof child === 'string' || typeof child === 'number') {
+                  element.appendChild(document.createTextNode(String(child)));
+                } else if (child && typeof child === 'object' && child.nodeType) {
+                  element.appendChild(child);
+                }
+              });
+              return element;
+            },
+            useState: (initial) => {
+              let value = initial;
+              const setValue = (newValue) => {
+                value = typeof newValue === 'function' ? newValue(value) : newValue;
+                // Simple re-render simulation
+                setTimeout(() => {
+                  const root = document.getElementById('root');
+                  if (root && typeof App !== 'undefined') {
+                    root.innerHTML = '';
+                    const appElement = App();
+                    if (appElement) root.appendChild(appElement);
+                  }
+                }, 0);
+              };
+              return [value, setValue];
+            },
+            useEffect: (fn, deps) => {
+              setTimeout(fn, 0);
+            }
+          };
           
           ${files.map(file => {
             if (file.type === 'tsx' || file.type === 'jsx') {
-              // Simple JSX to JS transpilation for preview
               let content = file.content;
-              
-              // Remove imports and exports for iframe context
+              // Remove imports and exports
               content = content.replace(/import.*from.*['"].*['"];?\n?/g, '');
               content = content.replace(/export\s+(default\s+)?/g, '');
               
-              // Basic JSX to React.createElement conversion
-              content = content.replace(/\<(\w+)([^>]*)\>/g, (match, tag, attrs) => {
+              // Basic JSX to JS conversion
+              content = content.replace(/<(\w+)([^>]*?)>/g, (match, tag, attrs) => {
+                let propsStr = '';
                 if (attrs.trim()) {
-                  return `h('${tag}', {${attrs.replace(/className=/g, 'className:').replace(/=/g, ':').replace(/"/g, "'")}},`;
+                  // Simple attribute parsing
+                  propsStr = attrs.replace(/(\w+)=\{([^}]+)\}/g, '$1: $2')
+                               .replace(/(\w+)="([^"]+)"/g, '$1: "$2"')
+                               .replace(/className/g, 'className');
+                  propsStr = `{${propsStr}}`;
                 }
-                return `h('${tag}', null,`;
+                return `React.createElement('${tag}', ${propsStr || 'null'},`;
               });
-              content = content.replace(/\<\/\w+\>/g, ')');
+              content = content.replace(/<\/\w+>/g, ')');
               
               return content;
             }
-            return file.content;
+            return '';
           }).join('\n')}
           
-          // Mount the app
-          const rootElement = document.getElementById('root');
-          if (rootElement && typeof App !== 'undefined') {
-            try {
-              ReactDOM.render(h(App), rootElement);
-            } catch (error) {
-              rootElement.innerHTML = '<div style="padding: 2rem; text-align: center;"><h2>Generated Application</h2><p>Your application has been generated successfully!</p></div>';
+          // Render the app
+          setTimeout(() => {
+            const root = document.getElementById('root');
+            if (root && typeof App !== 'undefined') {
+              try {
+                const appElement = App();
+                if (appElement) {
+                  root.appendChild(appElement);
+                } else {
+                  root.innerHTML = '<div style="padding: 2rem; text-align: center; font-family: system-ui;"><h2>Generated Application</h2><p>Your application has been generated successfully!</p></div>';
+                }
+              } catch (error) {
+                console.error('Render error:', error);
+                root.innerHTML = '<div style="padding: 2rem; text-align: center; font-family: system-ui;"><h2>Generated Application</h2><p>Your application has been generated successfully!</p><p style="color: #666; font-size: 0.9em;">Preview rendering in progress...</p></div>';
+              }
+            } else {
+              root.innerHTML = '<div style="padding: 2rem; text-align: center; font-family: system-ui;"><h2>Generated Application</h2><p>Your application has been generated successfully!</p></div>';
             }
-          }
+          }, 100);
         `;
       } else {
-        // For vanilla JS apps
         jsContent = jsFiles.map(f => f.content).join('\n');
       }
 
-      // Create complete HTML document
-      htmlFile = {
-        path: 'preview.html',
-        type: 'html' as const,
-        content: `<!DOCTYPE html>
+      // Combine CSS
+      const cssContent = cssFiles.map(f => f.content).join('\n');
+
+      // Create complete HTML
+      const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -100,67 +158,54 @@ const WebAppPreview: React.FC<WebAppPreviewProps> = ({ files }) => {
             box-sizing: border-box;
         }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-                sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            background: #ffffff;
-            color: #333;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
             line-height: 1.6;
+            color: #333;
+            background: #fff;
         }
         #root {
             min-height: 100vh;
         }
         ${cssContent}
     </style>
-    ${reactFiles.length > 0 || tsFiles.length > 0 ? `
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    ` : ''}
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root">
+        <div style="padding: 2rem; text-align: center;">
+            <h2>Loading Application...</h2>
+        </div>
+    </div>
     <script>
         ${jsContent}
     </script>
 </body>
-</html>`
-      };
+</html>`;
+
+      setPreviewContent(htmlContent);
     } else {
-      // If HTML file exists, enhance it with CSS and JS from other files
-      let processedContent = htmlFile.content;
+      // Process existing HTML file
+      let content = htmlFile.content;
       
-      // Inject CSS files
+      // Inject CSS
       const cssFiles = files.filter(f => f.type === 'css');
       if (cssFiles.length > 0) {
         const cssContent = cssFiles.map(f => f.content).join('\n');
-        
-        if (processedContent.includes('</head>')) {
-          processedContent = processedContent.replace(
-            '</head>',
-            `<style>${cssContent}</style>\n</head>`
-          );
+        if (content.includes('</head>')) {
+          content = content.replace('</head>', `<style>${cssContent}</style>\n</head>`);
         }
       }
       
-      // Inject JS files
+      // Inject JS
       const jsFiles = files.filter(f => f.type === 'javascript');
       if (jsFiles.length > 0) {
         const jsContent = jsFiles.map(f => f.content).join('\n');
-        
-        if (processedContent.includes('</body>')) {
-          processedContent = processedContent.replace(
-            '</body>',
-            `<script>${jsContent}</script>\n</body>`
-          );
+        if (content.includes('</body>')) {
+          content = content.replace('</body>', `<script>${jsContent}</script>\n</body>`);
         }
       }
       
-      htmlFile = { ...htmlFile, content: processedContent };
+      setPreviewContent(content);
     }
-
-    setPreviewContent(htmlFile.content);
   }, [files]);
 
   useEffect(() => {
@@ -173,14 +218,8 @@ const WebAppPreview: React.FC<WebAppPreviewProps> = ({ files }) => {
         doc.write(previewContent);
         doc.close();
         
-        // Handle iframe loading errors gracefully
         iframe.onload = () => {
-          try {
-            // Ensure the iframe content is properly loaded
-            console.log('Preview loaded successfully');
-          } catch (error) {
-            console.warn('Preview loading issue:', error);
-          }
+          console.log('Preview loaded successfully');
         };
       }
     }

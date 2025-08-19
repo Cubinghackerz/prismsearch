@@ -535,7 +535,7 @@ Please create a complete, functional web application that follows this plan exac
             </Button>
           </div>
           <div className="flex-1">
-            <WebAppPreview files={generatedApp.files || []} />
+            <WebAppPreview files={generatedApp?.files || []} />
           </div>
         </div>
       </div>
