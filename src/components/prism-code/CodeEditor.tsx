@@ -2,43 +2,42 @@
 import React from 'react';
 import Editor from '@monaco-editor/react';
 
-export interface CodeEditorProps {
-  language: string;
-  value?: string;
-  code?: string;
-  onChange: (code: string) => void;
-  className?: string;
+interface CodeEditorProps {
+  value: string;
+  onChange: (content: string) => void;
+  language?: string;
   height?: string;
   readOnly?: boolean;
 }
 
-const CodeEditor: React.FC<CodeEditorProps> = ({
-  language,
-  value,
-  code,
-  onChange,
-  className = "",
-  height = "400px",
-  readOnly = false
+const CodeEditor: React.FC<CodeEditorProps> = ({ 
+  value, 
+  onChange, 
+  language = 'javascript', 
+  height = '400px',
+  readOnly = false 
 }) => {
-  const editorValue = value || code || "";
-  
   return (
-    <div className={`border border-prism-border rounded-lg overflow-hidden ${className}`}>
+    <div className="w-full h-full border border-prism-border rounded-lg overflow-hidden">
       <Editor
         height={height}
         language={language}
-        value={editorValue}
-        onChange={(newValue) => onChange(newValue || "")}
+        value={value}
+        onChange={(val) => onChange(val || '')}
         theme="vs-dark"
         options={{
           minimap: { enabled: false },
           fontSize: 14,
           lineNumbers: 'on',
-          roundedSelection: false,
           scrollBeyondLastLine: false,
-          readOnly,
           automaticLayout: true,
+          tabSize: 2,
+          readOnly,
+          wordWrap: 'on',
+          folding: true,
+          lineDecorationsWidth: 0,
+          lineNumbersMinChars: 3,
+          glyphMargin: false,
         }}
       />
     </div>

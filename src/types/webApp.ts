@@ -13,14 +13,6 @@ export interface GeneratedApp {
   packages: string[];
 }
 
-export interface ProjectHistoryItem {
-  id: string;
-  prompt: string;
-  generatedApp: GeneratedApp;
-  model: string;
-  timestamp: Date;
-}
-
 export interface DevelopmentPlan {
   projectOverview: string;
   colorScheme: {

@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Code, Settings, Braces } from "lucide-react";
@@ -85,13 +86,6 @@ const AdvancedCodeEditor: React.FC<AdvancedCodeEditorProps> = ({
 
   const organizedFiles = organizeFilesByDirectory();
   const selectedFileData = generatedApp.files?.find(f => f.path === selectedFile);
-
-  // Auto-select first file if none selected
-  React.useEffect(() => {
-    if (!selectedFile && generatedApp.files && generatedApp.files.length > 0) {
-      setSelectedFile(generatedApp.files[0].path);
-    }
-  }, [generatedApp.files, selectedFile]);
 
   if (!generatedApp.files || generatedApp.files.length === 0) {
     return (
