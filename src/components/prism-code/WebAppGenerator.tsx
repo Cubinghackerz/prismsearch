@@ -16,6 +16,7 @@ import ProjectHistory from "./ProjectHistory";
 import DevelopmentPlanDialog from "./DevelopmentPlanDialog";
 import { v4 as uuidv4 } from 'uuid';
 import DeploymentDialog from "./DeploymentDialog";
+import TimeEstimator from "./TimeEstimator";
 
 interface GeneratedApp {
   html: string;
@@ -61,7 +62,7 @@ const WebAppGenerator = () => {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedApp, setGeneratedApp] = useState<GeneratedApp | null>(null);
-  const [selectedModel, setSelectedModel] = useState<AIModel>('gemini');
+  const [selectedModel, setSelectedModel] = useState<AIModel>('gemini-2.5-pro-exp-03-25');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeRightTab, setActiveRightTab] = useState('generator');
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
@@ -335,6 +336,7 @@ Please create a complete, functional web application that follows this plan exac
     }
 
     setIsGenerating(true);
+    const startTime = Date.now();
     
     try {
       let contextPrompt = prompt;
@@ -350,20 +352,42 @@ ${conversationHistory.slice(-3).map((item, index) =>
 Please modify or enhance the current application accordingly.`;
       }
 
-      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
-        body: { 
-          query: `Generate a complete web application based on this description: ${contextPrompt}. 
+      // Enhanced prompt for beautiful UI generation
+      const enhancedPrompt = `Generate a stunning, modern web application with exceptional UI/UX design based on this description: ${contextPrompt}
+
+CRITICAL DESIGN REQUIREMENTS:
+- Create a visually stunning, modern interface with beautiful aesthetics
+- Use contemporary design principles: proper spacing, typography hierarchy, and visual balance
+- Implement smooth animations and micro-interactions for enhanced user experience
+- Apply modern color schemes with gradients, shadows, and depth
+- Ensure responsive design that works perfectly on all devices
+- Use modern CSS techniques: flexbox, grid, transforms, and transitions
+- Include hover effects, loading states, and interactive feedback
+- Apply glassmorphism, neumorphism, or other modern design trends where appropriate
+- Ensure accessibility with proper contrast ratios and ARIA labels
+- Create an intuitive, user-friendly interface with clear visual hierarchy
+
+TECHNICAL REQUIREMENTS:
+- Generate clean, semantic HTML5 structure
+- Use modern CSS3 with custom properties (CSS variables)
+- Implement vanilla JavaScript with ES6+ features
+- Ensure cross-browser compatibility and optimal performance
+- Include proper meta tags and responsive viewport configuration
 
 Please return ONLY a valid JSON object with this exact structure:
 {
-  "html": "complete HTML content",
-  "css": "complete CSS styles", 
-  "javascript": "complete JavaScript code",
-  "description": "brief description of the app",
-  "features": ["feature 1", "feature 2", "feature 3"]
+  "html": "complete HTML content with semantic structure",
+  "css": "beautiful, modern CSS with animations and responsive design", 
+  "javascript": "clean, functional JavaScript with smooth interactions",
+  "description": "brief description emphasizing the visual appeal and functionality",
+  "features": ["feature 1 with UI focus", "feature 2 with UX emphasis", "feature 3"]
 }
 
-Make it responsive, modern, and fully functional. Do not include any markdown formatting or code blocks. Just the raw JSON.`,
+Focus on creating something visually impressive that users will love to interact with. Make it modern, beautiful, and highly functional.`;
+
+      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
+        body: { 
+          query: enhancedPrompt,
           model: modelToUse,
           chatId: currentProjectId || 'webapp-generation',
           chatHistory: []
@@ -424,6 +448,8 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
         };
       }
 
+      const generationTime = Math.round((Date.now() - startTime) / 1000);
+
       setGeneratedApp(parsedApp);
       setActiveRightTab('editor');
       
@@ -434,8 +460,8 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       setPrompt("");
       
       toast({
-        title: "Web App Generated!",
-        description: `Your web application has been created successfully using ${modelToUse}.`,
+        title: "Beautiful Web App Generated!",
+        description: `Your stunning web application was created in ${generationTime}s using ${modelToUse}.`,
       });
     } catch (error) {
       console.error(`Error generating web app with ${modelToUse}:`, error);
@@ -600,7 +626,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
       <Alert className="border-orange-500/30 bg-orange-500/5">
         <AlertTriangle className="h-4 w-4 text-orange-500" />
         <AlertDescription className="text-orange-300">
-          <strong>Enhanced Features:</strong> Now with development planning, advanced Monaco Editor for professional code editing and package management capabilities.
+          <strong>Enhanced Features:</strong> Now optimized for stunning UI generation with Gemini 2.5 Pro Experimental, featuring real-time generation time estimates and beautiful design focus.
         </AlertDescription>
       </Alert>
 
@@ -683,7 +709,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Wand2 className="w-5 h-5 text-prism-primary" />
-                    <span>{generatedApp ? 'Continue Working' : 'Describe Your Web App'}</span>
+                    <span>{generatedApp ? 'Continue Working' : 'Describe Your Beautiful Web App'}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -698,13 +724,19 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
                       placeholder={generatedApp ? 
-                        "Describe how you want to modify or enhance the current web app... Mention specific packages like 'Add Chart.js for data visualization' or 'Use Lodash for data manipulation'..." : 
-                        "Describe the web application you want to create... For example: 'Create a todo list app with drag and drop functionality using React Beautiful DnD, dark mode toggle, and local storage. Include animations with Framer Motion and use Tailwind CSS for styling.'"
+                        "Describe how you want to enhance the visual design or add beautiful new features... Focus on UI improvements, animations, or modern design elements..." : 
+                        "Describe the beautiful web application you want to create... For example: 'Create a stunning portfolio website with smooth scrolling animations, glassmorphism cards, gradient backgrounds, and interactive hover effects. Include a modern dark/light theme toggle with beautiful transitions.'"
                       }
                       className="min-h-[200px] resize-none bg-prism-surface/10 border-prism-border"
                       disabled={isGenerating || isThinking}
                     />
                   </div>
+
+                  <TimeEstimator 
+                    prompt={prompt} 
+                    model={selectedModel} 
+                    isVisible={!isGenerating && !isThinking && prompt.trim().length > 0}
+                  />
 
                   <div className="flex space-x-2">
                     <Button

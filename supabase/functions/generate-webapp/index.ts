@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from '../_shared/cors.ts'
 
@@ -12,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, model = 'gemini' } = await req.json();
+    const { prompt, model = 'gemini-2.5-pro-exp-03-25' } = await req.json();
 
     if (!prompt) {
       throw new Error('Prompt is required');
@@ -21,6 +20,9 @@ serve(async (req) => {
     let response;
     
     switch (model) {
+      case 'gemini-2.5-pro-exp-03-25':
+        response = await generateWithGemini(prompt, 'gemini-2.5-pro-exp-03-25');
+        break;
       case 'gemini':
         response = await generateWithGemini(prompt);
         break;
@@ -68,14 +70,19 @@ serve(async (req) => {
   }
 });
 
-async function generateWithGemini(prompt: string) {
+async function generateWithGemini(prompt: string, modelVersion: string = 'gemini-2.0-flash-exp') {
   if (!GEMINI_API_KEY) {
     throw new Error('Gemini API key not configured');
   }
 
   const systemPrompt = createSystemPrompt();
   
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`, {
+  // Map model versions to API endpoints
+  const modelEndpoint = modelVersion === 'gemini-2.5-pro-exp-03-25' 
+    ? 'gemini-2.5-pro-exp-03-25'
+    : 'gemini-2.0-flash-exp';
+  
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelEndpoint}:generateContent?key=${GEMINI_API_KEY}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -202,37 +209,47 @@ async function generateWithOpenAI(prompt: string, model: string) {
 }
 
 function createSystemPrompt(): string {
-  return `You are a professional web developer AI that creates complete, functional web applications. 
+  return `You are a world-class UI/UX designer and frontend developer AI that creates exceptionally beautiful, modern web applications. 
 
-Given a user prompt, generate a complete web application with the following structure:
-- HTML: Complete, semantic HTML structure
-- CSS: Modern, responsive styling with animations and good UX
-- JavaScript: Functional, well-commented JavaScript code
-- Description: Brief description of the application
-- Features: Array of key features implemented
+Given a user prompt, generate a complete, visually stunning web application with the following structure:
+- HTML: Complete, semantic HTML structure with accessibility in mind
+- CSS: Beautiful, modern styling with stunning visual design, animations, and responsive layout
+- JavaScript: Functional, smooth JavaScript with delightful interactions
+- Description: Brief description emphasizing the visual appeal and user experience
+- Features: Array of key features implemented with focus on UI/UX excellence
 
-Guidelines:
+DESIGN EXCELLENCE GUIDELINES:
+1. Create visually stunning interfaces with modern design principles
+2. Use beautiful color palettes, gradients, and sophisticated styling
+3. Implement smooth animations, transitions, and micro-interactions
+4. Apply contemporary design trends (glassmorphism, neumorphism, modern minimalism)
+5. Ensure perfect responsive design for all screen sizes
+6. Use modern typography with proper hierarchy and spacing
+7. Include delightful hover effects and interactive feedback
+8. Apply proper shadows, depth, and visual layering
+9. Ensure high contrast and accessibility compliance
+10. Create intuitive user flows and navigation
+
+TECHNICAL EXCELLENCE GUIDELINES:
 1. Use modern web standards (HTML5, CSS3, ES6+)
-2. Make it responsive and mobile-friendly
-3. Include proper accessibility features
-4. Use semantic HTML elements
-5. Implement smooth animations and transitions
-6. Ensure cross-browser compatibility
-7. Include error handling in JavaScript
-8. Make it visually appealing with modern design principles
-9. Use CSS Grid/Flexbox for layouts
-10. Include interactive elements and user feedback
+2. Implement CSS Grid and Flexbox for perfect layouts
+3. Include CSS custom properties for consistent theming
+4. Use semantic HTML elements and ARIA labels
+5. Ensure cross-browser compatibility and performance
+6. Include proper meta tags and viewport configuration
+7. Implement smooth scrolling and optimized animations
+8. Use modern JavaScript features and clean code structure
 
 Return ONLY a valid JSON object with this exact structure:
 {
-  "html": "complete HTML content",
-  "css": "complete CSS styles",
-  "javascript": "complete JavaScript code",
-  "description": "brief description of the app",
-  "features": ["feature 1", "feature 2", "feature 3"]
+  "html": "complete HTML content with semantic structure and accessibility",
+  "css": "stunning, modern CSS with beautiful animations and responsive design",
+  "javascript": "clean, functional JavaScript with smooth interactions",
+  "description": "brief description emphasizing visual appeal and user experience",
+  "features": ["UI-focused feature 1", "UX-focused feature 2", "visual feature 3"]
 }
 
-Do not include any markdown formatting or code blocks. Just the raw JSON.`;
+Focus on creating something that users will find visually impressive, highly functional, and delightful to use. Prioritize beautiful design, smooth interactions, and modern aesthetics.`;
 }
 
 function parseAIResponse(content: string) {
