@@ -3,8 +3,20 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from '../_shared/cors.ts'
 
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+const FALLBACK_GEMINI_API_KEY_1 = Deno.env.get('FALLBACK_GEMINI_API_KEY_1');
+const FALLBACK_GEMINI_API_KEY_2 = Deno.env.get('FALLBACK_GEMINI_API_KEY_2');
+const FALLBACK_GEMINI_API_KEY_3 = Deno.env.get('FALLBACK_GEMINI_API_KEY_3');
+const FALLBACK_GEMINI_API_KEY_4 = Deno.env.get('FALLBACK_GEMINI_API_KEY_4');
+const FALLBACK_GEMINI_API_KEY_5 = Deno.env.get('FALLBACK_GEMINI_API_KEY_5');
+
+const GEMINI_API_KEYS = [
+  GEMINI_API_KEY,
+  FALLBACK_GEMINI_API_KEY_1,
+  FALLBACK_GEMINI_API_KEY_2,
+  FALLBACK_GEMINI_API_KEY_3,
+  FALLBACK_GEMINI_API_KEY_4,
+  FALLBACK_GEMINI_API_KEY_5,
+].filter(Boolean); // Remove null/undefined values
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -12,7 +24,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, model = 'gemini' } = await req.json();
+    const { prompt, model = 'gemini-2.5-pro-exp-03-25' } = await req.json();
 
     if (!prompt) {
       throw new Error('Prompt is required');
@@ -21,20 +33,11 @@ serve(async (req) => {
     let response;
     
     switch (model) {
-      case 'gemini':
-        response = await generateWithGemini(prompt);
+      case 'gemini-2.5-pro-exp-03-25':
+        response = await generateWithGemini(prompt, 'gemini-2.5-pro-exp-03-25');
         break;
-      case 'claude-sonnet':
-        response = await generateWithClaude(prompt, 'claude-3-5-sonnet-20241022');
-        break;
-      case 'claude-haiku':
-        response = await generateWithClaude(prompt, 'claude-3-5-haiku-20241022');
-        break;
-      case 'gpt-4o':
-        response = await generateWithOpenAI(prompt, 'gpt-4o');
-        break;
-      case 'gpt-4o-mini':
-        response = await generateWithOpenAI(prompt, 'gpt-4o-mini');
+      case 'gemini-2.0-flash-exp':
+        response = await generateWithGemini(prompt, 'gemini-2.0-flash-exp');
         break;
       default:
         throw new Error(`Unsupported model: ${model}`);
@@ -68,137 +71,76 @@ serve(async (req) => {
   }
 });
 
-async function generateWithGemini(prompt: string) {
-  if (!GEMINI_API_KEY) {
-    throw new Error('Gemini API key not configured');
+async function generateWithGemini(prompt: string, modelName: string) {
+  if (GEMINI_API_KEYS.length === 0) {
+    throw new Error('No Gemini API keys configured');
   }
 
   const systemPrompt = createSystemPrompt();
-  
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      contents: [{
-        parts: [{
-          text: `${systemPrompt}\n\nUser Request: ${prompt}`
-        }]
-      }],
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 8192,
-      }
-    })
-  });
+  let lastError;
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('Gemini API error:', response.status, errorText);
-    throw new Error(`Gemini API request failed: ${response.status} - ${errorText}`);
-  }
-
-  const data = await response.json();
-  const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  
-  if (!content) {
-    throw new Error('No content received from Gemini API');
-  }
-
-  return parseAIResponse(content);
-}
-
-async function generateWithClaude(prompt: string, model: string) {
-  if (!ANTHROPIC_API_KEY) {
-    throw new Error('Anthropic API key not configured');
-  }
-
-  const systemPrompt = createSystemPrompt();
-  
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: model,
-      max_tokens: 8192,
-      temperature: 0.7,
-      system: systemPrompt,
-      messages: [
-        {
-          role: 'user',
-          content: prompt
-        }
-      ]
-    })
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('Claude API error:', response.status, errorText);
-    throw new Error(`Claude API request failed: ${response.status} - ${errorText}`);
-  }
-
-  const data = await response.json();
-  const content = data.content?.[0]?.text;
-  
-  if (!content) {
-    throw new Error('No content received from Claude API');
-  }
-
-  return parseAIResponse(content);
-}
-
-async function generateWithOpenAI(prompt: string, model: string) {
-  if (!OPENAI_API_KEY) {
-    throw new Error('OpenAI API key not configured');
-  }
-
-  const systemPrompt = createSystemPrompt();
-  
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OPENAI_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: model,
-      messages: [
-        {
-          role: 'system',
-          content: systemPrompt
+  // Try each API key in sequence
+  for (let i = 0; i < GEMINI_API_KEYS.length; i++) {
+    const apiKey = GEMINI_API_KEYS[i];
+    console.log(`Attempting with Gemini API key ${i + 1}/${GEMINI_API_KEYS.length} for model: ${modelName}`);
+    
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        {
-          role: 'user',
-          content: prompt
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `${systemPrompt}\n\nUser Request: ${prompt}`
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 8192,
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Gemini API error with key ${i + 1}:`, response.status, errorText);
+        lastError = new Error(`Gemini API request failed: ${response.status} - ${errorText}`);
+        
+        // If it's a rate limit or quota error, try the next key
+        if (response.status === 429 || response.status === 403) {
+          console.log(`Rate limit or quota exceeded with key ${i + 1}, trying next key...`);
+          continue;
         }
-      ],
-      max_tokens: 8192,
-      temperature: 0.7
-    })
-  });
+        
+        // For other errors, still try the next key but log it
+        console.log(`Error with key ${i + 1}, trying next key...`);
+        continue;
+      }
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('OpenAI API error:', response.status, errorText);
-    throw new Error(`OpenAI API request failed: ${response.status} - ${errorText}`);
+      const data = await response.json();
+      const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      
+      if (!content) {
+        lastError = new Error('No content received from Gemini API');
+        continue;
+      }
+
+      console.log(`Successfully generated content with Gemini API key ${i + 1}`);
+      return parseAIResponse(content);
+
+    } catch (error) {
+      console.error(`Error with Gemini API key ${i + 1}:`, error);
+      lastError = error;
+      continue;
+    }
   }
 
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-  
-  if (!content) {
-    throw new Error('No content received from OpenAI API');
-  }
-
-  return parseAIResponse(content);
+  // If all keys failed, throw the last error
+  throw lastError || new Error('All Gemini API keys failed');
 }
 
 function createSystemPrompt(): string {
@@ -252,5 +194,12 @@ function parseAIResponse(content: string) {
     throw new Error('Incomplete web app generated');
   }
 
-  return parsedResponse;
+  // Ensure all properties are strings
+  return {
+    html: String(parsedResponse.html || ''),
+    css: String(parsedResponse.css || ''),
+    javascript: String(parsedResponse.javascript || ''),
+    description: String(parsedResponse.description || 'Generated web application'),
+    features: Array.isArray(parsedResponse.features) ? parsedResponse.features : []
+  };
 }
