@@ -25,7 +25,7 @@ const MODEL_OPTIONS = [
   },
   { 
     value: 'gemini' as AIModel, 
-    label: 'Gemini 2.5 Flash', 
+    label: 'Gemini 2.0 Flash', 
     description: 'Google\'s latest model - excellent for coding and TypeScript' 
   },
   { 

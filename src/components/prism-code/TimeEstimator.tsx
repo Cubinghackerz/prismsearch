@@ -12,9 +12,10 @@ interface TimeEstimatorProps {
 const MODEL_SPEEDS = {
   'gemini-2.5-pro-exp-03-25': { baseTime: 15, complexity: 1.2 },
   'gemini': { baseTime: 8, complexity: 1.0 },
-  'groq-llama4-maverick': { baseTime: 12, complexity: 1.1 },
-  'groq-llama4-scout': { baseTime: 6, complexity: 0.9 },
-  'groq-llama31-8b-instant': { baseTime: 4, complexity: 0.8 },
+  'claude-sonnet': { baseTime: 12, complexity: 1.1 },
+  'claude-haiku': { baseTime: 6, complexity: 0.9 },
+  'gpt-4o': { baseTime: 10, complexity: 1.0 },
+  'gpt-4o-mini': { baseTime: 5, complexity: 0.8 },
 };
 
 const TimeEstimator: React.FC<TimeEstimatorProps> = ({ prompt, model, isVisible }) => {
@@ -27,7 +28,8 @@ const TimeEstimator: React.FC<TimeEstimatorProps> = ({ prompt, model, isVisible 
     }
 
     const calculateEstimate = () => {
-      const modelConfig = MODEL_SPEEDS[model];
+      // Get model config with fallback for unknown models
+      const modelConfig = MODEL_SPEEDS[model] || { baseTime: 8, complexity: 1.0 };
       const wordCount = prompt.trim().split(/\s+/).length;
       
       // Base complexity factors
