@@ -17,15 +17,7 @@ import DevelopmentPlanDialog from "./DevelopmentPlanDialog";
 import { v4 as uuidv4 } from 'uuid';
 import DeploymentDialog from "./DeploymentDialog";
 import TimeEstimator from "./TimeEstimator";
-import { GeneratedApp, GeneratedFile, DevelopmentPlan } from "@/types/webApp";
-
-interface ProjectHistoryItem {
-  id: string;
-  prompt: string;
-  generatedApp: GeneratedApp;
-  model: string;
-  timestamp: Date;
-}
+import { GeneratedApp, ProjectHistoryItem, DevelopmentPlan } from "@/types/webApp";
 
 const WebAppGenerator = () => {
   const [prompt, setPrompt] = useState("");

@@ -101,25 +101,30 @@ const WebAppPreview: React.FC<WebAppPreviewProps> = ({ files }) => {
             try {
               const iframeWindow = iframe.contentWindow;
               if (iframeWindow) {
-                // Capture console logs from iframe
-                const originalLog = iframeWindow.console.log;
-                const originalError = iframeWindow.console.error;
-                const originalWarn = iframeWindow.console.warn;
+                // Type assertion to access console properties
+                const iframeConsole = (iframeWindow as any).console;
                 
-                iframeWindow.console.log = (...args) => {
-                  console.log('Preview Log:', ...args);
-                  originalLog.apply(iframeWindow.console, args);
-                };
-                
-                iframeWindow.console.error = (...args) => {
-                  console.error('Preview Error:', ...args);
-                  originalError.apply(iframeWindow.console, args);
-                };
-                
-                iframeWindow.console.warn = (...args) => {
-                  console.warn('Preview Warning:', ...args);
-                  originalWarn.apply(iframeWindow.console, args);
-                };
+                if (iframeConsole) {
+                  // Capture console logs from iframe
+                  const originalLog = iframeConsole.log;
+                  const originalError = iframeConsole.error;
+                  const originalWarn = iframeConsole.warn;
+                  
+                  iframeConsole.log = (...args: any[]) => {
+                    console.log('Preview Log:', ...args);
+                    if (originalLog) originalLog.apply(iframeConsole, args);
+                  };
+                  
+                  iframeConsole.error = (...args: any[]) => {
+                    console.error('Preview Error:', ...args);
+                    if (originalError) originalError.apply(iframeConsole, args);
+                  };
+                  
+                  iframeConsole.warn = (...args: any[]) => {
+                    console.warn('Preview Warning:', ...args);
+                    if (originalWarn) originalWarn.apply(iframeConsole, args);
+                  };
+                }
                 
                 iframeWindow.onerror = (msg, url, line, col, error) => {
                   console.error('Preview runtime error:', { msg, url, line, col, error });
