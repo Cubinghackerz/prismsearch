@@ -72,7 +72,7 @@ const WebAppGenerator = () => {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedApp, setGeneratedApp] = useState<GeneratedApp | null>(null);
-  const [selectedModel, setSelectedModel] = useState<AIModel>('gemini-2.5-pro-exp-03-25');
+  const [selectedModel, setSelectedModel] = useState<AIModel>('gemini-2.0-flash-exp');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeRightTab, setActiveRightTab] = useState('generator');
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
@@ -179,107 +179,6 @@ const WebAppGenerator = () => {
     }
   };
 
-  const thinkAboutProject = async () => {
-    if (!prompt.trim()) {
-      toast({
-        title: "Missing Prompt",
-        description: "Please describe the web app you want to analyze.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (isLimitReached) {
-      toast({
-        title: "Daily Limit Reached",
-        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!incrementQueryCount()) {
-      toast({
-        title: "Daily Limit Reached",
-        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsThinking(true);
-    setShowPlanDialog(true);
-    setDevelopmentPlan(null);
-    
-    try {
-      const detailedPrompt = `Create a comprehensive development plan for this web application: "${prompt}"
-
-Please provide a detailed JSON response with the following structure:
-{
-  "projectOverview": "Detailed description of the project including purpose, target audience, and key objectives",
-  "colorScheme": {
-    "primary": "#hex-color",
-    "secondary": "#hex-color", 
-    "accent": "#hex-color",
-    "background": "#hex-color",
-    "text": "#hex-color"
-  },
-  "architecture": {
-    "framework": "recommended framework/library",
-    "styling": "CSS approach (CSS3, Tailwind, etc)",
-    "stateManagement": "state management approach",
-    "routing": "routing strategy"
-  },
-  "features": ["feature 1", "feature 2", "feature 3", "..."],
-  "packages": ["recommended npm packages/libraries"],
-  "fileStructure": ["file1.html", "file2.css", "folder/", "..."],
-  "implementationSteps": ["step 1", "step 2", "step 3", "..."],
-  "securityConsiderations": ["security measure 1", "security measure 2", "..."],
-  "performanceOptimizations": ["optimization 1", "optimization 2", "..."],
-  "estimatedComplexity": "Low|Medium|High"
-}
-
-Focus on modern web development best practices, accessibility, and user experience.`;
-
-      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
-        body: { 
-          query: detailedPrompt,
-          model: selectedModel,
-          chatId: currentProjectId || 'webapp-planning',
-          chatHistory: []
-        }
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      const planText = data.response || '';
-      const plan = parseDevelopmentPlan(planText);
-      
-      if (plan) {
-        setDevelopmentPlan(plan);
-        toast({
-          title: "Plan Generated",
-          description: "Review the development plan and approve to start generation.",
-        });
-      } else {
-        throw new Error('Failed to parse development plan');
-      }
-      
-    } catch (error) {
-      console.error('Error creating development plan:', error);
-      toast({
-        title: "Planning Failed",
-        description: `Failed to create development plan: ${error.message}`,
-        variant: "destructive"
-      });
-      setShowPlanDialog(false);
-    } finally {
-      setIsThinking(false);
-    }
-  };
-
   const generateWebApp = async (modelToUse: AIModel = selectedModel) => {
     if (!prompt.trim()) {
       toast({
@@ -360,6 +259,18 @@ Focus on creating a beautiful, functional application with proper architecture a
         parsedApp.framework = parsedApp.framework || 'vanilla';
         parsedApp.language = parsedApp.language || 'javascript';
       }
+
+      // Ensure files property exists and is properly formatted
+      if (!parsedApp.files) {
+        parsedApp.files = {};
+      }
+
+      // Convert any object values to strings
+      Object.keys(parsedApp.files).forEach(fileName => {
+        if (typeof parsedApp.files[fileName] !== 'string') {
+          parsedApp.files[fileName] = String(parsedApp.files[fileName] || '');
+        }
+      });
 
       const generationTime = Math.round((Date.now() - startTime) / 1000);
 
@@ -442,7 +353,7 @@ Focus on creating a beautiful, functional application with proper architecture a
       // New multi-file format
       files = Object.entries(generatedApp.files).map(([name, content]) => ({
         name,
-        content
+        content: String(content)
       }));
     } else {
       // Legacy format support

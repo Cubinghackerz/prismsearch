@@ -47,7 +47,12 @@ const AdvancedCodeEditor: React.FC<AdvancedCodeEditorProps> = ({
   // Get files - support both new and legacy formats
   const getFiles = () => {
     if (generatedApp.files) {
-      return generatedApp.files;
+      // Ensure all file contents are strings
+      const normalizedFiles: Record<string, string> = {};
+      Object.entries(generatedApp.files).forEach(([fileName, content]) => {
+        normalizedFiles[fileName] = typeof content === 'string' ? content : String(content || '');
+      });
+      return normalizedFiles;
     }
     // Legacy format fallback
     return {
