@@ -5,6 +5,15 @@ const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
+// Fallback Gemini API keys
+const FALLBACK_GEMINI_KEYS = [
+  Deno.env.get('FALLBACK_GEMINI_API_KEY_1'),
+  Deno.env.get('FALLBACK_GEMINI_API_KEY_2'),
+  Deno.env.get('FALLBACK_GEMINI_API_KEY_3'),
+  Deno.env.get('FALLBACK_GEMINI_API_KEY_4'),
+  Deno.env.get('FALLBACK_GEMINI_API_KEY_5'),
+].filter(key => key !== null);
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -21,10 +30,10 @@ serve(async (req) => {
     
     switch (model) {
       case 'gemini-2.5-pro-exp-03-25':
-        response = await generateWithGemini(prompt, 'gemini-2.5-pro-exp-03-25');
+        response = await generateWithGeminiWithFallback(prompt, 'gemini-2.5-pro-exp-03-25');
         break;
       case 'gemini':
-        response = await generateWithGemini(prompt);
+        response = await generateWithGeminiWithFallback(prompt);
         break;
       case 'claude-sonnet':
         response = await generateWithClaude(prompt, 'claude-3-5-sonnet-20241022');
@@ -70,19 +79,51 @@ serve(async (req) => {
   }
 });
 
-async function generateWithGemini(prompt: string, modelVersion: string = 'gemini-2.0-flash-exp') {
-  if (!GEMINI_API_KEY) {
-    throw new Error('Gemini API key not configured');
+async function generateWithGeminiWithFallback(prompt: string, modelVersion: string = 'gemini-2.0-flash-exp') {
+  const allKeys = [GEMINI_API_KEY, ...FALLBACK_GEMINI_KEYS].filter(key => key !== null);
+  
+  if (allKeys.length === 0) {
+    throw new Error('No Gemini API keys configured');
+  }
+
+  let lastError;
+  
+  for (let i = 0; i < allKeys.length; i++) {
+    try {
+      console.log(`Attempting Gemini API call with key ${i + 1}/${allKeys.length}`);
+      return await generateWithGemini(prompt, modelVersion, allKeys[i]);
+    } catch (error) {
+      console.error(`Gemini API key ${i + 1} failed:`, error.message);
+      lastError = error;
+      
+      // If it's a rate limit or quota error, try the next key
+      if (error.message.includes('quota') || error.message.includes('rate limit') || error.message.includes('429')) {
+        continue;
+      }
+      
+      // For other errors, also try the next key but log it
+      if (i < allKeys.length - 1) {
+        console.log(`Trying fallback key ${i + 2}...`);
+        continue;
+      }
+    }
+  }
+  
+  throw new Error(`All Gemini API keys failed. Last error: ${lastError?.message}`);
+}
+
+async function generateWithGemini(prompt: string, modelVersion: string = 'gemini-2.0-flash-exp', apiKey: string) {
+  if (!apiKey) {
+    throw new Error('Gemini API key not provided');
   }
 
   const systemPrompt = createSystemPrompt();
   
-  // Map model versions to API endpoints
   const modelEndpoint = modelVersion === 'gemini-2.5-pro-exp-03-25' 
     ? 'gemini-2.5-pro-exp-03-25'
     : 'gemini-2.0-flash-exp';
   
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelEndpoint}:generateContent?key=${GEMINI_API_KEY}`, {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelEndpoint}:generateContent?key=${apiKey}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -209,14 +250,67 @@ async function generateWithOpenAI(prompt: string, model: string) {
 }
 
 function createSystemPrompt(): string {
-  return `You are a world-class UI/UX designer and frontend developer AI that creates exceptionally beautiful, modern web applications. 
+  return `You are a world-class full-stack developer and UI/UX designer AI that creates complete, production-ready web applications with modern frameworks and technologies.
 
-Given a user prompt, generate a complete, visually stunning web application with the following structure:
-- HTML: Complete, semantic HTML structure with accessibility in mind
-- CSS: Beautiful, modern styling with stunning visual design, animations, and responsive layout
-- JavaScript: Functional, smooth JavaScript with delightful interactions
-- Description: Brief description emphasizing the visual appeal and user experience
-- Features: Array of key features implemented with focus on UI/UX excellence
+Given a user prompt, generate a complete web application with unlimited files following proper project structure:
+
+TECHNOLOGY OPTIONS (choose the most appropriate):
+1. **Vanilla Web App**: HTML5, CSS3, JavaScript ES6+
+2. **React Application**: React 18+, TypeScript, modern hooks
+3. **Vue.js Application**: Vue 3, Composition API, TypeScript
+4. **Angular Application**: Angular 16+, TypeScript, standalone components
+5. **Node.js Backend**: Express.js, TypeScript, REST APIs
+6. **Static Site**: HTML5, CSS3, minimal JavaScript
+
+FRAMEWORK-SPECIFIC FEATURES:
+- **React**: Components, hooks, context, routing with React Router
+- **Vue**: Composition API, reactive refs, Vue Router, Pinia store
+- **Angular**: Components, services, dependency injection, Angular Router
+- **Node.js**: Express middleware, authentication, database integration
+- **TypeScript**: Strong typing, interfaces, generics, modern features
+
+MODERN DEVELOPMENT PRACTICES:
+1. **File Structure**: Follow framework conventions (components/, pages/, utils/, types/)
+2. **TypeScript**: Use TypeScript when beneficial for type safety
+3. **State Management**: Context API, Pinia, NgRx, or Zustand as appropriate
+4. **Styling**: CSS Modules, Styled Components, Tailwind CSS, or SCSS
+5. **Package Management**: Include package.json with proper dependencies
+6. **Build Tools**: Vite, Webpack, or framework-specific build configs
+7. **Testing**: Jest, Vitest, or Cypress setup files
+8. **Linting**: ESLint, Prettier configuration files
+
+RESPONSE STRUCTURE - Return a JSON object with unlimited files:
+{
+  "framework": "react|vue|angular|vanilla|nodejs",
+  "language": "typescript|javascript",
+  "description": "Brief description of the application and chosen tech stack",
+  "features": ["feature 1", "feature 2", "..."],
+  "files": {
+    "package.json": "package configuration with dependencies",
+    "tsconfig.json": "TypeScript configuration (if applicable)",
+    "vite.config.ts": "Build tool configuration (if applicable)",
+    "index.html": "Main HTML entry point",
+    "src/main.ts": "Application entry point",
+    "src/App.tsx": "Main application component (if framework)",
+    "src/components/ComponentName.tsx": "Individual components",
+    "src/pages/PageName.tsx": "Page components",
+    "src/types/index.ts": "TypeScript type definitions",
+    "src/utils/helpers.ts": "Utility functions",
+    "src/styles/main.css": "Main stylesheet",
+    "src/styles/components.css": "Component styles",
+    "public/favicon.ico": "Static assets (base64 encoded for small files)",
+    "README.md": "Project documentation and setup instructions"
+  },
+  "dependencies": {
+    "production": ["react@18.x", "typescript@5.x", "..."],
+    "development": ["@types/react@18.x", "vite@4.x", "..."]
+  },
+  "scripts": {
+    "dev": "development server command",
+    "build": "production build command",
+    "preview": "preview built application"
+  }
+}
 
 DESIGN EXCELLENCE GUIDELINES:
 1. Create visually stunning interfaces with modern design principles
@@ -231,32 +325,25 @@ DESIGN EXCELLENCE GUIDELINES:
 10. Create intuitive user flows and navigation
 
 TECHNICAL EXCELLENCE GUIDELINES:
-1. Use modern web standards (HTML5, CSS3, ES6+)
-2. Implement CSS Grid and Flexbox for perfect layouts
-3. Include CSS custom properties for consistent theming
-4. Use semantic HTML elements and ARIA labels
+1. Use modern web standards and best practices
+2. Implement proper TypeScript types and interfaces
+3. Follow framework-specific patterns and conventions
+4. Include proper error handling and loading states
 5. Ensure cross-browser compatibility and performance
-6. Include proper meta tags and viewport configuration
-7. Implement smooth scrolling and optimized animations
-8. Use modern JavaScript features and clean code structure
+6. Implement proper SEO and meta tag configurations
+7. Use modern JavaScript/TypeScript features
+8. Follow component-driven development principles
+9. Include proper file organization and imports
+10. Implement responsive design with CSS Grid/Flexbox
 
-Return ONLY a valid JSON object with this exact structure:
-{
-  "html": "complete HTML content with semantic structure and accessibility",
-  "css": "stunning, modern CSS with beautiful animations and responsive design",
-  "javascript": "clean, functional JavaScript with smooth interactions",
-  "description": "brief description emphasizing visual appeal and user experience",
-  "features": ["UI-focused feature 1", "UX-focused feature 2", "visual feature 3"]
-}
+Choose the most appropriate technology stack based on the user's requirements. For simple applications, use vanilla technologies. For complex applications with state management needs, choose React, Vue, or Angular. Always include proper project structure with unlimited files as needed.
 
-Focus on creating something that users will find visually impressive, highly functional, and delightful to use. Prioritize beautiful design, smooth interactions, and modern aesthetics.`;
+Focus on creating production-ready, scalable applications that developers can immediately run and deploy.`;
 }
 
 function parseAIResponse(content: string) {
-  // Parse the JSON response
   let parsedResponse;
   try {
-    // Clean the response in case there's any markdown formatting
     const cleanContent = content.replace(/```json\n?|```\n?/g, '').trim();
     parsedResponse = JSON.parse(cleanContent);
   } catch (parseError) {
@@ -264,9 +351,9 @@ function parseAIResponse(content: string) {
     throw new Error('Invalid JSON response from AI model');
   }
 
-  // Validate the response structure
-  if (!parsedResponse.html || !parsedResponse.css || !parsedResponse.javascript) {
-    throw new Error('Incomplete web app generated');
+  // Validate the response structure for the new format
+  if (!parsedResponse.files || !parsedResponse.framework) {
+    throw new Error('Incomplete web app generated - missing required fields');
   }
 
   return parsedResponse;
