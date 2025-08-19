@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain, Rocket } from "lucide-react";
+import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain, Rocket, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyQueryLimit } from "@/hooks/useDailyQueryLimit";
@@ -36,6 +36,79 @@ const WebAppGenerator = () => {
   const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
 
   const MODEL_FALLBACK_ORDER: AIModel[] = ['gemini', 'groq-llama4-maverick', 'groq-llama4-scout', 'groq-llama31-8b-instant'];
+
+  const handlePlanApproval = () => {
+    setShowPlanDialog(false);
+    generateWebApp();
+  };
+
+  const handlePlanRejection = () => {
+    setShowPlanDialog(false);
+    setDevelopmentPlan(null);
+  };
+
+  const thinkAboutProject = async () => {
+    if (!prompt.trim()) return;
+    
+    setIsThinking(true);
+    try {
+      // Simulate thinking process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const plan: DevelopmentPlan = {
+        projectOverview: `AI-generated web application: ${prompt}`,
+        colorScheme: {
+          primary: "#3B82F6",
+          secondary: "#6B7280", 
+          accent: "#10B981",
+          background: "#FFFFFF",
+          text: "#1F2937"
+        },
+        architecture: {
+          framework: "React with TypeScript",
+          styling: "Tailwind CSS",
+          stateManagement: "React Hooks",
+          routing: "React Router"
+        },
+        features: ["Modern UI", "Responsive Design", "TypeScript Support"],
+        packages: ["react", "typescript", "tailwindcss"],
+        fileStructure: ["src/App.tsx", "src/components/", "package.json"],
+        implementationSteps: ["Setup", "Components", "Styling", "Testing"],
+        securityConsiderations: ["Input validation", "XSS protection"],
+        performanceOptimizations: ["Code splitting", "Lazy loading"],
+        estimatedComplexity: 'Medium' as const
+      };
+      
+      setDevelopmentPlan(plan);
+      setShowPlanDialog(true);
+    } catch (error) {
+      console.error('Error creating development plan:', error);
+    } finally {
+      setIsThinking(false);
+    }
+  };
+
+  const downloadApp = () => {
+    if (!generatedApp || !generatedApp.files) return;
+    
+    // Create a zip-like structure by downloading each file
+    generatedApp.files.forEach(file => {
+      const blob = new Blob([file.content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = file.path.split('/').pop() || 'file.txt';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    });
+    
+    toast({
+      title: "Files Downloaded",
+      description: `Downloaded ${generatedApp.files.length} files from your project.`,
+    });
+  };
 
   const saveProject = (projectPrompt: string, app: GeneratedApp, model: string) => {
     const projectId = currentProjectId || uuidv4();
