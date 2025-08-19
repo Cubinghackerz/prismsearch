@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,11 +18,14 @@ import DevelopmentPlanDialog from './DevelopmentPlanDialog';
 import TimeEstimator from './TimeEstimator';
 import LivePreview from './LivePreview';
 
+// Define AIModel type
+type AIModel = 'gemini-2.5-pro-exp-03-25' | 'gemini' | 'claude-sonnet' | 'claude-haiku' | 'gpt-4o' | 'gpt-4o-mini';
+
 const WebAppGenerator: React.FC = () => {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedApp, setGeneratedApp] = useState<GeneratedApp | null>(null);
-  const [selectedModel, setSelectedModel] = useState('gemini-2.5-pro-exp-03-25');
+  const [selectedModel, setSelectedModel] = useState<AIModel>('gemini-2.5-pro-exp-03-25');
   const [showPreview, setShowPreview] = useState(true);
   const [projectHistory, setProjectHistory] = useState<ProjectHistoryItem[]>([]);
   const [developmentPlan, setDevelopmentPlan] = useState<DevelopmentPlan | null>(null);
@@ -32,7 +34,7 @@ const WebAppGenerator: React.FC = () => {
   const [progress, setProgress] = useState(0);
   const { toast } = useToast();
 
-  const models = [
+  const models: Array<{ value: AIModel; label: string; description: string }> = [
     { 
       value: 'gemini-2.5-pro-exp-03-25', 
       label: 'Gemini 2.5 Pro (Experimental)', 
@@ -232,7 +234,7 @@ const WebAppGenerator: React.FC = () => {
   const loadProject = (project: ProjectHistoryItem) => {
     setGeneratedApp(project.generatedApp);
     setPrompt(project.prompt);
-    setSelectedModel(project.model);
+    setSelectedModel(project.model as AIModel);
   };
 
   const downloadApp = () => {
@@ -272,7 +274,7 @@ const WebAppGenerator: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">AI Model</label>
-              <Select value={selectedModel} onValueChange={setSelectedModel}>
+              <Select value={selectedModel} onValueChange={(value: AIModel) => setSelectedModel(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -332,13 +334,10 @@ const WebAppGenerator: React.FC = () => {
             </Button>
 
             <DevelopmentPlanDialog
-              prompt={prompt}
-              model={selectedModel}
               onPlanGenerated={setDevelopmentPlan}
             />
 
             <ProjectHistory 
-              projects={projectHistory}
               onLoadProject={loadProject}
             />
           </div>

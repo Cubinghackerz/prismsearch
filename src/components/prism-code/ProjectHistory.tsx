@@ -6,23 +6,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { History, Trash2, Eye, Calendar } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-
-interface GeneratedApp {
-  html: string;
-  css: string;
-  javascript: string;
-  description: string;
-  features: string[];
-}
-
-interface ProjectHistoryItem {
-  id: string;
-  prompt: string;
-  generatedApp: GeneratedApp;
-  model: string;
-  timestamp: Date;
-}
+import { useToast } from '@/components/ui/use-toast';
+import { ProjectHistoryItem } from '@/types/webApp';
 
 interface ProjectHistoryProps {
   onLoadProject: (project: ProjectHistoryItem) => void;
