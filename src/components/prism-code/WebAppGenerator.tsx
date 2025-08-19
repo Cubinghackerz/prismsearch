@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain, Rocket, Code } from "lucide-react";
+import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain, Rocket, Code, Terminal } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyQueryLimit } from "@/hooks/useDailyQueryLimit";
@@ -69,7 +69,7 @@ const WebAppGenerator = () => {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedApp, setGeneratedApp] = useState<GeneratedApp | null>(null);
-  const [selectedModel, setSelectedModel] = useState<AIModel>('gemini');
+  const [selectedModel, setSelectedModel] = useState<AIModel>('gemini-2.0-flash');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeRightTab, setActiveRightTab] = useState('generator');
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
@@ -78,6 +78,8 @@ const WebAppGenerator = () => {
   const [developmentPlan, setDevelopmentPlan] = useState<DevelopmentPlan | null>(null);
   const [showPlanDialog, setShowPlanDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState<string>('');
+  const [consoleOutput, setConsoleOutput] = useState<string[]>([]);
+  const [showConsole, setShowConsole] = useState(false);
   const { toast } = useToast();
   const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
 
@@ -202,6 +204,12 @@ const WebAppGenerator = () => {
     }
   };
 
+  const addConsoleMessage = (message: string, type: 'log' | 'error' | 'warn' = 'log') => {
+    const timestamp = new Date().toLocaleTimeString();
+    const formattedMessage = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+    setConsoleOutput(prev => [...prev.slice(-49), formattedMessage]); // Keep last 50 messages
+  };
+
   const generateWebApp = async (modelToUse: AIModel = selectedModel) => {
     if (!prompt.trim()) {
       toast({
@@ -231,6 +239,9 @@ const WebAppGenerator = () => {
     }
 
     setIsGenerating(true);
+    setShowConsole(true);
+    addConsoleMessage(`Starting web app generation with ${modelToUse} model...`);
+    
     const startTime = Date.now();
     
     try {
@@ -247,6 +258,8 @@ ${conversationHistory.slice(-3).map((item, index) =>
 Please modify or enhance the current application accordingly.`;
       }
 
+      addConsoleMessage("Preparing enhanced prompt for AI generation...");
+
       const enhancedPrompt = `Generate a complete, modern web application based on this description: ${contextPrompt}
 
 REQUIREMENTS:
@@ -259,6 +272,8 @@ REQUIREMENTS:
 
 Focus on creating a beautiful, functional application with proper architecture and file organization.`;
 
+      addConsoleMessage("Sending request to AI generation service...");
+
       const { data, error } = await supabase.functions.invoke('generate-webapp', {
         body: { 
           prompt: enhancedPrompt,
@@ -267,8 +282,11 @@ Focus on creating a beautiful, functional application with proper architecture a
       });
 
       if (error) {
+        addConsoleMessage(`Generation failed: ${error.message}`, 'error');
         throw new Error(error.message);
       }
+
+      addConsoleMessage("Parsing AI response and normalizing file contents...");
 
       let parsedApp: GeneratedApp = data;
       
@@ -287,6 +305,9 @@ Focus on creating a beautiful, functional application with proper architecture a
 
       const generationTime = Math.round((Date.now() - startTime) / 1000);
 
+      addConsoleMessage(`Generation completed successfully in ${generationTime} seconds`);
+      addConsoleMessage(`Generated ${Object.keys(parsedApp.files).length} files for ${parsedApp.framework} application`);
+
       setGeneratedApp(parsedApp);
       setActiveRightTab('editor');
       
@@ -299,6 +320,7 @@ Focus on creating a beautiful, functional application with proper architecture a
           name.includes('main.')
         ) || fileNames[0];
         setSelectedFile(mainFile);
+        addConsoleMessage(`Set main file: ${mainFile}`);
       }
       
       setConversationHistory(prev => [...prev, { prompt, response: parsedApp }]);
@@ -313,6 +335,7 @@ Focus on creating a beautiful, functional application with proper architecture a
       });
     } catch (error) {
       console.error(`Error generating web app:`, error);
+      addConsoleMessage(`Generation error: ${error.message}`, 'error');
       
       toast({
         title: "Generation Failed",
@@ -332,6 +355,8 @@ Focus on creating a beautiful, functional application with proper architecture a
     setDevelopmentPlan(null);
     setSelectedFile('');
     setActiveRightTab('generator');
+    setConsoleOutput([]);
+    addConsoleMessage("New project started");
     toast({
       title: "New Project Started",
       description: "You can now create a fresh web application.",
@@ -350,6 +375,7 @@ Focus on creating a beautiful, functional application with proper architecture a
     setConversationHistory([{ prompt: project.prompt, response: normalizedApp }]);
     setPrompt("");
     setActiveRightTab('editor');
+    addConsoleMessage(`Loaded project: ${project.prompt.slice(0, 50)}...`);
     
     // Set the first file as selected
     const fileNames = Object.keys(normalizedApp.files || {});
@@ -365,6 +391,8 @@ Focus on creating a beautiful, functional application with proper architecture a
 
   const downloadApp = () => {
     if (!generatedApp) return;
+
+    addConsoleMessage("Starting file download process...");
 
     const files = Object.entries(generatedApp.files || {}).map(([name, content]) => ({
       name,
@@ -389,6 +417,8 @@ Focus on creating a beautiful, functional application with proper architecture a
       URL.revokeObjectURL(url);
     });
 
+    addConsoleMessage(`Downloaded ${files.length} files successfully`);
+
     toast({
       title: "Files Downloaded",
       description: `All ${files.length} files have been downloaded to your device.`,
@@ -407,6 +437,7 @@ Focus on creating a beautiful, functional application with proper architecture a
     };
 
     setGeneratedApp(updatedApp);
+    addConsoleMessage(`File modified: ${fileName}`);
 
     if (currentProjectId) {
       saveProject(conversationHistory[0]?.prompt || 'Modified project', updatedApp, selectedModel);
@@ -416,24 +447,13 @@ Focus on creating a beautiful, functional application with proper architecture a
   // Helper function to extract file content based on type
   const getFileContent = (app: GeneratedApp, type: 'html' | 'css' | 'javascript'): string => {
     if (!app.files) {
-      // Fallback to legacy format
-      switch (type) {
-        case 'html':
-          return (app as any).html || '';
-        case 'css':
-          return (app as any).css || '';
-        case 'javascript':
-          return (app as any).javascript || '';
-        default:
-          return '';
-      }
+      return '';
     }
 
     const files = app.files;
     
     switch (type) {
       case 'html':
-        // Look for HTML files in common locations
         return files['index.html'] || 
                files['src/index.html'] || 
                files['public/index.html'] || 
@@ -442,7 +462,6 @@ Focus on creating a beautiful, functional application with proper architecture a
                ) || '';
                
       case 'css':
-        // Look for CSS files in common locations
         return files['styles.css'] || 
                files['style.css'] || 
                files['src/styles.css'] || 
@@ -457,7 +476,6 @@ Focus on creating a beautiful, functional application with proper architecture a
                ) || '';
                
       case 'javascript':
-        // Look for JavaScript files in common locations
         return files['script.js'] || 
                files['main.js'] || 
                files['index.js'] || 
@@ -477,6 +495,11 @@ Focus on creating a beautiful, functional application with proper architecture a
     }
   };
 
+  const clearConsole = () => {
+    setConsoleOutput([]);
+    addConsoleMessage("Console cleared");
+  };
+
   if (isFullscreen && generatedApp) {
     return (
       <div className="fixed inset-0 z-50 bg-background">
@@ -494,9 +517,10 @@ Focus on creating a beautiful, functional application with proper architecture a
           </div>
           <div className="flex-1">
             <WebAppPreview
-              html={generatedApp.files?.['index.html'] || ''}
-              css={generatedApp.files?.['styles.css'] || ''}
-              javascript={generatedApp.files?.['script.js'] || ''}
+              html={getFileContent(generatedApp, 'html')}
+              css={getFileContent(generatedApp, 'css')}
+              javascript={getFileContent(generatedApp, 'javascript')}
+              onConsoleMessage={addConsoleMessage}
             />
           </div>
         </div>
@@ -557,10 +581,10 @@ Focus on creating a beautiful, functional application with proper architecture a
 
       {/* Split Layout */}
       <div className="flex gap-6 h-[calc(100vh-20rem)]">
-        {/* Left Side - Preview */}
-        <div className="flex-1">
+        {/* Left Side - Preview and Console */}
+        <div className="flex-1 flex flex-col">
           {generatedApp ? (
-            <div className="h-full flex flex-col">
+            <>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-4">
                   <h3 className="text-lg font-semibold text-prism-text">Live Preview</h3>
@@ -577,6 +601,14 @@ Focus on creating a beautiful, functional application with proper architecture a
                   </div>
                 </div>
                 <div className="flex space-x-2">
+                  <Button
+                    onClick={() => setShowConsole(!showConsole)}
+                    size="sm"
+                    variant="outline"
+                  >
+                    <Terminal className="w-4 h-4 mr-2" />
+                    {showConsole ? 'Hide Console' : 'Show Console'}
+                  </Button>
                   <Button
                     onClick={() => setIsFullscreen(true)}
                     size="sm"
@@ -597,14 +629,50 @@ Focus on creating a beautiful, functional application with proper architecture a
                   </Button>
                 </div>
               </div>
-              <div className="flex-1">
+              
+              {/* Preview Area */}
+              <div className={`${showConsole ? 'flex-1' : 'flex-1'} mb-4`}>
                 <WebAppPreview
                   html={getFileContent(generatedApp, 'html')}
                   css={getFileContent(generatedApp, 'css')}
                   javascript={getFileContent(generatedApp, 'javascript')}
+                  onConsoleMessage={addConsoleMessage}
                 />
               </div>
-            </div>
+
+              {/* Console Area */}
+              {showConsole && (
+                <div className="h-48 border border-prism-border rounded-lg bg-black text-green-400 font-mono text-sm overflow-hidden flex flex-col">
+                  <div className="flex items-center justify-between p-2 border-b border-prism-border bg-gray-900">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                      <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                      <span className="text-gray-400 ml-2">Console</span>
+                    </div>
+                    <Button 
+                      onClick={clearConsole} 
+                      size="sm" 
+                      variant="ghost" 
+                      className="text-gray-400 hover:text-white"
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                    {consoleOutput.length === 0 ? (
+                      <div className="text-gray-500">Console output will appear here...</div>
+                    ) : (
+                      consoleOutput.map((message, index) => (
+                        <div key={index} className="text-xs">
+                          {message}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <Card className="h-full flex items-center justify-center">
               <CardContent className="text-center py-20">

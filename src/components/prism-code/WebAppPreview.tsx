@@ -8,9 +8,10 @@ interface WebAppPreviewProps {
   html: string;
   css: string;
   javascript: string;
+  onConsoleMessage?: (message: string, type?: 'log' | 'error' | 'warn') => void;
 }
 
-const WebAppPreview = ({ html, css, javascript }: WebAppPreviewProps) => {
+const WebAppPreview = ({ html, css, javascript, onConsoleMessage }: WebAppPreviewProps) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [debugInfo, setDebugInfo] = useState<string>('');
 
@@ -31,6 +32,7 @@ const WebAppPreview = ({ html, css, javascript }: WebAppPreviewProps) => {
         
         if (!hasContent) {
           console.log('WebAppPreview - No content provided, showing fallback');
+          onConsoleMessage?.('No content provided, showing fallback message', 'warn');
           setDebugInfo(`No content: HTML(${html?.length || 0}), CSS(${css?.length || 0}), JS(${javascript?.length || 0})`);
           
           const fallbackHTML = `
@@ -54,102 +56,226 @@ const WebAppPreview = ({ html, css, javascript }: WebAppPreviewProps) => {
         }
 
         console.log('WebAppPreview - Generating preview with content');
+        onConsoleMessage?.(`Building preview: HTML(${html?.length || 0} chars), CSS(${css?.length || 0} chars), JS(${javascript?.length || 0} chars)`);
         setDebugInfo(`Content loaded: HTML(${html?.length || 0}), CSS(${css?.length || 0}), JS(${javascript?.length || 0})`);
 
         // Handle React/JSX content by adding Babel transpilation
         let processedJS = javascript || '';
         
         // Check if content contains JSX/React code
-        if (processedJS.includes('React') || processedJS.includes('jsx') || processedJS.includes('<') && processedJS.includes('/>')) {
+        if (processedJS.includes('React') || processedJS.includes('jsx') || (processedJS.includes('<') && processedJS.includes('/>'))) {
           console.log('WebAppPreview - Detected React/JSX content, adding Babel');
-          // Add React and Babel for JSX transpilation
+          onConsoleMessage?.('Detected React/JSX content, setting up transpilation');
+          
+          // For React components, we need to handle JSX properly
           processedJS = `
-            // Load React from CDN for preview
-            const { createElement: h, useState, useEffect } = React;
-            
-            // Simple JSX transpiler for basic cases
-            ${processedJS.replace(/className/g, 'class')}
+            // React app initialization
+            try {
+              ${processedJS}
+            } catch (error) {
+              console.error('React component error:', error);
+              throw error;
+            }
           `;
         }
 
+        // Enhanced HTML with better error handling and console capture
         const fullHTML = `
           <!DOCTYPE html>
           <html lang="en">
           <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:">
+            <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https: http:;">
             <title>Generated Web App Preview</title>
-            <!-- Load React for JSX support if needed -->
+            
+            <!-- Load React and other libraries if needed -->
             ${(javascript && (javascript.includes('React') || javascript.includes('jsx'))) ? `
             <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
             <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
             <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
             ` : ''}
+            
             <style>
               body {
                 margin: 0;
                 padding: 20px;
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+                line-height: 1.6;
               }
-              ${css}
+              
+              /* Error display styles */
+              .preview-error {
+                background: #fee;
+                color: #c33;
+                padding: 15px;
+                margin: 15px 0;
+                border-radius: 6px;
+                border: 1px solid #c33;
+                font-family: monospace;
+                font-size: 14px;
+                white-space: pre-wrap;
+              }
+              
+              ${css || ''}
             </style>
           </head>
           <body>
             ${html || ''}
+            
             <script>
-              // Debug logging
-              console.log('Preview iframe loaded');
-              console.log('HTML content length:', ${html?.length || 0});
-              console.log('CSS content length:', ${css?.length || 0});
-              console.log('JS content length:', ${javascript?.length || 0});
+              // Enhanced console capture and error handling
+              const originalConsole = {
+                log: console.log,
+                error: console.error,
+                warn: console.warn,
+                info: console.info
+              };
+              
+              // Override console methods to capture output
+              console.log = function(...args) {
+                originalConsole.log.apply(console, args);
+                try {
+                  window.parent.postMessage({
+                    type: 'console',
+                    level: 'log',
+                    message: args.map(arg => 
+                      typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+                    ).join(' ')
+                  }, '*');
+                } catch(e) {}
+              };
+              
+              console.error = function(...args) {
+                originalConsole.error.apply(console, args);
+                try {
+                  window.parent.postMessage({
+                    type: 'console',
+                    level: 'error',
+                    message: args.map(arg => 
+                      typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+                    ).join(' ')
+                  }, '*');
+                } catch(e) {}
+              };
+              
+              console.warn = function(...args) {
+                originalConsole.warn.apply(console, args);
+                try {
+                  window.parent.postMessage({
+                    type: 'console',
+                    level: 'warn',
+                    message: args.map(arg => 
+                      typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+                    ).join(' ')
+                  }, '*');
+                } catch(e) {}
+              };
+
+              // Global error handler
+              window.onerror = function(message, source, lineno, colno, error) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'preview-error';
+                errorDiv.textContent = \`JavaScript Error: \${message}\nLine: \${lineno}, Column: \${colno}\`;
+                document.body.appendChild(errorDiv);
+                
+                console.error('Global error caught:', message, 'at', source, lineno, colno);
+                return false;
+              };
+
+              // Unhandled promise rejection handler
+              window.addEventListener('unhandledrejection', function(event) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'preview-error';
+                errorDiv.textContent = \`Unhandled Promise Rejection: \${event.reason}\`;
+                document.body.appendChild(errorDiv);
+                
+                console.error('Unhandled promise rejection:', event.reason);
+              });
+
+              // Initial load message
+              console.log('🚀 Preview application loaded successfully');
+              console.log('📊 Content stats:', {
+                html: ${html?.length || 0},
+                css: ${css?.length || 0}, 
+                javascript: ${javascript?.length || 0}
+              });
             </script>
+            
             <script>
-              // Wrap JavaScript in try-catch for safety
+              // Main application script with enhanced error handling
               try {
                 ${processedJS}
+                console.log('✅ Application JavaScript executed successfully');
               } catch (error) {
-                console.error('Preview JavaScript Error:', error);
+                console.error('❌ Application JavaScript Error:', error);
+                
                 const errorDiv = document.createElement('div');
-                errorDiv.style.cssText = 'background: #fee; color: #c33; padding: 10px; margin: 10px 0; border-radius: 4px; border: 1px solid #c33;';
-                errorDiv.textContent = 'JavaScript Error: ' + error.message;
+                errorDiv.className = 'preview-error';
+                errorDiv.innerHTML = \`
+                  <strong>JavaScript Execution Error:</strong><br>
+                  \${error.message}<br><br>
+                  <strong>Stack:</strong><br>
+                  \${error.stack || 'No stack trace available'}
+                \`;
                 document.body.appendChild(errorDiv);
+                
+                throw error;
               }
-              
-              // Log success
-              console.log('Preview JavaScript executed successfully');
             </script>
           </body>
           </html>
         `;
         
-        console.log('WebAppPreview - Writing content to iframe');
+        console.log('WebAppPreview - Writing enhanced content to iframe');
+        onConsoleMessage?.('Writing application content to preview iframe');
+        
         iframeDoc.open();
         iframeDoc.write(fullHTML);
         iframeDoc.close();
         
-        // Add load event listener to detect when iframe finishes loading
+        // Set up message listener for console output from iframe
+        const handleMessage = (event: MessageEvent) => {
+          if (event.data && event.data.type === 'console') {
+            onConsoleMessage?.(event.data.message, event.data.level);
+          }
+        };
+        
+        window.addEventListener('message', handleMessage);
+        
+        // Add load event listener
         iframe.onload = () => {
           console.log('WebAppPreview - Iframe loaded successfully');
+          onConsoleMessage?.('Preview iframe loaded and ready for interaction');
+          
           const iframeWindow = iframe.contentWindow;
           if (iframeWindow) {
-            // Check for errors in iframe console
+            // Check content after a brief delay
             setTimeout(() => {
               try {
                 const bodyContent = iframeDoc.body?.innerHTML || '';
                 console.log('WebAppPreview - Iframe body content length:', bodyContent.length);
+                onConsoleMessage?.(`Preview content rendered: ${bodyContent.length} characters`);
+                
                 if (bodyContent.length < 50) {
                   console.warn('WebAppPreview - Very little content in iframe body');
+                  onConsoleMessage?.('Warning: Very little content rendered in preview', 'warn');
                 }
               } catch (e) {
                 console.error('WebAppPreview - Error checking iframe content:', e);
+                onConsoleMessage?.('Error checking preview content', 'error');
               }
             }, 100);
           }
         };
+
+        // Cleanup function
+        return () => {
+          window.removeEventListener('message', handleMessage);
+        };
       }
     }
-  }, [html, css, javascript]);
+  }, [html, css, javascript, onConsoleMessage]);
 
   return (
     <Card className="h-full flex flex-col">
@@ -165,7 +291,7 @@ const WebAppPreview = ({ html, css, javascript }: WebAppPreviewProps) => {
         <Alert className="mx-6 mb-4 border-yellow-500/30 bg-yellow-500/5">
           <AlertTriangle className="h-4 w-4 text-yellow-500" />
           <AlertDescription className="text-yellow-300 text-sm">
-            This is a sandboxed preview of your generated web app. Some features may behave differently than in a full deployment.
+            This is a locally hosted preview of your generated web app. Full interactivity and real-time console output are enabled.
           </AlertDescription>
         </Alert>
         
@@ -180,7 +306,7 @@ const WebAppPreview = ({ html, css, javascript }: WebAppPreviewProps) => {
             ref={iframeRef}
             className="w-full h-full border-0"
             title="Web App Preview"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-downloads"
           />
         </div>
       </CardContent>
