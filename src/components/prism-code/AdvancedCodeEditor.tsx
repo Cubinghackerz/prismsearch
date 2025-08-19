@@ -1,7 +1,5 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Code, Settings, Braces } from "lucide-react";
@@ -17,7 +15,9 @@ const AdvancedCodeEditor: React.FC<AdvancedCodeEditorProps> = ({
   generatedApp, 
   onFileChange 
 }) => {
-  const [selectedFile, setSelectedFile] = useState(generatedApp.files?.[0]?.path || '');
+  const [selectedFile, setSelectedFile] = useState(() => {
+    return generatedApp.files?.[0]?.path || '';
+  });
 
   const getFileIcon = (type: string) => {
     switch (type) {
@@ -106,7 +106,7 @@ const AdvancedCodeEditor: React.FC<AdvancedCodeEditorProps> = ({
           <Code className="w-5 h-5 text-prism-primary" />
           <span>Advanced Code Editor</span>
           <Badge variant="outline" className="ml-auto">
-            {generatedApp.files.length} files
+            {generatedApp.files?.length || 0} files
           </Badge>
         </CardTitle>
       </CardHeader>
