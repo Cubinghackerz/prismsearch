@@ -156,19 +156,26 @@ TECHNOLOGY OPTIONS (choose the most appropriate):
 2. **React Application**: React 18+, TypeScript, modern hooks
 3. **Vue.js Application**: Vue 3, Composition API, TypeScript
 4. **Angular Application**: Angular 16+, TypeScript, standalone components
-5. **Node.js Backend**: Express.js, TypeScript, REST APIs
+5. **Node.js Backend**: Express.js with TypeScript (REQUIRED for all backend code), REST APIs with proper typing
 6. **Static Site**: HTML5, CSS3, minimal JavaScript
+
+CRITICAL BACKEND REQUIREMENT:
+- ALL backend/server-side code MUST be written in TypeScript
+- Use proper TypeScript interfaces, types, and generics for all backend APIs
+- Include comprehensive type definitions for request/response objects
+- Implement proper error handling with typed error classes
+- Use TypeScript strict mode configuration
 
 FRAMEWORK-SPECIFIC FEATURES:
 - **React**: Components, hooks, context, routing with React Router
 - **Vue**: Composition API, reactive refs, Vue Router, Pinia store
 - **Angular**: Components, services, dependency injection, Angular Router
-- **Node.js**: Express middleware, authentication, database integration
+- **Node.js Backend**: Express middleware with TypeScript, typed authentication, database integration with proper ORM types
 - **TypeScript**: Strong typing, interfaces, generics, modern features
 
 MODERN DEVELOPMENT PRACTICES:
 1. **File Structure**: Follow framework conventions (components/, pages/, utils/, types/)
-2. **TypeScript**: Use TypeScript when beneficial for type safety
+2. **TypeScript**: MANDATORY for all backend code, strongly recommended for frontend
 3. **State Management**: Context API, Pinia, NgRx, or Zustand as appropriate
 4. **Styling**: CSS Modules, Styled Components, Tailwind CSS, or SCSS
 5. **Package Management**: Include package.json with proper dependencies
@@ -176,25 +183,36 @@ MODERN DEVELOPMENT PRACTICES:
 7. **Testing**: Jest, Vitest, or Cypress setup files
 8. **Linting**: ESLint, Prettier configuration files
 
+BACKEND TYPESCRIPT REQUIREMENTS:
+- Always generate tsconfig.json with strict mode enabled
+- Use proper interface definitions for all API endpoints
+- Include @types/ packages for all dependencies
+- Implement proper middleware typing
+- Use typed database models and schemas
+- Include comprehensive error handling with custom error types
+
 RESPONSE STRUCTURE - Return a JSON object with unlimited files:
 {
   "framework": "react|vue|angular|vanilla|nodejs",
-  "language": "typescript|javascript",
+  "language": "typescript|javascript" (MUST be "typescript" for backend/Node.js projects),
   "description": "Brief description of the application and chosen tech stack",
   "features": ["feature 1", "feature 2", "..."],
   "files": {
     "package.json": "package configuration with dependencies",
-    "tsconfig.json": "TypeScript configuration (if applicable)",
+    "tsconfig.json": "TypeScript configuration (REQUIRED for backend, recommended for frontend)",
     "vite.config.ts": "Build tool configuration (if applicable)",
     "index.html": "Main HTML entry point",
-    "src/main.ts": "Application entry point",
+    "src/main.ts": "Application entry point (TypeScript for backend projects)",
     "src/App.tsx": "Main application component (if framework)",
     "src/components/ComponentName.tsx": "Individual components",
     "src/pages/PageName.tsx": "Page components",
-    "src/types/index.ts": "TypeScript type definitions",
+    "src/types/index.ts": "TypeScript type definitions (REQUIRED for backend projects)",
     "src/utils/helpers.ts": "Utility functions",
     "src/styles/main.css": "Main stylesheet",
     "src/styles/components.css": "Component styles",
+    "src/middleware/auth.ts": "Backend middleware with proper typing (if backend)",
+    "src/routes/api.ts": "API routes with TypeScript interfaces (if backend)",
+    "src/models/User.ts": "Database models with TypeScript (if backend)",
     "public/favicon.ico": "Static assets (base64 encoded for small files)",
     "README.md": "Project documentation and setup instructions"
   },
