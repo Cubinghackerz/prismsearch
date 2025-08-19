@@ -12,14 +12,12 @@ import { useToast } from '@/components/ui/use-toast';
 import { Loader2, Wand2, Download, Eye, EyeOff, FileText, Settings, Clock, Sparkles } from 'lucide-react';
 import { GeneratedApp, FileContent, ProjectHistoryItem, DevelopmentPlan } from '@/types/webApp';
 import { supabase } from '@/integrations/supabase/client';
+import { AIModel } from './ModelSelector';
 import FileManager from './FileManager';
 import ProjectHistory from './ProjectHistory';
 import DevelopmentPlanDialog from './DevelopmentPlanDialog';
 import TimeEstimator from './TimeEstimator';
 import LivePreview from './LivePreview';
-
-// Define AIModel type
-type AIModel = 'gemini-2.5-pro-exp-03-25' | 'gemini' | 'claude-sonnet' | 'claude-haiku' | 'gpt-4o' | 'gpt-4o-mini';
 
 const WebAppGenerator: React.FC = () => {
   const [prompt, setPrompt] = useState('');
