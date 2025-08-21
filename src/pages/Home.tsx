@@ -74,24 +74,25 @@ const Home = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden font-fira-code">
-      {/* Galaxy Background */}
+      {/* Galaxy Background - Fixed positioning behind everything */}
       <div className="fixed inset-0 -z-10">
         <Galaxy
           mouseRepulsion={true}
           mouseInteraction={true}
-          density={1.2}
-          glowIntensity={0.4}
-          saturation={0.6}
+          density={2.5}
+          glowIntensity={0.6}
+          saturation={0.8}
           hueShift={200}
           transparent={false}
-          rotationSpeed={0.075}
-          twinkleIntensity={0.4}
-          repulsionStrength={1.5}
-          speed={1.5}
+          rotationSpeed={0.15}
+          twinkleIntensity={0.6}
+          repulsionStrength={2.5}
+          speed={3.0}
+          starSpeed={1.5}
         />
       </div>
 
-      {/* Content without any overlay */}
+      {/* Content - No background overlays */}
       <div className="relative z-10">
         {/* Navigation */}
         <header className="container mx-auto px-6 py-8">
@@ -108,27 +109,27 @@ const Home = () => {
             </div>
             
             <div className="hidden md:flex items-center space-x-6">
-              <Button variant="ghost" onClick={() => navigate('/search')} className="font-fira-code">
+              <Button variant="ghost" onClick={() => navigate('/search')} className="font-fira-code text-white/90 hover:text-white hover:bg-white/10">
                 Search
               </Button>
-              <Button variant="ghost" onClick={() => navigate('/chat')} className="font-fira-code">
+              <Button variant="ghost" onClick={() => navigate('/chat')} className="font-fira-code text-white/90 hover:text-white hover:bg-white/10">
                 Chat
               </Button>
               <Button 
                 variant="ghost" 
                 onClick={() => navigate('/code')}
-                className="relative font-fira-code"
+                className="relative font-fira-code text-white/90 hover:text-white hover:bg-white/10"
               >
                 Code
                 <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
               </Button>
-              <Button variant="ghost" onClick={() => navigate('/vault')} className="font-fira-code">
+              <Button variant="ghost" onClick={() => navigate('/vault')} className="font-fira-code text-white/90 hover:text-white hover:bg-white/10">
                 Vault
               </Button>
               <Button 
                 variant="ghost" 
                 onClick={() => navigate('/conversions')}
-                className="relative font-fira-code"
+                className="relative font-fira-code text-white/90 hover:text-white hover:bg-white/10"
               >
                 Conversions
                 <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
@@ -136,12 +137,12 @@ const Home = () => {
               <Button 
                 variant="ghost" 
                 onClick={() => navigate('/detector')}
-                className="relative font-fira-code"
+                className="relative font-fira-code text-white/90 hover:text-white hover:bg-white/10"
               >
                 Detector
                 <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
               </Button>
-              <Button variant="ghost" onClick={() => navigate('/pricing')} className="font-fira-code">
+              <Button variant="ghost" onClick={() => navigate('/pricing')} className="font-fira-code text-white/90 hover:text-white hover:bg-white/10">
                 Pricing
               </Button>
               <AuthButtons />
@@ -154,7 +155,7 @@ const Home = () => {
           <div className="text-center space-y-8 mb-20">
             <div className="space-y-4">
               <AnimatedHeadline />
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto font-fira-code">
+              <p className="text-xl text-white/80 max-w-2xl mx-auto font-fira-code">
                 Experience the future of intelligent search, AI-powered web app generation, secure password management, 
                 online code execution, and AI conversations in one unified platform.
               </p>
@@ -164,7 +165,7 @@ const Home = () => {
               <Button 
                 size="lg" 
                 onClick={() => navigate('/code')}
-                className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 font-fira-code"
+                className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 font-fira-code text-black font-bold"
               >
                 <Sparkles className="mr-2 h-4 w-4" />
                 Try AI Web App Generator
@@ -173,7 +174,7 @@ const Home = () => {
                 size="lg" 
                 variant="outline" 
                 onClick={() => navigate('/search')}
-                className="font-fira-code"
+                className="font-fira-code text-white border-white/30 hover:bg-white/10 hover:text-white"
               >
                 Start Searching
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -184,9 +185,9 @@ const Home = () => {
           {/* Featured Feature */}
           {featuredFeature && (
             <div className="mb-16">
-              <h2 className="text-2xl font-bold text-center mb-8 font-fira-code">Featured</h2>
+              <h2 className="text-2xl font-bold text-center mb-8 font-fira-code text-white">Featured</h2>
               <Card 
-                className="group cursor-pointer transition-all duration-300 hover:scale-105 border-2 border-orange-500/30 bg-gradient-to-br from-orange-500/5 to-yellow-500/5"
+                className="group cursor-pointer transition-all duration-300 hover:scale-105 border-2 border-orange-500/30 bg-black/20 hover:bg-black/30"
                 onClick={() => navigate(featuredFeature.path)}
               >
                 <CardHeader>
@@ -196,14 +197,14 @@ const Home = () => {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
-                        <CardTitle className="text-2xl font-fira-code">{featuredFeature.title}</CardTitle>
+                        <CardTitle className="text-2xl font-fira-code text-white">{featuredFeature.title}</CardTitle>
                         {featuredFeature.beta && (
                           <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-sm font-semibold rounded-full border border-orange-500/30 font-fira-code">
                             Beta
                           </span>
                         )}
                       </div>
-                      <CardDescription className="text-lg font-fira-code">
+                      <CardDescription className="text-lg font-fira-code text-white/70">
                         {featuredFeature.description}
                       </CardDescription>
                     </div>
@@ -212,7 +213,7 @@ const Home = () => {
                 <CardContent>
                   <Button 
                     variant="ghost" 
-                    className="w-full justify-start group-hover:bg-accent/50 font-fira-code text-lg py-6"
+                    className="w-full justify-start group-hover:bg-white/10 font-fira-code text-lg py-6 text-white/90 hover:text-white"
                   >
                     Start Creating Web Apps
                     <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
@@ -227,7 +228,7 @@ const Home = () => {
             {regularFeatures.map((feature, index) => (
               <Card 
                 key={index}
-                className="group cursor-pointer transition-all duration-300 hover:scale-105 bg-card/80 border-border/50"
+                className="group cursor-pointer transition-all duration-300 hover:scale-105 bg-black/20 hover:bg-black/30 border-white/20"
                 onClick={() => navigate(feature.path)}
               >
                 <CardHeader>
@@ -236,7 +237,7 @@ const Home = () => {
                       <feature.icon className="h-6 w-6" />
                     </div>
                     <div className="flex items-center space-x-2">
-                      <CardTitle className="font-fira-code">{feature.title}</CardTitle>
+                      <CardTitle className="font-fira-code text-white">{feature.title}</CardTitle>
                       {feature.beta && (
                         <span className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs font-semibold rounded-full border border-orange-500/30 font-fira-code">
                           Beta
@@ -244,14 +245,14 @@ const Home = () => {
                       )}
                     </div>
                   </div>
-                  <CardDescription className="font-fira-code">
+                  <CardDescription className="font-fira-code text-white/70">
                     {feature.description}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button 
                     variant="ghost" 
-                    className="w-full justify-start group-hover:bg-accent/50 font-fira-code"
+                    className="w-full justify-start group-hover:bg-white/10 font-fira-code text-white/90 hover:text-white"
                   >
                     Explore Feature
                     <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -264,22 +265,22 @@ const Home = () => {
           {/* Stats Section */}
           <div className="grid md:grid-cols-3 gap-8 text-center">
             <div className="space-y-2">
-              <h3 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-fira-code">
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-fira-code">
                 10M+
               </h3>
-              <p className="text-muted-foreground font-fira-code">Searches Powered</p>
+              <p className="text-white/70 font-fira-code">Searches Powered</p>
             </div>
             <div className="space-y-2">
-              <h3 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-fira-code">
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-fira-code">
                 256-bit
               </h3>
-              <p className="text-muted-foreground font-fira-code">Encryption Standard</p>
+              <p className="text-white/70 font-fira-code">Encryption Standard</p>
             </div>
             <div className="space-y-2">
-              <h3 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-fira-code">
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-fira-code">
                 99.9%
               </h3>
-              <p className="text-muted-foreground font-fira-code">Uptime Guarantee</p>
+              <p className="text-white/70 font-fira-code">Uptime Guarantee</p>
             </div>
           </div>
         </main>
