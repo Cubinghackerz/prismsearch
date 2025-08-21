@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calculator, Function, PieChart, TrendingUp } from 'lucide-react';
+import { Calculator, Sigma, PieChart, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 
 declare global {
@@ -157,7 +157,7 @@ captured_output = output.getvalue()
             Calculator
           </TabsTrigger>
           <TabsTrigger value="algebra" className="flex items-center gap-2">
-            <Function className="h-4 w-4" />
+            <Sigma className="h-4 w-4" />
             Algebra
           </TabsTrigger>
           <TabsTrigger value="calculus" className="flex items-center gap-2">
