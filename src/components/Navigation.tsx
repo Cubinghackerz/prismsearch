@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -119,99 +120,100 @@ const Navigation = () => {
           </SheetContent>
         </Sheet>
       
-      {/* Desktop Navigation */}
-      <div className="hidden md:flex items-center space-x-1">
-        <NavigationItem to="/chat" icon={MessageSquare} text="Chat" />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white hover:bg-white/10 transition-colors font-fira-code flex items-center space-x-2"
-            >
-              <Zap className="w-4 h-4" />
-              <span>Prism Suite</span>
-              <ChevronDown className="w-4 h-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 bg-black/95 backdrop-blur-md border border-white/20 font-fira-code">
-            <DropdownMenuItem asChild>
-              <Link to="/prism-vault" className="flex items-center space-x-2 w-full">
-                <Shield className="w-4 h-4" />
-                <div>
-                  <div className="font-medium">Vault</div>
-                  <div className="text-xs text-gray-400">Secure Password Manager</div>
-                </div>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/prism-code" className="flex items-center space-x-2 w-full">
-                <Code className="w-4 h-4" />
-                <div>
-                  <div className="font-medium">Code</div>
-                  <div className="text-xs text-gray-400">AI Web App Generator</div>
-                </div>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/prism-pages" className="flex items-center space-x-2 w-full">
-                <FileText className="w-4 h-4" />
-                <div>
-                  <div className="font-medium">Pages</div>
-                  <div className="text-xs text-gray-400">AI Document Editor</div>
-                </div>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/prism-image-gen" className="flex items-center space-x-2 w-full">
-                <Image className="w-4 h-4" />
-                <div>
-                  <div className="font-medium">Image Gen</div>
-                  <div className="text-xs text-gray-400">AI Image Generator</div>
-                </div>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/prism-detector" className="flex items-center space-x-2 w-full">
-                <Eye className="w-4 h-4" />
-                <div>
-                  <div className="font-medium">Detector</div>
-                  <div className="text-xs text-gray-400">Content Analysis</div>
-                </div>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/prism-conversions" className="flex items-center space-x-2 w-full">
-                <RefreshCw className="w-4 h-4" />
-                <div>
-                  <div className="font-medium">Conversions</div>
-                  <div className="text-xs text-gray-400">Format Converter</div>
-                </div>
-              </Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center space-x-1">
+          <NavigationItem to="/chat" icon={MessageSquare} text="Chat" />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-white hover:bg-white/10 transition-colors font-fira-code flex items-center space-x-2"
+              >
+                <Zap className="w-4 h-4" />
+                <span>Prism Suite</span>
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-black/95 backdrop-blur-md border border-white/20 font-fira-code">
+              <DropdownMenuItem asChild>
+                <Link to="/prism-vault" className="flex items-center space-x-2 w-full">
+                  <Shield className="w-4 h-4" />
+                  <div>
+                    <div className="font-medium">Vault</div>
+                    <div className="text-xs text-gray-400">Secure Password Manager</div>
+                  </div>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/prism-code" className="flex items-center space-x-2 w-full">
+                  <Code className="w-4 h-4" />
+                  <div>
+                    <div className="font-medium">Code</div>
+                    <div className="text-xs text-gray-400">AI Web App Generator</div>
+                  </div>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/prism-pages" className="flex items-center space-x-2 w-full">
+                  <FileText className="w-4 h-4" />
+                  <div>
+                    <div className="font-medium">Pages</div>
+                    <div className="text-xs text-gray-400">AI Document Editor</div>
+                  </div>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/prism-image-gen" className="flex items-center space-x-2 w-full">
+                  <Image className="w-4 h-4" />
+                  <div>
+                    <div className="font-medium">Image Gen</div>
+                    <div className="text-xs text-gray-400">AI Image Generator</div>
+                  </div>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/prism-detector" className="flex items-center space-x-2 w-full">
+                  <Eye className="w-4 h-4" />
+                  <div>
+                    <div className="font-medium">Detector</div>
+                    <div className="text-xs text-gray-400">Content Analysis</div>
+                  </div>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/prism-conversions" className="flex items-center space-x-2 w-full">
+                  <RefreshCw className="w-4 h-4" />
+                  <div>
+                    <div className="font-medium">Conversions</div>
+                    <div className="text-xs text-gray-400">Format Converter</div>
+                  </div>
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-        <NavigationItem to="/pricing" icon={DollarSign} text="Pricing" />
-        <NavigationItem to="/analytics" icon={BarChart} text="Analytics" />
-        <ThemeToggle />
-        {isSignedIn ? (
-          <Button variant="ghost" size="sm" className="text-white hover:bg-white/10" onClick={handleSignOut}>
-            <LogIn className="w-4 h-4 mr-2" />
-            Sign Out
-          </Button>
-        ) : (
-          <>
-            <Link to="/auth" className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-white/10 transition-colors text-white">
-              <LogIn className="w-4 h-4" />
-              <span className="text-sm">Sign In</span>
-            </Link>
-            <Link to="/clerk-auth" className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-white/10 transition-colors text-white">
-              <UserPlus className="w-4 h-4" />
-              <span className="text-sm">Sign Up</span>
-            </Link>
-          </>
-        )}
+          <NavigationItem to="/pricing" icon={DollarSign} text="Pricing" />
+          <NavigationItem to="/analytics" icon={BarChart} text="Analytics" />
+          <ThemeToggle />
+          {isSignedIn ? (
+            <Button variant="ghost" size="sm" className="text-white hover:bg-white/10" onClick={handleSignOut}>
+              <LogIn className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
+          ) : (
+            <>
+              <Link to="/auth" className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-white/10 transition-colors text-white">
+                <LogIn className="w-4 h-4" />
+                <span className="text-sm">Sign In</span>
+              </Link>
+              <Link to="/clerk-auth" className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-white/10 transition-colors text-white">
+                <UserPlus className="w-4 h-4" />
+                <span className="text-sm">Sign Up</span>
+              </Link>
+            </>
+          )}
+        </div>
       </div>
     </nav>
   );
