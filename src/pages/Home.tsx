@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, MessageCircle, Lock, ArrowRight, Shield, FileType, AlertTriangle, Code, Globe, Sparkles } from 'lucide-react';
+import { Search, MessageCircle, Lock, ArrowRight, Shield, FileType, Code, Globe, Sparkles } from 'lucide-react';
 import AnimatedHeadline from '@/components/AnimatedHeadline';
 import Footer from '@/components/Footer';
 import AuthButtons from '@/components/AuthButtons';
@@ -74,29 +74,30 @@ const Home = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden font-fira-code">
-      {/* Galaxy Background - Fixed positioning behind everything */}
-      <div className="fixed inset-0 -z-10">
+      {/* Galaxy Background - Full coverage */}
+      <div className="fixed inset-0">
         <Galaxy
-          mouseRepulsion={true}
+          mouseRepulsion={false}
           mouseInteraction={true}
-          density={2.5}
-          glowIntensity={0.6}
+          density={4.0}
+          glowIntensity={0.15}
           saturation={0.8}
           hueShift={200}
           transparent={false}
           rotationSpeed={0.15}
-          twinkleIntensity={0.6}
+          twinkleIntensity={0.15}
           repulsionStrength={2.5}
           speed={3.0}
           starSpeed={1.5}
+          autoCenterRepulsion={1.5}
         />
       </div>
 
-      {/* Content - No background overlays */}
-      <div className="relative z-10">
+      {/* Content - All UI elements with solid backgrounds */}
+      <div className="relative z-10 min-h-screen">
         {/* Navigation */}
         <header className="container mx-auto px-6 py-8">
-          <nav className="flex items-center justify-between">
+          <nav className="flex items-center justify-between bg-black/80 backdrop-blur-md rounded-xl p-4 border border-white/20">
             <div className="flex items-center space-x-2">
               <img 
                 src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" 
@@ -153,7 +154,7 @@ const Home = () => {
         {/* Hero Section */}
         <main className="container mx-auto px-6 py-16">
           <div className="text-center space-y-8 mb-20">
-            <div className="space-y-4">
+            <div className="space-y-4 bg-black/80 backdrop-blur-md rounded-2xl p-8 border border-white/20">
               <AnimatedHeadline />
               <p className="text-xl text-white/80 max-w-2xl mx-auto font-fira-code">
                 Experience the future of intelligent search, AI-powered web app generation, secure password management, 
@@ -185,9 +186,9 @@ const Home = () => {
           {/* Featured Feature */}
           {featuredFeature && (
             <div className="mb-16">
-              <h2 className="text-2xl font-bold text-center mb-8 font-fira-code text-white">Featured</h2>
+              <h2 className="text-2xl font-bold text-center mb-8 font-fira-code text-white bg-black/60 backdrop-blur-md rounded-xl p-4 border border-white/20">Featured</h2>
               <Card 
-                className="group cursor-pointer transition-all duration-300 hover:scale-105 border-2 border-orange-500/30 bg-black/20 hover:bg-black/30"
+                className="group cursor-pointer transition-all duration-300 hover:scale-105 border-2 border-orange-500/30 bg-black/80 backdrop-blur-md hover:bg-black/90"
                 onClick={() => navigate(featuredFeature.path)}
               >
                 <CardHeader>
@@ -228,7 +229,7 @@ const Home = () => {
             {regularFeatures.map((feature, index) => (
               <Card 
                 key={index}
-                className="group cursor-pointer transition-all duration-300 hover:scale-105 bg-black/20 hover:bg-black/30 border-white/20"
+                className="group cursor-pointer transition-all duration-300 hover:scale-105 bg-black/80 backdrop-blur-md hover:bg-black/90 border-white/20"
                 onClick={() => navigate(feature.path)}
               >
                 <CardHeader>
@@ -263,7 +264,7 @@ const Home = () => {
           </div>
 
           {/* Stats Section */}
-          <div className="grid md:grid-cols-3 gap-8 text-center">
+          <div className="grid md:grid-cols-3 gap-8 text-center bg-black/80 backdrop-blur-md rounded-2xl p-8 border border-white/20">
             <div className="space-y-2">
               <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-fira-code">
                 10M+
@@ -285,7 +286,9 @@ const Home = () => {
           </div>
         </main>
 
-        <Footer />
+        <div className="bg-black/80 backdrop-blur-md border-t border-white/20">
+          <Footer />
+        </div>
       </div>
     </div>
   );
