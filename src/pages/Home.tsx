@@ -91,8 +91,8 @@ const Home = () => {
         />
       </div>
 
-      {/* Content without backdrop blur */}
-      <div className="relative z-10 bg-background/60">
+      {/* Content without any overlay */}
+      <div className="relative z-10">
         {/* Navigation */}
         <header className="container mx-auto px-6 py-8">
           <nav className="flex items-center justify-between">
