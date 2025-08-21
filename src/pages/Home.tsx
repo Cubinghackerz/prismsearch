@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import AnimatedHeadline from '@/components/AnimatedHeadline';
 import Footer from '@/components/Footer';
 import AuthButtons from '@/components/AuthButtons';
 import Galaxy from '@/components/Galaxy';
+import CountUp from '@/components/CountUp';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -267,19 +267,40 @@ const Home = () => {
           <div className="grid md:grid-cols-3 gap-8 text-center bg-black/80 backdrop-blur-md rounded-2xl p-8 border border-white/20">
             <div className="space-y-2">
               <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-fira-code">
-                10M+
+                <CountUp
+                  from={0}
+                  to={10}
+                  duration={2}
+                  delay={0.2}
+                  className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
+                />
+                M+
               </h3>
               <p className="text-white/70 font-fira-code">Searches Powered</p>
             </div>
             <div className="space-y-2">
               <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-fira-code">
-                256-bit
+                <CountUp
+                  from={0}
+                  to={256}
+                  duration={2}
+                  delay={0.4}
+                  className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
+                />
+                -bit
               </h3>
               <p className="text-white/70 font-fira-code">Encryption Standard</p>
             </div>
             <div className="space-y-2">
               <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-fira-code">
-                99.9%
+                <CountUp
+                  from={0}
+                  to={99.9}
+                  duration={2}
+                  delay={0.6}
+                  className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
+                />
+                %
               </h3>
               <p className="text-white/70 font-fira-code">Uptime Guarantee</p>
             </div>
