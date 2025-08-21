@@ -9,16 +9,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import WebAppGenerator from "@/components/prism-code/WebAppGenerator";
 import CodeNotebook from "@/components/prism-code/CodeNotebook";
 import { QueryLimitDisplay } from "@/components/chat/QueryLimitDisplay";
-import HumanVerificationScreen from "@/components/HumanVerificationScreen";
 
 const PrismCode = () => {
   const { isSignedIn, isLoaded } = useAuth();
   const [activeTab, setActiveTab] = useState("webapp");
-  const [isVerifying, setIsVerifying] = useState(true);
-
-  const handleVerificationComplete = () => {
-    setIsVerifying(false);
-  };
 
   if (!isLoaded) {
     return <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10 flex items-center justify-center">
@@ -28,15 +22,6 @@ const PrismCode = () => {
 
   if (!isSignedIn) {
     return <Navigate to="/auth" replace />;
-  }
-
-  if (isVerifying) {
-    return (
-      <HumanVerificationScreen 
-        onVerificationComplete={handleVerificationComplete}
-        title="CODE ACCESS VERIFICATION"
-      />
-    );
   }
 
   return (
