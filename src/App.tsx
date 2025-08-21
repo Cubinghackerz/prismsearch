@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
@@ -21,6 +22,8 @@ import SecureRedirect from "./pages/SecureRedirect";
 import PrismCode from "./pages/PrismCode";
 import PrismPages from "./pages/PrismPages";
 import DocumentEditor from "./pages/DocumentEditor";
+import PrismMath from "./pages/PrismMath";
+import PrismChess from "./pages/PrismChess";
 
 // Create QueryClient with optimized settings for better performance
 const queryClient = new QueryClient({
@@ -52,6 +55,8 @@ const AppContent: React.FC = () => {
         <Route path="/docs" element={<PrismPages />} />
         <Route path="/docs/:docId" element={<DocumentEditor />} />
         <Route path="/code" element={<PrismCode />} />
+        <Route path="/math" element={<PrismMath />} />
+        <Route path="/chess" element={<PrismChess />} />
         <Route path="/auth" element={<ClerkAuth />} />
         <Route path="/secure-redirect" element={<SecureRedirect />} />
         <Route path="*" element={<NotFound />} />
