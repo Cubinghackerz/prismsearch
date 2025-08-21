@@ -10,12 +10,10 @@ import ScrollToTop from '../components/ScrollToTop';
 import { ChatProvider } from '../context/ChatContext';
 import Navigation from '../components/Navigation';
 import { QueryLimitDisplay } from '../components/chat/QueryLimitDisplay';
-import HumanVerificationScreen from '@/components/vault/HumanVerificationScreen';
 
 const Chat = () => {
   const [isBookmarksOpen, setIsBookmarksOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [bookmarksCount, setBookmarksCount] = useState<number>(() => {
     try {
       const bookmarks = JSON.parse(localStorage.getItem('prism_bookmarks') || '[]');
@@ -24,18 +22,6 @@ const Chat = () => {
       return 0;
     }
   });
-
-  const handleVerificationComplete = () => {
-    setIsLoading(false);
-  };
-
-  if (isLoading) {
-    return (
-      <HumanVerificationScreen 
-        onVerificationComplete={handleVerificationComplete}
-      />
-    );
-  }
 
   return (
     <div className={`${isFullscreen ? 'fixed inset-0 z-50' : 'min-h-screen'} bg-gradient-to-b from-prism-bg to-prism-surface relative overflow-hidden flex flex-col font-fira-code`}>

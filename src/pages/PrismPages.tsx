@@ -1,19 +1,13 @@
 
-import React, { useState } from "react";
+import React from "react";
 import Navigation from "@/components/Navigation";
 import PrismPagesHeader from "@/components/prism-pages/PrismPagesHeader";
 import DocumentsList from "@/components/prism-pages/DocumentsList";
 import { useAuth } from "@clerk/clerk-react";
 import { Navigate } from "react-router-dom";
-import HumanVerificationScreen from "@/components/vault/HumanVerificationScreen";
 
 const PrismPages = () => {
   const { isSignedIn, isLoaded } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
-
-  const handleVerificationComplete = () => {
-    setIsLoading(false);
-  };
 
   if (!isLoaded) {
     return <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10 flex items-center justify-center">
@@ -23,14 +17,6 @@ const PrismPages = () => {
 
   if (!isSignedIn) {
     return <Navigate to="/auth" replace />;
-  }
-
-  if (isLoading) {
-    return (
-      <HumanVerificationScreen 
-        onVerificationComplete={handleVerificationComplete}
-      />
-    );
   }
 
   return (
