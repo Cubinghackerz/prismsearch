@@ -1,84 +1,219 @@
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { 
+  Menu, 
+  Home, 
+  MessageSquare, 
+  Zap, 
+  Shield, 
+  Code, 
+  FileText, 
+  Image,
+  Eye, 
+  RefreshCw, 
+  ChevronDown, 
+  DollarSign, 
+  BarChart, 
+  LogIn, 
+  UserPlus 
+} from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
+import { useAuth } from '@clerk/clerk-react';
 
-import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+interface NavigationItemProps {
+  to: string;
+  icon: React.ComponentType<any>;
+  text: string;
+}
+
+const NavigationItem: React.FC<NavigationItemProps> = ({ to, icon: Icon, text }) => {
+  const location = useLocation();
+  const isActive = location.pathname === to;
+
+  return (
+    <Link to={to} className={`flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-white/10 transition-colors ${isActive ? 'bg-white/10' : ''}`}>
+      <Icon className="w-4 h-4 text-white" />
+      <span className="text-sm text-white font-fira-code">{text}</span>
+    </Link>
+  );
+};
 
 const Navigation = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isSignedIn, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isActive = (path: string) => location.pathname === path;
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
 
   return (
-    <header className="container mx-auto px-6 py-8">
-      <nav className="flex items-center justify-between">
-        <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate("/")}>
-          <img 
-            src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" 
-            alt="Prism Logo" 
-            className="w-8 h-8"
-          />
-          <span className="text-2xl font-bold bg-gradient-to-r from-prism-primary to-prism-accent bg-clip-text text-transparent font-fira-code">
-            Prism
-          </span>
-        </div>
-        
-        <div className="hidden md:flex items-center space-x-6">
-          <Button 
-            variant={isActive("/search") ? "default" : "ghost"} 
-            onClick={() => navigate("/search")}
-            className="font-fira-code"
-          >
-            Search
+    <nav className="fixed top-0 left-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/20 font-fira-code">
+      <div className="container max-w-screen-xl mx-auto px-4 h-16 flex items-center justify-between">
+        <Link to="/" className="flex items-center text-lg font-semibold text-white">
+          <Home className="w-6 h-6 mr-2" />
+          <span className="font-fira-code">Prism AI</span>
+        </Link>
+
+        {/* Mobile Navigation */}
+        <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="sm" className="md:hidden text-white">
+              <Menu className="w-6 h-6" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="bg-black/95 backdrop-blur-md border-r border-white/20 font-fira-code">
+            <div className="flex flex-col h-full">
+              <div className="py-4 border-b border-white/20">
+                <Link to="/" className="flex items-center text-lg font-semibold text-white px-4">
+                  <Home className="w-6 h-6 mr-2" />
+                  <span className="font-fira-code">Prism AI</span>
+                </Link>
+              </div>
+
+              <div className="flex-grow flex flex-col justify-between">
+                <div className="flex flex-col space-y-2 py-4 px-4">
+                  <NavigationItem to="/home" icon={Home} text="Home" />
+                  <NavigationItem to="/chat" icon={MessageSquare} text="Chat" />
+                  <NavigationItem to="/prism-vault" icon={Shield} text="Vault" />
+                  <NavigationItem to="/prism-code" icon={Code} text="Code" />
+                  <NavigationItem to="/prism-pages" icon={FileText} text="Pages" />
+                  <NavigationItem to="/prism-image-gen" icon={Image} text="Image Gen" />
+                  <NavigationItem to="/prism-detector" icon={Eye} text="Detector" />
+                  <NavigationItem to="/prism-conversions" icon={RefreshCw} text="Conversions" />
+                  <NavigationItem to="/pricing" icon={DollarSign} text="Pricing" />
+                  <NavigationItem to="/analytics" icon={BarChart} text="Analytics" />
+                </div>
+
+                <div className="py-4 border-t border-white/20 flex flex-col space-y-2 px-4">
+                  <ThemeToggle />
+                  {isSignedIn ? (
+                    <Button variant="ghost" className="justify-start text-white hover:bg-white/10" onClick={handleSignOut}>
+                      <LogIn className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </Button>
+                  ) : (
+                    <>
+                      <Link to="/auth" className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-white/10 transition-colors text-white">
+                        <LogIn className="w-4 h-4 mr-2" />
+                        <span>Sign In</span>
+                      </Link>
+                      <Link to="/clerk-auth" className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-white/10 transition-colors text-white">
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        <span>Sign Up</span>
+                      </Link>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+      
+      {/* Desktop Navigation */}
+      <div className="hidden md:flex items-center space-x-1">
+        <NavigationItem to="/chat" icon={MessageSquare} text="Chat" />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-white/10 transition-colors font-fira-code flex items-center space-x-2"
+            >
+              <Zap className="w-4 h-4" />
+              <span>Prism Suite</span>
+              <ChevronDown className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 bg-black/95 backdrop-blur-md border border-white/20 font-fira-code">
+            <DropdownMenuItem asChild>
+              <Link to="/prism-vault" className="flex items-center space-x-2 w-full">
+                <Shield className="w-4 h-4" />
+                <div>
+                  <div className="font-medium">Vault</div>
+                  <div className="text-xs text-gray-400">Secure Password Manager</div>
+                </div>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/prism-code" className="flex items-center space-x-2 w-full">
+                <Code className="w-4 h-4" />
+                <div>
+                  <div className="font-medium">Code</div>
+                  <div className="text-xs text-gray-400">AI Web App Generator</div>
+                </div>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/prism-pages" className="flex items-center space-x-2 w-full">
+                <FileText className="w-4 h-4" />
+                <div>
+                  <div className="font-medium">Pages</div>
+                  <div className="text-xs text-gray-400">AI Document Editor</div>
+                </div>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/prism-image-gen" className="flex items-center space-x-2 w-full">
+                <Image className="w-4 h-4" />
+                <div>
+                  <div className="font-medium">Image Gen</div>
+                  <div className="text-xs text-gray-400">AI Image Generator</div>
+                </div>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/prism-detector" className="flex items-center space-x-2 w-full">
+                <Eye className="w-4 h-4" />
+                <div>
+                  <div className="font-medium">Detector</div>
+                  <div className="text-xs text-gray-400">Content Analysis</div>
+                </div>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/prism-conversions" className="flex items-center space-x-2 w-full">
+                <RefreshCw className="w-4 h-4" />
+                <div>
+                  <div className="font-medium">Conversions</div>
+                  <div className="text-xs text-gray-400">Format Converter</div>
+                </div>
+              </Link>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <NavigationItem to="/pricing" icon={DollarSign} text="Pricing" />
+        <NavigationItem to="/analytics" icon={BarChart} text="Analytics" />
+        <ThemeToggle />
+        {isSignedIn ? (
+          <Button variant="ghost" size="sm" className="text-white hover:bg-white/10" onClick={handleSignOut}>
+            <LogIn className="w-4 h-4 mr-2" />
+            Sign Out
           </Button>
-          <Button 
-            variant={isActive("/chat") ? "default" : "ghost"} 
-            onClick={() => navigate("/chat")}
-            className="font-fira-code"
-          >
-            Chat
-          </Button>
-          <Button 
-            variant={isActive("/code") ? "default" : "ghost"} 
-            onClick={() => navigate("/code")}
-            className="relative font-fira-code"
-          >
-            Code
-            <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
-          </Button>
-          <Button 
-            variant={isActive("/vault") ? "default" : "ghost"} 
-            onClick={() => navigate("/vault")}
-            className="font-fira-code"
-          >
-            Vault
-          </Button>
-          <Button 
-            variant={isActive("/conversions") ? "default" : "ghost"} 
-            onClick={() => navigate("/conversions")}
-            className="relative font-fira-code"
-          >
-            Conversions
-            <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
-          </Button>
-          <Button 
-            variant={isActive("/detector") ? "default" : "ghost"} 
-            onClick={() => navigate("/detector")}
-            className="relative font-fira-code"
-          >
-            Detector
-            <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
-          </Button>
-          <Button 
-            variant={isActive("/pricing") ? "default" : "ghost"} 
-            onClick={() => navigate("/pricing")}
-            className="font-fira-code"
-          >
-            Pricing
-          </Button>
-        </div>
-      </nav>
-    </header>
+        ) : (
+          <>
+            <Link to="/auth" className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-white/10 transition-colors text-white">
+              <LogIn className="w-4 h-4" />
+              <span className="text-sm">Sign In</span>
+            </Link>
+            <Link to="/clerk-auth" className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-white/10 transition-colors text-white">
+              <UserPlus className="w-4 h-4" />
+              <span className="text-sm">Sign Up</span>
+            </Link>
+          </>
+        )}
+      </div>
+    </nav>
   );
 };
 
