@@ -3,14 +3,29 @@ import { corsHeaders } from '../_shared/cors.ts'
 
 // Ensure API keys are available
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+const FALLBACK_GEMINI_API_KEY_1 = Deno.env.get('FALLBACK_GEMINI_API_KEY_1');
+const FALLBACK_GEMINI_API_KEY_2 = Deno.env.get('FALLBACK_GEMINI_API_KEY_2');
+const FALLBACK_GEMINI_API_KEY_3 = Deno.env.get('FALLBACK_GEMINI_API_KEY_3');
+const FALLBACK_GEMINI_API_KEY_4 = Deno.env.get('FALLBACK_GEMINI_API_KEY_4');
+const FALLBACK_GEMINI_API_KEY_5 = Deno.env.get('FALLBACK_GEMINI_API_KEY_5');
 const MISTRAL_API_KEY = Deno.env.get('MISTRAL_API_KEY');
 const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY');
 const FALLBACK_GROQ_API_KEY = Deno.env.get('FALLBACK_GROQ_API_KEY');
 const AZURE_OPENAI_KEY = Deno.env.get('AZURE_OPENAI_KEY');
 
+// Create array of all available Gemini API keys
+const GEMINI_API_KEYS = [
+  GEMINI_API_KEY,
+  FALLBACK_GEMINI_API_KEY_1,
+  FALLBACK_GEMINI_API_KEY_2,
+  FALLBACK_GEMINI_API_KEY_3,
+  FALLBACK_GEMINI_API_KEY_4,
+  FALLBACK_GEMINI_API_KEY_5,
+].filter(Boolean); // Remove any undefined keys
+
 // Check which API keys are available
 const availableModels = {
-  gemini: !!GEMINI_API_KEY,
+  gemini: GEMINI_API_KEYS.length > 0,
   mistral: !!MISTRAL_API_KEY,
   'mistral-medium-3': !!MISTRAL_API_KEY,
   groq: !!(GROQ_API_KEY || FALLBACK_GROQ_API_KEY),
@@ -39,6 +54,7 @@ class DeepResearchAgent {
   private modelId: string;
   private model: string;
   private isUsingFallback: boolean = false;
+  private currentGeminiKeyIndex: number = 0;
 
   constructor(model: string) {
     // Default to gemini if the requested model is not available
@@ -52,7 +68,7 @@ class DeepResearchAgent {
     // Set API key and model ID based on the selected model
     switch (model) {
       case 'gemini':
-        this.apiKey = GEMINI_API_KEY || '';
+        this.apiKey = GEMINI_API_KEYS[0] || '';
         this.modelId = 'gemini-2.0-flash-exp';
         break;
       case 'mistral':
@@ -91,7 +107,7 @@ class DeepResearchAgent {
         break;
       default:
         // Default to Gemini
-        this.apiKey = GEMINI_API_KEY || '';
+        this.apiKey = GEMINI_API_KEYS[0] || '';
         this.modelId = 'gemini-2.0-flash-exp';
     }
 
@@ -129,40 +145,79 @@ class DeepResearchAgent {
   }
 
   private async sendGeminiPrompt(promptText: string): Promise<string> {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${this.modelId}:generateContent?key=${this.apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: promptText
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 4096, // Reduced to avoid potential token limit issues
+    let attempts = 0;
+    const maxAttempts = GEMINI_API_KEYS.length;
+
+    while (attempts < maxAttempts) {
+      const currentApiKey = GEMINI_API_KEYS[this.currentGeminiKeyIndex];
+      
+      try {
+        console.log(`Attempting Gemini request with key index ${this.currentGeminiKeyIndex} (attempt ${attempts + 1})`);
+        
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${this.modelId}:generateContent?key=${currentApiKey}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: promptText
+              }]
+            }],
+            generationConfig: {
+              temperature: 0.7,
+              topK: 40,
+              topP: 0.95,
+              maxOutputTokens: 4096, // Reduced to avoid potential token limit issues
+            }
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Gemini API error with key index ${this.currentGeminiKeyIndex}:`, response.status, errorText);
+          
+          // Move to next API key if available
+          if (attempts < maxAttempts - 1) {
+            this.currentGeminiKeyIndex = (this.currentGeminiKeyIndex + 1) % GEMINI_API_KEYS.length;
+            attempts++;
+            console.log(`Trying next Gemini API key (index ${this.currentGeminiKeyIndex})`);
+            continue;
+          }
+          
+          throw new Error(`Gemini API request failed: ${response.status} - ${errorText}`);
         }
-      })
-    });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Gemini API error:', response.status, errorText);
-      throw new Error(`Gemini API request failed: ${response.status} - ${errorText}`);
+        const data = await response.json();
+        const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        if (!content) {
+          throw new Error('No content received from Gemini API');
+        }
+
+        if (this.currentGeminiKeyIndex > 0) {
+          console.log(`Successfully used fallback Gemini API key (index ${this.currentGeminiKeyIndex})`);
+        }
+
+        return content.trim();
+      } catch (error) {
+        console.error(`Gemini API attempt ${attempts + 1} with key index ${this.currentGeminiKeyIndex} failed:`, error);
+        
+        // Move to next API key if available
+        if (attempts < maxAttempts - 1) {
+          this.currentGeminiKeyIndex = (this.currentGeminiKeyIndex + 1) % GEMINI_API_KEYS.length;
+          attempts++;
+          console.log(`Trying next Gemini API key (index ${this.currentGeminiKeyIndex})`);
+          continue;
+        }
+        
+        // If we've exhausted all attempts, throw the error
+        throw error;
+      }
     }
 
-    const data = await response.json();
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    
-    if (!content) {
-      throw new Error('No content received from Gemini API');
-    }
-
-    return content.trim();
+    throw new Error('All Gemini API keys failed');
   }
 
   private async sendMistralPrompt(promptText: string): Promise<string> {
@@ -407,8 +462,8 @@ async function sendRegularChat(prompt: string, model: string): Promise<string> {
   } catch (error) {
     console.error(`Error with regular chat for ${model}:`, error);
     
-    // Fallback to Gemini if the selected model fails
-    if (model !== 'gemini') {
+    // Fallback to Gemini if the selected model fails and Gemini keys are available
+    if (model !== 'gemini' && GEMINI_API_KEYS.length > 0) {
       console.log('Falling back to Gemini...');
       try {
         const geminiAgent = new DeepResearchAgent('gemini');
@@ -438,8 +493,8 @@ async function processDeepResearch(query: string, model: string): Promise<string
   } catch (error) {
     console.error('Error in deep research:', error);
     
-    // Fallback to Gemini for deep research if the selected model fails
-    if (model !== 'gemini') {
+    // Fallback to Gemini for deep research if the selected model fails and Gemini keys are available
+    if (model !== 'gemini' && GEMINI_API_KEYS.length > 0) {
       console.log('Falling back to Gemini for deep research...');
       try {
         const geminiAgent = new DeepResearchAgent('gemini');
