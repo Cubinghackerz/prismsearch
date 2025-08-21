@@ -1,84 +1,101 @@
-
 import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
+import { Search, MessageSquare, Zap, Shield, Code, RefreshCw, Image } from "lucide-react";
 
-const Navigation = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const isActive = (path: string) => location.pathname === path;
-
+const Navigation: React.FC = () => {
   return (
-    <header className="container mx-auto px-6 py-8">
-      <nav className="flex items-center justify-between">
-        <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate("/")}>
-          <img 
-            src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" 
-            alt="Prism Logo" 
-            className="w-8 h-8"
-          />
-          <span className="text-2xl font-bold bg-gradient-to-r from-prism-primary to-prism-accent bg-clip-text text-transparent font-fira-code">
-            Prism
-          </span>
-        </div>
-        
-        <div className="hidden md:flex items-center space-x-6">
-          <Button 
-            variant={isActive("/search") ? "default" : "ghost"} 
-            onClick={() => navigate("/search")}
-            className="font-fira-code"
-          >
-            Search
-          </Button>
-          <Button 
-            variant={isActive("/chat") ? "default" : "ghost"} 
-            onClick={() => navigate("/chat")}
-            className="font-fira-code"
-          >
-            Chat
-          </Button>
-          <Button 
-            variant={isActive("/code") ? "default" : "ghost"} 
-            onClick={() => navigate("/code")}
-            className="relative font-fira-code"
-          >
-            Code
-            <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
-          </Button>
-          <Button 
-            variant={isActive("/vault") ? "default" : "ghost"} 
-            onClick={() => navigate("/vault")}
-            className="font-fira-code"
-          >
-            Vault
-          </Button>
-          <Button 
-            variant={isActive("/conversions") ? "default" : "ghost"} 
-            onClick={() => navigate("/conversions")}
-            className="relative font-fira-code"
-          >
-            Conversions
-            <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
-          </Button>
-          <Button 
-            variant={isActive("/detector") ? "default" : "ghost"} 
-            onClick={() => navigate("/detector")}
-            className="relative font-fira-code"
-          >
-            Detector
-            <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
-          </Button>
-          <Button 
-            variant={isActive("/pricing") ? "default" : "ghost"} 
-            onClick={() => navigate("/pricing")}
-            className="font-fira-code"
-          >
-            Pricing
-          </Button>
-        </div>
-      </nav>
-    </header>
+    <NavigationMenu>
+      <NavigationMenuList>
+        <NavigationMenuItem>
+          <Link to="/search">
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              <Search className="mr-2 h-4 w-4" />
+              Search
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+
+        <NavigationMenuItem>
+          <Link to="/chat">
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              <MessageSquare className="mr-2 h-4 w-4" />
+              Chat
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+
+        <NavigationMenuItem>
+          <NavigationMenuTrigger>
+            <Zap className="mr-2 h-4 w-4" />
+            Tools
+          </NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <div className="grid gap-3 p-6 w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+              <div className="row-span-3">
+                <NavigationMenuLink asChild>
+                  <Link
+                    className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
+                    to="/vault"
+                  >
+                    <Shield className="h-6 w-6" />
+                    <div className="mb-2 mt-4 text-lg font-medium">
+                      Prism Vault
+                    </div>
+                    <p className="text-sm leading-tight text-muted-foreground">
+                      Secure password management with advanced encryption
+                    </p>
+                  </Link>
+                </NavigationMenuLink>
+              </div>
+              <Link to="/code" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                <div className="text-sm font-medium leading-none flex items-center">
+                  <Code className="mr-2 h-4 w-4" />
+                  Prism Code
+                </div>
+                <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                  AI-powered development environment
+                </p>
+              </Link>
+              <Link to="/image-gen" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                <div className="text-sm font-medium leading-none flex items-center">
+                  <Image className="mr-2 h-4 w-4" />
+                  Image Generator
+                </div>
+                <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                  AI-powered image generation with Google Imagen
+                </p>
+              </Link>
+              <Link to="/conversions" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                <div className="text-sm font-medium leading-none flex items-center">
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Conversions
+                </div>
+                <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                  File format conversion tools
+                </p>
+              </Link>
+            </div>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+
+        <NavigationMenuItem>
+          <Link to="/pricing">
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              Pricing
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+      </NavigationMenuList>
+    </NavigationMenu>
   );
 };
 
