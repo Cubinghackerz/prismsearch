@@ -2,12 +2,24 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 
 const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
+  const isToolsActive = () => {
+    const toolPaths = ["/search", "/chat", "/code", "/math", "/vault", "/conversions", "/detector"];
+    return toolPaths.includes(location.pathname);
+  };
 
   return (
     <header className="container mx-auto px-6 py-8">
@@ -23,59 +35,73 @@ const Navigation = () => {
           </span>
         </div>
         
-        <div className="hidden lg:flex items-center space-x-4 xl:space-x-6 flex-wrap">
-          <Button 
-            variant={isActive("/search") ? "default" : "ghost"} 
-            onClick={() => navigate("/search")}
-            className="font-fira-code text-sm"
-          >
-            Search
-          </Button>
-          <Button 
-            variant={isActive("/chat") ? "default" : "ghost"} 
-            onClick={() => navigate("/chat")}
-            className="font-fira-code text-sm"
-          >
-            Chat
-          </Button>
-          <Button 
-            variant={isActive("/code") ? "default" : "ghost"} 
-            onClick={() => navigate("/code")}
-            className="relative font-fira-code text-sm"
-          >
-            Code
-            <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
-          </Button>
-          <Button 
-            variant={isActive("/math") ? "default" : "ghost"} 
-            onClick={() => navigate("/math")}
-            className="font-fira-code text-sm"
-          >
-            Math
-          </Button>
-          <Button 
-            variant={isActive("/vault") ? "default" : "ghost"} 
-            onClick={() => navigate("/vault")}
-            className="font-fira-code text-sm"
-          >
-            Vault
-          </Button>
-          <Button 
-            variant={isActive("/conversions") ? "default" : "ghost"} 
-            onClick={() => navigate("/conversions")}
-            className="relative font-fira-code text-sm"
-          >
-            Conversions
-            <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
-          </Button>
-          <Button 
-            variant={isActive("/detector") ? "default" : "ghost"} 
-            onClick={() => navigate("/detector")}
-            className="relative font-fira-code text-sm"
-          >
-            Detector
-            <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
-          </Button>
+        <div className="hidden lg:flex items-center space-x-6 flex-wrap">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant={isToolsActive() ? "default" : "ghost"}
+                className="font-fira-code text-sm flex items-center gap-2"
+              >
+                Tools
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-48 bg-background/95 backdrop-blur-md border border-border/50" align="start">
+              <DropdownMenuItem 
+                onClick={() => navigate("/search")}
+                className={`cursor-pointer font-fira-code ${isActive("/search") ? "bg-accent text-accent-foreground" : ""}`}
+              >
+                Search
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => navigate("/chat")}
+                className={`cursor-pointer font-fira-code ${isActive("/chat") ? "bg-accent text-accent-foreground" : ""}`}
+              >
+                Chat
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => navigate("/code")}
+                className={`cursor-pointer font-fira-code ${isActive("/code") ? "bg-accent text-accent-foreground" : ""}`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  Code
+                  <span className="ml-2 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => navigate("/math")}
+                className={`cursor-pointer font-fira-code ${isActive("/math") ? "bg-accent text-accent-foreground" : ""}`}
+              >
+                Math
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => navigate("/vault")}
+                className={`cursor-pointer font-fira-code ${isActive("/vault") ? "bg-accent text-accent-foreground" : ""}`}
+              >
+                Vault
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => navigate("/conversions")}
+                className={`cursor-pointer font-fira-code ${isActive("/conversions") ? "bg-accent text-accent-foreground" : ""}`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  Conversions
+                  <span className="ml-2 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => navigate("/detector")}
+                className={`cursor-pointer font-fira-code ${isActive("/detector") ? "bg-accent text-accent-foreground" : ""}`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  Detector
+                  <span className="ml-2 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Button 
             variant={isActive("/pricing") ? "default" : "ghost"} 
             onClick={() => navigate("/pricing")}
