@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -83,14 +84,15 @@ const Home = () => {
           saturation={0.6}
           hueShift={200}
           transparent={false}
-          rotationSpeed={0.05}
+          rotationSpeed={0.075}
           twinkleIntensity={0.4}
           repulsionStrength={1.5}
+          speed={1.5}
         />
       </div>
 
-      {/* Content with enhanced backdrop */}
-      <div className="relative z-10 bg-background/40 backdrop-blur-sm">
+      {/* Content without backdrop blur */}
+      <div className="relative z-10 bg-background/60">
         {/* Navigation */}
         <header className="container mx-auto px-6 py-8">
           <nav className="flex items-center justify-between">
@@ -184,7 +186,7 @@ const Home = () => {
             <div className="mb-16">
               <h2 className="text-2xl font-bold text-center mb-8 font-fira-code">Featured</h2>
               <Card 
-                className="group cursor-pointer transition-all duration-300 hover:scale-105 border-2 border-orange-500/30 bg-gradient-to-br from-orange-500/5 to-yellow-500/5 backdrop-blur-md"
+                className="group cursor-pointer transition-all duration-300 hover:scale-105 border-2 border-orange-500/30 bg-gradient-to-br from-orange-500/5 to-yellow-500/5"
                 onClick={() => navigate(featuredFeature.path)}
               >
                 <CardHeader>
@@ -225,7 +227,7 @@ const Home = () => {
             {regularFeatures.map((feature, index) => (
               <Card 
                 key={index}
-                className="group cursor-pointer transition-all duration-300 hover:scale-105 backdrop-blur-md bg-card/80 border-border/50"
+                className="group cursor-pointer transition-all duration-300 hover:scale-105 bg-card/80 border-border/50"
                 onClick={() => navigate(feature.path)}
               >
                 <CardHeader>
