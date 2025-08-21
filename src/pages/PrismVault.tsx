@@ -9,7 +9,6 @@ import { EmptyVaultCard } from '@/components/vault/EmptyVaultCard';
 import { StoredPasswordsList } from '@/components/StoredPasswordsList';
 import { PasswordManagerDialog } from '@/components/PasswordManagerDialog';
 import Navigation from '@/components/Navigation';
-import ParticleBackground from '@/components/ParticleBackground';
 import Footer from '@/components/Footer';
 import zxcvbn from 'zxcvbn';
 import HumanVerificationScreen from '@/components/vault/HumanVerificationScreen';
@@ -219,7 +218,6 @@ const PrismVault = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 relative overflow-hidden font-fira-code">
-      <ParticleBackground />
       <Navigation />
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <VaultHeader />

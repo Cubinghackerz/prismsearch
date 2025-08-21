@@ -1,12 +1,18 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import DocumentEditorComponent from "@/components/prism-pages/DocumentEditor";
+import HumanVerificationScreen from "@/components/vault/HumanVerificationScreen";
 
 const DocumentEditor = () => {
   const { docId } = useParams();
   const { isSignedIn, isLoaded } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+
+  const handleVerificationComplete = () => {
+    setIsLoading(false);
+  };
 
   if (!isLoaded) {
     return <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10 flex items-center justify-center">
@@ -20,6 +26,14 @@ const DocumentEditor = () => {
 
   if (!docId) {
     return <Navigate to="/docs" replace />;
+  }
+
+  if (isLoading) {
+    return (
+      <HumanVerificationScreen 
+        onVerificationComplete={handleVerificationComplete}
+      />
+    );
   }
 
   return (
