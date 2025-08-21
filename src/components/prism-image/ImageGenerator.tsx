@@ -157,7 +157,7 @@ const ImageGenerator: React.FC = () => {
           >
             {isGenerating ? (
               <div className="flex items-center gap-2">
-                <LoadingAnimation size="sm" color="purple" />
+                <LoadingAnimation size="small" color="purple" />
                 Generating Image...
               </div>
             ) : (
