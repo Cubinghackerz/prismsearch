@@ -12,6 +12,7 @@ import Navigation from '@/components/Navigation';
 import ParticleBackground from '@/components/ParticleBackground';
 import Footer from '@/components/Footer';
 import zxcvbn from 'zxcvbn';
+import HumanVerificationScreen from '@/components/vault/HumanVerificationScreen';
 
 interface PasswordData {
   password: string;
@@ -204,16 +205,14 @@ const PrismVault = () => {
     }, 50);
   };
 
-  const handleLoadingComplete = () => {
+  const handleVerificationComplete = () => {
     setIsVaultLoading(false);
   };
 
   if (isVaultLoading) {
     return (
-      <VaultLoadingScreen 
-        vaultText={vaultText} 
-        encryptionProgress={encryptionProgress}
-        onLoadingComplete={handleLoadingComplete}
+      <HumanVerificationScreen 
+        onVerificationComplete={handleVerificationComplete}
       />
     );
   }
