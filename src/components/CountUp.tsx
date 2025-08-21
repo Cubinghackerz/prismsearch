@@ -20,7 +20,7 @@ export default function CountUp({
   from = 0,
   direction = "up",
   delay = 0,
-  duration = 2,
+  duration = 4, // Increased from 2 to 4 (50% slower)
   className = "",
   startWhen = true,
   separator = "",
@@ -30,8 +30,9 @@ export default function CountUp({
   const ref = useRef<HTMLSpanElement>(null);
   const motionValue = useMotionValue(direction === "down" ? to : from);
 
-  const damping = 20 + 40 * (1 / duration);
-  const stiffness = 100 * (1 / duration);
+  // Adjusted spring settings for smoother animation
+  const damping = 30 + 40 * (1 / duration); // Increased damping for smoother motion
+  const stiffness = 60 * (1 / duration); // Reduced stiffness for less bouncy motion
 
   const springValue = useSpring(motionValue, {
     damping,

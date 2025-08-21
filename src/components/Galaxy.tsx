@@ -107,7 +107,7 @@ vec3 StarLayer(vec2 uv) {
       float val = max(max(base.r, base.g), base.b);
       base = hsv2rgb(vec3(hue, sat, val));
 
-      vec2 pad = vec2(tris(seed * 34.0 + uTime * uSpeed / 10.0), tris(seed * 38.0 + uTime * uSpeed / 30.0)) - 0.5;
+      vec2 pad = vec2(tris(seed * 34.0 + uTime * uSpeed / 20.0), tris(seed * 38.0 + uTime * uSpeed / 60.0)) - 0.5;
 
       float star = Star(gv - offset - pad, flareSize);
       vec3 color = base;
@@ -133,14 +133,14 @@ void main() {
     vec2 centerUV = vec2(0.0, 0.0); // Center in UV space
     float centerDist = length(uv - centerUV);
     vec2 repulsion = normalize(uv - centerUV) * (uAutoCenterRepulsion / (centerDist + 0.1));
-    uv += repulsion * 0.05;
+    uv += repulsion * 0.025;
   } else if (uMouseRepulsion) {
     vec2 mousePosUV = (uMouse * uResolution.xy - focalPx) / uResolution.y;
     float mouseDist = length(uv - mousePosUV);
     vec2 repulsion = normalize(uv - mousePosUV) * (uRepulsionStrength / (mouseDist + 0.1));
-    uv += repulsion * 0.05 * uMouseActiveFactor;
+    uv += repulsion * 0.025 * uMouseActiveFactor;
   } else {
-    vec2 mouseOffset = mouseNorm * 0.1 * uMouseActiveFactor;
+    vec2 mouseOffset = mouseNorm * 0.05 * uMouseActiveFactor;
     uv += mouseOffset;
   }
 
@@ -290,11 +290,11 @@ export default function Galaxy({
     function update(t: number) {
       animateId = requestAnimationFrame(update);
       if (!disableAnimation) {
-        program.uniforms.uTime.value = t * 0.001;
-        program.uniforms.uStarSpeed.value = (t * 0.001 * starSpeed) / 10.0;
+        program.uniforms.uTime.value = t * 0.0005; // Reduced from 0.001 to 0.0005 (50% slower)
+        program.uniforms.uStarSpeed.value = (t * 0.0005 * starSpeed) / 20.0; // Reduced and adjusted for smoothness
       }
 
-      const lerpFactor = 0.05;
+      const lerpFactor = 0.025; // Reduced from 0.05 for smoother mouse interpolation
       smoothMousePos.current.x +=
         (targetMousePos.current.x - smoothMousePos.current.x) * lerpFactor;
       smoothMousePos.current.y +=
