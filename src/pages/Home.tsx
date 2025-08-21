@@ -74,7 +74,7 @@ const Home = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden font-fira-code">
-      {/* Galaxy Background - Full coverage with slower animations */}
+      {/* Galaxy Background - Full coverage with updated speed */}
       <div className="fixed inset-0">
         <Galaxy
           mouseRepulsion={false}
@@ -87,7 +87,7 @@ const Home = () => {
           rotationSpeed={0.075}
           twinkleIntensity={0.15}
           repulsionStrength={2.5}
-          speed={1.5}
+          speed={2}
           starSpeed={0.75}
           autoCenterRepulsion={1.5}
         />
@@ -263,14 +263,14 @@ const Home = () => {
             ))}
           </div>
 
-          {/* Stats Section with slower CountUp animations */}
+          {/* Stats Section with faster CountUp animations */}
           <div className="grid md:grid-cols-3 gap-8 text-center bg-black/80 backdrop-blur-md rounded-2xl p-8 border border-white/20">
             <div className="space-y-2">
               <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-fira-code">
                 <CountUp
                   from={0}
                   to={10}
-                  duration={4}
+                  duration={2}
                   delay={0.2}
                   className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
                 />
@@ -283,7 +283,7 @@ const Home = () => {
                 <CountUp
                   from={0}
                   to={256}
-                  duration={4}
+                  duration={2}
                   delay={0.4}
                   className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
                 />
@@ -296,7 +296,7 @@ const Home = () => {
                 <CountUp
                   from={0}
                   to={99.9}
-                  duration={4}
+                  duration={2}
                   delay={0.6}
                   className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
                 />
