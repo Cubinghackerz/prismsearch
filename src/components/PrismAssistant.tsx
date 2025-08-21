@@ -2,13 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, Minimize2, Maximize2, HelpCircle, Search, Shield, User, Sparkles } from 'lucide-react';
+import { X, Minimize2, Maximize2, HelpCircle, Search, Shield, User, Sparkles, Calculator } from 'lucide-react';
 
 interface FAQ {
   id: string;
   question: string;
   answer: string;
-  category: 'search' | 'vault' | 'account' | 'general';
+  category: 'search' | 'vault' | 'account' | 'general' | 'math';
 }
 
 interface Message {
@@ -90,11 +90,36 @@ const PrismAssistant = () => {
       question: 'Is Prism free to use?',
       answer: 'Prism offers both free and premium plans. The free plan includes basic search and limited vault storage. Premium plans offer unlimited storage, advanced features, and priority support.',
       category: 'general'
+    },
+    {
+      id: '11',
+      question: 'How do I use the Math Assistant?',
+      answer: 'Navigate to the Math section and type your mathematical problem or equation. The AI will solve it step-by-step and show detailed explanations. You can also use the equation keyboard for complex formulas.',
+      category: 'math'
+    },
+    {
+      id: '12',
+      question: 'What types of math problems can the assistant solve?',
+      answer: 'The Math Assistant can handle algebra, calculus, trigonometry, statistics, geometry, and advanced mathematical concepts. It supports LaTeX notation and provides step-by-step solutions.',
+      category: 'math'
+    },
+    {
+      id: '13',
+      question: 'How do I input mathematical equations?',
+      answer: 'You can type equations directly using standard notation (like x^2 + 2x + 1), use LaTeX syntax (like \\frac{1}{2}), or use our built-in equation keyboard for symbols and functions.',
+      category: 'math'
+    },
+    {
+      id: '14',
+      question: 'Can I save my math problems and solutions?',
+      answer: 'Yes! Your math problems and solutions are automatically saved in your history. You can review previous calculations and build upon them for complex multi-step problems.',
+      category: 'math'
     }
   ];
 
   const categories = [
     { id: 'search', name: 'Search Features', icon: Search, color: 'text-prism-primary' },
+    { id: 'math', name: 'Math Assistant', icon: Calculator, color: 'text-prism-accent' },
     { id: 'vault', name: 'Prism Vault', icon: Shield, color: 'text-prism-accent' },
     { id: 'account', name: 'Account & Settings', icon: User, color: 'text-blue-500' },
     { id: 'general', name: 'General', icon: HelpCircle, color: 'text-prism-text' }

@@ -11,37 +11,37 @@ const Navigation = () => {
 
   return (
     <header className="container mx-auto px-6 py-8">
-      <nav className="flex items-center justify-between">
-        <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate("/")}>
+      <nav className="flex items-center justify-between gap-8">
+        <div className="flex items-center space-x-3 cursor-pointer min-w-fit" onClick={() => navigate("/")}>
           <img 
             src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" 
             alt="Prism Logo" 
-            className="w-8 h-8"
+            className="w-8 h-8 flex-shrink-0"
           />
-          <span className="text-2xl font-bold bg-gradient-to-r from-prism-primary to-prism-accent bg-clip-text text-transparent font-fira-code">
+          <span className="text-2xl font-bold bg-gradient-to-r from-prism-primary to-prism-accent bg-clip-text text-transparent font-fira-code whitespace-nowrap">
             Prism
           </span>
         </div>
         
-        <div className="hidden md:flex items-center space-x-6">
+        <div className="hidden lg:flex items-center space-x-4 xl:space-x-6 flex-wrap">
           <Button 
             variant={isActive("/search") ? "default" : "ghost"} 
             onClick={() => navigate("/search")}
-            className="font-fira-code"
+            className="font-fira-code text-sm"
           >
             Search
           </Button>
           <Button 
             variant={isActive("/chat") ? "default" : "ghost"} 
             onClick={() => navigate("/chat")}
-            className="font-fira-code"
+            className="font-fira-code text-sm"
           >
             Chat
           </Button>
           <Button 
             variant={isActive("/code") ? "default" : "ghost"} 
             onClick={() => navigate("/code")}
-            className="relative font-fira-code"
+            className="relative font-fira-code text-sm"
           >
             Code
             <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
@@ -49,21 +49,21 @@ const Navigation = () => {
           <Button 
             variant={isActive("/math") ? "default" : "ghost"} 
             onClick={() => navigate("/math")}
-            className="font-fira-code"
+            className="font-fira-code text-sm"
           >
             Math
           </Button>
           <Button 
             variant={isActive("/vault") ? "default" : "ghost"} 
             onClick={() => navigate("/vault")}
-            className="font-fira-code"
+            className="font-fira-code text-sm"
           >
             Vault
           </Button>
           <Button 
             variant={isActive("/conversions") ? "default" : "ghost"} 
             onClick={() => navigate("/conversions")}
-            className="relative font-fira-code"
+            className="relative font-fira-code text-sm"
           >
             Conversions
             <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
@@ -71,7 +71,7 @@ const Navigation = () => {
           <Button 
             variant={isActive("/detector") ? "default" : "ghost"} 
             onClick={() => navigate("/detector")}
-            className="relative font-fira-code"
+            className="relative font-fira-code text-sm"
           >
             Detector
             <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
@@ -79,7 +79,7 @@ const Navigation = () => {
           <Button 
             variant={isActive("/pricing") ? "default" : "ghost"} 
             onClick={() => navigate("/pricing")}
-            className="font-fira-code"
+            className="font-fira-code text-sm"
           >
             Pricing
           </Button>
