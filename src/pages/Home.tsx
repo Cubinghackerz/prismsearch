@@ -1,8 +1,16 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, MessageCircle, Lock, ArrowRight, Shield, FileType, Code, Globe, Sparkles, Sigma } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { Search, MessageCircle, Lock, ArrowRight, Shield, FileType, Code, Globe, Sparkles, Sigma, ChevronDown } from 'lucide-react';
 import AnimatedHeadline from '@/components/AnimatedHeadline';
 import Footer from '@/components/Footer';
 import AuthButtons from '@/components/AuthButtons';
@@ -118,42 +126,68 @@ const Home = () => {
             </div>
             
             <div className="hidden md:flex items-center space-x-6">
-              <Button variant="ghost" onClick={() => navigate('/search')} className="font-fira-code text-white/90 hover:text-white hover:bg-white/10">
-                Search
-              </Button>
-              <Button variant="ghost" onClick={() => navigate('/chat')} className="font-fira-code text-white/90 hover:text-white hover:bg-white/10">
-                Chat
-              </Button>
-              <Button 
-                variant="ghost" 
-                onClick={() => navigate('/code')}
-                className="relative font-fira-code text-white/90 hover:text-white hover:bg-white/10"
-              >
-                Code
-                <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
-              </Button>
-              <Button variant="ghost" onClick={() => navigate('/math')} className="font-fira-code text-white/90 hover:text-white hover:bg-white/10">
-                Math
-              </Button>
-              <Button variant="ghost" onClick={() => navigate('/vault')} className="font-fira-code text-white/90 hover:text-white hover:bg-white/10">
-                Vault
-              </Button>
-              <Button 
-                variant="ghost" 
-                onClick={() => navigate('/conversions')}
-                className="relative font-fira-code text-white/90 hover:text-white hover:bg-white/10"
-              >
-                Conversions
-                <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
-              </Button>
-              <Button 
-                variant="ghost" 
-                onClick={() => navigate('/detector')}
-                className="relative font-fira-code text-white/90 hover:text-white hover:bg-white/10"
-              >
-                Detector
-                <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="font-fira-code text-white/90 hover:text-white hover:bg-white/10 flex items-center gap-2">
+                    Tools
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-48 bg-black/95 backdrop-blur-md border border-white/20" align="start">
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/search")}
+                    className="cursor-pointer font-fira-code text-white/90 hover:bg-white/10 hover:text-white"
+                  >
+                    Search
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/chat")}
+                    className="cursor-pointer font-fira-code text-white/90 hover:bg-white/10 hover:text-white"
+                  >
+                    Chat
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/code")}
+                    className="cursor-pointer font-fira-code text-white/90 hover:bg-white/10 hover:text-white"
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      Code
+                      <span className="ml-2 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/math")}
+                    className="cursor-pointer font-fira-code text-white/90 hover:bg-white/10 hover:text-white"
+                  >
+                    Math
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/vault")}
+                    className="cursor-pointer font-fira-code text-white/90 hover:bg-white/10 hover:text-white"
+                  >
+                    Vault
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/conversions")}
+                    className="cursor-pointer font-fira-code text-white/90 hover:bg-white/10 hover:text-white"
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      Conversions
+                      <span className="ml-2 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/detector")}
+                    className="cursor-pointer font-fira-code text-white/90 hover:bg-white/10 hover:text-white"
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      Detector
+                      <span className="ml-2 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant="ghost" onClick={() => navigate('/pricing')} className="font-fira-code text-white/90 hover:text-white hover:bg-white/10">
                 Pricing
               </Button>
