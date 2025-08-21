@@ -10,7 +10,7 @@ const MathRenderer: React.FC<MathRendererProps> = ({ content, className = '' }) 
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (containerRef.current && window.MathJax) {
+    if (containerRef.current && typeof window !== 'undefined' && window.MathJax) {
       // Clear previous content
       containerRef.current.innerHTML = '';
       
