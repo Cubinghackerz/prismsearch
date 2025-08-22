@@ -17,7 +17,7 @@ const Navigation = () => {
 
   const isActive = (path: string) => location.pathname === path;
   const isToolsActive = () => {
-    const toolPaths = ["/search", "/chat", "/code", "/math", "/vault", "/conversions", "/detector"];
+    const toolPaths = ["/search", "/chat", "/code", "/math", "/vault", "/conversions", "/compressor", "/detector"];
     return toolPaths.includes(location.pathname);
   };
 
@@ -88,6 +88,15 @@ const Navigation = () => {
                 <div className="flex items-center justify-between w-full">
                   Conversions
                   <span className="ml-2 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => navigate("/compressor")}
+                className={`cursor-pointer font-fira-code ${isActive("/compressor") ? "bg-accent text-accent-foreground" : ""}`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  Compressor
+                  <span className="ml-2 px-1.5 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30 font-fira-code">New</span>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuItem 

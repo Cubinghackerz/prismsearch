@@ -1,309 +1,167 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, Minimize2, Maximize2, HelpCircle, Search, Shield, User, Sparkles, Calculator } from 'lucide-react';
-
-interface FAQ {
-  id: string;
-  question: string;
-  answer: string;
-  category: 'search' | 'vault' | 'account' | 'general' | 'math';
-}
-
-interface Message {
-  id: string;
-  content: string;
-  isUser: boolean;
-  timestamp: Date;
-}
+import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Send, User, MessageSquare, HelpCircle } from "lucide-react";
 
 const PrismAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([{
-    id: '1',
-    content: "Hi! I'm your Prism Assistant. I can help you with frequently asked questions about Prism's features. Choose from the topics below or browse our FAQs.",
-    isUser: false,
-    timestamp: new Date()
-  }]);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [message, setMessage] = useState('');
+  const [chatHistory, setChatHistory] = useState([
+    {
+      sender: 'Prism',
+      text: "Hi, I'm Prism! How can I help you today? Here are some common questions:",
+    },
+    {
+      sender: 'Prism',
+      text: "• What is Prism?",
+    },
+    {
+      sender: 'Prism',
+      text: "• How does the AI search work?",
+    },
+    {
+      sender: 'Prism',
+      text: "• Is my data secure in the Vault?",
+    },
+  ]);
 
-  const faqs: FAQ[] = [
+  const toggleOpen = () => setIsOpen(!isOpen);
+
+  const sendMessage = () => {
+    if (message.trim() !== '') {
+      setChatHistory([...chatHistory, { sender: 'You', text: message }]);
+      setMessage('');
+
+      // Simulate Prism's response
+      setTimeout(() => {
+        const responses = [
+          "That's a great question! Let me look into that for you.",
+          "Interesting, I'll get back to you with an answer shortly.",
+          "I'm not quite sure, but I'll find out!",
+        ];
+        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+        setChatHistory([...chatHistory, { sender: 'Prism', text: randomResponse }]);
+      }, 500);
+    }
+  };
+
+  const faqs = [
     {
-      id: '1',
-      question: 'How do I search more effectively?',
-      answer: 'Use specific keywords, try different search engines, and use quotation marks for exact phrases. You can also use filters to narrow down results by date, type, or source.',
-      category: 'search'
+      question: "What is Prism?",
+      answer: "Prism is a comprehensive AI-powered platform that offers multiple tools including intelligent search, AI chat, password management, file conversions, compression, code generation, math assistance, and content detection services."
     },
     {
-      id: '2',
-      question: 'What search engines are available?',
-      answer: 'Prism supports multiple search engines including Google, Bing, DuckDuckGo, and specialized academic sources. You can switch between them in the search interface.',
-      category: 'search'
+      question: "How does the AI search work?",
+      answer: "Our AI search combines multiple search engines and uses advanced language models to provide comprehensive, contextual answers to your queries with cited sources."
     },
     {
-      id: '3',
-      question: 'How secure is Prism Vault?',
-      answer: 'Prism Vault uses military-grade AES-256 encryption to protect your passwords. All data is encrypted locally before being stored, and we never have access to your master password.',
-      category: 'vault'
+      question: "Is my data secure in the Vault?",
+      answer: "Yes! Your passwords are encrypted locally using AES-256 encryption before being stored. We use zero-knowledge architecture, meaning we cannot access your decrypted data."
     },
     {
-      id: '4',
-      question: 'How do I generate strong passwords?',
-      answer: 'Use the built-in password generator in Prism Vault. It creates cryptographically secure passwords with customizable length and character sets, and includes strength analysis.',
-      category: 'vault'
+      question: "What file formats does the Converter support?",
+      answer: "The File Converter supports 70+ formats across categories including images (JPG, PNG, WebP), documents (PDF, DOCX), audio (MP3, FLAC), video (MP4, AVI), archives (ZIP, 7Z), code files, and data formats."
     },
     {
-      id: '5',
-      question: 'How do I create a Prism account?',
-      answer: 'Click the sign-up button on any page and follow the prompts. You can sign up with email or use social login options. A strong password is required for security.',
-      category: 'account'
+      question: "How does the File Compressor work?",
+      answer: "Our File Compressor uses advanced algorithms to reduce file sizes while maintaining quality. It supports images, documents, audio, video, archives, and code files with customizable compression levels and smart optimization based on file type."
     },
     {
-      id: '6',
-      question: 'How do I reset my password?',
-      answer: 'On the login page, click "Forgot Password" and enter your email address. You\'ll receive a reset link via email. Follow the instructions to create a new secure password.',
-      category: 'account'
+      question: "What programming languages does Code support?",
+      answer: "Prism Code supports web development with HTML, CSS, JavaScript, and can generate complete web applications with modern frameworks and deployment options."
     },
     {
-      id: '7',
-      question: 'How do I change my account settings?',
-      answer: 'Once logged in, access your account settings through the user menu. You can update your profile, change passwords, manage subscriptions, and adjust privacy settings.',
-      category: 'account'
+      question: "How accurate is the Math Assistant?",
+      answer: "The Math Assistant uses advanced AI models trained on mathematical datasets and can handle everything from basic arithmetic to complex calculus, with step-by-step explanations and visual representations."
     },
     {
-      id: '8',
-      question: 'What are the daily query limits?',
-      answer: 'Free accounts have 30 daily queries, while registered users get 100 queries per day. Queries reset daily at midnight. Premium plans offer unlimited queries.',
-      category: 'account'
+      question: "What can the Detector identify?",
+      answer: "The Detector can identify AI-generated content, analyze text authenticity, detect potential security threats in files, and provide detailed analysis reports."
     },
     {
-      id: '9',
-      question: 'Can I sync my data across devices?',
-      answer: 'Yes! Your bookmarks, passwords, and preferences sync securely across all your devices when you\'re signed in to your Prism account.',
-      category: 'general'
+      question: "How do I get started?",
+      answer: "Simply choose any tool from the navigation menu! Most features work without registration, though creating an account unlocks additional capabilities and saves your data."
     },
     {
-      id: '10',
-      question: 'Is Prism free to use?',
-      answer: 'Prism offers both free and premium plans. The free plan includes basic search and limited vault storage. Premium plans offer unlimited storage, advanced features, and priority support.',
-      category: 'general'
-    },
-    {
-      id: '11',
-      question: 'How do I use the Math Assistant?',
-      answer: 'Navigate to the Math section and type your mathematical problem or equation. The AI will solve it step-by-step and show detailed explanations. You can also use the equation keyboard for complex formulas.',
-      category: 'math'
-    },
-    {
-      id: '12',
-      question: 'What types of math problems can the assistant solve?',
-      answer: 'The Math Assistant can handle algebra, calculus, trigonometry, statistics, geometry, and advanced mathematical concepts. It supports LaTeX notation and provides step-by-step solutions.',
-      category: 'math'
-    },
-    {
-      id: '13',
-      question: 'How do I input mathematical equations?',
-      answer: 'You can type equations directly using standard notation (like x^2 + 2x + 1), use LaTeX syntax (like \\frac{1}{2}), or use our built-in equation keyboard for symbols and functions.',
-      category: 'math'
-    },
-    {
-      id: '14',
-      question: 'Can I save my math problems and solutions?',
-      answer: 'Yes! Your math problems and solutions are automatically saved in your history. You can review previous calculations and build upon them for complex multi-step problems.',
-      category: 'math'
+      question: "What are the pricing plans?",
+      answer: "We offer a free tier with basic features and premium plans with advanced capabilities, higher limits, and priority support. Check our Pricing page for detailed information."
     }
   ];
 
-  const categories = [
-    { id: 'search', name: 'Search Features', icon: Search, color: 'text-prism-primary' },
-    { id: 'math', name: 'Math Assistant', icon: Calculator, color: 'text-prism-accent' },
-    { id: 'vault', name: 'Prism Vault', icon: Shield, color: 'text-prism-accent' },
-    { id: 'account', name: 'Account & Settings', icon: User, color: 'text-blue-500' },
-    { id: 'general', name: 'General', icon: HelpCircle, color: 'text-prism-text' }
-  ];
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleCategoryClick = (categoryId: string) => {
-    setSelectedCategory(categoryId);
-    const categoryFaqs = faqs.filter(faq => faq.category === categoryId);
-    const categoryName = categories.find(cat => cat.id === categoryId)?.name;
-    
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      content: `Here are the most common questions about ${categoryName}:\n\n${categoryFaqs.map(faq => `• ${faq.question}`).join('\n')}`,
-      isUser: false,
-      timestamp: new Date()
-    };
-    
-    setMessages(prev => [...prev, newMessage]);
-  };
-
-  const handleFAQClick = (faq: FAQ) => {
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: faq.question,
-      isUser: true,
-      timestamp: new Date()
-    };
-
-    const botMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      content: faq.answer,
-      isUser: false,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage, botMessage]);
-  };
-
-  const resetChat = () => {
-    setMessages([{
-      id: '1',
-      content: "Hi! I'm your Prism Assistant. I can help you with frequently asked questions about Prism's features. Choose from the topics below or browse our FAQs.",
-      isUser: false,
-      timestamp: new Date()
-    }]);
-    setSelectedCategory(null);
-  };
-
-  if (!isOpen) {
-    return (
-      <div className="fixed bottom-6 right-6 z-50">
-        <Button 
-          onClick={() => setIsOpen(true)} 
-          className="w-14 h-14 rounded-full bg-prism-surface hover:bg-prism-surface/80 text-white shadow-2xl hover:shadow-prism-primary/25 transition-all duration-300 group p-0"
-        >
-          <img 
-            src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" 
-            alt="Prism Logo" 
-            className="w-6 h-6 group-hover:scale-110 transition-transform duration-300"
-          />
-          <div className="absolute -top-2 -right-2 w-4 h-4 bg-prism-accent rounded-full animate-pulse">
-            <Sparkles className="w-3 h-3 text-white absolute top-0.5 left-0.5" />
-          </div>
-        </Button>
-      </div>
-    );
-  }
-
   return (
-    <div className="fixed bottom-6 right-6 z-50">
-      <Card className={`w-96 shadow-2xl border-prism-border/50 bg-prism-surface/95 backdrop-blur-md transition-all duration-300 ${isMinimized ? 'h-16' : 'h-[500px]'}`}>
-        <CardHeader className="flex flex-row items-center space-y-0 pb-2 px-4 py-3 border-b border-prism-border/30">
-          <div className="flex items-center space-x-2 flex-1">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center">
-              <img 
-                src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" 
-                alt="Prism Logo" 
-                className="w-5 h-5"
-              />
-            </div>
-            <CardTitle className="text-sm font-semibold text-prism-text">Prism Assistant</CardTitle>
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-          </div>
-          <div className="flex items-center space-x-1">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setIsMinimized(!isMinimized)} 
-              className="w-8 h-8 p-0 hover:bg-prism-surface/50"
-            >
-              {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setIsOpen(false)} 
-              className="w-8 h-8 p-0 hover:bg-prism-surface/50"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        </CardHeader>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          className="fixed bottom-6 right-6 rounded-full shadow-lg hover:bg-secondary/50 transition-colors duration-200"
+        >
+          <HelpCircle className="h-6 w-6" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 bg-background/95 backdrop-blur-md border border-border/50 shadow-xl p-4 rounded-lg flex flex-col gap-2">
+        <div className="flex items-center space-x-2">
+          <Avatar className="w-8 h-8">
+            <AvatarImage src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" alt="Prism Logo" />
+            <AvatarFallback>P</AvatarFallback>
+          </Avatar>
+          <h3 className="text-lg font-semibold">Prism Assistant</h3>
+        </div>
 
-        {!isMinimized && (
-          <CardContent className="p-0 flex flex-col h-[calc(500px-64px)]">
-            <ScrollArea className="flex-1 px-4 py-2">
-              <div className="space-y-4">
-                {messages.map(message => (
-                  <div key={message.id} className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] p-3 rounded-lg text-sm ${
-                      message.isUser 
-                        ? 'bg-gradient-to-r from-prism-primary to-prism-accent text-white' 
-                        : 'bg-prism-surface border border-prism-border/30 text-prism-text'
-                    }`}>
-                      <p className="whitespace-pre-wrap">{message.content}</p>
-                      <p className={`text-xs mt-1 ${
-                        message.isUser ? 'text-white/70' : 'text-prism-text-muted'
-                      }`}>
-                        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+        <ScrollArea className="h-48 mb-2">
+          <div className="space-y-2">
+            {chatHistory.map((chat, index) => (
+              <div key={index} className={`flex ${chat.sender === 'Prism' ? 'items-start' : 'items-end flex-row-reverse'}`}>
+                <div className="flex-shrink-0">
+                  <Avatar className="w-6 h-6">
+                    {chat.sender === 'Prism' ? (
+                      <>
+                        <AvatarImage src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" alt="Prism Logo" />
+                        <AvatarFallback>P</AvatarFallback>
+                      </>
+                    ) : (
+                      <>
+                        <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+                        <AvatarFallback>CN</AvatarFallback>
+                      </>
+                    )}
+                  </Avatar>
+                </div>
+                <div className={`ml-2 mr-2 p-2 rounded-lg ${chat.sender === 'Prism' ? 'bg-secondary/20' : 'bg-primary/20 text-right'}`}>
+                  <p className="text-sm">{chat.text}</p>
+                </div>
               </div>
-              <div ref={messagesEndRef} />
-            </ScrollArea>
+            ))}
+          </div>
+        </ScrollArea>
 
-            <div className="p-4 border-t border-prism-border/30">
-              {!selectedCategory ? (
-                <div className="space-y-3">
-                  <p className="text-sm text-prism-text-muted mb-3">Choose a topic:</p>
-                  {categories.map(category => {
-                    const IconComponent = category.icon;
-                    return (
-                      <Button
-                        key={category.id}
-                        onClick={() => handleCategoryClick(category.id)}
-                        variant="outline"
-                        className="w-full justify-start border-prism-border/30 hover:bg-prism-surface/50"
-                      >
-                        <IconComponent className={`w-4 h-4 mr-2 ${category.color}`} />
-                        {category.name}
-                      </Button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-sm text-prism-text-muted mb-2">Select a question:</p>
-                  <div className="max-h-32 overflow-y-auto space-y-1">
-                    {faqs.filter(faq => faq.category === selectedCategory).map(faq => (
-                      <Button
-                        key={faq.id}
-                        onClick={() => handleFAQClick(faq)}
-                        variant="ghost"
-                        className="w-full text-left justify-start text-xs p-2 h-auto hover:bg-prism-surface/50"
-                      >
-                        {faq.question}
-                      </Button>
-                    ))}
-                  </div>
-                  <Button
-                    onClick={resetChat}
-                    variant="outline"
-                    size="sm"
-                    className="w-full mt-2"
-                  >
-                    Back to Topics
-                  </Button>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        )}
-      </Card>
-    </div>
+        <div className="flex items-center space-x-2">
+          <Input
+            type="text"
+            placeholder="Ask me anything..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                sendMessage();
+              }
+            }}
+            className="flex-grow"
+          />
+          <Button onClick={sendMessage} size="sm">
+            <Send className="h-4 w-4 mr-2" />
+            Send
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 };
 

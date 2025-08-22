@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -128,28 +127,31 @@ const Home = () => {
             <div className="hidden md:flex items-center space-x-6">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="font-fira-code text-white/90 hover:text-white hover:bg-white/10 flex items-center gap-2">
+                  <Button 
+                    variant="ghost"
+                    className="font-fira-code text-sm flex items-center gap-2 text-white hover:text-white hover:bg-white/10"
+                  >
                     Tools
                     <ChevronDown className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-48 bg-black/95 backdrop-blur-md border border-white/20" align="start">
+                <DropdownMenuContent className="w-48 bg-background/95 backdrop-blur-md border border-border/50" align="start">
                   <DropdownMenuItem 
                     onClick={() => navigate("/search")}
-                    className="cursor-pointer font-fira-code text-white/90 hover:bg-white/10 hover:text-white"
+                    className="cursor-pointer font-fira-code"
                   >
                     Search
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => navigate("/chat")}
-                    className="cursor-pointer font-fira-code text-white/90 hover:bg-white/10 hover:text-white"
+                    className="cursor-pointer font-fira-code"
                   >
                     Chat
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
                     onClick={() => navigate("/code")}
-                    className="cursor-pointer font-fira-code text-white/90 hover:bg-white/10 hover:text-white"
+                    className="cursor-pointer font-fira-code"
                   >
                     <div className="flex items-center justify-between w-full">
                       Code
@@ -158,19 +160,19 @@ const Home = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => navigate("/math")}
-                    className="cursor-pointer font-fira-code text-white/90 hover:bg-white/10 hover:text-white"
+                    className="cursor-pointer font-fira-code"
                   >
                     Math
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => navigate("/vault")}
-                    className="cursor-pointer font-fira-code text-white/90 hover:bg-white/10 hover:text-white"
+                    className="cursor-pointer font-fira-code"
                   >
                     Vault
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => navigate("/conversions")}
-                    className="cursor-pointer font-fira-code text-white/90 hover:bg-white/10 hover:text-white"
+                    className="cursor-pointer font-fira-code"
                   >
                     <div className="flex items-center justify-between w-full">
                       Conversions
@@ -178,8 +180,17 @@ const Home = () => {
                     </div>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
+                    onClick={() => navigate("/compressor")}
+                    className="cursor-pointer font-fira-code"
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      Compressor
+                      <span className="ml-2 px-1.5 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30 font-fira-code">New</span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
                     onClick={() => navigate("/detector")}
-                    className="cursor-pointer font-fira-code text-white/90 hover:bg-white/10 hover:text-white"
+                    className="cursor-pointer font-fira-code"
                   >
                     <div className="flex items-center justify-between w-full">
                       Detector
