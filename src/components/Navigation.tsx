@@ -17,7 +17,7 @@ const Navigation = () => {
 
   const isActive = (path: string) => location.pathname === path;
   const isToolsActive = () => {
-    const toolPaths = ["/search", "/chat", "/code", "/math", "/vault", "/conversions", "/compressor", "/detector"];
+    const toolPaths = ["/search", "/chat", "/code", "/math", "/vault", "/conversions", "/compressor", "/detector", "/graphing"];
     return toolPaths.includes(location.pathname);
   };
 
@@ -74,6 +74,15 @@ const Navigation = () => {
                 className={`cursor-pointer font-fira-code ${isActive("/math") ? "bg-accent text-accent-foreground" : ""}`}
               >
                 Math
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => navigate("/graphing")}
+                className={`cursor-pointer font-fira-code ${isActive("/graphing") ? "bg-accent text-accent-foreground" : ""}`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  Graphing
+                  <span className="ml-2 px-1.5 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30 font-fira-code">New</span>
+                </div>
               </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={() => navigate("/vault")}

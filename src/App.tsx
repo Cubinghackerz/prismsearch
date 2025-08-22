@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
@@ -17,6 +18,7 @@ import PrismVault from "./pages/PrismVault";
 import PrismConversions from "./pages/PrismConversions";
 import PrismCompressor from "./pages/PrismCompressor";
 import PrismDetector from "./pages/PrismDetector";
+import PrismGraphing from "./pages/PrismGraphing";
 import ClerkAuth from "./pages/ClerkAuth";
 import SecureRedirect from "./pages/SecureRedirect";
 import PrismCode from "./pages/PrismCode";
@@ -52,6 +54,7 @@ const AppContent: React.FC = () => {
         <Route path="/conversions" element={<PrismConversions />} />
         <Route path="/compressor" element={<PrismCompressor />} />
         <Route path="/detector" element={<PrismDetector />} />
+        <Route path="/graphing" element={<PrismGraphing />} />
         <Route path="/docs" element={<PrismPages />} />
         <Route path="/docs/:docId" element={<DocumentEditor />} />
         <Route path="/code" element={<PrismCode />} />

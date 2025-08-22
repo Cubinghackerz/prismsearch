@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Search, MessageCircle, Lock, ArrowRight, Shield, FileType, Code, Globe, Sparkles, Sigma, ChevronDown } from 'lucide-react';
+import { Search, MessageCircle, Lock, ArrowRight, Shield, FileType, Code, Globe, Sparkles, Sigma, ChevronDown, Calculator, Archive } from 'lucide-react';
 import AnimatedHeadline from '@/components/AnimatedHeadline';
 import Footer from '@/components/Footer';
 import AuthButtons from '@/components/AuthButtons';
@@ -36,6 +37,24 @@ const Home = () => {
       path: '/math',
       gradient: 'from-blue-500 to-purple-500',
       featured: true
+    },
+    {
+      icon: Calculator,
+      title: 'Graphing Tool',
+      description: 'Plot mathematical equations, analyze functions, and visualize complex relationships',
+      path: '/graphing',
+      gradient: 'from-purple-500 to-blue-500',
+      featured: true,
+      new: true
+    },
+    {
+      icon: Archive,
+      title: 'File Compressor',
+      description: 'Compress files while maintaining quality across multiple formats with batch processing',
+      path: '/compressor',
+      gradient: 'from-green-500 to-teal-500',
+      featured: true,
+      new: true
     },
     {
       icon: Search,
@@ -165,6 +184,15 @@ const Home = () => {
                     Math
                   </DropdownMenuItem>
                   <DropdownMenuItem 
+                    onClick={() => navigate("/graphing")}
+                    className="cursor-pointer font-fira-code"
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      Graphing
+                      <span className="ml-2 px-1.5 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30 font-fira-code">New</span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
                     onClick={() => navigate("/vault")}
                     className="cursor-pointer font-fira-code"
                   >
@@ -263,6 +291,11 @@ const Home = () => {
                                 Beta
                               </span>
                             )}
+                            {feature.new && (
+                              <span className="px-3 py-1 bg-blue-500/20 text-blue-400 text-sm font-semibold rounded-full border border-blue-500/30 font-fira-code">
+                                New
+                              </span>
+                            )}
                           </div>
                           <CardDescription className="text-lg font-fira-code text-white/70">
                             {feature.description}
@@ -276,7 +309,9 @@ const Home = () => {
                         className="w-full justify-start group-hover:bg-white/10 font-fira-code text-lg py-6 text-white/90 hover:text-white"
                       >
                         {feature.title.includes('Web App') ? 'Start Creating Web Apps' : 
-                         feature.title.includes('Math') ? 'Solve Math Problems' : 'Explore Feature'}
+                         feature.title.includes('Math') ? 'Solve Math Problems' : 
+                         feature.title.includes('Graphing') ? 'Plot Equations' :
+                         feature.title.includes('Compressor') ? 'Compress Files' : 'Explore Feature'}
                         <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                       </Button>
                     </CardContent>
