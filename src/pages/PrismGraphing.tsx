@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -9,9 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { Calculator, Zap, Download, RotateCcw, Plus, Minus } from 'lucide-react';
 import { toast } from 'sonner';
+import CartesianGraph from '@/components/graphing/CartesianGraph';
 
 const PrismGraphing = () => {
   const [equation, setEquation] = useState('x^2');
@@ -20,9 +20,7 @@ const PrismGraphing = () => {
   const [xMax, setXMax] = useState(10);
   const [yMin, setYMin] = useState(-10);
   const [yMax, setYMax] = useState(10);
-  const [graphData, setGraphData] = useState<{x: number, y: number}[]>([]);
   const [equations, setEquations] = useState<{id: string, equation: string, color: string, visible: boolean}[]>([]);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#f97316', '#06b6d4', '#84cc16'];
 
@@ -47,61 +45,6 @@ const PrismGraphing = () => {
       { name: 'Square Root', equation: 'sqrt(x)', description: 'Square root function' },
       { name: 'Reciprocal', equation: '1/x', description: 'Hyperbola' }
     ]
-  };
-
-  const evaluateEquation = (expr: string, x: number): number => {
-    try {
-      // Replace mathematical functions and constants
-      let processedExpr = expr
-        .replace(/\^/g, '**')
-        .replace(/sin\(/g, 'Math.sin(')
-        .replace(/cos\(/g, 'Math.cos(')
-        .replace(/tan\(/g, 'Math.tan(')
-        .replace(/ln\(/g, 'Math.log(')
-        .replace(/log\(/g, 'Math.log10(')
-        .replace(/sqrt\(/g, 'Math.sqrt(')
-        .replace(/abs\(/g, 'Math.abs(')
-        .replace(/e\^/g, 'Math.E**')
-        .replace(/e/g, 'Math.E')
-        .replace(/pi/g, 'Math.PI')
-        .replace(/x/g, x.toString());
-
-      // Handle implicit multiplication (e.g., 2x becomes 2*x)
-      processedExpr = processedExpr.replace(/(\d)([a-zA-Z])/g, '$1*$2');
-      processedExpr = processedExpr.replace(/([a-zA-Z])(\d)/g, '$1*$2');
-
-      const result = Function('"use strict"; return (' + processedExpr + ')')();
-      return isNaN(result) || !isFinite(result) ? null : result;
-    } catch (error) {
-      return null;
-    }
-  };
-
-  const generateGraphData = (eq: string) => {
-    const data = [];
-    const step = (xMax - xMin) / 1000;
-    
-    for (let x = xMin; x <= xMax; x += step) {
-      const y = evaluateEquation(eq, x);
-      if (y !== null && y >= yMin && y <= yMax) {
-        data.push({ x: Number(x.toFixed(3)), y: Number(y.toFixed(3)) });
-      }
-    }
-    return data;
-  };
-
-  const plotEquation = () => {
-    try {
-      const data = generateGraphData(equation);
-      if (data.length === 0) {
-        toast.error('Invalid equation or no valid points in range');
-        return;
-      }
-      setGraphData(data);
-      toast.success('Equation plotted successfully!');
-    } catch (error) {
-      toast.error('Error plotting equation');
-    }
   };
 
   const addEquation = () => {
@@ -133,7 +76,6 @@ const PrismGraphing = () => {
   };
 
   const resetGraph = () => {
-    setGraphData([]);
     setEquations([]);
     setEquation('x^2');
     setXMin(-10);
@@ -144,21 +86,9 @@ const PrismGraphing = () => {
   };
 
   const downloadGraph = () => {
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const link = document.createElement('a');
-      link.download = 'graph.png';
-      link.href = canvas.toDataURL();
-      link.click();
-      toast.success('Graph downloaded');
-    }
+    // This would need to be implemented to capture the canvas
+    toast.success('Download feature coming soon!');
   };
-
-  useEffect(() => {
-    if (equation) {
-      plotEquation();
-    }
-  }, [xMin, xMax, yMin, yMax]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10">
@@ -176,7 +106,7 @@ const PrismGraphing = () => {
             </Badge>
           </div>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto font-fira-code">
-            Plot mathematical equations, analyze functions, and visualize complex mathematical relationships with our advanced graphing calculator.
+            Plot mathematical equations on a beautiful Cartesian coordinate system with precise visualization and analysis tools.
           </p>
         </div>
 
@@ -221,13 +151,9 @@ const PrismGraphing = () => {
                 </div>
 
                 <div className="flex space-x-2">
-                  <Button onClick={plotEquation} className="flex-1">
-                    <Calculator className="h-4 w-4 mr-2" />
-                    Plot
-                  </Button>
-                  <Button onClick={addEquation} variant="outline" className="flex-1">
+                  <Button onClick={addEquation} className="flex-1">
                     <Plus className="h-4 w-4 mr-2" />
-                    Add
+                    Add Equation
                   </Button>
                 </div>
               </CardContent>
@@ -332,66 +258,22 @@ const PrismGraphing = () => {
 
           {/* Graph Display */}
           <div className="lg:col-span-2 space-y-6">
-            <Card className="h-96">
-              <CardHeader>
-                <CardTitle>Graph Visualization</CardTitle>
-              </CardHeader>
-              <CardContent className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={graphData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="x" 
-                      type="number" 
-                      scale="linear"
-                      domain={[xMin, xMax]}
-                    />
-                    <YAxis 
-                      type="number" 
-                      scale="linear"
-                      domain={[yMin, yMax]}
-                    />
-                    <Tooltip 
-                      formatter={(value, name) => [Number(value).toFixed(3), 'f(x)']}
-                      labelFormatter={(value) => `x = ${Number(value).toFixed(3)}`}
-                    />
-                    <ReferenceLine x={0} stroke="#666" strokeDasharray="2 2" />
-                    <ReferenceLine y={0} stroke="#666" strokeDasharray="2 2" />
-                    <Line 
-                      type="monotone" 
-                      dataKey="y" 
-                      stroke="#3b82f6" 
-                      strokeWidth={2}
-                      dot={false}
-                      connectNulls={false}
-                    />
-                    {equations.filter(eq => eq.visible).map((eq) => {
-                      const data = generateGraphData(eq.equation);
-                      return (
-                        <Line
-                          key={eq.id}
-                          data={data}
-                          type="monotone"
-                          dataKey="y"
-                          stroke={eq.color}
-                          strokeWidth={2}
-                          dot={false}
-                          connectNulls={false}
-                        />
-                      );
-                    })}
-                  </LineChart>
-                </ResponsiveContainer>
-                <canvas ref={canvasRef} style={{ display: 'none' }} />
-              </CardContent>
-            </Card>
+            <CartesianGraph
+              equations={equations}
+              xMin={xMin}
+              xMax={xMax}
+              yMin={yMin}
+              yMax={yMax}
+              width={800}
+              height={600}
+            />
 
             {/* Preset Equations */}
             <Card>
               <CardHeader>
                 <CardTitle>Preset Equations</CardTitle>
                 <CardDescription>
-                  Click on any preset to quickly plot common mathematical functions
+                  Click on any preset to quickly add common mathematical functions
                 </CardDescription>
               </CardHeader>
               <CardContent>
