@@ -90,7 +90,7 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden" style={{ scrollBehavior: 'smooth' }}>
       {/* Optimized Prism Background with better performance */}
       <div className="absolute inset-0 -z-10 will-change-transform">
         <Prism
@@ -170,16 +170,17 @@ const Home = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <Link key={index} to={feature.link} className="group block">
-                <Card className="h-full bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-2xl relative">
+                <Card className="h-full bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-2xl relative overflow-visible">
                   {feature.isNew && (
                     <Badge 
                       variant="secondary" 
-                      className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-semibold px-2 py-1 text-xs"
+                      className="absolute -top-3 -right-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold px-3 py-1 text-xs shadow-lg z-10"
+                      style={{ transform: 'rotate(12deg)' }}
                     >
                       NEW
                     </Badge>
                   )}
-                  <CardHeader>
+                  <CardHeader className="relative">
                     <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${feature.color} p-2.5 mb-4 group-hover:scale-110 transition-transform`}>
                       {React.cloneElement(feature.icon, { className: "h-full w-full text-white" })}
                     </div>

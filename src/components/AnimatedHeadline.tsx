@@ -25,7 +25,7 @@ const AnimatedHeadline = memo(() => {
           staggerDuration={0.025}
           splitLevelClassName="overflow-hidden"
           transition={{ type: "spring", damping: 30, stiffness: 400 }}
-          rotationInterval={1500}
+          rotationInterval={2500}
         />
       </h1>
       
@@ -43,11 +43,11 @@ const AnimatedHeadline = memo(() => {
           }
 
           .static-text {
-            background: linear-gradient(to right, #8B5CF6, #A855F7, #8B5CF6);
+            background: linear-gradient(45deg, #00C2A8, #9B5DE5, #A855F7, #00C2A8);
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-size: 200% 200%;
+            background-size: 300% 300%;
             animation: gradientShift 4s ease infinite;
             text-align: center;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -61,12 +61,12 @@ const AnimatedHeadline = memo(() => {
           }
 
           .static-text .inline-block {
-            background: linear-gradient(45deg, #A855F7, #EC4899, #EF4444) !important;
+            background: linear-gradient(45deg, #A855F7, #EC4899, #EF4444, #9B5DE5) !important;
             background-clip: text !important;
             -webkit-background-clip: text !important;
             -webkit-text-fill-color: transparent !important;
-            background-size: 200% 200% !important;
-            animation: rotatingGradient 3s ease infinite !important;
+            background-size: 300% 300% !important;
+            animation: rotatingGradient 5s ease infinite !important;
           }
 
           @media (min-width: 768px) {
@@ -77,15 +77,19 @@ const AnimatedHeadline = memo(() => {
           }
 
           @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-          }
-
-          @keyframes rotatingGradient {
-            0%, 100% { background-position: 0% 50%; }
+            0% { background-position: 0% 50%; }
             25% { background-position: 100% 0%; }
             50% { background-position: 100% 100%; }
             75% { background-position: 0% 100%; }
+            100% { background-position: 0% 50%; }
+          }
+
+          @keyframes rotatingGradient {
+            0% { background-position: 0% 0%; }
+            25% { background-position: 100% 0%; }
+            50% { background-position: 100% 100%; }
+            75% { background-position: 0% 100%; }
+            100% { background-position: 0% 0%; }
           }
         `
       }} />
