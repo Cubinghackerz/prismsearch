@@ -1,10 +1,10 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from '../_shared/cors.ts'
 
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY');
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -23,6 +23,12 @@ serve(async (req) => {
     switch (model) {
       case 'gemini':
         response = await generateWithGemini(prompt);
+        break;
+      case 'gemini-cli':
+        response = await generateWithGeminiCLI(prompt);
+        break;
+      case 'qwen3-coder':
+        response = await generateWithQwen3Coder(prompt);
         break;
       case 'claude-sonnet':
         response = await generateWithClaude(prompt, 'claude-3-5-sonnet-20241022');
@@ -106,6 +112,95 @@ async function generateWithGemini(prompt: string) {
   
   if (!content) {
     throw new Error('No content received from Gemini API');
+  }
+
+  return parseAIResponse(content);
+}
+
+async function generateWithGeminiCLI(prompt: string) {
+  if (!GEMINI_API_KEY) {
+    throw new Error('Gemini API key not configured');
+  }
+
+  const systemPrompt = createCodeFocusedSystemPrompt();
+  
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      contents: [{
+        parts: [{
+          text: `${systemPrompt}\n\nUser Request: ${prompt}`
+        }]
+      }],
+      generationConfig: {
+        temperature: 0.3,
+        topK: 32,
+        topP: 0.8,
+        maxOutputTokens: 8192,
+      }
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Gemini CLI API error:', response.status, errorText);
+    throw new Error(`Gemini CLI API request failed: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  
+  if (!content) {
+    throw new Error('No content received from Gemini CLI API');
+  }
+
+  return parseAIResponse(content);
+}
+
+async function generateWithQwen3Coder(prompt: string) {
+  if (!GROQ_API_KEY) {
+    throw new Error('Groq API key not configured for Qwen3 Coder');
+  }
+
+  const systemPrompt = createCodeFocusedSystemPrompt();
+  
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${GROQ_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: 'llama-3.1-70b-versatile', // Using available model as placeholder for Qwen3
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt + '\n\nYou are Qwen3-Coder, a specialized coding AI model. Focus on generating clean, efficient, and well-documented code.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 8192,
+      temperature: 0.2
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Qwen3 Coder API error:', response.status, errorText);
+    throw new Error(`Qwen3 Coder API request failed: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+  
+  if (!content) {
+    throw new Error('No content received from Qwen3 Coder API');
   }
 
   return parseAIResponse(content);
@@ -222,6 +317,40 @@ Guidelines:
 8. Make it visually appealing with modern design principles
 9. Use CSS Grid/Flexbox for layouts
 10. Include interactive elements and user feedback
+
+Return ONLY a valid JSON object with this exact structure:
+{
+  "html": "complete HTML content",
+  "css": "complete CSS styles",
+  "javascript": "complete JavaScript code",
+  "description": "brief description of the app",
+  "features": ["feature 1", "feature 2", "feature 3"]
+}
+
+Do not include any markdown formatting or code blocks. Just the raw JSON.`;
+}
+
+function createCodeFocusedSystemPrompt(): string {
+  return `You are a specialized code generation AI that creates complete, functional web applications with a focus on clean, efficient code.
+
+Given a user prompt, generate a complete web application with the following structure:
+- HTML: Semantic, well-structured HTML
+- CSS: Clean, modern styling with best practices
+- JavaScript: Efficient, well-commented, and maintainable code
+- Description: Technical description of the application
+- Features: Array of implemented features
+
+Code Quality Guidelines:
+1. Write clean, readable, and maintainable code
+2. Use modern JavaScript features (ES6+, async/await, modules)
+3. Implement proper error handling and validation
+4. Follow coding best practices and conventions
+5. Include comprehensive comments for complex logic
+6. Use efficient algorithms and data structures
+7. Ensure code is scalable and extensible
+8. Implement proper separation of concerns
+9. Use semantic HTML and accessible design patterns
+10. Write performance-optimized CSS
 
 Return ONLY a valid JSON object with this exact structure:
 {
