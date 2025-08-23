@@ -17,7 +17,7 @@ const Navigation = () => {
 
   const isActive = (path: string) => location.pathname === path;
   const isToolsActive = () => {
-    const toolPaths = ["/search", "/chat", "/code", "/math", "/physics", "/chemistry", "/vault", "/conversions", "/compressor", "/detector", "/graphing"];
+    const toolPaths = ["/search", "/chat", "/code", "/math", "/vault", "/conversions", "/compressor", "/detector", "/graphing"];
     return toolPaths.includes(location.pathname);
   };
 
@@ -74,24 +74,6 @@ const Navigation = () => {
                 className={`cursor-pointer font-fira-code ${isActive("/math") ? "bg-accent text-accent-foreground" : ""}`}
               >
                 Math
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => navigate("/physics")}
-                className={`cursor-pointer font-fira-code ${isActive("/physics") ? "bg-accent text-accent-foreground" : ""}`}
-              >
-                <div className="flex items-center justify-between w-full">
-                  Physics
-                  <span className="ml-2 px-1.5 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30 font-fira-code">New</span>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => navigate("/chemistry")}
-                className={`cursor-pointer font-fira-code ${isActive("/chemistry") ? "bg-accent text-accent-foreground" : ""}`}
-              >
-                <div className="flex items-center justify-between w-full">
-                  Chemistry
-                  <span className="ml-2 px-1.5 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30 font-fira-code">New</span>
-                </div>
               </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={() => navigate("/graphing")}

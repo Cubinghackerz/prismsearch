@@ -1,70 +1,84 @@
 
-import { Toaster } from "@/components/ui/sonner";
+import React from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { ChatProvider } from "@/context/ChatContext";
-import Home from "./pages/Home";
+import AuthPromptDialog from "@/components/AuthPromptDialog";
+import useAuthPrompt from "@/hooks/useAuthPrompt";
+import PrismAssistant from "@/components/PrismAssistant";
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import ClerkAuth from "./pages/ClerkAuth";
-import Analytics from "./pages/Analytics";
+import NotFound from "./pages/NotFound";
 import Chat from "./pages/Chat";
-import PrismCode from "./pages/PrismCode";
-import PrismMath from "./pages/PrismMath";
-import PrismPhysics from "./pages/PrismPhysics";
-import PrismChemistry from "./pages/PrismChemistry";
+import Pricing from "./pages/Pricing";
+import Home from "./pages/Home";
 import PrismVault from "./pages/PrismVault";
-import PrismPages from "./pages/PrismPages";
-import PrismGraphing from "./pages/PrismGraphing";
 import PrismConversions from "./pages/PrismConversions";
 import PrismCompressor from "./pages/PrismCompressor";
 import PrismDetector from "./pages/PrismDetector";
-import DocumentEditor from "./pages/DocumentEditor";
-import Pricing from "./pages/Pricing";
-import NotFound from "./pages/NotFound";
+import PrismGraphing from "./pages/PrismGraphing";
+import ClerkAuth from "./pages/ClerkAuth";
 import SecureRedirect from "./pages/SecureRedirect";
+import PrismCode from "./pages/PrismCode";
+import PrismPages from "./pages/PrismPages";
+import DocumentEditor from "./pages/DocumentEditor";
+import PrismMath from "./pages/PrismMath";
 
-const queryClient = new QueryClient();
+// Create QueryClient with optimized settings for better performance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 60000,
+      gcTime: 300000,
+    },
+  },
+});
 
-function App() {
+const AppContent: React.FC = () => {
+  const { showPrompt, closePrompt } = useAuthPrompt();
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <ChatProvider>
-          <TooltipProvider>
-            <Toaster />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/home" element={<Home />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/clerk-auth" element={<ClerkAuth />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/search" element={<Home />} />
-                <Route path="/chat" element={<Chat />} />
-                <Route path="/code" element={<PrismCode />} />
-                <Route path="/math" element={<PrismMath />} />
-                <Route path="/physics" element={<PrismPhysics />} />
-                <Route path="/chemistry" element={<PrismChemistry />} />
-                <Route path="/vault" element={<PrismVault />} />
-                <Route path="/pages" element={<PrismPages />} />
-                <Route path="/graphing" element={<PrismGraphing />} />
-                <Route path="/conversions" element={<PrismConversions />} />
-                <Route path="/compressor" element={<PrismCompressor />} />
-                <Route path="/detector" element={<PrismDetector />} />
-                <Route path="/document/:id" element={<DocumentEditor />} />
-                <Route path="/pricing" element={<Pricing />} />
-                <Route path="/secure-redirect" element={<SecureRedirect />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </ChatProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <div className="bg-gradient-to-b from-background to-secondary/10 text-foreground min-h-screen font-inter">
+      <Toaster />
+      <SonnerToaster />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/search" element={<Index />} />
+        <Route path="/chat" element={<Chat />} />
+        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/vault" element={<PrismVault />} />
+        <Route path="/conversions" element={<PrismConversions />} />
+        <Route path="/compressor" element={<PrismCompressor />} />
+        <Route path="/detector" element={<PrismDetector />} />
+        <Route path="/graphing" element={<PrismGraphing />} />
+        <Route path="/docs" element={<PrismPages />} />
+        <Route path="/docs/:docId" element={<DocumentEditor />} />
+        <Route path="/code" element={<PrismCode />} />
+        <Route path="/math" element={<PrismMath />} />
+        <Route path="/auth" element={<ClerkAuth />} />
+        <Route path="/secure-redirect" element={<SecureRedirect />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <AuthPromptDialog isOpen={showPrompt} onClose={closePrompt} />
+      <PrismAssistant />
+    </div>
   );
-}
+};
+
+const App: React.FC = () => (
+  <QueryClientProvider client={queryClient}>
+    <ThemeProvider>
+      <TooltipProvider>
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
+  </QueryClientProvider>
+);
 
 export default App;
