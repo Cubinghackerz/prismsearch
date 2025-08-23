@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Search, MessageCircle, Lock, ArrowRight, Shield, FileType, Code, Globe, Sparkles, Sigma, ChevronDown, Calculator, Archive, Atom, Flask } from 'lucide-react';
+import { Search, MessageCircle, Lock, ArrowRight, Shield, FileType, Code, Globe, Sparkles, Sigma, ChevronDown, Calculator, Archive, Atom, Beaker } from 'lucide-react';
 import AnimatedHeadline from '@/components/AnimatedHeadline';
 import Footer from '@/components/Footer';
 import AuthButtons from '@/components/AuthButtons';
@@ -48,7 +48,7 @@ const Home = () => {
       new: true
     },
     {
-      icon: Flask,
+      icon: Beaker,
       title: 'Chemistry Assistant',
       description: 'Advanced chemistry problem solver with reaction balancing and molecular analysis',
       path: '/chemistry',
