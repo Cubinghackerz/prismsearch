@@ -1,24 +1,11 @@
-
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
-import { Separator } from '@/components/ui/separator';
-import { Eye, EyeOff, X, Target, Move, ZoomIn, RotateCcw } from 'lucide-react';
-
-interface Point {
-  x: number;
-  y: number;
-}
-
-interface Parameter {
-  name: string;
-  value: number;
-  min: number;
-  max: number;
-  step: number;
-}
+import { Label } from '@/components/ui/label';
+import { Maximize2, Minimize2, RotateCcw, ZoomIn, ZoomOut, Move, Crosshair } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface EquationData {
   id: string;
@@ -27,524 +14,446 @@ interface EquationData {
   visible: boolean;
   type: 'explicit' | 'implicit' | 'parametric' | 'inequality' | 'polar';
   style: 'solid' | 'dashed' | 'dotted';
-  parameters?: Parameter[];
+  parameters?: Array<{
+    name: string;
+    value: number;
+    min: number;
+    max: number;
+    step: number;
+  }>;
 }
 
-interface AdvancedCartesianGraphProps {
+interface GraphProps {
   equations: EquationData[];
   xMin: number;
   xMax: number;
   yMin: number;
   yMax: number;
-  width?: number;
-  height?: number;
+  width: number;
+  height: number;
   onEquationUpdate?: (id: string, updates: Partial<EquationData>) => void;
-  onPointClick?: (point: Point) => void;
 }
 
-const AdvancedCartesianGraph: React.FC<AdvancedCartesianGraphProps> = ({
+const AdvancedCartesianGraph: React.FC<GraphProps> = ({
   equations,
   xMin,
   xMax,
   yMin,
   yMax,
-  width = 800,
-  height = 600,
-  onEquationUpdate,
-  onPointClick
+  width,
+  height,
+  onEquationUpdate
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [hoveredPoint, setHoveredPoint] = useState<Point | null>(null);
-  const [intersections, setIntersections] = useState<Point[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [viewBounds, setViewBounds] = useState({ xMin, xMax, yMin, yMax });
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState<Point>({ x: 0, y: 0 });
-  const [viewTransform, setViewTransform] = useState({ offsetX: 0, offsetY: 0, scale: 1 });
+  const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [showCoordinates, setShowCoordinates] = useState(false);
+  const [intersections, setIntersections] = useState<Array<{ x: number; y: number; equations: string[] }>>([]);
 
-  const evaluateExpression = useCallback((expr: string, x: number, params: { [key: string]: number } = {}): number | null => {
+  const evaluateExpression = useCallback((expr: string, x: number, parameters?: any): number => {
     try {
-      let processedExpr = expr
+      // Replace common math functions and constants
+      let expression = expr
         .replace(/\^/g, '**')
-        .replace(/sin\(/g, 'Math.sin(')
-        .replace(/cos\(/g, 'Math.cos(')
-        .replace(/tan\(/g, 'Math.tan(')
-        .replace(/ln\(/g, 'Math.log(')
-        .replace(/log\(/g, 'Math.log10(')
-        .replace(/sqrt\(/g, 'Math.sqrt(')
-        .replace(/abs\(/g, 'Math.abs(')
-        .replace(/\be\b/g, 'Math.E')
-        .replace(/\bpi\b/g, 'Math.PI')
-        .replace(/x/g, x.toString());
+        .replace(/sin/g, 'Math.sin')
+        .replace(/cos/g, 'Math.cos')
+        .replace(/tan/g, 'Math.tan')
+        .replace(/ln/g, 'Math.log')
+        .replace(/log/g, 'Math.log10')
+        .replace(/sqrt/g, 'Math.sqrt')
+        .replace(/abs/g, 'Math.abs')
+        .replace(/pi/g, 'Math.PI')
+        .replace(/e(?![a-zA-Z])/g, 'Math.E')
+        .replace(/\bx\b/g, x.toString());
 
-      // Replace parameters
-      Object.entries(params).forEach(([name, value]) => {
-        processedExpr = processedExpr.replace(new RegExp(`\\b${name}\\b`, 'g'), value.toString());
-      });
+      // Replace parameters if provided
+      if (parameters) {
+        Object.entries(parameters).forEach(([param, value]) => {
+          const regex = new RegExp(`\\b${param}\\b`, 'g');
+          expression = expression.replace(regex, value.toString());
+        });
+      }
 
-      // Handle implicit multiplication
-      processedExpr = processedExpr.replace(/(\d)([a-zA-Z])/g, '$1*$2');
-      processedExpr = processedExpr.replace(/([a-zA-Z])(\d)/g, '$1*$2');
+      return Function(`"use strict"; return (${expression})`)();
+    } catch {
+      return NaN;
+    }
+  }, []);
 
-      const result = Function('"use strict"; return (' + processedExpr + ')')();
-      return isNaN(result) || !isFinite(result) ? null : result;
+  const screenToGraph = useCallback((screenX: number, screenY: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = ((screenX - rect.left) / canvas.width) * (viewBounds.xMax - viewBounds.xMin) + viewBounds.xMin;
+    const y = ((rect.bottom - screenY) / canvas.height) * (viewBounds.yMax - viewBounds.yMin) + viewBounds.yMin;
+    return { x, y };
+  }, [viewBounds]);
+
+  const graphToScreen = useCallback((graphX: number, graphY: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    
+    const x = ((graphX - viewBounds.xMin) / (viewBounds.xMax - viewBounds.xMin)) * canvas.width;
+    const y = canvas.height - ((graphY - viewBounds.yMin) / (viewBounds.yMax - viewBounds.yMin)) * canvas.height;
+    return { x, y };
+  }, [viewBounds]);
+
+  const toggleFullscreen = async () => {
+    if (!containerRef.current) return;
+
+    try {
+      if (!isFullscreen) {
+        await containerRef.current.requestFullscreen();
+        setIsFullscreen(true);
+      } else {
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+      }
     } catch (error) {
-      return null;
+      toast.error('Fullscreen not supported in this browser');
     }
-  }, []);
+  };
 
-  const detectLinearEquation = useCallback((equation: string) => {
-    // Detect if equation is linear and extract slope/intercept
-    const slopeInterceptMatch = equation.match(/y\s*=\s*(-?\d*\.?\d*)\s*\*?\s*x\s*([+-]\s*\d+\.?\d*)?/);
-    const standardFormMatch = equation.match(/(-?\d*\.?\d*)\s*\*?\s*x\s*([+-]\s*\d*\.?\d*)\s*\*?\s*y\s*=\s*(-?\d+\.?\d*)/);
+  const resetView = () => {
+    setViewBounds({ xMin, xMax, yMin, yMax });
+  };
+
+  const zoomIn = () => {
+    const centerX = (viewBounds.xMin + viewBounds.xMax) / 2;
+    const centerY = (viewBounds.yMin + viewBounds.yMax) / 2;
+    const rangeX = (viewBounds.xMax - viewBounds.xMin) * 0.25;
+    const rangeY = (viewBounds.yMax - viewBounds.yMin) * 0.25;
     
-    if (slopeInterceptMatch) {
-      const slope = parseFloat(slopeInterceptMatch[1] || '1');
-      const intercept = parseFloat(slopeInterceptMatch[2]?.replace(/\s/g, '') || '0');
-      return { type: 'slope-intercept', slope, intercept };
-    }
-    
-    if (standardFormMatch) {
-      const A = parseFloat(standardFormMatch[1] || '1');
-      const B = parseFloat(standardFormMatch[2]?.replace(/\s/g, '') || '1');
-      const C = parseFloat(standardFormMatch[3] || '0');
-      return { type: 'standard', A, B, C };
-    }
-    
-    return null;
-  }, []);
-
-  const findIntersections = useCallback((eq1: EquationData, eq2: EquationData): Point[] => {
-    const intersections: Point[] = [];
-    const step = (xMax - xMin) / (width * 4);
-    
-    for (let x = xMin; x <= xMax; x += step) {
-      const params1 = eq1.parameters ? Object.fromEntries(eq1.parameters.map(p => [p.name, p.value])) : {};
-      const params2 = eq2.parameters ? Object.fromEntries(eq2.parameters.map(p => [p.name, p.value])) : {};
-      
-      const y1 = evaluateExpression(eq1.equation.replace('y=', ''), x, params1);
-      const y2 = evaluateExpression(eq2.equation.replace('y=', ''), x, params2);
-      
-      if (y1 !== null && y2 !== null && Math.abs(y1 - y2) < 0.1) {
-        intersections.push({ x, y: y1 });
-      }
-    }
-    
-    return intersections;
-  }, [evaluateExpression, xMin, xMax, yMin, yMax, width]);
-
-  const toCanvasCoords = useCallback((mathX: number, mathY: number): Point => {
-    const adjustedXMin = xMin + viewTransform.offsetX;
-    const adjustedXMax = xMax + viewTransform.offsetX;
-    const adjustedYMin = yMin + viewTransform.offsetY;
-    const adjustedYMax = yMax + viewTransform.offsetY;
-    
-    const xScale = (width / (adjustedXMax - adjustedXMin)) * viewTransform.scale;
-    const yScale = (height / (adjustedYMax - adjustedYMin)) * viewTransform.scale;
-    
-    return {
-      x: (mathX - adjustedXMin) * xScale,
-      y: height - (mathY - adjustedYMin) * yScale
-    };
-  }, [xMin, xMax, yMin, yMax, width, height, viewTransform]);
-
-  const toMathCoords = useCallback((canvasX: number, canvasY: number): Point => {
-    const adjustedXMin = xMin + viewTransform.offsetX;
-    const adjustedXMax = xMax + viewTransform.offsetX;
-    const adjustedYMin = yMin + viewTransform.offsetY;
-    const adjustedYMax = yMax + viewTransform.offsetY;
-    
-    const xScale = (width / (adjustedXMax - adjustedXMin)) * viewTransform.scale;
-    const yScale = (height / (adjustedYMax - adjustedYMin)) * viewTransform.scale;
-    
-    return {
-      x: canvasX / xScale + adjustedXMin,
-      y: (height - canvasY) / yScale + adjustedYMin
-    };
-  }, [xMin, xMax, yMin, yMax, width, height, viewTransform]);
-
-  const drawGrid = useCallback((ctx: CanvasRenderingContext2D) => {
-    ctx.strokeStyle = '#e5e5e5';
-    ctx.lineWidth = 0.5;
-
-    const adjustedXMin = xMin + viewTransform.offsetX;
-    const adjustedXMax = xMax + viewTransform.offsetX;
-    const adjustedYMin = yMin + viewTransform.offsetY;
-    const adjustedYMax = yMax + viewTransform.offsetY;
-
-    // Dynamic grid spacing
-    const xRange = (adjustedXMax - adjustedXMin) / viewTransform.scale;
-    const yRange = (adjustedYMax - adjustedYMin) / viewTransform.scale;
-    const xStep = Math.pow(10, Math.floor(Math.log10(xRange / 10)));
-    const yStep = Math.pow(10, Math.floor(Math.log10(yRange / 10)));
-
-    // Vertical grid lines
-    for (let x = Math.ceil(adjustedXMin / xStep) * xStep; x <= adjustedXMax; x += xStep) {
-      const canvasX = toCanvasCoords(x, 0).x;
-      if (canvasX >= 0 && canvasX <= width) {
-        ctx.beginPath();
-        ctx.moveTo(canvasX, 0);
-        ctx.lineTo(canvasX, height);
-        ctx.stroke();
-      }
-    }
-
-    // Horizontal grid lines
-    for (let y = Math.ceil(adjustedYMin / yStep) * yStep; y <= adjustedYMax; y += yStep) {
-      const canvasY = toCanvasCoords(0, y).y;
-      if (canvasY >= 0 && canvasY <= height) {
-        ctx.beginPath();
-        ctx.moveTo(0, canvasY);
-        ctx.lineTo(width, canvasY);
-        ctx.stroke();
-      }
-    }
-  }, [xMin, xMax, yMin, yMax, width, height, viewTransform, toCanvasCoords]);
-
-  const drawAxes = useCallback((ctx: CanvasRenderingContext2D) => {
-    ctx.strokeStyle = '#666666';
-    ctx.lineWidth = 2;
-
-    const origin = toCanvasCoords(0, 0);
-
-    // X-axis
-    if (origin.y >= 0 && origin.y <= height) {
-      ctx.beginPath();
-      ctx.moveTo(0, origin.y);
-      ctx.lineTo(width, origin.y);
-      ctx.stroke();
-    }
-
-    // Y-axis
-    if (origin.x >= 0 && origin.x <= width) {
-      ctx.beginPath();
-      ctx.moveTo(origin.x, 0);
-      ctx.lineTo(origin.x, height);
-      ctx.stroke();
-    }
-  }, [width, height, toCanvasCoords]);
-
-  const drawLabels = useCallback((ctx: CanvasRenderingContext2D) => {
-    ctx.fillStyle = '#666666';
-    ctx.font = '12px monospace';
-
-    const adjustedXMin = xMin + viewTransform.offsetX;
-    const adjustedXMax = xMax + viewTransform.offsetX;
-    const adjustedYMin = yMin + viewTransform.offsetY;
-    const adjustedYMax = yMax + viewTransform.offsetY;
-
-    const xRange = (adjustedXMax - adjustedXMin) / viewTransform.scale;
-    const yRange = (adjustedYMax - adjustedYMin) / viewTransform.scale;
-    const xStep = Math.pow(10, Math.floor(Math.log10(xRange / 10)));
-    const yStep = Math.pow(10, Math.floor(Math.log10(yRange / 10)));
-
-    const origin = toCanvasCoords(0, 0);
-
-    // X-axis labels
-    ctx.textAlign = 'center';
-    for (let x = Math.ceil(adjustedXMin / xStep) * xStep; x <= adjustedXMax; x += xStep) {
-      if (Math.abs(x) < xStep / 10) continue;
-      const canvasX = toCanvasCoords(x, 0).x;
-      if (canvasX >= 0 && canvasX <= width) {
-        const labelY = origin.y + 15;
-        if (labelY <= height) {
-          ctx.fillText(x.toFixed(x < 1 ? 1 : 0), canvasX, labelY);
-        }
-      }
-    }
-
-    // Y-axis labels
-    ctx.textAlign = 'right';
-    for (let y = Math.ceil(adjustedYMin / yStep) * yStep; y <= adjustedYMax; y += yStep) {
-      if (Math.abs(y) < yStep / 10) continue;
-      const canvasY = toCanvasCoords(0, y).y;
-      if (canvasY >= 0 && canvasY <= height) {
-        const labelX = origin.x - 5;
-        if (labelX >= 0) {
-          ctx.fillText(y.toFixed(y < 1 ? 1 : 0), labelX, canvasY + 4);
-        }
-      }
-    }
-  }, [xMin, xMax, yMin, yMax, viewTransform, toCanvasCoords, width, height]);
-
-  const drawEquation = useCallback((ctx: CanvasRenderingContext2D, eq: EquationData) => {
-    if (!eq.visible) return;
-
-    ctx.strokeStyle = eq.color;
-    ctx.lineWidth = 2;
-    
-    // Set line style
-    if (eq.style === 'dashed') {
-      ctx.setLineDash([5, 5]);
-    } else if (eq.style === 'dotted') {
-      ctx.setLineDash([2, 2]);
-    } else {
-      ctx.setLineDash([]);
-    }
-
-    const params = eq.parameters ? Object.fromEntries(eq.parameters.map(p => [p.name, p.value])) : {};
-    const adjustedXMin = xMin + viewTransform.offsetX;
-    const adjustedXMax = xMax + viewTransform.offsetX;
-
-    if (eq.type === 'explicit') {
-      ctx.beginPath();
-      const step = (adjustedXMax - adjustedXMin) / (width * 2);
-      let isFirstPoint = true;
-
-      for (let x = adjustedXMin; x <= adjustedXMax; x += step) {
-        const y = evaluateExpression(eq.equation.replace('y=', ''), x, params);
-        
-        if (y !== null && y >= yMin + viewTransform.offsetY && y <= yMax + viewTransform.offsetY) {
-          const canvasPoint = toCanvasCoords(x, y);
-          
-          if (isFirstPoint) {
-            ctx.moveTo(canvasPoint.x, canvasPoint.y);
-            isFirstPoint = false;
-          } else {
-            ctx.lineTo(canvasPoint.x, canvasPoint.y);
-          }
-        } else {
-          isFirstPoint = true;
-        }
-      }
-      ctx.stroke();
-
-    } else if (eq.type === 'inequality') {
-      // Handle inequality rendering with shading
-      const step = (adjustedXMax - adjustedXMin) / (width / 2);
-      ctx.fillStyle = eq.color + '20'; // Semi-transparent
-      
-      for (let x = adjustedXMin; x <= adjustedXMax; x += step) {
-        const y = evaluateExpression(eq.equation.replace(/[><=]/g, '-').replace('y', ''), x, params);
-        if (y !== null) {
-          const canvasPoint = toCanvasCoords(x, y);
-          const isAbove = eq.equation.includes('>');
-          
-          if (isAbove) {
-            ctx.fillRect(canvasPoint.x, 0, step * (width / (adjustedXMax - adjustedXMin)), canvasPoint.y);
-          } else {
-            ctx.fillRect(canvasPoint.x, canvasPoint.y, step * (width / (adjustedXMax - adjustedXMin)), height - canvasPoint.y);
-          }
-        }
-      }
-    }
-
-    ctx.setLineDash([]); // Reset line dash
-  }, [evaluateExpression, xMin, xMax, yMin, yMax, viewTransform, toCanvasCoords, width]);
-
-  const drawIntersections = useCallback((ctx: CanvasRenderingContext2D) => {
-    ctx.fillStyle = '#ff0000';
-    intersections.forEach(point => {
-      const canvasPoint = toCanvasCoords(point.x, point.y);
-      ctx.beginPath();
-      ctx.arc(canvasPoint.x, canvasPoint.y, 4, 0, 2 * Math.PI);
-      ctx.fill();
+    setViewBounds({
+      xMin: centerX - rangeX,
+      xMax: centerX + rangeX,
+      yMin: centerY - rangeY,
+      yMax: centerY + rangeY
     });
-  }, [intersections, toCanvasCoords]);
+  };
 
-  const drawHoveredPoint = useCallback((ctx: CanvasRenderingContext2D) => {
-    if (!hoveredPoint) return;
+  const zoomOut = () => {
+    const centerX = (viewBounds.xMin + viewBounds.xMax) / 2;
+    const centerY = (viewBounds.yMin + viewBounds.yMax) / 2;
+    const rangeX = (viewBounds.xMax - viewBounds.xMin);
+    const rangeY = (viewBounds.yMax - viewBounds.yMin);
     
-    const canvasPoint = toCanvasCoords(hoveredPoint.x, hoveredPoint.y);
-    
-    // Draw crosshair
-    ctx.strokeStyle = '#999999';
-    ctx.lineWidth = 1;
-    ctx.setLineDash([3, 3]);
-    
-    ctx.beginPath();
-    ctx.moveTo(0, canvasPoint.y);
-    ctx.lineTo(width, canvasPoint.y);
-    ctx.moveTo(canvasPoint.x, 0);
-    ctx.lineTo(canvasPoint.x, height);
-    ctx.stroke();
-    
-    ctx.setLineDash([]);
-    
-    // Draw point
-    ctx.fillStyle = '#ff6600';
-    ctx.beginPath();
-    ctx.arc(canvasPoint.x, canvasPoint.y, 5, 0, 2 * Math.PI);
-    ctx.fill();
-    
-    // Draw coordinates
-    ctx.fillStyle = '#000000';
-    ctx.font = '12px monospace';
-    ctx.textAlign = 'left';
-    const label = `(${hoveredPoint.x.toFixed(2)}, ${hoveredPoint.y.toFixed(2)})`;
-    ctx.fillText(label, canvasPoint.x + 10, canvasPoint.y - 10);
-  }, [hoveredPoint, toCanvasCoords, width, height]);
+    setViewBounds({
+      xMin: centerX - rangeX,
+      xMax: centerX + rangeX,
+      yMin: centerY - rangeY,
+      yMax: centerY + rangeY
+    });
+  };
 
-  const render = useCallback(() => {
+  const drawGraph = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    canvas.width = width;
-    canvas.height = height;
+    // Set canvas size
+    const containerWidth = isFullscreen ? window.innerWidth : width;
+    const containerHeight = isFullscreen ? window.innerHeight - 100 : height;
+    
+    canvas.width = containerWidth;
+    canvas.height = containerHeight;
 
     // Clear canvas
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    drawGrid(ctx);
-    drawAxes(ctx);
-    drawLabels(ctx);
+    // Draw grid
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 0.5;
+    
+    const stepX = (viewBounds.xMax - viewBounds.xMin) / 20;
+    const stepY = (viewBounds.yMax - viewBounds.yMin) / 20;
+    
+    for (let x = Math.ceil(viewBounds.xMin / stepX) * stepX; x <= viewBounds.xMax; x += stepX) {
+      const screenX = graphToScreen(x, 0).x;
+      ctx.beginPath();
+      ctx.moveTo(screenX, 0);
+      ctx.lineTo(screenX, canvas.height);
+      ctx.stroke();
+    }
+    
+    for (let y = Math.ceil(viewBounds.yMin / stepY) * stepY; y <= viewBounds.yMax; y += stepY) {
+      const screenY = graphToScreen(0, y).y;
+      ctx.beginPath();
+      ctx.moveTo(0, screenY);
+      ctx.lineTo(canvas.width, screenY);
+      ctx.stroke();
+    }
+
+    // Draw axes
+    ctx.strokeStyle = '#666';
+    ctx.lineWidth = 1;
+    
+    const originScreen = graphToScreen(0, 0);
+    
+    // X-axis
+    if (viewBounds.yMin <= 0 && viewBounds.yMax >= 0) {
+      ctx.beginPath();
+      ctx.moveTo(0, originScreen.y);
+      ctx.lineTo(canvas.width, originScreen.y);
+      ctx.stroke();
+    }
+    
+    // Y-axis
+    if (viewBounds.xMin <= 0 && viewBounds.xMax >= 0) {
+      ctx.beginPath();
+      ctx.moveTo(originScreen.x, 0);
+      ctx.lineTo(originScreen.x, canvas.height);
+      ctx.stroke();
+    }
 
     // Draw equations
-    equations.forEach(eq => drawEquation(ctx, eq));
+    equations.forEach((eq) => {
+      if (!eq.visible) return;
 
-    drawIntersections(ctx);
-    drawHoveredPoint(ctx);
-
-    // Update intersections
-    const newIntersections: Point[] = [];
-    for (let i = 0; i < equations.length; i++) {
-      for (let j = i + 1; j < equations.length; j++) {
-        if (equations[i].visible && equations[j].visible && 
-            equations[i].type === 'explicit' && equations[j].type === 'explicit') {
-          newIntersections.push(...findIntersections(equations[i], equations[j]));
-        }
+      ctx.strokeStyle = eq.color;
+      ctx.lineWidth = 2;
+      
+      if (eq.style === 'dashed') {
+        ctx.setLineDash([5, 5]);
+      } else if (eq.style === 'dotted') {
+        ctx.setLineDash([2, 3]);
+      } else {
+        ctx.setLineDash([]);
       }
+
+      if (eq.type === 'explicit') {
+        ctx.beginPath();
+        let firstPoint = true;
+        
+        for (let screenX = 0; screenX <= canvas.width; screenX += 2) {
+          const graphX = ((screenX / canvas.width) * (viewBounds.xMax - viewBounds.xMin)) + viewBounds.xMin;
+          const parameters = eq.parameters?.reduce((acc, param) => ({ ...acc, [param.name]: param.value }), {});
+          const y = evaluateExpression(eq.equation, graphX, parameters);
+          
+          if (!isNaN(y) && isFinite(y)) {
+            const screenY = graphToScreen(graphX, y).y;
+            if (screenY >= 0 && screenY <= canvas.height) {
+              if (firstPoint) {
+                ctx.moveTo(screenX, screenY);
+                firstPoint = false;
+              } else {
+                ctx.lineTo(screenX, screenY);
+              }
+            }
+          }
+        }
+        ctx.stroke();
+      }
+    });
+
+    // Draw intersections
+    ctx.fillStyle = '#ff0000';
+    intersections.forEach(intersection => {
+      const screen = graphToScreen(intersection.x, intersection.y);
+      ctx.beginPath();
+      ctx.arc(screen.x, screen.y, 4, 0, 2 * Math.PI);
+      ctx.fill();
+    });
+
+    // Draw coordinates if mouse is over canvas
+    if (showCoordinates) {
+      const graphCoords = screenToGraph(mousePos.x, mousePos.y);
+      ctx.fillStyle = '#fff';
+      ctx.font = '14px monospace';
+      ctx.fillRect(mousePos.x + 10, mousePos.y - 30, 120, 25);
+      ctx.fillStyle = '#000';
+      ctx.fillText(`(${graphCoords.x.toFixed(2)}, ${graphCoords.y.toFixed(2)})`, mousePos.x + 15, mousePos.y - 10);
     }
-    setIntersections(newIntersections);
-  }, [equations, width, height, viewTransform, drawGrid, drawAxes, drawLabels, drawEquation, drawIntersections, drawHoveredPoint, findIntersections]);
+  }, [equations, viewBounds, isFullscreen, width, height, mousePos, showCoordinates, intersections, evaluateExpression, graphToScreen, screenToGraph]);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  // Mouse event handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (rect) {
+      setLastMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    }
+  };
 
-    const rect = canvas.getBoundingClientRect();
-    const canvasX = e.clientX - rect.left;
-    const canvasY = e.clientY - rect.top;
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const currentPos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    setMousePos(currentPos);
 
     if (isDragging) {
-      const deltaX = canvasX - dragStart.x;
-      const deltaY = canvasY - dragStart.y;
+      const deltaX = currentPos.x - lastMousePos.x;
+      const deltaY = currentPos.y - lastMousePos.y;
       
-      setViewTransform(prev => ({
-        ...prev,
-        offsetX: prev.offsetX - deltaX / (width / (xMax - xMin)),
-        offsetY: prev.offsetY + deltaY / (height / (yMax - yMin))
+      const graphDeltaX = (deltaX / rect.width) * (viewBounds.xMin - viewBounds.xMax);
+      const graphDeltaY = (deltaY / rect.height) * (viewBounds.yMax - viewBounds.yMin);
+      
+      setViewBounds(prev => ({
+        xMin: prev.xMin + graphDeltaX,
+        xMax: prev.xMax + graphDeltaX,
+        yMin: prev.yMin + graphDeltaY,
+        yMax: prev.yMax + graphDeltaY
       }));
       
-      setDragStart({ x: canvasX, y: canvasY });
-    } else {
-      const mathPoint = toMathCoords(canvasX, canvasY);
-      setHoveredPoint(mathPoint);
+      setLastMousePos(currentPos);
     }
-  }, [isDragging, dragStart, toMathCoords, width, height, xMin, xMax, yMin, yMax]);
+  };
 
-  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const canvasX = e.clientX - rect.left;
-    const canvasY = e.clientY - rect.top;
-
-    setIsDragging(true);
-    setDragStart({ x: canvasX, y: canvasY });
-  }, []);
-
-  const handleMouseUp = useCallback(() => {
+  const handleMouseUp = () => {
     setIsDragging(false);
-  }, []);
+  };
 
-  const handleWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
+  const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
-    setViewTransform(prev => ({
-      ...prev,
-      scale: Math.max(0.1, Math.min(10, prev.scale * scaleFactor))
-    }));
-  }, []);
+    const zoomFactor = e.deltaY > 0 ? 1.1 : 0.9;
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
 
-  const resetView = useCallback(() => {
-    setViewTransform({ offsetX: 0, offsetY: 0, scale: 1 });
-  }, []);
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const graphMouse = screenToGraph(mouseX, mouseY);
+    
+    const rangeX = viewBounds.xMax - viewBounds.xMin;
+    const rangeY = viewBounds.yMax - viewBounds.yMin;
+    const newRangeX = rangeX * zoomFactor;
+    const newRangeY = rangeY * zoomFactor;
+    
+    setViewBounds({
+      xMin: graphMouse.x - (graphMouse.x - viewBounds.xMin) * zoomFactor,
+      xMax: graphMouse.x + (viewBounds.xMax - graphMouse.x) * zoomFactor,
+      yMin: graphMouse.y - (graphMouse.y - viewBounds.yMin) * zoomFactor,
+      yMax: graphMouse.y + (viewBounds.yMax - graphMouse.y) * zoomFactor
+    });
+  };
 
+  // Update view bounds when props change
   useEffect(() => {
-    render();
-  }, [render]);
+    setViewBounds({ xMin, xMax, yMin, yMax });
+  }, [xMin, xMax, yMin, yMax]);
+
+  // Redraw when dependencies change
+  useEffect(() => {
+    drawGraph();
+  }, [drawGraph]);
+
+  // Handle fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Advanced Graphing Tool</span>
-          <div className="flex items-center space-x-2">
-            <Badge variant="secondary">{intersections.length} Intersections</Badge>
-            <Button size="sm" variant="outline" onClick={resetView}>
-              <RotateCcw className="h-4 w-4 mr-1" />
-              Reset View
+    <div 
+      ref={containerRef}
+      className={`${isFullscreen ? 'fixed inset-0 z-50 bg-black' : 'relative'}`}
+    >
+      <Card className={`${isFullscreen ? 'h-full border-0 rounded-none' : ''}`}>
+        <CardContent className="p-4 h-full">
+          {/* Controls */}
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <Button size="sm" variant="outline" onClick={toggleFullscreen}>
+              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
             </Button>
+            <Button size="sm" variant="outline" onClick={resetView}>
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+            <Button size="sm" variant="outline" onClick={zoomIn}>
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+            <Button size="sm" variant="outline" onClick={zoomOut}>
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <Button 
+              size="sm" 
+              variant={showCoordinates ? "default" : "outline"}
+              onClick={() => setShowCoordinates(!showCoordinates)}
+            >
+              <Crosshair className="h-4 w-4" />
+            </Button>
+            
+            <div className="flex items-center space-x-2 ml-auto">
+              <Badge variant="secondary">
+                View: ({viewBounds.xMin.toFixed(1)}, {viewBounds.yMin.toFixed(1)}) to ({viewBounds.xMax.toFixed(1)}, {viewBounds.yMax.toFixed(1)})
+              </Badge>
+              {intersections.length > 0 && (
+                <Badge variant="default">
+                  {intersections.length} intersection{intersections.length !== 1 ? 's' : ''}
+                </Badge>
+              )}
+            </div>
           </div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex justify-center">
+
+          {/* Canvas */}
           <canvas
             ref={canvasRef}
-            className="border border-border rounded-lg shadow-sm cursor-move"
-            style={{ maxWidth: '100%', height: 'auto' }}
-            onMouseMove={handleMouseMove}
+            className="border border-border rounded cursor-move"
+            width={isFullscreen ? window.innerWidth : width}
+            height={isFullscreen ? window.innerHeight - 100 : height}
             onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
+            onMouseLeave={() => {
+              setIsDragging(false);
+              setShowCoordinates(false);
+            }}
+            onMouseEnter={() => setShowCoordinates(true)}
             onWheel={handleWheel}
           />
-        </div>
 
-        {hoveredPoint && (
-          <div className="text-center text-sm text-muted-foreground">
-            Coordinates: ({hoveredPoint.x.toFixed(3)}, {hoveredPoint.y.toFixed(3)})
-          </div>
-        )}
-
-        {/* Parameter Controls */}
-        {equations.some(eq => eq.parameters && eq.parameters.length > 0) && (
-          <div className="space-y-4">
-            <Separator />
-            <h3 className="text-lg font-semibold">Interactive Parameters</h3>
-            {equations.filter(eq => eq.parameters && eq.parameters.length > 0).map(eq => (
-              <div key={eq.id} className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <div 
-                    className="w-4 h-4 rounded"
-                    style={{ backgroundColor: eq.color }}
-                  />
-                  <span className="font-mono text-sm">{eq.equation}</span>
-                </div>
-                {eq.parameters?.map(param => (
-                  <div key={param.name} className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span>{param.name}</span>
-                      <span>{param.value.toFixed(2)}</span>
-                    </div>
-                    <Slider
-                      value={[param.value]}
-                      onValueChange={(values) => {
-                        if (onEquationUpdate) {
-                          const updatedParams = eq.parameters?.map(p => 
-                            p.name === param.name ? { ...p, value: values[0] } : p
-                          );
-                          onEquationUpdate(eq.id, { parameters: updatedParams });
-                        }
-                      }}
-                      min={param.min}
-                      max={param.max}
-                      step={param.step}
-                      className="w-full"
-                    />
+          {/* Parameter Controls */}
+          {equations.some(eq => eq.parameters && eq.visible) && (
+            <div className="mt-4 space-y-4">
+              <h4 className="font-semibold">Interactive Parameters</h4>
+              {equations.filter(eq => eq.parameters && eq.visible).map(eq => (
+                <div key={eq.id} className="space-y-2">
+                  <h5 className="text-sm font-medium" style={{ color: eq.color }}>
+                    {eq.equation}
+                  </h5>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {eq.parameters?.map((param) => (
+                      <div key={param.name} className="space-y-2">
+                        <Label className="flex justify-between">
+                          <span>{param.name}</span>
+                          <span>{param.value.toFixed(2)}</span>
+                        </Label>
+                        <Slider
+                          value={[param.value]}
+                          onValueChange={(values) => {
+                            if (onEquationUpdate) {
+                              const updatedParams = eq.parameters?.map(p => 
+                                p.name === param.name ? { ...p, value: values[0] } : p
+                              );
+                              onEquationUpdate(eq.id, { parameters: updatedParams });
+                            }
+                          }}
+                          min={param.min}
+                          max={param.max}
+                          step={param.step}
+                          className="flex-1"
+                        />
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

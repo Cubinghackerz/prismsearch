@@ -96,29 +96,29 @@ const Home = () => {
   ];
 
   const stats = [
-    { value: 10000, label: "Active Users", suffix: "+" },
+    { value: 10000, label: "Passwords Stored", suffix: "+" },
     { value: 1000000, label: "Problems Solved", suffix: "+" },
     { value: 99.9, label: "Uptime", suffix: "%" },
-    { value: 24, label: "Support", suffix: "/7" }
+    { value: 100000, label: "Lines of Code Generated", suffix: "+" }
   ];
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Enhanced Galaxy Background with Doubled Repulsion */}
+      {/* Optimized Galaxy Background with reduced performance settings */}
       <div className="absolute inset-0 -z-10">
         <Galaxy
           focal={[0.5, 0.5]}
           rotation={[1.0, 0.0]}
-          starSpeed={0.3}
-          density={0.8}
+          starSpeed={0.2}
+          density={0.4}
           hueShift={180}
-          speed={0.8}
+          speed={0.5}
           mouseInteraction={true}
-          glowIntensity={0.4}
-          saturation={0.3}
+          glowIntensity={0.2}
+          saturation={0.2}
           mouseRepulsion={true}
-          twinkleIntensity={0.4}
-          rotationSpeed={0.05}
+          twinkleIntensity={0.2}
+          rotationSpeed={0.02}
           repulsionStrength={16}
           autoCenterRepulsion={0}
           transparent={true}
@@ -225,15 +225,11 @@ const Home = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 font-semibold px-8">
-                <Link to="/auth" className="flex items-center">
-                  Start Free Trial
+                <Link to="/auth?mode=sign-up" className="flex items-center">
+                  Sign Up
                   <Star className="h-5 w-5 ml-2" />
                 </Link>
               </Button>
-              <div className="flex items-center text-white/70 text-sm">
-                <Users className="h-4 w-4 mr-2" />
-                No credit card required
-              </div>
             </div>
           </div>
         </div>
