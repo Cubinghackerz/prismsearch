@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -24,7 +23,7 @@ import {
 } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import Galaxy from '@/components/Galaxy';
+import Prism from '@/components/Prism';
 import CountUp from '@/components/CountUp';
 import AnimatedHeadline from '@/components/AnimatedHeadline';
 
@@ -104,24 +103,18 @@ const Home = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Optimized Galaxy Background with reduced performance settings */}
+      {/* Prism Background */}
       <div className="absolute inset-0 -z-10">
-        <Galaxy
-          focal={[0.5, 0.5]}
-          rotation={[1.0, 0.0]}
-          starSpeed={0.2}
-          density={0.4}
-          hueShift={180}
-          speed={0.5}
-          mouseInteraction={true}
-          glowIntensity={0.2}
-          saturation={0.2}
-          mouseRepulsion={true}
-          twinkleIntensity={0.2}
-          rotationSpeed={0.02}
-          repulsionStrength={16}
-          autoCenterRepulsion={0}
-          transparent={true}
+        <Prism
+          animationType="rotate"
+          timeScale={0.5}
+          height={3.5}
+          baseWidth={5.5}
+          scale={3.6}
+          hueShift={0}
+          colorFrequency={1}
+          noise={0.5}
+          glow={1}
         />
       </div>
 
