@@ -119,7 +119,7 @@ const Home = () => {
           mouseRepulsion={true}
           twinkleIntensity={0.4}
           rotationSpeed={0.05}
-          repulsionStrength={8}
+          repulsionStrength={16}
           autoCenterRepulsion={0}
           transparent={true}
         />
@@ -167,7 +167,8 @@ const Home = () => {
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
                 <div className="text-3xl lg:text-4xl font-bold text-white mb-2">
-                  <CountUp end={stat.value} suffix={stat.suffix} />
+                  <CountUp to={stat.value} />
+                  <span>{stat.suffix}</span>
                 </div>
                 <div className="text-white/70 text-sm lg:text-base">{stat.label}</div>
               </div>

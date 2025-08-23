@@ -43,6 +43,11 @@ export default function CountUp({
 
   // Get number of decimal places in a number
   const getDecimalPlaces = (num: number): number => {
+    // Add null/undefined check
+    if (num == null || typeof num !== 'number' || !isFinite(num)) {
+      return 0;
+    }
+    
     const str = num.toString();
     if (str.includes(".")) {
       const decimals = str.split(".")[1];
