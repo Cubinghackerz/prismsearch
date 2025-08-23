@@ -28,7 +28,12 @@ export default function CountUp({
   onEnd,
 }: CountUpProps) {
   const ref = useRef<HTMLSpanElement>(null);
-  const motionValue = useMotionValue(direction === "down" ? to : from);
+  
+  // Ensure we have valid numbers with proper defaults
+  const fromValue = typeof from === 'number' && isFinite(from) ? from : 0;
+  const toValue = typeof to === 'number' && isFinite(to) ? to : 0;
+  
+  const motionValue = useMotionValue(direction === "down" ? toValue : fromValue);
 
   // Adjusted spring settings for smoother animation with faster duration
   const damping = 30 + 40 * (1 / duration);
@@ -43,28 +48,33 @@ export default function CountUp({
 
   // Get number of decimal places in a number
   const getDecimalPlaces = (num: number): number => {
-    // Add null/undefined check
-    if (num == null || typeof num !== 'number' || !isFinite(num)) {
+    // Comprehensive null/undefined/invalid check
+    if (num == null || typeof num !== 'number' || !isFinite(num) || isNaN(num)) {
       return 0;
     }
     
-    const str = num.toString();
-    if (str.includes(".")) {
-      const decimals = str.split(".")[1];
-      if (parseInt(decimals) !== 0) {
-        return decimals.length;
+    try {
+      const str = num.toString();
+      if (str.includes(".")) {
+        const decimals = str.split(".")[1];
+        if (decimals && parseInt(decimals) !== 0) {
+          return decimals.length;
+        }
       }
+      return 0;
+    } catch (error) {
+      console.error('Error in getDecimalPlaces:', error);
+      return 0;
     }
-    return 0;
   };
 
-  const maxDecimals = Math.max(getDecimalPlaces(from), getDecimalPlaces(to));
+  const maxDecimals = Math.max(getDecimalPlaces(fromValue), getDecimalPlaces(toValue));
 
   useEffect(() => {
     if (ref.current) {
-      ref.current.textContent = String(direction === "down" ? to : from);
+      ref.current.textContent = String(direction === "down" ? toValue : fromValue);
     }
-  }, [from, to, direction]);
+  }, [fromValue, toValue, direction]);
 
   useEffect(() => {
     if (isInView && startWhen) {
@@ -73,7 +83,7 @@ export default function CountUp({
       }
 
       const timeoutId = setTimeout(() => {
-        motionValue.set(direction === "down" ? from : to);
+        motionValue.set(direction === "down" ? fromValue : toValue);
       }, delay * 1000);
 
       const durationTimeoutId = setTimeout(
@@ -95,8 +105,8 @@ export default function CountUp({
     startWhen,
     motionValue,
     direction,
-    from,
-    to,
+    fromValue,
+    toValue,
     delay,
     onStart,
     onEnd,
@@ -105,7 +115,7 @@ export default function CountUp({
 
   useEffect(() => {
     const unsubscribe = springValue.on("change", (latest) => {
-      if (ref.current) {
+      if (ref.current && typeof latest === 'number' && isFinite(latest)) {
         const hasDecimals = maxDecimals > 0;
 
         const options: Intl.NumberFormatOptions = {
@@ -114,13 +124,15 @@ export default function CountUp({
           maximumFractionDigits: hasDecimals ? maxDecimals : 0,
         };
 
-        const formattedNumber = Intl.NumberFormat("en-US", options).format(
-          latest
-        );
-
-        ref.current.textContent = separator
-          ? formattedNumber.replace(/,/g, separator)
-          : formattedNumber;
+        try {
+          const formattedNumber = Intl.NumberFormat("en-US", options).format(latest);
+          ref.current.textContent = separator
+            ? formattedNumber.replace(/,/g, separator)
+            : formattedNumber;
+        } catch (error) {
+          console.error('Error formatting number:', error);
+          ref.current.textContent = String(latest);
+        }
       }
     });
 
