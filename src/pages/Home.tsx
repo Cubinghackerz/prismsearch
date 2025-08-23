@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Search, 
   MessageSquare, 
   Shield, 
   Calculator, 
@@ -25,14 +24,6 @@ import AnimatedHeadline from '@/components/AnimatedHeadline';
 
 const Home = () => {
   const features = [
-    {
-      icon: <Search className="h-6 w-6" />,
-      title: "AI-Powered Search",
-      description: "Search the web with advanced AI analysis and get comprehensive answers with source citations.",
-      link: "/",
-      color: "from-blue-500 to-purple-600",
-      isNew: false
-    },
     {
       icon: <MessageSquare className="h-6 w-6" />,
       title: "Intelligent Chat",
@@ -99,27 +90,27 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ scrollBehavior: 'smooth' }}>
-      {/* Optimized Prism Background */}
-      <div className="absolute inset-0 -z-10">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Optimized Prism Background with better performance */}
+      <div className="absolute inset-0 -z-10 will-change-transform">
         <Prism
           animationType="rotate"
-          timeScale={0.3}
-          height={3.5}
-          baseWidth={5.5}
-          scale={3.6}
+          timeScale={0.2}
+          height={3}
+          baseWidth={5}
+          scale={3.2}
           hueShift={220}
-          colorFrequency={0.8}
-          noise={0.2}
-          glow={0.3}
-          bloom={0.5}
+          colorFrequency={0.6}
+          noise={0.15}
+          glow={0.25}
+          bloom={0.4}
           suspendWhenOffscreen={true}
         />
       </div>
 
       <Navigation />
       
-      {/* Hero Section - Added more top padding to account for fixed navigation */}
+      {/* Hero Section */}
       <section className="relative pt-24 pb-20 px-4">
         <div className="container mx-auto text-center">
           <div className="max-w-4xl mx-auto space-y-8">
@@ -231,14 +222,6 @@ const Home = () => {
       </section>
 
       <Footer />
-      
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          html {
-            scroll-behavior: smooth;
-          }
-        `
-      }} />
     </div>
   );
 };

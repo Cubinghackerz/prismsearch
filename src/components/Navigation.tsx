@@ -4,7 +4,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Menu, Search, MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, MoreHorizontal } from 'lucide-react';
+import { Menu, MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, MoreHorizontal } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import AuthButtons from '@/components/AuthButtons';
 
@@ -18,7 +18,6 @@ const Navigation = () => {
   const isHomePage = location.pathname === '/';
 
   const primaryNavItems = [
-    { name: 'Search', href: '/', icon: Search },
     { name: 'Chat', href: '/chat', icon: MessageSquare },
     { name: 'Vault', href: '/vault', icon: Shield },
     { name: 'Math', href: '/math', icon: Calculator },
@@ -42,14 +41,11 @@ const Navigation = () => {
     const controlNavbar = () => {
       const currentScrollY = window.scrollY;
       
-      // Show navbar when at top or when hovering near top
       if (currentScrollY < 100) {
         setIsVisible(true);
       } else if (currentScrollY > lastScrollY) {
-        // Scrolling down
         setIsVisible(false);
       } else {
-        // Scrolling up
         setIsVisible(true);
       }
       
@@ -89,8 +85,8 @@ const Navigation = () => {
             </span>
           </Link>
 
-          {/* Desktop Navigation - Centered */}
-          <div className="hidden md:flex items-center justify-center flex-1 space-x-6">
+          {/* Desktop Navigation - Properly Centered */}
+          <div className="hidden md:flex items-center justify-center absolute left-1/2 transform -translate-x-1/2 space-x-8">
             {primaryNavItems.map((item) => (
               <Link
                 key={item.name}
@@ -109,7 +105,7 @@ const Navigation = () => {
                   More
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-48 bg-background border-border">
                 {moreNavItems.map((item) => {
                   const Icon = item.icon;
                   return (

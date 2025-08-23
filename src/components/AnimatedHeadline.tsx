@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import RotatingText from './RotatingText';
 
-const AnimatedHeadline = () => {
+const AnimatedHeadline = memo(() => {
   const rotatingTexts = [
     'Digital Intelligence',
     'Agentic Coding',
@@ -13,11 +13,11 @@ const AnimatedHeadline = () => {
 
   return (
     <div className="animated-headline-wrapper">
-      <span className="static-text">
+      <h1 className="static-text">
         The Future of{' '}
         <RotatingText
           texts={rotatingTexts}
-          mainClassName="inline-flex bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 bg-clip-text text-transparent"
+          mainClassName="inline-block"
           staggerFrom="first"
           initial={{ y: "100%", opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -27,7 +27,7 @@ const AnimatedHeadline = () => {
           transition={{ type: "spring", damping: 30, stiffness: 400 }}
           rotationInterval={1500}
         />
-      </span>
+      </h1>
       
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -60,6 +60,15 @@ const AnimatedHeadline = () => {
             gap: 0.5rem;
           }
 
+          .static-text .inline-block {
+            background: linear-gradient(45deg, #A855F7, #EC4899, #EF4444) !important;
+            background-clip: text !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            background-size: 200% 200% !important;
+            animation: rotatingGradient 3s ease infinite !important;
+          }
+
           @media (min-width: 768px) {
             .animated-headline-wrapper {
               font-size: 4.5rem;
@@ -71,10 +80,19 @@ const AnimatedHeadline = () => {
             0%, 100% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
           }
+
+          @keyframes rotatingGradient {
+            0%, 100% { background-position: 0% 50%; }
+            25% { background-position: 100% 0%; }
+            50% { background-position: 100% 100%; }
+            75% { background-position: 0% 100%; }
+          }
         `
       }} />
     </div>
   );
-};
+});
+
+AnimatedHeadline.displayName = 'AnimatedHeadline';
 
 export default AnimatedHeadline;
