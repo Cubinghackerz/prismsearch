@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, Search, MessageSquare, Shield, Calculator, Code2, FileText, Atom, Beaker, Zap, Home } from 'lucide-react';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import ThemeToggle from '@/components/ThemeToggle';
 import AuthButtons from '@/components/AuthButtons';
 
 const Navigation = () => {
