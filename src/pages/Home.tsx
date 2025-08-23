@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,17 +10,12 @@ import {
   Shield, 
   Calculator, 
   Code2, 
-  FileText, 
   Atom, 
   Beaker, 
   Zap,
-  Brain,
   Sparkles,
   ChevronRight,
-  Star,
-  Users,
-  Clock,
-  Award
+  Star
 } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
@@ -72,7 +68,7 @@ const Home = () => {
       color: "from-teal-500 to-cyan-600"
     },
     {
-      icon: <Calculator className="h-6 w-6" />,
+      icon: <Zap className="h-6 w-6" />,
       title: "Graphing Tool",
       description: "Visualize mathematical functions with advanced plotting and analysis capabilities.",
       link: "/graphing",
@@ -84,13 +80,6 @@ const Home = () => {
       description: "Generate, edit, and deploy web applications with AI-powered development tools.",
       link: "/code",
       color: "from-cyan-500 to-blue-600"
-    },
-    {
-      icon: <FileText className="h-6 w-6" />,
-      title: "Document Editor",
-      description: "Create and collaborate on documents with intelligent writing assistance and formatting.",
-      link: "/pages",
-      color: "from-pink-500 to-rose-600"
     }
   ];
 
@@ -103,25 +92,27 @@ const Home = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Prism Background */}
+      {/* Optimized Prism Background */}
       <div className="absolute inset-0 -z-10">
         <Prism
           animationType="rotate"
-          timeScale={0.5}
+          timeScale={0.3}
           height={3.5}
           baseWidth={5.5}
           scale={3.6}
-          hueShift={0}
-          colorFrequency={1}
-          noise={0.5}
-          glow={1}
+          hueShift={220}
+          colorFrequency={0.8}
+          noise={0.2}
+          glow={0.3}
+          bloom={0.5}
+          suspendWhenOffscreen={true}
         />
       </div>
 
       <Navigation />
       
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-4">
+      {/* Hero Section - Added more top padding to account for fixed navigation */}
+      <section className="relative pt-24 pb-20 px-4">
         <div className="container mx-auto text-center">
           <div className="max-w-4xl mx-auto space-y-8">
             <Badge variant="secondary" className="bg-white/10 text-white border-white/20 hover:bg-white/20 transition-colors">
@@ -141,11 +132,6 @@ const Home = () => {
                 <Link to="/chat" className="flex items-center">
                   Get Started Free
                   <ChevronRight className="h-5 w-5 ml-2" />
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 font-semibold px-8">
-                <Link to="/pricing" className="flex items-center">
-                  View Pricing
                 </Link>
               </Button>
             </div>

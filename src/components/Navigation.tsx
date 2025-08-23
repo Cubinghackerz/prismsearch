@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Search, MessageSquare, Shield, Calculator, Code2, FileText, Atom, Beaker, Zap, Home } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Menu, Search, MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, MoreHorizontal } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import AuthButtons from '@/components/AuthButtons';
 
@@ -11,18 +12,21 @@ const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
-  const navItems = [
-    { name: 'Home', href: '/', icon: Home },
+  const primaryNavItems = [
     { name: 'Search', href: '/', icon: Search },
     { name: 'Chat', href: '/chat', icon: MessageSquare },
     { name: 'Vault', href: '/vault', icon: Shield },
     { name: 'Math', href: '/math', icon: Calculator },
+  ];
+
+  const moreNavItems = [
     { name: 'Physics', href: '/physics', icon: Atom },
     { name: 'Chemistry', href: '/chemistry', icon: Beaker },
     { name: 'Graphing', href: '/graphing', icon: Zap },
     { name: 'Code', href: '/code', icon: Code2 },
-    { name: 'Pages', href: '/pages', icon: FileText },
   ];
+
+  const allNavItems = [...primaryNavItems, ...moreNavItems];
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -30,17 +34,19 @@ const Navigation = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">P</span>
-            </div>
+            <img 
+              src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" 
+              alt="Prism Logo" 
+              className="h-8 w-8"
+            />
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               Prism
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navItems.slice(0, 6).map((item) => (
+          <div className="hidden md:flex items-center space-x-6">
+            {primaryNavItems.map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
@@ -49,6 +55,29 @@ const Navigation = () => {
                 {item.name}
               </Link>
             ))}
+            
+            {/* More dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
+                  <MoreHorizontal className="h-4 w-4 mr-1" />
+                  More
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {moreNavItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <DropdownMenuItem key={item.name} asChild>
+                      <Link to={item.href} className="flex items-center">
+                        <Icon className="h-4 w-4 mr-2" />
+                        {item.name}
+                      </Link>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Desktop Actions */}
@@ -68,7 +97,7 @@ const Navigation = () => {
               </SheetTrigger>
               <SheetContent side="right" className="w-80">
                 <div className="flex flex-col space-y-4 mt-6">
-                  {navItems.map((item) => {
+                  {allNavItems.map((item) => {
                     const Icon = item.icon;
                     return (
                       <Link

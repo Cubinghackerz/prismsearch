@@ -12,7 +12,6 @@ import PrismAssistant from "@/components/PrismAssistant";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Chat from "./pages/Chat";
-import Pricing from "./pages/Pricing";
 import Home from "./pages/Home";
 import PrismVault from "./pages/PrismVault";
 import PrismConversions from "./pages/PrismConversions";
@@ -51,7 +50,6 @@ const AppContent: React.FC = () => {
         <Route path="/" element={<Home />} />
         <Route path="/search" element={<Index />} />
         <Route path="/chat" element={<Chat />} />
-        <Route path="/pricing" element={<Pricing />} />
         <Route path="/vault" element={<PrismVault />} />
         <Route path="/conversions" element={<PrismConversions />} />
         <Route path="/compressor" element={<PrismCompressor />} />

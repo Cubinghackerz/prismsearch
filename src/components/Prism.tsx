@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from "react";
 import { Renderer, Triangle, Program, Mesh } from "ogl";
 
@@ -24,18 +23,18 @@ const Prism: React.FC<PrismProps> = ({
   height = 3.5,
   baseWidth = 5.5,
   animationType = "rotate",
-  glow = 1,
+  glow = 0.3,
   offset = { x: 0, y: 0 },
-  noise = 0.5,
+  noise = 0.2,
   transparent = true,
   scale = 3.6,
-  hueShift = 0,
-  colorFrequency = 1,
+  hueShift = 220,
+  colorFrequency = 0.8,
   hoverStrength = 2,
   inertia = 0.05,
-  bloom = 1,
-  suspendWhenOffscreen = false,
-  timeScale = 0.5,
+  bloom = 0.5,
+  suspendWhenOffscreen = true,
+  timeScale = 0.3,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -50,7 +49,7 @@ const Prism: React.FC<PrismProps> = ({
     const NOISE = Math.max(0.0, noise);
     const offX = offset?.x ?? 0;
     const offY = offset?.y ?? 0;
-    const SAT = transparent ? 1.5 : 1;
+    const SAT = transparent ? 0.8 : 1;
     const SCALE = Math.max(0.001, scale);
     const HUE = hueShift || 0;
     const CFREQ = Math.max(0.0, colorFrequency || 1);
@@ -62,7 +61,7 @@ const Prism: React.FC<PrismProps> = ({
     const HOVSTR = Math.max(0, hoverStrength || 1);
     const INERT = Math.max(0, Math.min(1, inertia || 0.12));
 
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const dpr = Math.min(1.5, window.devicePixelRatio || 1);
     const renderer = new Renderer({
       dpr,
       alpha: transparent,
@@ -176,7 +175,7 @@ const Prism: React.FC<PrismProps> = ({
           wob = mat2(c0, c1, c2, c0);
         }
 
-        const int STEPS = 100;
+        const int STEPS = 60;
         for (int i = 0; i < STEPS; i++) {
           p = vec3(f, z);
           p.xz = p.xz * wob;
@@ -190,7 +189,7 @@ const Prism: React.FC<PrismProps> = ({
 
         o = tanh4(o * o * (uGlow * uBloom) / 1e5);
 
-        vec3 col = o.rgb;
+        vec3 col = o.rgb * 0.4;
         float n = rand(gl_FragCoord.xy + vec2(iTime));
         col += (n - 0.5) * uNoise;
         col = clamp(col, 0.0, 1.0);
@@ -202,7 +201,9 @@ const Prism: React.FC<PrismProps> = ({
           col = clamp(hueRotation(uHueShift) * col, 0.0, 1.0);
         }
 
-        gl_FragColor = vec4(col, o.a);
+        col *= 0.6;
+
+        gl_FragColor = vec4(col, o.a * 0.8);
       }
     `;
 

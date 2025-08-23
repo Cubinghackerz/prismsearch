@@ -28,7 +28,7 @@ const PrismCode = () => {
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10">
       <Navigation />
       <QueryLimitDisplay />
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-6 py-8 pt-24">
         <div className="mb-6">
           <div className="flex items-center space-x-4 mb-4">
             <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/10 to-yellow-500/10 border border-orange-500/20">
