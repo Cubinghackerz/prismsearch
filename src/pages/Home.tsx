@@ -30,56 +30,64 @@ const Home = () => {
       title: "AI-Powered Search",
       description: "Search the web with advanced AI analysis and get comprehensive answers with source citations.",
       link: "/",
-      color: "from-blue-500 to-purple-600"
+      color: "from-blue-500 to-purple-600",
+      isNew: false
     },
     {
       icon: <MessageSquare className="h-6 w-6" />,
       title: "Intelligent Chat",
       description: "Engage with multiple AI models in dynamic conversations with file attachments and deep research.",
       link: "/chat",
-      color: "from-green-500 to-teal-600"
+      color: "from-green-500 to-teal-600",
+      isNew: false
     },
     {
       icon: <Shield className="h-6 w-6" />,
       title: "Secure Vault",
       description: "Protect your passwords with military-grade encryption and advanced security features.",
       link: "/vault",
-      color: "from-red-500 to-pink-600"
+      color: "from-red-500 to-pink-600",
+      isNew: false
     },
     {
       icon: <Calculator className="h-6 w-6" />,
       title: "Math Assistant",
       description: "Solve complex mathematical problems with step-by-step solutions and visual representations.",
       link: "/math",
-      color: "from-orange-500 to-red-600"
+      color: "from-orange-500 to-red-600",
+      isNew: true
     },
     {
       icon: <Atom className="h-6 w-6" />,
       title: "Physics Helper",
       description: "Master physics concepts with detailed explanations and interactive problem solving.",
       link: "/physics",
-      color: "from-purple-500 to-indigo-600"
+      color: "from-purple-500 to-indigo-600",
+      isNew: true
     },
     {
       icon: <Beaker className="h-6 w-6" />,
       title: "Chemistry Lab",
       description: "Explore chemical reactions, balance equations, and understand molecular interactions.",
       link: "/chemistry",
-      color: "from-teal-500 to-cyan-600"
+      color: "from-teal-500 to-cyan-600",
+      isNew: true
     },
     {
       icon: <Zap className="h-6 w-6" />,
       title: "Graphing Tool",
       description: "Visualize mathematical functions with advanced plotting and analysis capabilities.",
       link: "/graphing",
-      color: "from-indigo-500 to-purple-600"
+      color: "from-indigo-500 to-purple-600",
+      isNew: true
     },
     {
       icon: <Code2 className="h-6 w-6" />,
       title: "Code Generator",
       description: "Generate, edit, and deploy web applications with AI-powered development tools.",
       link: "/code",
-      color: "from-cyan-500 to-blue-600"
+      color: "from-cyan-500 to-blue-600",
+      isNew: true
     }
   ];
 
@@ -91,7 +99,7 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden" style={{ scrollBehavior: 'smooth' }}>
       {/* Optimized Prism Background */}
       <div className="absolute inset-0 -z-10">
         <Prism
@@ -171,7 +179,15 @@ const Home = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <Link key={index} to={feature.link} className="group block">
-                <Card className="h-full bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+                <Card className="h-full bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-2xl relative">
+                  {feature.isNew && (
+                    <Badge 
+                      variant="secondary" 
+                      className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-semibold px-2 py-1 text-xs"
+                    >
+                      NEW
+                    </Badge>
+                  )}
                   <CardHeader>
                     <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${feature.color} p-2.5 mb-4 group-hover:scale-110 transition-transform`}>
                       {React.cloneElement(feature.icon, { className: "h-full w-full text-white" })}
@@ -215,6 +231,14 @@ const Home = () => {
       </section>
 
       <Footer />
+      
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          html {
+            scroll-behavior: smooth;
+          }
+        `
+      }} />
     </div>
   );
 };

@@ -53,6 +53,11 @@ const AnimatedHeadline = () => {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             font-weight: 600;
             letter-spacing: -0.025em;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
           }
 
           @media (min-width: 768px) {
