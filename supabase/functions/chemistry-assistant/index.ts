@@ -16,26 +16,25 @@ serve(async (req) => {
       throw new Error('Problem is required');
     }
 
-    console.log('Solving math problem:', problem);
+    console.log('Solving chemistry problem:', problem);
 
-    const mathPrompt = `You are Qwen3-235B-A22B-Thinking-2507, an advanced mathematical reasoning AI model. Given the following mathematical problem or expression, provide a comprehensive solution with deep analytical thinking.
+    const chemistryPrompt = `You are Qwen3-235B-A22B-Thinking-2507, an advanced chemistry reasoning AI model. Given the following chemistry problem, provide a comprehensive solution with deep analytical thinking.
 
 Instructions:
-1. Think step-by-step through the problem with detailed reasoning
-2. Identify the type of mathematical problem (algebra, calculus, geometry, statistics, etc.)
-3. Provide step-by-step solution with clear explanations
-4. Show all intermediate steps and reasoning processes
-5. If it's an equation, solve for the variable(s) systematically
-6. If it's calculus, show the integration/differentiation process with justification
-7. If it's a word problem, set up the mathematical model first and explain your approach
-8. Include any relevant mathematical concepts, theorems, or principles used
-9. Format mathematical expressions clearly using standard notation
-10. Provide the final answer clearly labeled with verification if possible
-11. Use analytical thinking to explore alternative approaches when applicable
+1. Identify the type of chemistry problem (stoichiometry, equilibrium, kinetics, thermodynamics, etc.)
+2. List all given information and what needs to be found
+3. Write balanced chemical equations when applicable
+4. Apply relevant chemistry principles and laws systematically
+5. Show all calculations step-by-step with proper units and significant figures
+6. Include molecular structures or reaction mechanisms when helpful
+7. Use proper chemical notation and formulas
+8. Explain the chemical reasoning behind each step
+9. Verify the answer makes chemical sense
+10. Discuss alternative approaches if applicable
 
-Mathematical Problem: ${problem}
+Chemistry Problem: ${problem}
 
-Please provide a detailed, step-by-step solution with deep mathematical reasoning:`;
+Please provide a detailed, step-by-step solution with clear chemistry reasoning:`;
 
     // Try local Qwen model first
     let response;
@@ -48,7 +47,7 @@ Please provide a detailed, step-by-step solution with deep mathematical reasonin
         },
         body: JSON.stringify({
           model: 'qwen3-235b-a22b-thinking-2507',
-          prompt: mathPrompt,
+          prompt: chemistryPrompt,
           stream: false,
           options: {
             temperature: 0.1,
@@ -63,7 +62,7 @@ Please provide a detailed, step-by-step solution with deep mathematical reasonin
         const solution = data.response;
         
         if (solution) {
-          console.log('Math solution generated successfully with local Qwen model');
+          console.log('Chemistry solution generated successfully with local Qwen model');
           return new Response(
             JSON.stringify({ solution }),
             { 
@@ -96,11 +95,11 @@ Please provide a detailed, step-by-step solution with deep mathematical reasonin
         messages: [
           {
             role: 'system',
-            content: 'You are an advanced mathematical reasoning model with deep analytical capabilities. Focus on providing thorough mathematical solutions with step-by-step reasoning.'
+            content: 'You are an advanced chemistry reasoning model. Focus on providing thorough chemistry solutions with step-by-step reasoning, balanced equations, and clear explanations of chemical concepts.'
           },
           {
             role: 'user',
-            content: mathPrompt
+            content: chemistryPrompt
           }
         ],
         max_tokens: 8192,
@@ -110,7 +109,7 @@ Please provide a detailed, step-by-step solution with deep mathematical reasonin
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Groq API error:', response.status, errorText);
+      console.error('API error:', response.status, errorText);
       throw new Error(`API request failed: ${response.status} - ${errorText}`);
     }
 
@@ -121,7 +120,7 @@ Please provide a detailed, step-by-step solution with deep mathematical reasonin
       throw new Error('No solution received from API');
     }
 
-    console.log('Math solution generated successfully with Groq API');
+    console.log('Chemistry solution generated successfully');
 
     return new Response(
       JSON.stringify({ solution }),
@@ -134,11 +133,11 @@ Please provide a detailed, step-by-step solution with deep mathematical reasonin
     );
 
   } catch (error) {
-    console.error('Error in math assistant:', error);
+    console.error('Error in chemistry assistant:', error);
     
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Failed to solve mathematical problem'
+        error: error.message || 'Failed to solve chemistry problem'
       }),
       { 
         status: 500,

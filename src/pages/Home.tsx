@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Search, MessageCircle, Lock, ArrowRight, Shield, FileType, Code, Globe, Sparkles, Sigma, ChevronDown, Calculator, Archive } from 'lucide-react';
+import { Search, MessageCircle, Lock, ArrowRight, Shield, FileType, Code, Globe, Sparkles, Sigma, ChevronDown, Calculator, Archive, Atom, Flask } from 'lucide-react';
 import AnimatedHeadline from '@/components/AnimatedHeadline';
 import Footer from '@/components/Footer';
 import AuthButtons from '@/components/AuthButtons';
@@ -37,6 +37,24 @@ const Home = () => {
       path: '/math',
       gradient: 'from-blue-500 to-purple-500',
       featured: true
+    },
+    {
+      icon: Atom,
+      title: 'Physics Assistant',
+      description: 'Comprehensive physics problem solver with detailed solutions and formula keyboards',
+      path: '/physics',
+      gradient: 'from-cyan-500 to-blue-500',
+      featured: true,
+      new: true
+    },
+    {
+      icon: Flask,
+      title: 'Chemistry Assistant',
+      description: 'Advanced chemistry problem solver with reaction balancing and molecular analysis',
+      path: '/chemistry',
+      gradient: 'from-green-500 to-emerald-500',
+      featured: true,
+      new: true
     },
     {
       icon: Calculator,
@@ -69,14 +87,6 @@ const Home = () => {
       description: 'Engage with AI assistants for complex queries and conversations',
       path: '/chat',
       gradient: 'from-purple-500 to-pink-500'
-    },
-    {
-      icon: Code,
-      title: 'Code Notebook',
-      description: 'Online notebook for coding, testing, and running code snippets',
-      path: '/code',
-      gradient: 'from-indigo-500 to-purple-500',
-      beta: true
     },
     {
       icon: Lock,
@@ -184,6 +194,24 @@ const Home = () => {
                     Math
                   </DropdownMenuItem>
                   <DropdownMenuItem 
+                    onClick={() => navigate("/physics")}
+                    className="cursor-pointer font-fira-code"
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      Physics
+                      <span className="ml-2 px-1.5 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30 font-fira-code">New</span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/chemistry")}
+                    className="cursor-pointer font-fira-code"
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      Chemistry
+                      <span className="ml-2 px-1.5 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30 font-fira-code">New</span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
                     onClick={() => navigate("/graphing")}
                     className="cursor-pointer font-fira-code"
                   >
@@ -271,7 +299,7 @@ const Home = () => {
           {featuredFeatures.length > 0 && (
             <div className="mb-16">
               <h2 className="text-2xl font-bold text-center mb-8 font-fira-code text-white bg-black/60 backdrop-blur-md rounded-xl p-4 border border-white/20">Featured Tools</h2>
-              <div className="grid md:grid-cols-2 gap-8">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {featuredFeatures.map((feature, index) => (
                   <Card 
                     key={index}
@@ -281,23 +309,23 @@ const Home = () => {
                     <CardHeader>
                       <div className="flex items-center space-x-4">
                         <div className={`p-4 rounded-lg bg-gradient-to-r ${feature.gradient} text-white`}>
-                          <feature.icon className="h-8 w-8" />
+                          <feature.icon className="h-6 w-6" />
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center space-x-3 mb-2">
-                            <CardTitle className="text-2xl font-fira-code text-white">{feature.title}</CardTitle>
+                            <CardTitle className="text-lg font-fira-code text-white">{feature.title}</CardTitle>
                             {feature.beta && (
-                              <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-sm font-semibold rounded-full border border-orange-500/30 font-fira-code">
+                              <span className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs font-semibold rounded-full border border-orange-500/30 font-fira-code">
                                 Beta
                               </span>
                             )}
                             {feature.new && (
-                              <span className="px-3 py-1 bg-blue-500/20 text-blue-400 text-sm font-semibold rounded-full border border-blue-500/30 font-fira-code">
+                              <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full border border-blue-500/30 font-fira-code">
                                 New
                               </span>
                             )}
                           </div>
-                          <CardDescription className="text-lg font-fira-code text-white/70">
+                          <CardDescription className="text-sm font-fira-code text-white/70">
                             {feature.description}
                           </CardDescription>
                         </div>
@@ -306,13 +334,10 @@ const Home = () => {
                     <CardContent>
                       <Button 
                         variant="ghost" 
-                        className="w-full justify-start group-hover:bg-white/10 font-fira-code text-lg py-6 text-white/90 hover:text-white"
+                        className="w-full justify-start group-hover:bg-white/10 font-fira-code text-white/90 hover:text-white"
                       >
-                        {feature.title.includes('Web App') ? 'Start Creating Web Apps' : 
-                         feature.title.includes('Math') ? 'Solve Math Problems' : 
-                         feature.title.includes('Graphing') ? 'Plot Equations' :
-                         feature.title.includes('Compressor') ? 'Compress Files' : 'Explore Feature'}
-                        <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                        Explore Feature
+                        <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                       </Button>
                     </CardContent>
                   </Card>
@@ -322,43 +347,45 @@ const Home = () => {
           )}
 
           {/* Regular Features Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
-            {regularFeatures.map((feature, index) => (
-              <Card 
-                key={index}
-                className="group cursor-pointer transition-all duration-300 hover:scale-105 bg-black/80 backdrop-blur-md hover:bg-black/90 border-white/20"
-                onClick={() => navigate(feature.path)}
-              >
-                <CardHeader>
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-3 rounded-lg bg-gradient-to-r ${feature.gradient} text-white`}>
-                      <feature.icon className="h-6 w-6" />
+          {regularFeatures.length > 0 && (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
+              {regularFeatures.map((feature, index) => (
+                <Card 
+                  key={index}
+                  className="group cursor-pointer transition-all duration-300 hover:scale-105 bg-black/80 backdrop-blur-md hover:bg-black/90 border-white/20"
+                  onClick={() => navigate(feature.path)}
+                >
+                  <CardHeader>
+                    <div className="flex items-center space-x-3">
+                      <div className={`p-3 rounded-lg bg-gradient-to-r ${feature.gradient} text-white`}>
+                        <feature.icon className="h-6 w-6" />
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <CardTitle className="font-fira-code text-white">{feature.title}</CardTitle>
+                        {feature.beta && (
+                          <span className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs font-semibold rounded-full border border-orange-500/30 font-fira-code">
+                            Beta
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <CardTitle className="font-fira-code text-white">{feature.title}</CardTitle>
-                      {feature.beta && (
-                        <span className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs font-semibold rounded-full border border-orange-500/30 font-fira-code">
-                          Beta
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <CardDescription className="font-fira-code text-white/70">
-                    {feature.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start group-hover:bg-white/10 font-fira-code text-white/90 hover:text-white"
-                  >
-                    Explore Feature
-                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    <CardDescription className="font-fira-code text-white/70">
+                      {feature.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start group-hover:bg-white/10 font-fira-code text-white/90 hover:text-white"
+                    >
+                      Explore Feature
+                      <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
 
           {/* Stats Section with faster CountUp animations */}
           <div className="grid md:grid-cols-3 gap-8 text-center bg-black/80 backdrop-blur-md rounded-2xl p-8 border border-white/20">
