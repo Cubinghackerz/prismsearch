@@ -1,220 +1,413 @@
 
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight, Search, Shield, Calculator, Code, TestTube, Atom, Sparkles, Zap, Database, FileText, Image, BarChart3 } from 'lucide-react';
-import Navigation from '@/components/Navigation';
-import Footer from '@/components/Footer';
-import ParticleBackground from '@/components/ParticleBackground';
-import AnimatedHeadline from '@/components/AnimatedHeadline';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { Search, MessageCircle, Lock, ArrowRight, Shield, FileType, Code, Globe, Sparkles, Sigma, ChevronDown, Calculator, Archive } from 'lucide-react';
+import AnimatedHeadline from '@/components/AnimatedHeadline';
+import Footer from '@/components/Footer';
+import AuthButtons from '@/components/AuthButtons';
+import Galaxy from '@/components/Galaxy';
+import CountUp from '@/components/CountUp';
 
 const Home = () => {
-  const [mounted, setMounted] = useState(false);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const tools = [
+  const features = [
     {
-      title: "AI Search Assistant",
-      description: "Intelligent search with real-time results and AI-powered insights across multiple engines.",
-      icon: Search,
-      href: "/search",
-      color: "text-blue-500",
-      bgColor: "bg-blue-500/10"
+      icon: Globe,
+      title: 'AI Web App Generator',
+      description: 'Generate complete web applications with HTML, CSS, and JavaScript using AI',
+      path: '/code',
+      gradient: 'from-orange-500 to-yellow-500',
+      featured: true,
+      beta: true
     },
     {
-      title: "Secure Vault",
-      description: "Military-grade encryption for passwords and sensitive data with biometric protection.",
-      icon: Shield,
-      href: "/vault",
-      color: "text-green-500",
-      bgColor: "bg-green-500/10"
+      icon: Sigma,
+      title: 'Math Assistant',
+      description: 'Advanced mathematical problem solver with step-by-step solutions and equation keyboards',
+      path: '/math',
+      gradient: 'from-blue-500 to-purple-500',
+      featured: true
     },
     {
-      title: "Math Assistant",
-      description: "Advanced mathematical problem solver with step-by-step solutions and graphing.",
       icon: Calculator,
-      href: "/math",
-      color: "text-purple-500",
-      bgColor: "bg-purple-500/10"
+      title: 'Graphing Tool',
+      description: 'Plot mathematical equations, analyze functions, and visualize complex relationships',
+      path: '/graphing',
+      gradient: 'from-purple-500 to-blue-500',
+      featured: true,
+      new: true
     },
     {
-      title: "Physics Assistant",
-      description: "Comprehensive physics problem solver for mechanics, thermodynamics, and quantum physics.",
-      icon: Atom,
-      href: "/physics",
-      color: "text-orange-500",
-      bgColor: "bg-orange-500/10",
-      isNew: true
+      icon: Archive,
+      title: 'File Compressor',
+      description: 'Compress files while maintaining quality across multiple formats with batch processing',
+      path: '/compressor',
+      gradient: 'from-green-500 to-teal-500',
+      featured: true,
+      new: true
     },
     {
-      title: "Chemistry Assistant",
-      description: "Advanced chemistry solver for organic, inorganic, and physical chemistry problems.",
-      icon: TestTube,
-      href: "/chemistry",
-      color: "text-cyan-500",
-      bgColor: "bg-cyan-500/10",
-      isNew: true
+      icon: Search,
+      title: 'AI-Powered Search',
+      description: 'Search across multiple engines with intelligent results aggregation',
+      path: '/search',
+      gradient: 'from-blue-500 to-cyan-500'
     },
     {
-      title: "Code Generator",
-      description: "Multi-language code generation with AI assistance and real-time collaboration.",
+      icon: MessageCircle,
+      title: 'Advanced Chat',
+      description: 'Engage with AI assistants for complex queries and conversations',
+      path: '/chat',
+      gradient: 'from-purple-500 to-pink-500'
+    },
+    {
       icon: Code,
-      href: "/code",
-      color: "text-indigo-500",
-      bgColor: "bg-indigo-500/10"
+      title: 'Code Notebook',
+      description: 'Online notebook for coding, testing, and running code snippets',
+      path: '/code',
+      gradient: 'from-indigo-500 to-purple-500',
+      beta: true
     },
     {
-      title: "Document Editor",
-      description: "Smart document creation with AI writing assistance and collaborative features.",
-      icon: FileText,
-      href: "/pages",
-      color: "text-rose-500",
-      bgColor: "bg-rose-500/10"
+      icon: Lock,
+      title: 'Secure Vault',
+      description: 'Military-grade password generation and secure storage',
+      path: '/vault',
+      gradient: 'from-green-500 to-emerald-500'
     },
     {
-      title: "Image Tools",
-      description: "Advanced image processing, compression, and AI-powered enhancements.",
-      icon: Image,
-      href: "/compressor",
-      color: "text-yellow-500",
-      bgColor: "bg-yellow-500/10"
+      icon: FileType,
+      title: 'File Conversions',
+      description: 'Convert between different file formats while maintaining quality',
+      path: '/conversions',
+      gradient: 'from-orange-500 to-red-500',
+      beta: true
     },
     {
-      title: "Analytics Dashboard",
-      description: "Comprehensive analytics and insights for your digital workspace.",
-      icon: BarChart3,
-      href: "/analytics",
-      color: "text-teal-500",
-      bgColor: "bg-teal-500/10"
+      icon: Shield,
+      title: 'Threat Detector',
+      description: 'Detect suspicious content and potential threats in uploaded files',
+      path: '/detector',
+      gradient: 'from-red-500 to-pink-500',
+      beta: true
     }
   ];
 
-  if (!mounted) return null;
+  const featuredFeatures = features.filter(f => f.featured);
+  const regularFeatures = features.filter(f => !f.featured);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-secondary/5 relative overflow-hidden">
-      <ParticleBackground />
-      <Navigation />
-      
-      <main className="container mx-auto px-4 relative z-10">
-        {/* Hero Section */}
-        <section className="py-20 text-center space-y-8">
-          <div className="space-y-4">
-            <AnimatedHeadline />
-            <p className="text-xl text-prism-text-muted max-w-3xl mx-auto leading-relaxed">
-              Experience the future of productivity with our comprehensive suite of AI-powered tools. 
-              From secure data management to advanced problem-solving, unlock your potential with cutting-edge technology.
-            </p>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button asChild size="lg" className="bg-prism-primary hover:bg-prism-primary/90 text-white px-8 py-3 text-lg">
-              <Link to="/search">
-                Get Started <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="border-prism-border hover:bg-prism-surface/50 px-8 py-3 text-lg">
-              <Link to="/pricing">
-                View Pricing
-              </Link>
-            </Button>
-          </div>
-        </section>
+    <div className="min-h-screen relative overflow-hidden font-fira-code">
+      {/* Galaxy Background - Full coverage with updated speed */}
+      <div className="fixed inset-0">
+        <Galaxy
+          mouseRepulsion={false}
+          mouseInteraction={true}
+          density={4.0}
+          glowIntensity={0.15}
+          saturation={0.8}
+          hueShift={200}
+          transparent={false}
+          rotationSpeed={0.075}
+          twinkleIntensity={0.15}
+          repulsionStrength={2.5}
+          speed={2}
+          starSpeed={0.75}
+          autoCenterRepulsion={1.5}
+        />
+      </div>
 
-        {/* Tools Grid */}
-        <section className="py-16">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-prism-primary to-prism-accent bg-clip-text text-transparent">
-              Powerful Tools for Every Need
-            </h2>
-            <p className="text-lg text-prism-text-muted max-w-2xl mx-auto">
-              Discover our comprehensive suite of AI-powered tools designed to enhance your productivity and creativity.
-            </p>
+      {/* Content - All UI elements with solid backgrounds */}
+      <div className="relative z-10 min-h-screen">
+        {/* Navigation */}
+        <header className="container mx-auto px-6 py-8">
+          <nav className="flex items-center justify-between bg-black/80 backdrop-blur-md rounded-xl p-4 border border-white/20">
+            <div className="flex items-center space-x-2">
+              <img 
+                src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" 
+                alt="Prism Logo" 
+                className="w-8 h-8"
+              />
+              <span className="text-2xl font-bold bg-gradient-to-r from-prism-primary to-prism-accent bg-clip-text text-transparent font-fira-code">
+                Prism
+              </span>
+            </div>
+            
+            <div className="hidden md:flex items-center space-x-6">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost"
+                    className="font-fira-code text-sm flex items-center gap-2 text-white hover:text-white hover:bg-white/10"
+                  >
+                    Tools
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-48 bg-background/95 backdrop-blur-md border border-border/50" align="start">
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/search")}
+                    className="cursor-pointer font-fira-code"
+                  >
+                    Search
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/chat")}
+                    className="cursor-pointer font-fira-code"
+                  >
+                    Chat
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/code")}
+                    className="cursor-pointer font-fira-code"
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      Code
+                      <span className="ml-2 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/math")}
+                    className="cursor-pointer font-fira-code"
+                  >
+                    Math
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/graphing")}
+                    className="cursor-pointer font-fira-code"
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      Graphing
+                      <span className="ml-2 px-1.5 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30 font-fira-code">New</span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/vault")}
+                    className="cursor-pointer font-fira-code"
+                  >
+                    Vault
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/conversions")}
+                    className="cursor-pointer font-fira-code"
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      Conversions
+                      <span className="ml-2 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/compressor")}
+                    className="cursor-pointer font-fira-code"
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      Compressor
+                      <span className="ml-2 px-1.5 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30 font-fira-code">New</span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/detector")}
+                    className="cursor-pointer font-fira-code"
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      Detector
+                      <span className="ml-2 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button variant="ghost" onClick={() => navigate('/pricing')} className="font-fira-code text-white/90 hover:text-white hover:bg-white/10">
+                Pricing
+              </Button>
+              <AuthButtons />
+            </div>
+          </nav>
+        </header>
+
+        {/* Hero Section */}
+        <main className="container mx-auto px-6 py-16">
+          <div className="text-center space-y-8 mb-20">
+            <div className="space-y-4 bg-black/80 backdrop-blur-md rounded-2xl p-8 border border-white/20">
+              <AnimatedHeadline />
+              <p className="text-xl text-white/80 max-w-2xl mx-auto font-fira-code">
+                Experience the future of intelligent search, AI-powered web app generation, advanced mathematical computation,
+                secure password management, online code execution, and AI conversations in one unified platform.
+              </p>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                size="lg" 
+                onClick={() => navigate('/code')}
+                className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 font-fira-code text-black font-bold"
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                Try AI Web App Generator
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                onClick={() => navigate('/math')}
+                className="font-fira-code text-white border-white/30 hover:bg-white/10 hover:text-white"
+              >
+                Solve Math Problems
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
           </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tools.map((tool, index) => (
-              <Card key={index} className="group bg-prism-surface/30 hover:bg-prism-surface/50 border-prism-border hover:border-prism-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-prism-primary/10 relative">
-                {tool.isNew && (
-                  <Badge className="absolute -top-2 -right-2 bg-prism-accent text-white z-10">
-                    New
-                  </Badge>
-                )}
-                <CardHeader className="pb-4">
-                  <div className={`w-12 h-12 rounded-lg ${tool.bgColor} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                    <tool.icon className={`h-6 w-6 ${tool.color}`} />
+
+          {/* Featured Features */}
+          {featuredFeatures.length > 0 && (
+            <div className="mb-16">
+              <h2 className="text-2xl font-bold text-center mb-8 font-fira-code text-white bg-black/60 backdrop-blur-md rounded-xl p-4 border border-white/20">Featured Tools</h2>
+              <div className="grid md:grid-cols-2 gap-8">
+                {featuredFeatures.map((feature, index) => (
+                  <Card 
+                    key={index}
+                    className="group cursor-pointer transition-all duration-300 hover:scale-105 border-2 border-orange-500/30 bg-black/80 backdrop-blur-md hover:bg-black/90"
+                    onClick={() => navigate(feature.path)}
+                  >
+                    <CardHeader>
+                      <div className="flex items-center space-x-4">
+                        <div className={`p-4 rounded-lg bg-gradient-to-r ${feature.gradient} text-white`}>
+                          <feature.icon className="h-8 w-8" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <CardTitle className="text-2xl font-fira-code text-white">{feature.title}</CardTitle>
+                            {feature.beta && (
+                              <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-sm font-semibold rounded-full border border-orange-500/30 font-fira-code">
+                                Beta
+                              </span>
+                            )}
+                            {feature.new && (
+                              <span className="px-3 py-1 bg-blue-500/20 text-blue-400 text-sm font-semibold rounded-full border border-blue-500/30 font-fira-code">
+                                New
+                              </span>
+                            )}
+                          </div>
+                          <CardDescription className="text-lg font-fira-code text-white/70">
+                            {feature.description}
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start group-hover:bg-white/10 font-fira-code text-lg py-6 text-white/90 hover:text-white"
+                      >
+                        {feature.title.includes('Web App') ? 'Start Creating Web Apps' : 
+                         feature.title.includes('Math') ? 'Solve Math Problems' : 
+                         feature.title.includes('Graphing') ? 'Plot Equations' :
+                         feature.title.includes('Compressor') ? 'Compress Files' : 'Explore Feature'}
+                        <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Regular Features Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
+            {regularFeatures.map((feature, index) => (
+              <Card 
+                key={index}
+                className="group cursor-pointer transition-all duration-300 hover:scale-105 bg-black/80 backdrop-blur-md hover:bg-black/90 border-white/20"
+                onClick={() => navigate(feature.path)}
+              >
+                <CardHeader>
+                  <div className="flex items-center space-x-3">
+                    <div className={`p-3 rounded-lg bg-gradient-to-r ${feature.gradient} text-white`}>
+                      <feature.icon className="h-6 w-6" />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CardTitle className="font-fira-code text-white">{feature.title}</CardTitle>
+                      {feature.beta && (
+                        <span className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs font-semibold rounded-full border border-orange-500/30 font-fira-code">
+                          Beta
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <CardTitle className="text-xl font-semibold text-prism-text group-hover:text-prism-primary transition-colors">
-                    {tool.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <CardDescription className="text-prism-text-muted leading-relaxed mb-4">
-                    {tool.description}
+                  <CardDescription className="font-fira-code text-white/70">
+                    {feature.description}
                   </CardDescription>
-                  <Button asChild variant="ghost" className="w-full justify-between group-hover:bg-prism-primary/10 group-hover:text-prism-primary">
-                    <Link to={tool.href}>
-                      Explore Tool
-                      <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                    </Link>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start group-hover:bg-white/10 font-fira-code text-white/90 hover:text-white"
+                  >
+                    Explore Feature
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
-        </section>
 
-        {/* Features Section */}
-        <section className="py-16">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-prism-primary to-prism-accent bg-clip-text text-transparent">
-              Why Choose Prism?
-            </h2>
-            <p className="text-lg text-prism-text-muted max-w-2xl mx-auto">
-              Built with cutting-edge technology and designed for the modern digital workspace.
-            </p>
+          {/* Stats Section with faster CountUp animations */}
+          <div className="grid md:grid-cols-3 gap-8 text-center bg-black/80 backdrop-blur-md rounded-2xl p-8 border border-white/20">
+            <div className="space-y-2">
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-fira-code">
+                <CountUp
+                  from={0}
+                  to={10}
+                  duration={2}
+                  delay={0.2}
+                  className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
+                />
+                M+
+              </h3>
+              <p className="text-white/70 font-fira-code">Searches Powered</p>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-fira-code">
+                <CountUp
+                  from={0}
+                  to={256}
+                  duration={2}
+                  delay={0.4}
+                  className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
+                />
+                -bit
+              </h3>
+              <p className="text-white/70 font-fira-code">Encryption Standard</p>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-fira-code">
+                <CountUp
+                  from={0}
+                  to={99.9}
+                  duration={2}
+                  delay={0.6}
+                  className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
+                />
+                %
+              </h3>
+              <p className="text-white/70 font-fira-code">Uptime Guarantee</p>
+            </div>
           </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-prism-primary/10 flex items-center justify-center mx-auto">
-                <Zap className="h-8 w-8 text-prism-primary" />
-              </div>
-              <h3 className="text-xl font-semibold text-prism-text">Lightning Fast</h3>
-              <p className="text-prism-text-muted">
-                Optimized performance with instant results and real-time processing for all your tasks.
-              </p>
-            </div>
-            
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-prism-accent/10 flex items-center justify-center mx-auto">
-                <Database className="h-8 w-8 text-prism-accent" />
-              </div>
-              <h3 className="text-xl font-semibold text-prism-text">Secure & Private</h3>
-              <p className="text-prism-text-muted">
-                Military-grade encryption and privacy-first design keeps your data safe and secure.
-              </p>
-            </div>
-            
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-prism-secondary/10 flex items-center justify-center mx-auto">
-                <Sparkles className="h-8 w-8 text-prism-secondary" />
-              </div>
-              <h3 className="text-xl font-semibold text-prism-text">AI-Powered</h3>
-              <p className="text-prism-text-muted">
-                Advanced AI assistance across all tools for enhanced productivity and smart automation.
-              </p>
-            </div>
-          </div>
-        </section>
-      </main>
-      
-      <Footer />
+        </main>
+
+        <div className="bg-black/80 backdrop-blur-md border-t border-white/20">
+          <Footer />
+        </div>
+      </div>
     </div>
   );
 };
