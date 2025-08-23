@@ -5,10 +5,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Atom, Copy, Trash2, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import PhysicsKeyboard from './PhysicsKeyboard';
 import MathRenderer from '../math-assistant/MathRenderer';
+import ScientificCalculator from '../calculator/ScientificCalculator';
 
 interface PhysicsResult {
   id: string;
@@ -113,115 +115,130 @@ const PhysicsAssistant = () => {
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        <Card className="bg-prism-surface/50 border-prism-border">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Atom className="h-5 w-5" />
-              <span>Physics Problem Input</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyPress}
-              placeholder="Enter your physics problem here...
+      <Tabs defaultValue="solver" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="solver">Problem Solver</TabsTrigger>
+          <TabsTrigger value="calculator">Scientific Calculator</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="solver" className="space-y-6">
+          <div className="grid lg:grid-cols-2 gap-6">
+            <Card className="bg-prism-surface/50 border-prism-border">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Atom className="h-5 w-5" />
+                  <span>Physics Problem Input</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  placeholder="Enter your physics problem here...
 Examples:
 • A ball is thrown upward with initial velocity 20 m/s. Find maximum height.
 • Calculate the force needed to accelerate a 5 kg object at 2 m/s².
 • Find the electric field at distance r from a point charge q.
 • Derive the wave equation for electromagnetic waves."
-              className="min-h-[200px] bg-prism-surface/30 border-prism-border text-prism-text resize-none"
-            />
-            
-            <div className="flex justify-between items-center">
-              <div className="text-sm text-prism-text-muted">
-                Use Ctrl+Enter to solve quickly
-              </div>
-              <Button 
-                onClick={solvePhysics} 
-                disabled={isLoading || !input.trim()}
-                className="bg-prism-primary hover:bg-prism-primary/90"
-              >
-                {isLoading ? (
-                  <>Solving...</>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4 mr-2" />
-                    Solve Problem
-                  </>
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-prism-surface/50 border-prism-border">
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle>Solutions & Results</CardTitle>
-              {results.length > 0 && (
-                <Button variant="outline" size="sm" onClick={clearResults}>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Clear All
-                </Button>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[400px]">
-              {results.length === 0 ? (
-                <div className="text-center text-prism-text-muted py-12">
-                  <Atom className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No solutions yet. Enter a physics problem to get started!</p>
+                  className="min-h-[200px] bg-prism-surface/30 border-prism-border text-prism-text resize-none"
+                />
+                
+                <div className="flex justify-between items-center">
+                  <div className="text-sm text-prism-text-muted">
+                    Use Ctrl+Enter to solve quickly
+                  </div>
+                  <Button 
+                    onClick={solvePhysics} 
+                    disabled={isLoading || !input.trim()}
+                    className="bg-prism-primary hover:bg-prism-primary/90"
+                  >
+                    {isLoading ? (
+                      <>Solving...</>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 mr-2" />
+                        Solve Problem
+                      </>
+                    )}
+                  </Button>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {results.map((result, index) => (
-                    <div key={result.id} className="space-y-2">
-                      <div className="bg-prism-surface/30 rounded-lg p-4 space-y-3">
-                        <div className="flex justify-between items-start">
-                          <span className="text-sm text-prism-text-muted">
-                            Problem #{results.length - index}
-                          </span>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => copyResult(result.output)}
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <div className="text-sm font-medium text-prism-accent">Input:</div>
-                          <MathRenderer content={result.input} />
-                        </div>
-                        
-                        <Separator />
-                        
-                        <div className="space-y-2">
-                          <div className="text-sm font-medium text-prism-primary">Solution:</div>
-                          <MathRenderer content={result.output} />
-                        </div>
-                        
-                        <div className="text-xs text-prism-text-muted">
-                          {result.timestamp.toLocaleString()}
-                        </div>
-                      </div>
-                      {index < results.length - 1 && <Separator />}
+              </CardContent>
+            </Card>
+
+            <Card className="bg-prism-surface/50 border-prism-border">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CardTitle>Solutions & Results</CardTitle>
+                  {results.length > 0 && (
+                    <Button variant="outline" size="sm" onClick={clearResults}>
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Clear All
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[400px]">
+                  {results.length === 0 ? (
+                    <div className="text-center text-prism-text-muted py-12">
+                      <Atom className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No solutions yet. Enter a physics problem to get started!</p>
                     </div>
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {results.map((result, index) => (
+                        <div key={result.id} className="space-y-2">
+                          <div className="bg-prism-surface/30 rounded-lg p-4 space-y-3">
+                            <div className="flex justify-between items-start">
+                              <span className="text-sm text-prism-text-muted">
+                                Problem #{results.length - index}
+                              </span>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => copyResult(result.output)}
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <div className="text-sm font-medium text-prism-accent">Input:</div>
+                              <MathRenderer content={result.input} />
+                            </div>
+                            
+                            <Separator />
+                            
+                            <div className="space-y-2">
+                              <div className="text-sm font-medium text-prism-primary">Solution:</div>
+                              <MathRenderer content={result.output} />
+                            </div>
+                            
+                            <div className="text-xs text-prism-text-muted">
+                              {result.timestamp.toLocaleString()}
+                            </div>
+                          </div>
+                          {index < results.length - 1 && <Separator />}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </div>
 
-      <PhysicsKeyboard onInsert={insertAtCursor} />
+          <PhysicsKeyboard onInsert={insertAtCursor} />
+        </TabsContent>
+
+        <TabsContent value="calculator" className="space-y-6">
+          <div className="flex justify-center">
+            <ScientificCalculator type="physics" />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

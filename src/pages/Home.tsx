@@ -1,439 +1,244 @@
+
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { Search, MessageCircle, Lock, ArrowRight, Shield, FileType, Code, Globe, Sparkles, Sigma, ChevronDown, Calculator, Archive, Atom, Beaker } from 'lucide-react';
-import AnimatedHeadline from '@/components/AnimatedHeadline';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Search, 
+  MessageSquare, 
+  Shield, 
+  Calculator, 
+  Code2, 
+  FileText, 
+  Atom, 
+  Beaker, 
+  Zap,
+  Brain,
+  Sparkles,
+  ChevronRight,
+  Star,
+  Users,
+  Clock,
+  Award
+} from 'lucide-react';
+import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import AuthButtons from '@/components/AuthButtons';
 import Galaxy from '@/components/Galaxy';
 import CountUp from '@/components/CountUp';
+import AnimatedHeadline from '@/components/AnimatedHeadline';
 
 const Home = () => {
-  const navigate = useNavigate();
-
   const features = [
     {
-      icon: Globe,
-      title: 'AI Web App Generator',
-      description: 'Generate complete web applications with HTML, CSS, and JavaScript using AI',
-      path: '/code',
-      gradient: 'from-orange-500 to-yellow-500',
-      featured: true,
-      beta: true
+      icon: <Search className="h-6 w-6" />,
+      title: "AI-Powered Search",
+      description: "Search the web with advanced AI analysis and get comprehensive answers with source citations.",
+      link: "/",
+      color: "from-blue-500 to-purple-600"
     },
     {
-      icon: Sigma,
-      title: 'Math Assistant',
-      description: 'Advanced mathematical problem solver with step-by-step solutions and equation keyboards',
-      path: '/math',
-      gradient: 'from-blue-500 to-purple-500',
-      featured: true
+      icon: <MessageSquare className="h-6 w-6" />,
+      title: "Intelligent Chat",
+      description: "Engage with multiple AI models in dynamic conversations with file attachments and deep research.",
+      link: "/chat",
+      color: "from-green-500 to-teal-600"
     },
     {
-      icon: Atom,
-      title: 'Physics Assistant',
-      description: 'Comprehensive physics problem solver with detailed solutions and formula keyboards',
-      path: '/physics',
-      gradient: 'from-cyan-500 to-blue-500',
-      featured: true,
-      new: true
+      icon: <Shield className="h-6 w-6" />,
+      title: "Secure Vault",
+      description: "Protect your passwords with military-grade encryption and advanced security features.",
+      link: "/vault",
+      color: "from-red-500 to-pink-600"
     },
     {
-      icon: Beaker,
-      title: 'Chemistry Assistant',
-      description: 'Advanced chemistry problem solver with reaction balancing and molecular analysis',
-      path: '/chemistry',
-      gradient: 'from-green-500 to-emerald-500',
-      featured: true,
-      new: true
+      icon: <Calculator className="h-6 w-6" />,
+      title: "Math Assistant",
+      description: "Solve complex mathematical problems with step-by-step solutions and visual representations.",
+      link: "/math",
+      color: "from-orange-500 to-red-600"
     },
     {
-      icon: Calculator,
-      title: 'Graphing Tool',
-      description: 'Plot mathematical equations, analyze functions, and visualize complex relationships',
-      path: '/graphing',
-      gradient: 'from-purple-500 to-blue-500',
-      featured: true,
-      new: true
+      icon: <Atom className="h-6 w-6" />,
+      title: "Physics Helper",
+      description: "Master physics concepts with detailed explanations and interactive problem solving.",
+      link: "/physics",
+      color: "from-purple-500 to-indigo-600"
     },
     {
-      icon: Archive,
-      title: 'File Compressor',
-      description: 'Compress files while maintaining quality across multiple formats with batch processing',
-      path: '/compressor',
-      gradient: 'from-green-500 to-teal-500',
-      featured: true,
-      new: true
+      icon: <Beaker className="h-6 w-6" />,
+      title: "Chemistry Lab",
+      description: "Explore chemical reactions, balance equations, and understand molecular interactions.",
+      link: "/chemistry",
+      color: "from-teal-500 to-cyan-600"
     },
     {
-      icon: Search,
-      title: 'AI-Powered Search',
-      description: 'Search across multiple engines with intelligent results aggregation',
-      path: '/search',
-      gradient: 'from-blue-500 to-cyan-500'
+      icon: <Calculator className="h-6 w-6" />,
+      title: "Graphing Tool",
+      description: "Visualize mathematical functions with advanced plotting and analysis capabilities.",
+      link: "/graphing",
+      color: "from-indigo-500 to-purple-600"
     },
     {
-      icon: MessageCircle,
-      title: 'Advanced Chat',
-      description: 'Engage with AI assistants for complex queries and conversations',
-      path: '/chat',
-      gradient: 'from-purple-500 to-pink-500'
+      icon: <Code2 className="h-6 w-6" />,
+      title: "Code Generator",
+      description: "Generate, edit, and deploy web applications with AI-powered development tools.",
+      link: "/code",
+      color: "from-cyan-500 to-blue-600"
     },
     {
-      icon: Lock,
-      title: 'Secure Vault',
-      description: 'Military-grade password generation and secure storage',
-      path: '/vault',
-      gradient: 'from-green-500 to-emerald-500'
-    },
-    {
-      icon: FileType,
-      title: 'File Conversions',
-      description: 'Convert between different file formats while maintaining quality',
-      path: '/conversions',
-      gradient: 'from-orange-500 to-red-500',
-      beta: true
-    },
-    {
-      icon: Shield,
-      title: 'Threat Detector',
-      description: 'Detect suspicious content and potential threats in uploaded files',
-      path: '/detector',
-      gradient: 'from-red-500 to-pink-500',
-      beta: true
+      icon: <FileText className="h-6 w-6" />,
+      title: "Document Editor",
+      description: "Create and collaborate on documents with intelligent writing assistance and formatting.",
+      link: "/pages",
+      color: "from-pink-500 to-rose-600"
     }
   ];
 
-  const featuredFeatures = features.filter(f => f.featured);
-  const regularFeatures = features.filter(f => !f.featured);
+  const stats = [
+    { value: 10000, label: "Active Users", suffix: "+" },
+    { value: 1000000, label: "Problems Solved", suffix: "+" },
+    { value: 99.9, label: "Uptime", suffix: "%" },
+    { value: 24, label: "Support", suffix: "/7" }
+  ];
 
   return (
-    <div className="min-h-screen relative overflow-hidden font-fira-code">
-      {/* Galaxy Background - Full coverage with updated speed */}
-      <div className="fixed inset-0">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Enhanced Galaxy Background with Doubled Repulsion */}
+      <div className="absolute inset-0 -z-10">
         <Galaxy
-          mouseRepulsion={false}
+          focal={[0.5, 0.5]}
+          rotation={[1.0, 0.0]}
+          starSpeed={0.3}
+          density={0.8}
+          hueShift={180}
+          speed={0.8}
           mouseInteraction={true}
-          density={4.0}
-          glowIntensity={0.15}
-          saturation={0.8}
-          hueShift={200}
-          transparent={false}
-          rotationSpeed={0.075}
-          twinkleIntensity={0.15}
-          repulsionStrength={2.5}
-          speed={2}
-          starSpeed={0.75}
-          autoCenterRepulsion={1.5}
+          glowIntensity={0.4}
+          saturation={0.3}
+          mouseRepulsion={true}
+          twinkleIntensity={0.4}
+          rotationSpeed={0.05}
+          repulsionStrength={8}
+          autoCenterRepulsion={0}
+          transparent={true}
         />
       </div>
 
-      {/* Content - All UI elements with solid backgrounds */}
-      <div className="relative z-10 min-h-screen">
-        {/* Navigation */}
-        <header className="container mx-auto px-6 py-8">
-          <nav className="flex items-center justify-between bg-black/80 backdrop-blur-md rounded-xl p-4 border border-white/20">
-            <div className="flex items-center space-x-2">
-              <img 
-                src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" 
-                alt="Prism Logo" 
-                className="w-8 h-8"
-              />
-              <span className="text-2xl font-bold bg-gradient-to-r from-prism-primary to-prism-accent bg-clip-text text-transparent font-fira-code">
-                Prism
-              </span>
-            </div>
+      <Navigation />
+      
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-20 px-4">
+        <div className="container mx-auto text-center">
+          <div className="max-w-4xl mx-auto space-y-8">
+            <Badge variant="secondary" className="bg-white/10 text-white border-white/20 hover:bg-white/20 transition-colors">
+              <Sparkles className="h-4 w-4 mr-2" />
+              Powered by Advanced AI
+            </Badge>
             
-            <div className="hidden md:flex items-center space-x-6">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost"
-                    className="font-fira-code text-sm flex items-center gap-2 text-white hover:text-white hover:bg-white/10"
-                  >
-                    Tools
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-48 bg-background/95 backdrop-blur-md border border-border/50" align="start">
-                  <DropdownMenuItem 
-                    onClick={() => navigate("/search")}
-                    className="cursor-pointer font-fira-code"
-                  >
-                    Search
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => navigate("/chat")}
-                    className="cursor-pointer font-fira-code"
-                  >
-                    Chat
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={() => navigate("/code")}
-                    className="cursor-pointer font-fira-code"
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      Code
-                      <span className="ml-2 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => navigate("/math")}
-                    className="cursor-pointer font-fira-code"
-                  >
-                    Math
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => navigate("/physics")}
-                    className="cursor-pointer font-fira-code"
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      Physics
-                      <span className="ml-2 px-1.5 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30 font-fira-code">New</span>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => navigate("/chemistry")}
-                    className="cursor-pointer font-fira-code"
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      Chemistry
-                      <span className="ml-2 px-1.5 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30 font-fira-code">New</span>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => navigate("/graphing")}
-                    className="cursor-pointer font-fira-code"
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      Graphing
-                      <span className="ml-2 px-1.5 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30 font-fira-code">New</span>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => navigate("/vault")}
-                    className="cursor-pointer font-fira-code"
-                  >
-                    Vault
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => navigate("/conversions")}
-                    className="cursor-pointer font-fira-code"
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      Conversions
-                      <span className="ml-2 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => navigate("/compressor")}
-                    className="cursor-pointer font-fira-code"
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      Compressor
-                      <span className="ml-2 px-1.5 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30 font-fira-code">New</span>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => navigate("/detector")}
-                    className="cursor-pointer font-fira-code"
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      Detector
-                      <span className="ml-2 px-1.5 py-0.5 text-xs bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-fira-code">Beta</span>
-                    </div>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button variant="ghost" onClick={() => navigate('/pricing')} className="font-fira-code text-white/90 hover:text-white hover:bg-white/10">
-                Pricing
-              </Button>
-              <AuthButtons />
-            </div>
-          </nav>
-        </header>
+            <AnimatedHeadline />
+            
+            <p className="text-xl text-white/90 max-w-2xl mx-auto leading-relaxed">
+              Your all-in-one AI-powered productivity suite. From solving complex equations to generating code, 
+              Prism transforms how you work, learn, and create.
+            </p>
 
-        {/* Hero Section */}
-        <main className="container mx-auto px-6 py-16">
-          <div className="text-center space-y-8 mb-20">
-            <div className="space-y-4 bg-black/80 backdrop-blur-md rounded-2xl p-8 border border-white/20">
-              <AnimatedHeadline />
-              <p className="text-xl text-white/80 max-w-2xl mx-auto font-fira-code">
-                Experience the future of intelligent search, AI-powered web app generation, advanced mathematical computation,
-                secure password management, online code execution, and AI conversations in one unified platform.
-              </p>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                size="lg" 
-                onClick={() => navigate('/code')}
-                className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 font-fira-code text-black font-bold"
-              >
-                <Sparkles className="mr-2 h-4 w-4" />
-                Try AI Web App Generator
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
+              <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 font-semibold px-8">
+                <Link to="/chat" className="flex items-center">
+                  Get Started Free
+                  <ChevronRight className="h-5 w-5 ml-2" />
+                </Link>
               </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                onClick={() => navigate('/math')}
-                className="font-fira-code text-white border-white/30 hover:bg-white/10 hover:text-white"
-              >
-                Solve Math Problems
-                <ArrowRight className="ml-2 h-4 w-4" />
+              <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 font-semibold px-8">
+                <Link to="/pricing" className="flex items-center">
+                  View Pricing
+                </Link>
               </Button>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Featured Features */}
-          {featuredFeatures.length > 0 && (
-            <div className="mb-16">
-              <h2 className="text-2xl font-bold text-center mb-8 font-fira-code text-white bg-black/60 backdrop-blur-md rounded-xl p-4 border border-white/20">Featured Tools</h2>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {featuredFeatures.map((feature, index) => (
-                  <Card 
-                    key={index}
-                    className="group cursor-pointer transition-all duration-300 hover:scale-105 border-2 border-orange-500/30 bg-black/80 backdrop-blur-md hover:bg-black/90"
-                    onClick={() => navigate(feature.path)}
-                  >
-                    <CardHeader>
-                      <div className="flex items-center space-x-4">
-                        <div className={`p-4 rounded-lg bg-gradient-to-r ${feature.gradient} text-white`}>
-                          <feature.icon className="h-6 w-6" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <CardTitle className="text-lg font-fira-code text-white">{feature.title}</CardTitle>
-                            {feature.beta && (
-                              <span className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs font-semibold rounded-full border border-orange-500/30 font-fira-code">
-                                Beta
-                              </span>
-                            )}
-                            {feature.new && (
-                              <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full border border-blue-500/30 font-fira-code">
-                                New
-                              </span>
-                            )}
-                          </div>
-                          <CardDescription className="text-sm font-fira-code text-white/70">
-                            {feature.description}
-                          </CardDescription>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <Button 
-                        variant="ghost" 
-                        className="w-full justify-start group-hover:bg-white/10 font-fira-code text-white/90 hover:text-white"
-                      >
-                        Explore Feature
-                        <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
+      {/* Stats Section */}
+      <section className="py-16 px-4 bg-white/5 backdrop-blur-sm">
+        <div className="container mx-auto">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center">
+                <div className="text-3xl lg:text-4xl font-bold text-white mb-2">
+                  <CountUp end={stat.value} suffix={stat.suffix} />
+                </div>
+                <div className="text-white/70 text-sm lg:text-base">{stat.label}</div>
               </div>
-            </div>
-          )}
+            ))}
+          </div>
+        </div>
+      </section>
 
-          {/* Regular Features Grid */}
-          {regularFeatures.length > 0 && (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
-              {regularFeatures.map((feature, index) => (
-                <Card 
-                  key={index}
-                  className="group cursor-pointer transition-all duration-300 hover:scale-105 bg-black/80 backdrop-blur-md hover:bg-black/90 border-white/20"
-                  onClick={() => navigate(feature.path)}
-                >
+      {/* Features Grid */}
+      <section className="py-20 px-4">
+        <div className="container mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
+              Everything You Need in One Platform
+            </h2>
+            <p className="text-xl text-white/80 max-w-2xl mx-auto">
+              Discover powerful AI tools designed to enhance your productivity and creativity
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <Link key={index} to={feature.link} className="group block">
+                <Card className="h-full bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-2xl">
                   <CardHeader>
-                    <div className="flex items-center space-x-3">
-                      <div className={`p-3 rounded-lg bg-gradient-to-r ${feature.gradient} text-white`}>
-                        <feature.icon className="h-6 w-6" />
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <CardTitle className="font-fira-code text-white">{feature.title}</CardTitle>
-                        {feature.beta && (
-                          <span className="px-2 py-1 bg-orange-500/20 text-orange-400 text-xs font-semibold rounded-full border border-orange-500/30 font-fira-code">
-                            Beta
-                          </span>
-                        )}
-                      </div>
+                    <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${feature.color} p-2.5 mb-4 group-hover:scale-110 transition-transform`}>
+                      {React.cloneElement(feature.icon, { className: "h-full w-full text-white" })}
                     </div>
-                    <CardDescription className="font-fira-code text-white/70">
-                      {feature.description}
-                    </CardDescription>
+                    <CardTitle className="text-white group-hover:text-white/90 transition-colors">
+                      {feature.title}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Button 
-                      variant="ghost" 
-                      className="w-full justify-start group-hover:bg-white/10 font-fira-code text-white/90 hover:text-white"
-                    >
-                      Explore Feature
-                      <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </Button>
+                    <CardDescription className="text-white/70 group-hover:text-white/80 transition-colors">
+                      {feature.description}
+                    </CardDescription>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-          )}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
 
-          {/* Stats Section with faster CountUp animations */}
-          <div className="grid md:grid-cols-3 gap-8 text-center bg-black/80 backdrop-blur-md rounded-2xl p-8 border border-white/20">
-            <div className="space-y-2">
-              <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-fira-code">
-                <CountUp
-                  from={0}
-                  to={10}
-                  duration={2}
-                  delay={0.2}
-                  className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
-                />
-                M+
-              </h3>
-              <p className="text-white/70 font-fira-code">Searches Powered</p>
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-fira-code">
-                <CountUp
-                  from={0}
-                  to={256}
-                  duration={2}
-                  delay={0.4}
-                  className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
-                />
-                -bit
-              </h3>
-              <p className="text-white/70 font-fira-code">Encryption Standard</p>
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-fira-code">
-                <CountUp
-                  from={0}
-                  to={99.9}
-                  duration={2}
-                  delay={0.6}
-                  className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
-                />
-                %
-              </h3>
-              <p className="text-white/70 font-fira-code">Uptime Guarantee</p>
+      {/* CTA Section */}
+      <section className="py-20 px-4 bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-sm">
+        <div className="container mx-auto text-center">
+          <div className="max-w-3xl mx-auto space-y-8">
+            <h2 className="text-3xl lg:text-4xl font-bold text-white">
+              Ready to Transform Your Workflow?
+            </h2>
+            <p className="text-xl text-white/80">
+              Join thousands of users who have already discovered the power of AI-driven productivity
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 font-semibold px-8">
+                <Link to="/auth" className="flex items-center">
+                  Start Free Trial
+                  <Star className="h-5 w-5 ml-2" />
+                </Link>
+              </Button>
+              <div className="flex items-center text-white/70 text-sm">
+                <Users className="h-4 w-4 mr-2" />
+                No credit card required
+              </div>
             </div>
           </div>
-        </main>
-
-        <div className="bg-black/80 backdrop-blur-md border-t border-white/20">
-          <Footer />
         </div>
-      </div>
+      </section>
+
+      <Footer />
     </div>
   );
 };
