@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Flask, Copy, Trash2, Send } from 'lucide-react';
+import { TestTube, Copy, Trash2, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import ChemistryKeyboard from './ChemistryKeyboard';
 import MathRenderer from '../math-assistant/MathRenderer';
@@ -102,13 +102,13 @@ const ChemistryAssistant = () => {
     <div className="w-full max-w-6xl mx-auto p-6 space-y-6">
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center space-x-3">
-          <Flask className="h-8 w-8 text-prism-primary" />
+          <TestTube className="h-8 w-8 text-prism-primary" />
           <h1 className="text-4xl font-bold bg-gradient-to-r from-prism-primary to-prism-accent bg-clip-text text-transparent">
             Chemistry Assistant
           </h1>
         </div>
         <p className="text-lg text-prism-text-muted max-w-2xl mx-auto">
-          Advanced chemistry problem solver powered by AI. Solve organic, inorganic, 
+          Advanced chemistry problem solver powered by local Qwen3-235B-A22B-Thinking-2507 AI. Solve organic, inorganic, 
           physical chemistry, and more with step-by-step solutions and chemical formulas.
         </p>
       </div>
@@ -117,7 +117,7 @@ const ChemistryAssistant = () => {
         <Card className="bg-prism-surface/50 border-prism-border">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <Flask className="h-5 w-5" />
+              <TestTube className="h-5 w-5" />
               <span>Chemistry Problem Input</span>
             </CardTitle>
           </CardHeader>
@@ -138,7 +138,7 @@ Examples:
             
             <div className="flex justify-between items-center">
               <div className="text-sm text-prism-text-muted">
-                Use Ctrl+Enter to solve quickly
+                Use Ctrl+Enter to solve quickly • Powered by local Qwen3-235B
               </div>
               <Button 
                 onClick={solveChemistry} 
@@ -174,7 +174,7 @@ Examples:
             <ScrollArea className="h-[400px]">
               {results.length === 0 ? (
                 <div className="text-center text-prism-text-muted py-12">
-                  <Flask className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <TestTube className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>No solutions yet. Enter a chemistry problem to get started!</p>
                 </div>
               ) : (

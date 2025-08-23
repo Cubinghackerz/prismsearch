@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from '../_shared/cors.ts'
 
-const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY');
+const LOCAL_QWEN_URL = Deno.env.get('LOCAL_QWEN_URL') || 'http://localhost:11434'; // Default to Ollama port
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -16,13 +16,9 @@ serve(async (req) => {
       throw new Error('Problem is required');
     }
 
-    if (!GROQ_API_KEY) {
-      throw new Error('Groq API key not configured');
-    }
+    console.log('Solving chemistry problem with local Qwen3:', problem);
 
-    console.log('Solving chemistry problem:', problem);
-
-    const chemistryPrompt = `You are an advanced chemistry problem-solving AI with deep understanding of all chemistry domains. Given the following chemistry problem, provide a comprehensive solution with detailed analytical thinking.
+    const chemistryPrompt = `You are Qwen3-235B-A22B-Thinking-2507, an advanced chemistry problem-solving AI with deep understanding of all chemistry domains. Given the following chemistry problem, provide a comprehensive solution with detailed analytical thinking.
 
 Instructions:
 1. Identify the chemistry domain (organic, inorganic, physical, analytical, biochemistry, etc.)
@@ -41,6 +37,52 @@ Instructions:
 Chemistry Problem: ${problem}
 
 Please provide a detailed, step-by-step solution with chemical reasoning:`;
+
+    // Try to connect to local Qwen3 model first
+    try {
+      const localResponse = await fetch(`${LOCAL_QWEN_URL}/api/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'qwen3-235b-a22b-thinking-2507',
+          prompt: chemistryPrompt,
+          stream: false,
+          options: {
+            temperature: 0.1,
+            top_p: 0.9,
+            max_tokens: 8192
+          }
+        })
+      });
+
+      if (localResponse.ok) {
+        const localData = await localResponse.json();
+        const solution = localData.response;
+        
+        if (solution) {
+          console.log('Chemistry solution generated successfully with local Qwen3');
+          return new Response(
+            JSON.stringify({ solution }),
+            { 
+              headers: { 
+                ...corsHeaders,
+                'Content-Type': 'application/json' 
+              } 
+            }
+          );
+        }
+      }
+    } catch (localError) {
+      console.warn('Local Qwen3 model not available, falling back to Groq:', localError);
+    }
+
+    // Fallback to Groq if local model is not available
+    const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY');
+    if (!GROQ_API_KEY) {
+      throw new Error('Neither local Qwen3 model nor Groq API key is configured');
+    }
 
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -78,7 +120,7 @@ Please provide a detailed, step-by-step solution with chemical reasoning:`;
       throw new Error('No solution received from Chemistry API');
     }
 
-    console.log('Chemistry solution generated successfully');
+    console.log('Chemistry solution generated successfully with fallback model');
 
     return new Response(
       JSON.stringify({ solution }),

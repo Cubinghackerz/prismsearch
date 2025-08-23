@@ -108,7 +108,7 @@ const PhysicsAssistant = () => {
           </h1>
         </div>
         <p className="text-lg text-prism-text-muted max-w-2xl mx-auto">
-          Advanced physics problem solver powered by AI. Solve mechanics, thermodynamics, 
+          Advanced physics problem solver powered by local Qwen3-235B-A22B-Thinking-2507 AI. Solve mechanics, thermodynamics, 
           electromagnetism, quantum physics, and more with step-by-step solutions.
         </p>
       </div>
@@ -138,7 +138,7 @@ Examples:
             
             <div className="flex justify-between items-center">
               <div className="text-sm text-prism-text-muted">
-                Use Ctrl+Enter to solve quickly
+                Use Ctrl+Enter to solve quickly • Powered by local Qwen3-235B
               </div>
               <Button 
                 onClick={solvePhysics} 
