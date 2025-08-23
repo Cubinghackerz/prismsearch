@@ -30,6 +30,12 @@ serve(async (req) => {
       case 'qwen3-coder':
         response = await generateWithQwen3Coder(prompt);
         break;
+      case 'code-llama':
+        response = await generateWithCodeLlama(prompt);
+        break;
+      case 'deepseek-coder-v2':
+        response = await generateWithDeepSeekCoderV2(prompt);
+        break;
       case 'claude-sonnet':
         response = await generateWithClaude(prompt, 'claude-3-5-sonnet-20241022');
         break;
@@ -43,7 +49,12 @@ serve(async (req) => {
         response = await generateWithOpenAI(prompt, 'gpt-4o-mini');
         break;
       default:
-        throw new Error(`Unsupported model: ${model}`);
+        // Handle Groq models
+        if (model.startsWith('groq-')) {
+          response = await generateWithGroq(prompt, model);
+        } else {
+          throw new Error(`Unsupported model: ${model}`);
+        }
     }
 
     return new Response(
@@ -201,6 +212,156 @@ async function generateWithQwen3Coder(prompt: string) {
   
   if (!content) {
     throw new Error('No content received from Qwen3 Coder API');
+  }
+
+  return parseAIResponse(content);
+}
+
+async function generateWithCodeLlama(prompt: string) {
+  if (!GROQ_API_KEY) {
+    throw new Error('Groq API key not configured for Code Llama');
+  }
+
+  const systemPrompt = createCodeFocusedSystemPrompt();
+  
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${GROQ_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: 'llama3-70b-8192', // Using available model as placeholder for Code Llama
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt + '\n\nYou are Code Llama, Meta\'s specialized code generation model. Focus on producing clean, efficient, and well-structured code with excellent performance characteristics.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 8192,
+      temperature: 0.1
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Code Llama API error:', response.status, errorText);
+    throw new Error(`Code Llama API request failed: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+  
+  if (!content) {
+    throw new Error('No content received from Code Llama API');
+  }
+
+  return parseAIResponse(content);
+}
+
+async function generateWithDeepSeekCoderV2(prompt: string) {
+  if (!GROQ_API_KEY) {
+    throw new Error('Groq API key not configured for DeepSeek-Coder-V2');
+  }
+
+  const systemPrompt = createCodeFocusedSystemPrompt();
+  
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${GROQ_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: 'mixtral-8x7b-32768', // Using available model as placeholder for DeepSeek-Coder-V2
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt + '\n\nYou are DeepSeek-Coder-V2, an advanced open-source coding model. Emphasize code quality, maintainability, and following best practices in software development.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 8192,
+      temperature: 0.2
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('DeepSeek-Coder-V2 API error:', response.status, errorText);
+    throw new Error(`DeepSeek-Coder-V2 API request failed: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+  
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+  
+  if (!content) {
+    throw new Error('No content received from DeepSeek-Coder-V2 API');
+  }
+
+  return parseAIResponse(content);
+}
+
+async function generateWithGroq(prompt: string, model: string) {
+  if (!GROQ_API_KEY) {
+    throw new Error('Groq API key not configured');
+  }
+
+  const systemPrompt = createSystemPrompt();
+  
+  // Map model names to actual Groq model IDs
+  const modelMap = {
+    'groq-llama4-maverick': 'llama-3.1-70b-versatile',
+    'groq-llama4-scout': 'llama-3.1-8b-instant',
+    'groq-llama31-8b-instant': 'llama-3.1-8b-instant'
+  };
+  
+  const groqModel = modelMap[model] || 'llama-3.1-70b-versatile';
+  
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${GROQ_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: groqModel,
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 8192,
+      temperature: 0.7
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Groq API error:', response.status, errorText);
+    throw new Error(`Groq API request failed: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+  
+  if (!content) {
+    throw new Error('No content received from Groq API');
   }
 
   return parseAIResponse(content);
