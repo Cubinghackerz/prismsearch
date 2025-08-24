@@ -18,7 +18,7 @@ serve(async (req) => {
 
     console.log('Solving physics problem:', problem);
 
-    const physicsPrompt = `You are Qwen3-235B-A22B-Thinking-2507, an advanced physics reasoning AI model. Given the following physics problem, provide a comprehensive solution with deep analytical thinking.
+    const physicsPrompt = `You are Qwen3-30B-A3B (MoE), an advanced physics reasoning AI model. Given the following physics problem, provide a comprehensive solution with deep analytical thinking.
 
 Instructions:
 1. Identify the physics concepts, laws, and principles involved
@@ -39,14 +39,14 @@ Please provide a detailed, step-by-step solution with clear physics reasoning:`;
     // Try local Qwen model first
     let response;
     try {
-      console.log('Attempting to use local Qwen3-235B-A22B-Thinking-2507 model...');
+      console.log('Attempting to use local Qwen3-30B-A3B (MoE) model...');
       response = await fetch('http://localhost:11434/api/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'qwen3-235b-a22b-thinking-2507',
+          model: 'qwen3-30b-a3b-moe',
           prompt: physicsPrompt,
           stream: false,
           options: {

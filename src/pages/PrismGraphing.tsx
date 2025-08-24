@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -49,7 +49,7 @@ const PrismGraphing = () => {
         { name: 'b', value: 0, min: -10, max: 10, step: 0.5 }
       ]},
       { name: 'Vertical Line', equation: 'x = 2', description: 'x = constant', type: 'implicit' as const },
-      { name: 'Horizontal Line', equation: 'y = 1', description: 'y = constant', type: 'explicit' as const }
+      { name: 'Horizontal Line', equation: 'y = 1', description: 'y = constant', type: 'implicit' as const }
     ],
     polynomial: [
       { name: 'Quadratic', equation: 'a*x^2 + b*x + c', description: 'Parabola', params: [
@@ -101,7 +101,7 @@ const PrismGraphing = () => {
     ]
   };
 
-  const addEquation = () => {
+  const addEquation = useCallback(() => {
     if (!equation.trim()) {
       toast.error('Please enter an equation');
       return;
@@ -120,26 +120,26 @@ const PrismGraphing = () => {
       ] : undefined
     };
 
-    setEquations([...equations, newEquation]);
+    setEquations(prev => [...prev, newEquation]);
     toast.success('Equation added to graph');
-  };
+  }, [equation, equations.length, equationType, equationStyle, showParameters, colors]);
 
-  const removeEquation = (id: string) => {
-    setEquations(equations.filter(eq => eq.id !== id));
+  const removeEquation = useCallback((id: string) => {
+    setEquations(prev => prev.filter(eq => eq.id !== id));
     toast.success('Equation removed');
-  };
+  }, []);
 
-  const updateEquation = (id: string, updates: Partial<EquationData>) => {
-    setEquations(equations.map(eq => 
+  const updateEquation = useCallback((id: string, updates: Partial<EquationData>) => {
+    setEquations(prev => prev.map(eq => 
       eq.id === id ? { ...eq, ...updates } : eq
     ));
-  };
+  }, []);
 
-  const toggleEquationVisibility = (id: string) => {
+  const toggleEquationVisibility = useCallback((id: string) => {
     updateEquation(id, { visible: !equations.find(eq => eq.id === id)?.visible });
-  };
+  }, [equations, updateEquation]);
 
-  const resetGraph = () => {
+  const resetGraph = useCallback(() => {
     setEquations([]);
     setEquation('x^2');
     setXMin(-10);
@@ -147,11 +147,9 @@ const PrismGraphing = () => {
     setYMin(-10);
     setYMax(10);
     toast.success('Graph reset');
-  };
+  }, []);
 
-  const loadPreset = (preset: any) => {
-    console.log('Loading preset:', preset);
-    
+  const loadPreset = useCallback((preset: any) => {
     const newEquation: EquationData = {
       id: Date.now().toString(),
       equation: preset.equation,
@@ -162,29 +160,43 @@ const PrismGraphing = () => {
       parameters: preset.params
     };
     
-    console.log('Created equation:', newEquation);
-    setEquations([...equations, newEquation]);
+    setEquations(prev => [...prev, newEquation]);
     toast.success(`Added ${preset.name} to graph`);
-  };
+  }, [equations.length, colors]);
 
-  const exportGraph = () => {
+  const exportGraph = useCallback(() => {
     const canvas = document.querySelector('canvas');
     if (canvas) {
-      const link = document.createElement('a');
-      link.download = 'prism-graph.png';
-      link.href = canvas.toDataURL();
-      link.click();
-      toast.success('Graph exported successfully!');
+      try {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `prism-graph-${Date.now()}.png`;
+            link.href = url;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            toast.success('Graph exported successfully!');
+          } else {
+            toast.error('Failed to export graph');
+          }
+        }, 'image/png');
+      } catch (error) {
+        console.error('Export error:', error);
+        toast.error('Failed to export graph');
+      }
     } else {
       toast.error('No graph to export');
     }
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10">
       <Navigation />
       
-      <main className="container mx-auto px-4 py-8 pt-32">
+      <main className="container mx-auto px-4 py-8 pt-24">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-3 mb-4">
             <div className="p-3 rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 text-white">

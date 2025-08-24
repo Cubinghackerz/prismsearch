@@ -18,7 +18,7 @@ serve(async (req) => {
 
     console.log('Solving math problem:', problem);
 
-    const mathPrompt = `You are Qwen3-235B-A22B-Thinking-2507, an advanced mathematical reasoning AI model. Given the following mathematical problem or expression, provide a comprehensive solution with deep analytical thinking.
+    const mathPrompt = `You are Qwen3-30B-A3B (MoE), an advanced mathematical reasoning AI model. Given the following mathematical problem or expression, provide a comprehensive solution with deep analytical thinking.
 
 Instructions:
 1. Think step-by-step through the problem with detailed reasoning
@@ -40,14 +40,14 @@ Please provide a detailed, step-by-step solution with deep mathematical reasonin
     // Try local Qwen model first
     let response;
     try {
-      console.log('Attempting to use local Qwen3-235B-A22B-Thinking-2507 model...');
+      console.log('Attempting to use local Qwen3-30B-A3B (MoE) model...');
       response = await fetch('http://localhost:11434/api/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'qwen3-235b-a22b-thinking-2507',
+          model: 'qwen3-30b-a3b-moe',
           prompt: mathPrompt,
           stream: false,
           options: {

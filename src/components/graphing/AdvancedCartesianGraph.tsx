@@ -56,6 +56,20 @@ const AdvancedCartesianGraph: React.FC<GraphProps> = ({
 
   const evaluateExpression = useCallback((expr: string, x: number, parameters?: any): number => {
     try {
+      // Handle vertical lines (x = constant)
+      if (expr.includes('x =') || expr.includes('x=')) {
+        const match = expr.match(/x\s*=\s*([-+]?\d*\.?\d+)/);
+        if (match) {
+          const constantValue = parseFloat(match[1]);
+          return Math.abs(x - constantValue) < 0.01 ? 0 : NaN;
+        }
+      }
+
+      // Handle horizontal lines (y = constant)
+      if (expr.match(/^[-+]?\d*\.?\d+$/)) {
+        return parseFloat(expr);
+      }
+
       // Start with the original expression
       let expression = expr;
       
@@ -87,7 +101,6 @@ const AdvancedCartesianGraph: React.FC<GraphProps> = ({
         .replace(/\)\s*(\d+)/g, ')*$1')
         .replace(/(\d+)\s*([a-zA-Z]+)/g, '$1*$2');
 
-      console.log(`Evaluating: ${expr} -> ${expression} at x=${x}`);
       const result = Function(`"use strict"; return (${expression})`)();
       return isNaN(result) || !isFinite(result) ? NaN : result;
     } catch (error) {
@@ -106,6 +119,24 @@ const AdvancedCartesianGraph: React.FC<GraphProps> = ({
           const regex = new RegExp(`\\b${param}\\b`, 'g');
           expression = expression.replace(regex, `(${value})`);
         });
+      }
+      
+      // Handle vertical lines (x = constant)
+      if (expression.includes('x =') || expression.includes('x=')) {
+        const match = expression.match(/x\s*=\s*([-+]?\d*\.?\d+)/);
+        if (match) {
+          const constantValue = parseFloat(match[1]);
+          return Math.abs(x - constantValue) < 0.05;
+        }
+      }
+
+      // Handle horizontal lines (y = constant)  
+      if (expression.includes('y =') || expression.includes('y=')) {
+        const match = expression.match(/y\s*=\s*([-+]?\d*\.?\d+)/);
+        if (match) {
+          const constantValue = parseFloat(match[1]);
+          return Math.abs(y - constantValue) < 0.05;
+        }
       }
       
       // Handle equations like "x^2 + y^2 = r^2"
@@ -161,14 +192,20 @@ const AdvancedCartesianGraph: React.FC<GraphProps> = ({
 
     try {
       if (!isFullscreen) {
-        await containerRef.current.requestFullscreen();
-        setIsFullscreen(true);
+        if (containerRef.current.requestFullscreen) {
+          await containerRef.current.requestFullscreen();
+        } else {
+          toast.error('Fullscreen not supported in this browser');
+          return;
+        }
       } else {
-        await document.exitFullscreen();
-        setIsFullscreen(false);
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        }
       }
     } catch (error) {
-      toast.error('Fullscreen not supported in this browser');
+      console.error('Fullscreen error:', error);
+      toast.error('Unable to toggle fullscreen mode');
     }
   };
 
@@ -284,6 +321,34 @@ const AdvancedCartesianGraph: React.FC<GraphProps> = ({
 
       const parameters = eq.parameters?.reduce((acc, param) => ({ ...acc, [param.name]: param.value }), {});
 
+      // Handle vertical lines
+      if (eq.equation.includes('x =') || eq.equation.includes('x=')) {
+        const match = eq.equation.match(/x\s*=\s*([-+]?\d*\.?\d+)/);
+        if (match) {
+          const xValue = parseFloat(match[1]);
+          const screenX = graphToScreen(xValue, 0).x;
+          ctx.beginPath();
+          ctx.moveTo(screenX, 0);
+          ctx.lineTo(screenX, canvas.height);
+          ctx.stroke();
+          return;
+        }
+      }
+
+      // Handle horizontal lines
+      if (eq.equation.includes('y =') || eq.equation.includes('y=')) {
+        const match = eq.equation.match(/y\s*=\s*([-+]?\d*\.?\d+)/);
+        if (match) {
+          const yValue = parseFloat(match[1]);
+          const screenY = graphToScreen(0, yValue).y;
+          ctx.beginPath();
+          ctx.moveTo(0, screenY);
+          ctx.lineTo(canvas.width, screenY);
+          ctx.stroke();
+          return;
+        }
+      }
+
       if (eq.type === 'explicit') {
         ctx.beginPath();
         let firstPoint = true;
@@ -357,6 +422,7 @@ const AdvancedCartesianGraph: React.FC<GraphProps> = ({
   }, [equations, viewBounds, isFullscreen, width, height, mousePos, showCoordinates, intersections, evaluateExpression, evaluateImplicitEquation, graphToScreen, screenToGraph]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
     setIsDragging(true);
     const rect = canvasRef.current?.getBoundingClientRect();
     if (rect) {
@@ -375,7 +441,7 @@ const AdvancedCartesianGraph: React.FC<GraphProps> = ({
       const deltaX = currentPos.x - lastMousePos.x;
       const deltaY = currentPos.y - lastMousePos.y;
       
-      const graphDeltaX = (deltaX / rect.width) * (viewBounds.xMin - viewBounds.xMax);
+      const graphDeltaX = -(deltaX / rect.width) * (viewBounds.xMax - viewBounds.xMin);
       const graphDeltaY = (deltaY / rect.height) * (viewBounds.yMax - viewBounds.yMin);
       
       setViewBounds(prev => ({

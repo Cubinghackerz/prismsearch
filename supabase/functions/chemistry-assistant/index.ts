@@ -18,7 +18,7 @@ serve(async (req) => {
 
     console.log('Solving chemistry problem:', problem);
 
-    const chemistryPrompt = `You are Qwen3-235B-A22B-Thinking-2507, an advanced chemistry reasoning AI model. Given the following chemistry problem, provide a comprehensive solution with deep analytical thinking.
+    const chemistryPrompt = `You are Qwen3-30B-A3B (MoE), an advanced chemistry reasoning AI model. Given the following chemistry problem, provide a comprehensive solution with deep analytical thinking.
 
 Instructions:
 1. Identify the type of chemistry problem (stoichiometry, equilibrium, kinetics, thermodynamics, etc.)
@@ -39,14 +39,14 @@ Please provide a detailed, step-by-step solution with clear chemistry reasoning:
     // Try local Qwen model first
     let response;
     try {
-      console.log('Attempting to use local Qwen3-235B-A22B-Thinking-2507 model...');
+      console.log('Attempting to use local Qwen3-30B-A3B (MoE) model...');
       response = await fetch('http://localhost:11434/api/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'qwen3-235b-a22b-thinking-2507',
+          model: 'qwen3-30b-a3b-moe',
           prompt: chemistryPrompt,
           stream: false,
           options: {
