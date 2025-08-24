@@ -30,7 +30,7 @@ const Chat = () => {
       <div className="relative z-10 h-full flex flex-col flex-1">
         {!isFullscreen && <Navigation />}
         
-        <div className={`${isFullscreen ? 'flex-1' : 'container mx-auto px-6 flex-1'}`}>
+        <div className={`${isFullscreen ? 'flex-1' : 'container mx-auto px-6 flex-1 pt-20'}`}>
           <div className={`text-center ${isFullscreen ? 'p-4' : 'mb-8'}`}>
             <div className="flex items-center justify-center gap-2 mb-4">
               <img 

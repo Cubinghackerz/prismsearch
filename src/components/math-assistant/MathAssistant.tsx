@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { Calculator, Copy, Trash2, Send, PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import EquationKeyboard from './EquationKeyboard';
@@ -118,7 +118,16 @@ const MathAssistant = () => {
       <Tabs defaultValue="solver" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="solver">Problem Solver</TabsTrigger>
-          <TabsTrigger value="calculator">Scientific Calculator</TabsTrigger>
+          <TabsTrigger value="calculator" className="relative">
+            Scientific Calculator
+            <Badge 
+              variant="secondary" 
+              className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white font-bold px-2 py-1 text-xs shadow-lg z-10"
+              style={{ transform: 'rotate(12deg)' }}
+            >
+              BETA
+            </Badge>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="solver" className="space-y-6">
