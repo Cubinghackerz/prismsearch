@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ArrowRight, Calculator, Search, Shield, Code, FileText, Atom, FlaskConical, BarChart3, Zap, Brain, Crown, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -161,7 +162,8 @@ const Index = () => {
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
                 <div className="text-4xl font-bold text-primary mb-2 font-fira-code">
-                  <CountUp end={stat.number} suffix={stat.suffix} />
+                  <CountUp to={stat.number} />
+                  {stat.suffix}
                 </div>
                 <div className="text-muted-foreground font-medium">{stat.label}</div>
               </div>
