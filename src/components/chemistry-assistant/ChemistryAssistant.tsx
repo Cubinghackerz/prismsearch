@@ -110,7 +110,7 @@ const ChemistryAssistant = () => {
           </h1>
         </div>
         <p className="text-lg text-prism-text-muted max-w-2xl mx-auto">
-          Advanced chemistry problem solver powered by Qwen3-235B-A22B-Thinking-2507. 
+          Advanced chemistry problem solver powered by Qwen3-30B-A3B (MoE). 
           Solve stoichiometry, equilibrium, kinetics, thermodynamics, and more with detailed solutions.
         </p>
       </div>

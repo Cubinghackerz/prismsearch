@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -5,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { Atom, Copy, Trash2, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import PhysicsKeyboard from './PhysicsKeyboard';
@@ -110,7 +110,7 @@ const PhysicsAssistant = () => {
           </h1>
         </div>
         <p className="text-lg text-prism-text-muted max-w-2xl mx-auto">
-          Advanced physics problem solver powered by Qwen3-235B-A22B-Thinking-2507. 
+          Advanced physics problem solver powered by Qwen3-30B-A3B (MoE). 
           Solve mechanics, thermodynamics, electromagnetism, quantum physics, and more with detailed solutions.
         </p>
       </div>
@@ -118,16 +118,7 @@ const PhysicsAssistant = () => {
       <Tabs defaultValue="solver" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="solver">Problem Solver</TabsTrigger>
-          <TabsTrigger value="calculator" className="relative">
-            Scientific Calculator
-            <Badge 
-              variant="secondary" 
-              className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white font-bold px-2 py-1 text-xs shadow-lg z-10"
-              style={{ transform: 'rotate(12deg)' }}
-            >
-              BETA
-            </Badge>
-          </TabsTrigger>
+          <TabsTrigger value="calculator">Scientific Calculator</TabsTrigger>
         </TabsList>
 
         <TabsContent value="solver" className="space-y-6">
@@ -147,10 +138,10 @@ const PhysicsAssistant = () => {
                   onKeyDown={handleKeyPress}
                   placeholder="Enter your physics problem here...
 Examples:
-• A ball is thrown upward with initial velocity 20 m/s. Find maximum height.
-• Calculate the force needed to accelerate a 5 kg object at 2 m/s².
-• Find the electric field at distance r from a point charge q.
-• Derive the wave equation for electromagnetic waves."
+• A 2kg block slides down a 30° incline with friction coefficient μ = 0.2
+• Calculate the electric field at point P due to two charges
+• Find the wavelength of light with frequency 5 × 10¹⁴ Hz
+• Determine the momentum of a photon with energy 2.5 eV"
                   className="min-h-[200px] bg-prism-surface/30 border-prism-border text-prism-text resize-none"
                 />
                 
@@ -244,7 +235,7 @@ Examples:
 
         <TabsContent value="calculator" className="space-y-6">
           <div className="flex justify-center">
-            <ScientificCalculator type="physics" />
+            <ScientificCalculator />
           </div>
         </TabsContent>
       </Tabs>

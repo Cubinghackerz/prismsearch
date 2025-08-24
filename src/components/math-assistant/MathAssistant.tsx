@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -5,8 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Calculator, Copy, Trash2, Send, PlusCircle } from 'lucide-react';
+import { Calculator, Copy, Trash2, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import EquationKeyboard from './EquationKeyboard';
 import MathRenderer from './MathRenderer';
@@ -74,10 +74,10 @@ const MathAssistant = () => {
 
       setResults(prev => [newResult, ...prev]);
       setInput('');
-      toast.success('Mathematical problem solved!');
+      toast.success('Problem solved successfully!');
     } catch (error) {
       console.error('Error solving math:', error);
-      toast.error('Failed to solve the mathematical problem');
+      toast.error('Failed to solve the problem');
     } finally {
       setIsLoading(false);
     }
@@ -110,7 +110,7 @@ const MathAssistant = () => {
           </h1>
         </div>
         <p className="text-lg text-prism-text-muted max-w-2xl mx-auto">
-          Advanced mathematical problem solver powered by Qwen3-235B-A22B-Thinking-2507. 
+          Advanced mathematical problem solver powered by Qwen3-30B-A3B (MoE). 
           Solve algebra, calculus, geometry, statistics, and more with detailed step-by-step solutions.
         </p>
       </div>
@@ -118,16 +118,7 @@ const MathAssistant = () => {
       <Tabs defaultValue="solver" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="solver">Problem Solver</TabsTrigger>
-          <TabsTrigger value="calculator" className="relative">
-            Scientific Calculator
-            <Badge 
-              variant="secondary" 
-              className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white font-bold px-2 py-1 text-xs shadow-lg z-10"
-              style={{ transform: 'rotate(12deg)' }}
-            >
-              BETA
-            </Badge>
-          </TabsTrigger>
+          <TabsTrigger value="calculator">Scientific Calculator</TabsTrigger>
         </TabsList>
 
         <TabsContent value="solver" className="space-y-6">
@@ -148,9 +139,9 @@ const MathAssistant = () => {
                   placeholder="Enter your mathematical problem here...
 Examples:
 • Solve x² + 5x + 6 = 0
-• Find the derivative of sin(x) * cos(x)
-• Integrate x² dx from 0 to 5
-• Calculate the limit of (sin(x)/x) as x approaches 0"
+• Find the derivative of sin(x) * e^x
+• Calculate the integral of x² from 0 to 5
+• Simplify (2x + 3)(x - 1)"
                   className="min-h-[200px] bg-prism-surface/30 border-prism-border text-prism-text resize-none"
                 />
                 
@@ -244,7 +235,7 @@ Examples:
 
         <TabsContent value="calculator" className="space-y-6">
           <div className="flex justify-center">
-            <ScientificCalculator type="math" />
+            <ScientificCalculator />
           </div>
         </TabsContent>
       </Tabs>
