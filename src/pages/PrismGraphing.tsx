@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
@@ -49,8 +48,8 @@ const PrismGraphing = () => {
         { name: 'a', value: 1, min: -5, max: 5, step: 0.1 },
         { name: 'b', value: 0, min: -10, max: 10, step: 0.5 }
       ]},
-      { name: 'Vertical Line', equation: 'x = c', description: 'x = constant', type: 'implicit' as const },
-      { name: 'Horizontal Line', equation: 'y = c', description: 'y = constant', type: 'explicit' as const }
+      { name: 'Vertical Line', equation: 'x = 2', description: 'x = constant', type: 'implicit' as const },
+      { name: 'Horizontal Line', equation: 'y = 1', description: 'y = constant', type: 'explicit' as const }
     ],
     polynomial: [
       { name: 'Quadratic', equation: 'a*x^2 + b*x + c', description: 'Parabola', params: [
@@ -82,7 +81,7 @@ const PrismGraphing = () => {
       { name: 'Tangent', equation: 'tan(x)', description: 'Tangent function' }
     ],
     exponential: [
-      { name: 'Exponential', equation: 'a*e^(b*x) + c', description: 'Exponential growth/decay', params: [
+      { name: 'Exponential', equation: 'a*Math.E^(b*x) + c', description: 'Exponential growth/decay', params: [
         { name: 'a', value: 1, min: 0.1, max: 3, step: 0.1 },
         { name: 'b', value: 1, min: -2, max: 2, step: 0.1 },
         { name: 'c', value: 0, min: -5, max: 5, step: 0.5 }
@@ -95,9 +94,9 @@ const PrismGraphing = () => {
       ]}
     ],
     advanced: [
-      { name: 'Circle', equation: 'x^2 + y^2 = r^2', description: 'Circle equation', type: 'implicit' as const },
-      { name: 'Ellipse', equation: 'x^2/a^2 + y^2/b^2 = 1', description: 'Ellipse equation', type: 'implicit' as const },
-      { name: 'Hyperbola', equation: 'x^2/a^2 - y^2/b^2 = 1', description: 'Hyperbola equation', type: 'implicit' as const },
+      { name: 'Circle', equation: 'x^2 + y^2 = 25', description: 'Circle equation', type: 'implicit' as const },
+      { name: 'Ellipse', equation: 'x^2/9 + y^2/4 = 1', description: 'Ellipse equation', type: 'implicit' as const },
+      { name: 'Hyperbola', equation: 'x^2/4 - y^2/9 = 1', description: 'Hyperbola equation', type: 'implicit' as const },
       { name: 'Inequality', equation: 'y > x^2', description: 'Quadratic inequality', type: 'inequality' as const }
     ]
   };
@@ -151,6 +150,8 @@ const PrismGraphing = () => {
   };
 
   const loadPreset = (preset: any) => {
+    console.log('Loading preset:', preset);
+    
     const newEquation: EquationData = {
       id: Date.now().toString(),
       equation: preset.equation,
@@ -161,6 +162,7 @@ const PrismGraphing = () => {
       parameters: preset.params
     };
     
+    console.log('Created equation:', newEquation);
     setEquations([...equations, newEquation]);
     toast.success(`Added ${preset.name} to graph`);
   };

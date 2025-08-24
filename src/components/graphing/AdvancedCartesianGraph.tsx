@@ -56,33 +56,86 @@ const AdvancedCartesianGraph: React.FC<GraphProps> = ({
 
   const evaluateExpression = useCallback((expr: string, x: number, parameters?: any): number => {
     try {
-      // Replace common math functions and constants
-      let expression = expr
-        .replace(/\^/g, '**')
-        .replace(/sin/g, 'Math.sin')
-        .replace(/cos/g, 'Math.cos')
-        .replace(/tan/g, 'Math.tan')
-        .replace(/ln/g, 'Math.log')
-        .replace(/log/g, 'Math.log10')
-        .replace(/sqrt/g, 'Math.sqrt')
-        .replace(/abs/g, 'Math.abs')
-        .replace(/pi/g, 'Math.PI')
-        .replace(/e(?![a-zA-Z])/g, 'Math.E')
-        .replace(/\bx\b/g, x.toString());
-
-      // Replace parameters if provided
+      // Start with the original expression
+      let expression = expr;
+      
+      // Replace parameters first if provided
       if (parameters) {
         Object.entries(parameters).forEach(([param, value]) => {
           const regex = new RegExp(`\\b${param}\\b`, 'g');
-          expression = expression.replace(regex, value.toString());
+          expression = expression.replace(regex, `(${value})`);
         });
       }
+      
+      // Replace mathematical constants and functions
+      expression = expression
+        .replace(/\^/g, '**')
+        .replace(/\bsin\b/g, 'Math.sin')
+        .replace(/\bcos\b/g, 'Math.cos')
+        .replace(/\btan\b/g, 'Math.tan')
+        .replace(/\bln\b/g, 'Math.log')
+        .replace(/\blog\b/g, 'Math.log10')
+        .replace(/\bsqrt\b/g, 'Math.sqrt')
+        .replace(/\babs\b/g, 'Math.abs')
+        .replace(/\bpi\b/g, 'Math.PI')
+        .replace(/\be\b(?![a-zA-Z])/g, 'Math.E')
+        .replace(/\bx\b/g, `(${x})`);
 
-      return Function(`"use strict"; return (${expression})`)();
-    } catch {
+      // Handle implicit multiplication (e.g., 2x becomes 2*x)
+      expression = expression
+        .replace(/(\d+)\s*\(/g, '$1*(')
+        .replace(/\)\s*(\d+)/g, ')*$1')
+        .replace(/(\d+)\s*([a-zA-Z]+)/g, '$1*$2');
+
+      console.log(`Evaluating: ${expr} -> ${expression} at x=${x}`);
+      const result = Function(`"use strict"; return (${expression})`)();
+      return isNaN(result) || !isFinite(result) ? NaN : result;
+    } catch (error) {
+      console.error(`Error evaluating expression "${expr}":`, error);
       return NaN;
     }
   }, []);
+
+  const evaluateImplicitEquation = useCallback((expr: string, x: number, y: number, parameters?: any): boolean => {
+    try {
+      let expression = expr;
+      
+      // Replace parameters first
+      if (parameters) {
+        Object.entries(parameters).forEach(([param, value]) => {
+          const regex = new RegExp(`\\b${param}\\b`, 'g');
+          expression = expression.replace(regex, `(${value})`);
+        });
+      }
+      
+      // Handle equations like "x^2 + y^2 = r^2"
+      if (expression.includes('=')) {
+        const [left, right] = expression.split('=');
+        const leftResult = evaluateExpression(left.trim(), x, { y });
+        const rightResult = evaluateExpression(right.trim(), x, { y });
+        return Math.abs(leftResult - rightResult) < 0.1;
+      }
+      
+      // Handle inequalities like "y > x^2"
+      if (expression.includes('>')) {
+        const [left, right] = expression.split('>');
+        const leftResult = evaluateExpression(left.trim(), x, { y });
+        const rightResult = evaluateExpression(right.trim(), x, { y });
+        return leftResult > rightResult;
+      }
+      
+      if (expression.includes('<')) {
+        const [left, right] = expression.split('<');
+        const leftResult = evaluateExpression(left.trim(), x, { y });
+        const rightResult = evaluateExpression(right.trim(), x, { y });
+        return leftResult < rightResult;
+      }
+      
+      return false;
+    } catch (error) {
+      return false;
+    }
+  }, [evaluateExpression]);
 
   const screenToGraph = useCallback((screenX: number, screenY: number) => {
     const canvas = canvasRef.current;
@@ -229,13 +282,14 @@ const AdvancedCartesianGraph: React.FC<GraphProps> = ({
         ctx.setLineDash([]);
       }
 
+      const parameters = eq.parameters?.reduce((acc, param) => ({ ...acc, [param.name]: param.value }), {});
+
       if (eq.type === 'explicit') {
         ctx.beginPath();
         let firstPoint = true;
         
-        for (let screenX = 0; screenX <= canvas.width; screenX += 2) {
+        for (let screenX = 0; screenX <= canvas.width; screenX += 1) {
           const graphX = ((screenX / canvas.width) * (viewBounds.xMax - viewBounds.xMin)) + viewBounds.xMin;
-          const parameters = eq.parameters?.reduce((acc, param) => ({ ...acc, [param.name]: param.value }), {});
           const y = evaluateExpression(eq.equation, graphX, parameters);
           
           if (!isNaN(y) && isFinite(y)) {
@@ -247,10 +301,38 @@ const AdvancedCartesianGraph: React.FC<GraphProps> = ({
               } else {
                 ctx.lineTo(screenX, screenY);
               }
+            } else {
+              firstPoint = true;
             }
+          } else {
+            firstPoint = true;
           }
         }
         ctx.stroke();
+      } else if (eq.type === 'implicit') {
+        // For implicit equations like circles, ellipses
+        ctx.fillStyle = eq.color + '40'; // Semi-transparent
+        
+        for (let screenX = 0; screenX < canvas.width; screenX += 2) {
+          for (let screenY = 0; screenY < canvas.height; screenY += 2) {
+            const graphCoords = screenToGraph(screenX, screenY);
+            if (evaluateImplicitEquation(eq.equation, graphCoords.x, graphCoords.y, parameters)) {
+              ctx.fillRect(screenX, screenY, 2, 2);
+            }
+          }
+        }
+      } else if (eq.type === 'inequality') {
+        // For inequalities, fill the region
+        ctx.fillStyle = eq.color + '40'; // Semi-transparent
+        
+        for (let screenX = 0; screenX < canvas.width; screenX += 3) {
+          for (let screenY = 0; screenY < canvas.height; screenY += 3) {
+            const graphCoords = screenToGraph(screenX, screenY);
+            if (evaluateImplicitEquation(eq.equation, graphCoords.x, graphCoords.y, parameters)) {
+              ctx.fillRect(screenX, screenY, 3, 3);
+            }
+          }
+        }
       }
     });
 
@@ -272,9 +354,8 @@ const AdvancedCartesianGraph: React.FC<GraphProps> = ({
       ctx.fillStyle = '#000';
       ctx.fillText(`(${graphCoords.x.toFixed(2)}, ${graphCoords.y.toFixed(2)})`, mousePos.x + 15, mousePos.y - 10);
     }
-  }, [equations, viewBounds, isFullscreen, width, height, mousePos, showCoordinates, intersections, evaluateExpression, graphToScreen, screenToGraph]);
+  }, [equations, viewBounds, isFullscreen, width, height, mousePos, showCoordinates, intersections, evaluateExpression, evaluateImplicitEquation, graphToScreen, screenToGraph]);
 
-  // Mouse event handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
     const rect = canvasRef.current?.getBoundingClientRect();
