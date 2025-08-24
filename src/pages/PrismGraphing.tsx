@@ -167,11 +167,24 @@ const PrismGraphing = () => {
     toast.success(`Added ${preset.name} to graph`);
   };
 
+  const exportGraph = () => {
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+      const link = document.createElement('a');
+      link.download = 'prism-graph.png';
+      link.href = canvas.toDataURL();
+      link.click();
+      toast.success('Graph exported successfully!');
+    } else {
+      toast.error('No graph to export');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10">
       <Navigation />
       
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 pt-32">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-3 mb-4">
             <div className="p-3 rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 text-white">
@@ -179,7 +192,7 @@ const PrismGraphing = () => {
             </div>
             <h1 className="text-4xl font-bold font-fira-code">Advanced Graphing Tool</h1>
             <Badge variant="secondary" className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-              Enhanced
+              Beta
             </Badge>
           </div>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto font-fira-code">
@@ -359,7 +372,7 @@ const PrismGraphing = () => {
                 <RotateCcw className="h-4 w-4 mr-2" />
                 Reset
               </Button>
-              <Button variant="outline" className="flex-1">
+              <Button onClick={exportGraph} variant="outline" className="flex-1">
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
