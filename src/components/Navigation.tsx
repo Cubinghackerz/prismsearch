@@ -16,9 +16,10 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
-import { usePathname, useRouter } from 'next/navigation';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,7 +46,6 @@ import {
   MessageSquare,
   Globe
 } from "lucide-react";
-import { useUser } from '@clerk/nextjs';
 import { Link } from 'react-router-dom';
 
 interface NavItem {
@@ -57,9 +57,8 @@ interface NavItem {
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const pathname = usePathname();
-  const { user } = useUser();
-  const navigate = useRouter().push;
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -132,7 +131,7 @@ const Navigation = () => {
                     to={item.href}
                     className={cn(
                       "relative block rounded-md px-3 py-2 text-sm font-medium no-underline transition-colors hover:text-accent-foreground sm:text-base",
-                      pathname === item.href ? "text-accent-foreground" : "text-prism-text"
+                      location.pathname === item.href ? "text-accent-foreground" : "text-prism-text"
                     )}
                   >
                     {item.name}
@@ -196,35 +195,8 @@ const Navigation = () => {
           </SheetContent>
         </Sheet>
 
-        {/* User Profile Dropdown */}
-        {user ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0 rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.imageUrl} alt={user.firstName || "User"} />
-                  <AvatarFallback>{user.firstName?.charAt(0) || user.lastName?.charAt(0) || "U"}</AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/vault')}>
-                Vault
-                <DropdownMenuShortcut>⇧⌘V</DropdownMenuShortcut>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/auth')}>
-                Settings
-                <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/auth')}>Logout <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut></DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <Button onClick={() => navigate('/auth')} variant="outline">Sign In</Button>
-        )}
+        {/* Sign In Button - Simplified for now */}
+        <Button onClick={() => navigate('/auth')} variant="outline">Sign In</Button>
       </div>
     </header>
   );
