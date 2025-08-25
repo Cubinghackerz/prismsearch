@@ -11,6 +11,7 @@ import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SearchResult {
   url: string;
@@ -46,19 +47,14 @@ const DeepSearch = () => {
     setResults(null);
 
     try {
-      const response = await fetch('/api/deep-search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query }),
+      const { data, error } = await supabase.functions.invoke('deep-search', {
+        body: { query }
       });
 
-      if (!response.ok) {
-        throw new Error('Deep search failed');
+      if (error) {
+        throw new Error(error.message || 'Deep search failed');
       }
 
-      const data: DeepSearchResponse = await response.json();
       setResults(data);
       
       toast({
@@ -69,7 +65,7 @@ const DeepSearch = () => {
       console.error('Deep search error:', error);
       toast({
         title: "Search Error",
-        description: "Failed to complete deep search. Please try again.",
+        description: "Failed to complete deep search. Please ensure Qwen2.5 is running locally on port 11434.",
         variant: "destructive",
       });
     } finally {
@@ -106,7 +102,7 @@ const DeepSearch = () => {
               </Badge>
             </div>
             <p className="text-prism-text-muted text-lg max-w-2xl mx-auto">
-              Advanced web search with AI-powered analysis. Scrapes multiple sources and provides intelligent summaries.
+              Advanced web search with AI-powered analysis. Scrapes multiple sources and provides intelligent summaries using Qwen2.5.
             </p>
           </div>
 
@@ -158,7 +154,7 @@ const DeepSearch = () => {
                       Conducting Deep Search...
                     </h3>
                     <p className="text-prism-text-muted">
-                      Scraping web pages and analyzing content with AI
+                      Scraping web pages and analyzing content with Qwen2.5
                     </p>
                   </div>
                 </div>

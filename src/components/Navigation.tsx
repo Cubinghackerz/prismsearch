@@ -195,8 +195,22 @@ const Navigation = () => {
           </SheetContent>
         </Sheet>
 
-        {/* Sign In Button - Simplified for now */}
-        <Button onClick={() => navigate('/auth')} variant="outline">Sign In</Button>
+        {/* Auth Buttons */}
+        <div className="hidden md:flex items-center gap-2">
+          <Button onClick={() => navigate('/auth')} variant="ghost" size="sm">
+            Sign In
+          </Button>
+          <Button onClick={() => navigate('/auth')} variant="default" size="sm">
+            Sign Up
+          </Button>
+        </div>
+
+        {/* Mobile Auth Button */}
+        <div className="md:hidden">
+          <Button onClick={() => navigate('/auth')} variant="outline" size="sm">
+            Auth
+          </Button>
+        </div>
       </div>
     </header>
   );
