@@ -1,167 +1,232 @@
+import React, { useState } from 'react';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu"
+import { usePathname, useRouter } from 'next/navigation';
+import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  Search,
+  Menu,
+  Shield,
+  Code,
+  FileText,
+  Wrench,
+  Calculator,
+  Atom,
+  Beaker,
+  TrendingUp,
+  RotateCcw,
+  Archive,
+  Eye,
+  MessageSquare,
+  Globe
+} from "lucide-react";
+import { useUser } from '@clerk/nextjs';
+import { Link } from 'react-router-dom';
 
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Menu, MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, MoreHorizontal } from 'lucide-react';
-import ThemeToggle from '@/components/ThemeToggle';
-import AuthButtons from '@/components/AuthButtons';
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<any>;
+  subItems?: NavItem[];
+}
 
 const Navigation = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const { user } = useUser();
+  const navigate = useRouter().push;
 
-  const isHomePage = location.pathname === '/';
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
 
-  const primaryNavItems = [
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+  };
+
+  const navigationItems = [
+    { name: 'Search', href: '/search', icon: Search },
+    { name: 'Deep Search', href: '/deep-search', icon: Globe },
     { name: 'Chat', href: '/chat', icon: MessageSquare },
     { name: 'Vault', href: '/vault', icon: Shield },
-    { name: 'Math', href: '/math', icon: Calculator },
-  ];
-
-  const moreNavItems = [
-    { name: 'Physics', href: '/physics', icon: Atom },
-    { name: 'Chemistry', href: '/chemistry', icon: Beaker },
-    { name: 'Graphing', href: '/graphing', icon: Zap },
-    { name: 'Code', href: '/code', icon: Code2 },
-  ];
-
-  const allNavItems = [...primaryNavItems, ...moreNavItems];
-
-  useEffect(() => {
-    if (isHomePage) {
-      setIsVisible(true);
-      return;
+    { name: 'Code', href: '/code', icon: Code },
+    { name: 'Docs', href: '/docs', icon: FileText },
+    { name: 'Tools', href: '#', icon: Wrench, 
+      subItems: [
+        { name: 'Math Assistant', href: '/math', icon: Calculator },
+        { name: 'Physics Helper', href: '/physics', icon: Atom },
+        { name: 'Chemistry Lab', href: '/chemistry', icon: Beaker },
+        { name: 'Graphing', href: '/graphing', icon: TrendingUp },
+        { name: 'Conversions', href: '/conversions', icon: RotateCcw },
+        { name: 'Compressor', href: '/compressor', icon: Archive },
+        { name: 'Detector', href: '/detector', icon: Eye }
+      ]
     }
-
-    const controlNavbar = () => {
-      const currentScrollY = window.scrollY;
-      
-      if (currentScrollY < 100) {
-        setIsVisible(true);
-      } else if (currentScrollY > lastScrollY) {
-        setIsVisible(false);
-      } else {
-        setIsVisible(true);
-      }
-      
-      setLastScrollY(currentScrollY);
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (e.clientY < 100) {
-        setIsVisible(true);
-      }
-    };
-
-    window.addEventListener('scroll', controlNavbar);
-    window.addEventListener('mousemove', handleMouseMove);
-
-    return () => {
-      window.removeEventListener('scroll', controlNavbar);
-      window.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, [lastScrollY, isHomePage]);
+  ];
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border transition-transform duration-300 ${
-      isVisible ? 'translate-y-0' : '-translate-y-full'
-    }`}>
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <img 
-              src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" 
-              alt="Prism Logo" 
-              className="h-8 w-8"
-            />
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Prism
-            </span>
-          </Link>
+    <header className="bg-prism-bg/90 backdrop-blur-md sticky top-0 z-50 border-b border-prism-border shadow-sm">
+      <div className="container flex items-center justify-between h-16">
+        {/* Logo and Brand */}
+        <Link to="/" className="font-bold text-xl text-prism-text">
+          Prism <span className="text-prism-primary">AI</span>
+        </Link>
 
-          {/* Desktop Navigation - Properly Centered */}
-          <div className="hidden md:flex items-center justify-center absolute left-1/2 transform -translate-x-1/2 space-x-8">
-            {primaryNavItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className="text-muted-foreground hover:text-primary transition-colors duration-200 font-medium"
-              >
-                {item.name}
-              </Link>
+        {/* Desktop Navigation */}
+        <NavigationMenu className="hidden md:flex space-x-4">
+          <NavigationMenuList>
+            {navigationItems.map((item) => (
+              item.subItems ? (
+                <NavigationMenuItem key={item.name}>
+                  <NavigationMenuTrigger className={navigationMenuTriggerStyle()}>
+                    {item.name}
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid gap-3 p-4 md:w-[400px] md:grid-cols-2 lg:w-[500px]">
+                      {item.subItems.map((subItem) => (
+                        <li key={subItem.name}>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              to={subItem.href}
+                              className="block select-none space-y-1.5 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                            >
+                              <div className="text-sm font-medium leading-none">{subItem.name}</div>
+                              <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                                Sophisticated task automation and data analysis.
+                              </p>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                      ))}
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              ) : (
+                <NavigationMenuItem key={item.name}>
+                  <Link
+                    to={item.href}
+                    className={cn(
+                      "relative block rounded-md px-3 py-2 text-sm font-medium no-underline transition-colors hover:text-accent-foreground sm:text-base",
+                      pathname === item.href ? "text-accent-foreground" : "text-prism-text"
+                    )}
+                  >
+                    {item.name}
+                  </Link>
+                </NavigationMenuItem>
+              )
             ))}
-            
-            {/* More dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
-                  <MoreHorizontal className="h-4 w-4 mr-1" />
-                  More
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-background border-border">
-                {moreNavItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <DropdownMenuItem key={item.name} asChild>
-                      <Link to={item.href} className="flex items-center">
-                        <Icon className="h-4 w-4 mr-2" />
-                        {item.name}
-                      </Link>
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          </NavigationMenuList>
+        </NavigationMenu>
 
-          {/* Desktop Actions */}
-          <div className="hidden md:flex items-center space-x-4">
-            <ThemeToggle />
-            <AuthButtons />
-          </div>
-
-          {/* Mobile Navigation */}
-          <div className="md:hidden flex items-center space-x-2">
-            <ThemeToggle />
-            <Sheet open={isOpen} onOpenChange={setIsOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-6 w-6" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-80">
-                <div className="flex flex-col space-y-4 mt-6">
-                  {allNavItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <Link
-                        key={item.name}
-                        to={item.href}
-                        className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-accent transition-colors duration-200"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <Icon className="h-5 w-5 text-muted-foreground" />
-                        <span className="font-medium">{item.name}</span>
-                      </Link>
-                    );
-                  })}
-                  <div className="pt-4 border-t border-border">
-                    <AuthButtons />
+        {/* Mobile Navigation */}
+        <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+          <SheetTrigger asChild className="md:hidden">
+            <Menu className="h-6 w-6 text-prism-text cursor-pointer" />
+          </SheetTrigger>
+          <SheetContent side="left" className="bg-prism-bg/95 backdrop-blur-md border-r border-prism-border">
+            <SheetHeader className="text-left">
+              <SheetTitle>Navigation</SheetTitle>
+              <SheetDescription>
+                Explore Prism AI
+              </SheetDescription>
+            </SheetHeader>
+            <div className="py-4">
+              {navigationItems.map((item) => (
+                item.subItems ? (
+                  <div key={item.name} className="mb-2">
+                    <button
+                      className="flex items-center justify-between w-full py-2 px-4 text-prism-text hover:bg-prism-primary/10 rounded-md"
+                      onClick={() => {
+                        // Handle submenu toggle if needed
+                      }}
+                    >
+                      <span>{item.name}</span>
+                      <span>{/* Add icon if needed */}</span>
+                    </button>
+                    <div className="ml-4">
+                      {item.subItems.map((subItem) => (
+                        <Link
+                          key={subItem.name}
+                          to={subItem.href}
+                          className="block py-2 px-4 text-prism-text hover:bg-prism-primary/10 rounded-md"
+                          onClick={closeMenu}
+                        >
+                          {subItem.name}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-        </div>
+                ) : (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className="block py-2 px-4 text-prism-text hover:bg-prism-primary/10 rounded-md"
+                    onClick={closeMenu}
+                  >
+                    {item.name}
+                  </Link>
+                )
+              ))}
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        {/* User Profile Dropdown */}
+        {user ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0 rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={user.imageUrl} alt={user.firstName || "User"} />
+                  <AvatarFallback>{user.firstName?.charAt(0) || user.lastName?.charAt(0) || "U"}</AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate('/vault')}>
+                Vault
+                <DropdownMenuShortcut>⇧⌘V</DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/auth')}>
+                Settings
+                <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate('/auth')}>Logout <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut></DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <Button onClick={() => navigate('/auth')} variant="outline">Sign In</Button>
+        )}
       </div>
-    </nav>
+    </header>
   );
 };
 

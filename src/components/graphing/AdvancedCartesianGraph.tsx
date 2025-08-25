@@ -1,605 +1,567 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Maximize2, Minimize2, RotateCcw, ZoomIn, ZoomOut, Move, Crosshair } from 'lucide-react';
-import { toast } from 'sonner';
+import { Slider } from '@/components/ui/slider';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Maximize2, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { motion } from 'framer-motion';
 
-interface EquationData {
-  id: string;
-  equation: string;
-  color: string;
-  visible: boolean;
-  type: 'explicit' | 'implicit' | 'parametric' | 'inequality' | 'polar';
-  style: 'solid' | 'dashed' | 'dotted';
-  parameters?: Array<{
-    name: string;
-    value: number;
-    min: number;
-    max: number;
-    step: number;
-  }>;
-}
-
-interface GraphProps {
-  equations: EquationData[];
-  xMin: number;
-  xMax: number;
-  yMin: number;
-  yMax: number;
-  width: number;
-  height: number;
-  onEquationUpdate?: (id: string, updates: Partial<EquationData>) => void;
-}
-
-const AdvancedCartesianGraph: React.FC<GraphProps> = ({
-  equations,
-  xMin,
-  xMax,
-  yMin,
-  yMax,
-  width,
-  height,
-  onEquationUpdate
-}) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [viewBounds, setViewBounds] = useState({ xMin, xMax, yMin, yMax });
+const AdvancedCartesianGraph = () => {
+  const [functions, setFunctions] = useState<any[]>([]);
+  const [newFunction, setNewFunction] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [domain, setDomain] = useState({ min: -10, max: 10 });
+  const [range, setRange] = useState({ min: -10, max: 10 });
   const [isDragging, setIsDragging] = useState(false);
   const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [showCoordinates, setShowCoordinates] = useState(false);
-  const [intersections, setIntersections] = useState<Array<{ x: number; y: number; equations: string[] }>>([]);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const { toast } = useToast();
 
-  const evaluateExpression = useCallback((expr: string, x: number, parameters?: any): number => {
-    try {
-      // Handle vertical lines (x = constant)
-      if (expr.includes('x =') || expr.includes('x=')) {
-        const match = expr.match(/x\s*=\s*([-+]?\d*\.?\d+)/);
-        if (match) {
-          const constantValue = parseFloat(match[1]);
-          return Math.abs(x - constantValue) < 0.01 ? 0 : NaN;
-        }
-      }
-
-      // Handle horizontal lines (y = constant)
-      if (expr.match(/^[-+]?\d*\.?\d+$/)) {
-        return parseFloat(expr);
-      }
-
-      // Start with the original expression
-      let expression = expr;
-      
-      // Replace parameters first if provided
-      if (parameters) {
-        Object.entries(parameters).forEach(([param, value]) => {
-          const regex = new RegExp(`\\b${param}\\b`, 'g');
-          expression = expression.replace(regex, `(${value})`);
-        });
-      }
-      
-      // Replace mathematical constants and functions
-      expression = expression
-        .replace(/\^/g, '**')
-        .replace(/\bsin\b/g, 'Math.sin')
-        .replace(/\bcos\b/g, 'Math.cos')
-        .replace(/\btan\b/g, 'Math.tan')
-        .replace(/\bln\b/g, 'Math.log')
-        .replace(/\blog\b/g, 'Math.log10')
-        .replace(/\bsqrt\b/g, 'Math.sqrt')
-        .replace(/\babs\b/g, 'Math.abs')
-        .replace(/\bpi\b/g, 'Math.PI')
-        .replace(/\be\b(?![a-zA-Z])/g, 'Math.E')
-        .replace(/\bx\b/g, `(${x})`);
-
-      // Handle implicit multiplication (e.g., 2x becomes 2*x)
-      expression = expression
-        .replace(/(\d+)\s*\(/g, '$1*(')
-        .replace(/\)\s*(\d+)/g, ')*$1')
-        .replace(/(\d+)\s*([a-zA-Z]+)/g, '$1*$2');
-
-      const result = Function(`"use strict"; return (${expression})`)();
-      return isNaN(result) || !isFinite(result) ? NaN : result;
-    } catch (error) {
-      console.error(`Error evaluating expression "${expr}":`, error);
-      return NaN;
+  const presets = [
+    { 
+      name: 'Linear', 
+      functions: ['x', '2*x + 1', '-0.5*x + 3'], 
+      colors: ['#00c2a8', '#4f46e5', '#f59e0b'],
+      domain: { min: -10, max: 10 },
+      range: { min: -10, max: 10 }
+    },
+    { 
+      name: 'Quadratic', 
+      functions: ['x^2', '-(x-2)^2 + 3', '0.5*x^2 - 2*x + 1'], 
+      colors: ['#00c2a8', '#4f46e5', '#f59e0b'],
+      domain: { min: -5, max: 5 },
+      range: { min: -5, max: 10 }
+    },
+    { 
+      name: 'Trigonometric', 
+      functions: ['sin(x)', 'cos(x)', 'tan(x/2)'], 
+      colors: ['#00c2a8', '#4f46e5', '#f59e0b'],
+      domain: { min: -2*Math.PI, max: 2*Math.PI },
+      range: { min: -3, max: 3 }
+    },
+    { 
+      name: 'Exponential', 
+      functions: ['exp(x)', 'exp(-x)', '2^x'], 
+      colors: ['#00c2a8', '#4f46e5', '#f59e0b'],
+      domain: { min: -3, max: 3 },
+      range: { min: 0, max: 8 }
+    },
+    { 
+      name: 'Vertical Line', 
+      functions: ['x = 2'], 
+      colors: ['#00c2a8'],
+      domain: { min: -5, max: 5 },
+      range: { min: -5, max: 5 },
+      isVertical: true
+    },
+    { 
+      name: 'Horizontal Line', 
+      functions: ['y = 3'], 
+      colors: ['#4f46e5'],
+      domain: { min: -5, max: 5 },
+      range: { min: -2, max: 8 },
+      isHorizontal: true
     }
-  }, []);
+  ];
 
-  const evaluateImplicitEquation = useCallback((expr: string, x: number, y: number, parameters?: any): boolean => {
-    try {
-      let expression = expr;
-      
-      // Replace parameters first
-      if (parameters) {
-        Object.entries(parameters).forEach(([param, value]) => {
-          const regex = new RegExp(`\\b${param}\\b`, 'g');
-          expression = expression.replace(regex, `(${value})`);
-        });
-      }
-      
-      // Handle vertical lines (x = constant)
-      if (expression.includes('x =') || expression.includes('x=')) {
-        const match = expression.match(/x\s*=\s*([-+]?\d*\.?\d+)/);
-        if (match) {
-          const constantValue = parseFloat(match[1]);
-          return Math.abs(x - constantValue) < 0.05;
-        }
-      }
-
-      // Handle horizontal lines (y = constant)  
-      if (expression.includes('y =') || expression.includes('y=')) {
-        const match = expression.match(/y\s*=\s*([-+]?\d*\.?\d+)/);
-        if (match) {
-          const constantValue = parseFloat(match[1]);
-          return Math.abs(y - constantValue) < 0.05;
-        }
-      }
-      
-      // Handle equations like "x^2 + y^2 = r^2"
-      if (expression.includes('=')) {
-        const [left, right] = expression.split('=');
-        const leftResult = evaluateExpression(left.trim(), x, { y });
-        const rightResult = evaluateExpression(right.trim(), x, { y });
-        return Math.abs(leftResult - rightResult) < 0.1;
-      }
-      
-      // Handle inequalities like "y > x^2"
-      if (expression.includes('>')) {
-        const [left, right] = expression.split('>');
-        const leftResult = evaluateExpression(left.trim(), x, { y });
-        const rightResult = evaluateExpression(right.trim(), x, { y });
-        return leftResult > rightResult;
-      }
-      
-      if (expression.includes('<')) {
-        const [left, right] = expression.split('<');
-        const leftResult = evaluateExpression(left.trim(), x, { y });
-        const rightResult = evaluateExpression(right.trim(), x, { y });
-        return leftResult < rightResult;
-      }
-      
-      return false;
-    } catch (error) {
-      return false;
-    }
-  }, [evaluateExpression]);
-
-  const screenToGraph = useCallback((screenX: number, screenY: number) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-    
-    const rect = canvas.getBoundingClientRect();
-    const x = ((screenX - rect.left) / canvas.width) * (viewBounds.xMax - viewBounds.xMin) + viewBounds.xMin;
-    const y = ((rect.bottom - screenY) / canvas.height) * (viewBounds.yMax - viewBounds.yMin) + viewBounds.yMin;
-    return { x, y };
-  }, [viewBounds]);
-
-  const graphToScreen = useCallback((graphX: number, graphY: number) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-    
-    const x = ((graphX - viewBounds.xMin) / (viewBounds.xMax - viewBounds.xMin)) * canvas.width;
-    const y = canvas.height - ((graphY - viewBounds.yMin) / (viewBounds.yMax - viewBounds.yMin)) * canvas.height;
-    return { x, y };
-  }, [viewBounds]);
-
-  const toggleFullscreen = async () => {
-    if (!containerRef.current) return;
-
-    try {
-      if (!isFullscreen) {
-        if (containerRef.current.requestFullscreen) {
-          await containerRef.current.requestFullscreen();
-        } else {
-          toast.error('Fullscreen not supported in this browser');
-          return;
-        }
-      } else {
-        if (document.exitFullscreen) {
-          await document.exitFullscreen();
-        }
-      }
-    } catch (error) {
-      console.error('Fullscreen error:', error);
-      toast.error('Unable to toggle fullscreen mode');
-    }
-  };
-
-  const resetView = () => {
-    setViewBounds({ xMin, xMax, yMin, yMax });
-  };
-
-  const zoomIn = () => {
-    const centerX = (viewBounds.xMin + viewBounds.xMax) / 2;
-    const centerY = (viewBounds.yMin + viewBounds.yMax) / 2;
-    const rangeX = (viewBounds.xMax - viewBounds.xMin) * 0.25;
-    const rangeY = (viewBounds.yMax - viewBounds.yMin) * 0.25;
-    
-    setViewBounds({
-      xMin: centerX - rangeX,
-      xMax: centerX + rangeX,
-      yMin: centerY - rangeY,
-      yMax: centerY + rangeY
-    });
-  };
-
-  const zoomOut = () => {
-    const centerX = (viewBounds.xMin + viewBounds.xMax) / 2;
-    const centerY = (viewBounds.yMin + viewBounds.yMax) / 2;
-    const rangeX = (viewBounds.xMax - viewBounds.xMin);
-    const rangeY = (viewBounds.yMax - viewBounds.yMin);
-    
-    setViewBounds({
-      xMin: centerX - rangeX,
-      xMax: centerX + rangeX,
-      yMin: centerY - rangeY,
-      yMax: centerY + rangeY
-    });
-  };
-
-  const drawGraph = useCallback(() => {
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
+    
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-
-    // Set canvas size
-    const containerWidth = isFullscreen ? window.innerWidth : width;
-    const containerHeight = isFullscreen ? window.innerHeight - 100 : height;
     
-    canvas.width = containerWidth;
-    canvas.height = containerHeight;
+    ctxRef.current = ctx;
+    drawGrid();
+    functions.forEach(func => plotFunction(func.expression, func.color));
+  }, [functions, domain, range]);
 
-    // Clear canvas
-    ctx.fillStyle = '#0a0a0a';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Draw grid
-    ctx.strokeStyle = '#333';
+  const drawGrid = useCallback(() => {
+    if (!canvasRef.current || !ctxRef.current) return;
+    
+    const canvas = canvasRef.current;
+    const ctx = ctxRef.current;
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Set grid style
+    ctx.strokeStyle = '#2a2a2a';
     ctx.lineWidth = 0.5;
     
-    const stepX = (viewBounds.xMax - viewBounds.xMin) / 20;
-    const stepY = (viewBounds.yMax - viewBounds.yMin) / 20;
+    // Calculate grid spacing
+    const gridSpacing = 40;
     
-    for (let x = Math.ceil(viewBounds.xMin / stepX) * stepX; x <= viewBounds.xMax; x += stepX) {
-      const screenX = graphToScreen(x, 0).x;
+    // Draw vertical grid lines
+    for (let x = 0; x <= canvas.width; x += gridSpacing) {
       ctx.beginPath();
-      ctx.moveTo(screenX, 0);
-      ctx.lineTo(screenX, canvas.height);
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvas.height);
       ctx.stroke();
     }
     
-    for (let y = Math.ceil(viewBounds.yMin / stepY) * stepY; y <= viewBounds.yMax; y += stepY) {
-      const screenY = graphToScreen(0, y).y;
+    // Draw horizontal grid lines
+    for (let y = 0; y <= canvas.height; y += gridSpacing) {
       ctx.beginPath();
-      ctx.moveTo(0, screenY);
-      ctx.lineTo(canvas.width, screenY);
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvas.width, y);
       ctx.stroke();
     }
-
+    
     // Draw axes
-    ctx.strokeStyle = '#666';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
     
-    const originScreen = graphToScreen(0, 0);
+    const centerX = canvas.width / 2 + panOffset.x;
+    const centerY = canvas.height / 2 + panOffset.y;
     
     // X-axis
-    if (viewBounds.yMin <= 0 && viewBounds.yMax >= 0) {
-      ctx.beginPath();
-      ctx.moveTo(0, originScreen.y);
-      ctx.lineTo(canvas.width, originScreen.y);
-      ctx.stroke();
-    }
+    ctx.beginPath();
+    ctx.moveTo(0, centerY);
+    ctx.lineTo(canvas.width, centerY);
+    ctx.stroke();
     
     // Y-axis
-    if (viewBounds.xMin <= 0 && viewBounds.xMax >= 0) {
-      ctx.beginPath();
-      ctx.moveTo(originScreen.x, 0);
-      ctx.lineTo(originScreen.x, canvas.height);
-      ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(centerX, 0);
+    ctx.lineTo(centerX, canvas.height);
+    ctx.stroke();
+    
+    // Add axis labels with proper scaling
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '12px monospace';
+    ctx.textAlign = 'center';
+    
+    // X-axis labels
+    const xStep = (domain.max - domain.min) / 10;
+    for (let i = 0; i <= 10; i++) {
+      const x = (canvas.width / 10) * i + panOffset.x;
+      const value = domain.min + (xStep * i);
+      if (Math.abs(value) > 0.01 || value === 0) {
+        ctx.fillText(value.toFixed(1), x, centerY + 20);
+      }
     }
-
-    // Draw equations
-    equations.forEach((eq) => {
-      if (!eq.visible) return;
-
-      ctx.strokeStyle = eq.color;
-      ctx.lineWidth = 2;
-      
-      if (eq.style === 'dashed') {
-        ctx.setLineDash([5, 5]);
-      } else if (eq.style === 'dotted') {
-        ctx.setLineDash([2, 3]);
-      } else {
-        ctx.setLineDash([]);
+    
+    // Y-axis labels
+    ctx.textAlign = 'right';
+    const yStep = (range.max - range.min) / 10;
+    for (let i = 0; i <= 10; i++) {
+      const y = canvas.height - (canvas.height / 10) * i + panOffset.y;
+      const value = range.min + (yStep * i);
+      if (Math.abs(value) > 0.01 || value === 0) {
+        ctx.fillText(value.toFixed(1), centerX - 10, y + 4);
       }
+    }
+  }, [domain, range, panOffset]);
 
-      const parameters = eq.parameters?.reduce((acc, param) => ({ ...acc, [param.name]: param.value }), {});
-
-      // Handle vertical lines
-      if (eq.equation.includes('x =') || eq.equation.includes('x=')) {
-        const match = eq.equation.match(/x\s*=\s*([-+]?\d*\.?\d+)/);
-        if (match) {
-          const xValue = parseFloat(match[1]);
-          const screenX = graphToScreen(xValue, 0).x;
-          ctx.beginPath();
-          ctx.moveTo(screenX, 0);
-          ctx.lineTo(screenX, canvas.height);
-          ctx.stroke();
-          return;
-        }
-      }
-
-      // Handle horizontal lines
-      if (eq.equation.includes('y =') || eq.equation.includes('y=')) {
-        const match = eq.equation.match(/y\s*=\s*([-+]?\d*\.?\d+)/);
-        if (match) {
-          const yValue = parseFloat(match[1]);
-          const screenY = graphToScreen(0, yValue).y;
-          ctx.beginPath();
-          ctx.moveTo(0, screenY);
-          ctx.lineTo(canvas.width, screenY);
-          ctx.stroke();
-          return;
-        }
-      }
-
-      if (eq.type === 'explicit') {
-        ctx.beginPath();
-        let firstPoint = true;
+  const plotFunction = useCallback((funcStr: string, color: string) => {
+    if (!canvasRef.current || !ctxRef.current) return;
+    
+    const canvas = canvasRef.current;
+    const ctx = ctxRef.current;
+    
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    
+    try {
+      // Handle vertical lines (x = constant)
+      if (funcStr.includes('x =')) {
+        const xValue = parseFloat(funcStr.split('=')[1].trim());
+        const canvasX = ((xValue - domain.min) / (domain.max - domain.min)) * canvas.width + panOffset.x;
         
-        for (let screenX = 0; screenX <= canvas.width; screenX += 1) {
-          const graphX = ((screenX / canvas.width) * (viewBounds.xMax - viewBounds.xMin)) + viewBounds.xMin;
-          const y = evaluateExpression(eq.equation, graphX, parameters);
+        ctx.moveTo(canvasX, 0);
+        ctx.lineTo(canvasX, canvas.height);
+        ctx.stroke();
+        return;
+      }
+      
+      // Handle horizontal lines (y = constant)
+      if (funcStr.includes('y =')) {
+        const yValue = parseFloat(funcStr.split('=')[1].trim());
+        const canvasY = canvas.height - ((yValue - range.min) / (range.max - range.min)) * canvas.height + panOffset.y;
+        
+        ctx.moveTo(0, canvasY);
+        ctx.lineTo(canvas.width, canvasY);
+        ctx.stroke();
+        return;
+      }
+      
+      // Regular function plotting
+      let firstPoint = true;
+      const step = (domain.max - domain.min) / canvas.width;
+      
+      for (let x = domain.min; x <= domain.max; x += step) {
+        try {
+          const y = evaluateFunction(funcStr, x);
           
-          if (!isNaN(y) && isFinite(y)) {
-            const screenY = graphToScreen(graphX, y).y;
-            if (screenY >= 0 && screenY <= canvas.height) {
-              if (firstPoint) {
-                ctx.moveTo(screenX, screenY);
-                firstPoint = false;
-              } else {
-                ctx.lineTo(screenX, screenY);
-              }
+          if (isFinite(y) && y >= range.min && y <= range.max) {
+            const canvasX = ((x - domain.min) / (domain.max - domain.min)) * canvas.width + panOffset.x;
+            const canvasY = canvas.height - ((y - range.min) / (range.max - range.min)) * canvas.height + panOffset.y;
+            
+            if (firstPoint) {
+              ctx.moveTo(canvasX, canvasY);
+              firstPoint = false;
             } else {
-              firstPoint = true;
+              ctx.lineTo(canvasX, canvasY);
             }
-          } else {
+          } else if (!firstPoint) {
+            // Break the line for discontinuities
+            ctx.stroke();
+            ctx.beginPath();
+            firstPoint = true;
+          }
+        } catch (e) {
+          // Skip invalid points
+          if (!firstPoint) {
+            ctx.stroke();
+            ctx.beginPath();
             firstPoint = true;
           }
         }
-        ctx.stroke();
-      } else if (eq.type === 'implicit') {
-        // For implicit equations like circles, ellipses
-        ctx.fillStyle = eq.color + '40'; // Semi-transparent
-        
-        for (let screenX = 0; screenX < canvas.width; screenX += 2) {
-          for (let screenY = 0; screenY < canvas.height; screenY += 2) {
-            const graphCoords = screenToGraph(screenX, screenY);
-            if (evaluateImplicitEquation(eq.equation, graphCoords.x, graphCoords.y, parameters)) {
-              ctx.fillRect(screenX, screenY, 2, 2);
-            }
-          }
+      }
+      
+      ctx.stroke();
+    } catch (error) {
+      console.error('Error plotting function:', error);
+    }
+  }, [domain, range, panOffset]);
+
+  const evaluateFunction = (funcStr: string, x: number): number => {
+    // Replace math functions and constants
+    funcStr = funcStr.replace(/Math\.PI/g, Math.PI.toString());
+    funcStr = funcStr.replace(/Math\.E/g, Math.E.toString());
+    funcStr = funcStr.replace(/sin\(/g, 'Math.sin(');
+    funcStr = funcStr.replace(/cos\(/g, 'Math.cos(');
+    funcStr = funcStr.replace(/tan\(/g, 'Math.tan(');
+    funcStr = funcStr.replace(/exp\(/g, 'Math.exp(');
+    funcStr = funcStr.replace(/sqrt\(/g, 'Math.sqrt(');
+    funcStr = funcStr.replace(/log\(/g, 'Math.log(');
+    funcStr = funcStr.replace(/abs\(/g, 'Math.abs(');
+    funcStr = funcStr.replace(/\^/g, '**');
+    
+    // Use a Proxy to safely evaluate the function
+    const sandbox = { x: x };
+    const proxy = new Proxy(sandbox, {
+      has: () => true,
+      get: (target, prop) => {
+        if (prop === 'x') {
+          return target[prop];
         }
-      } else if (eq.type === 'inequality') {
-        // For inequalities, fill the region
-        ctx.fillStyle = eq.color + '40'; // Semi-transparent
-        
-        for (let screenX = 0; screenX < canvas.width; screenX += 3) {
-          for (let screenY = 0; screenY < canvas.height; screenY += 3) {
-            const graphCoords = screenToGraph(screenX, screenY);
-            if (evaluateImplicitEquation(eq.equation, graphCoords.x, graphCoords.y, parameters)) {
-              ctx.fillRect(screenX, screenY, 3, 3);
-            }
-          }
+        if (typeof Math[prop] === 'function') {
+          return Math[prop];
         }
+        return undefined;
       }
     });
-
-    // Draw intersections
-    ctx.fillStyle = '#ff0000';
-    intersections.forEach(intersection => {
-      const screen = graphToScreen(intersection.x, intersection.y);
-      ctx.beginPath();
-      ctx.arc(screen.x, screen.y, 4, 0, 2 * Math.PI);
-      ctx.fill();
-    });
-
-    // Draw coordinates if mouse is over canvas
-    if (showCoordinates) {
-      const graphCoords = screenToGraph(mousePos.x, mousePos.y);
-      ctx.fillStyle = '#fff';
-      ctx.font = '14px monospace';
-      ctx.fillRect(mousePos.x + 10, mousePos.y - 30, 120, 25);
-      ctx.fillStyle = '#000';
-      ctx.fillText(`(${graphCoords.x.toFixed(2)}, ${graphCoords.y.toFixed(2)})`, mousePos.x + 15, mousePos.y - 10);
-    }
-  }, [equations, viewBounds, isFullscreen, width, height, mousePos, showCoordinates, intersections, evaluateExpression, evaluateImplicitEquation, graphToScreen, screenToGraph]);
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (rect) {
-      setLastMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    
+    try {
+      const result = new Function('with (this) { return ' + funcStr + ' }').call(proxy);
+      return Number(result);
+    } catch (error) {
+      console.error(`Error evaluating function ${funcStr}:`, error);
+      return NaN;
     }
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return;
+  const addFunction = () => {
+    if (!newFunction.trim()) return;
+    
+    const newFunc = {
+      id: Date.now(),
+      expression: newFunction,
+      color: '#' + Math.floor(Math.random()*16777215).toString(16),
+      visible: true
+    };
+    
+    setFunctions(prev => [...prev, newFunc]);
+    setNewFunction('');
+  };
 
-    const currentPos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    setMousePos(currentPos);
+  const removeFunction = (id: number) => {
+    setFunctions(prev => prev.filter(func => func.id !== id));
+  };
 
-    if (isDragging) {
-      const deltaX = currentPos.x - lastMousePos.x;
-      const deltaY = currentPos.y - lastMousePos.y;
-      
-      const graphDeltaX = -(deltaX / rect.width) * (viewBounds.xMax - viewBounds.xMin);
-      const graphDeltaY = (deltaY / rect.height) * (viewBounds.yMax - viewBounds.yMin);
-      
-      setViewBounds(prev => ({
-        xMin: prev.xMin + graphDeltaX,
-        xMax: prev.xMax + graphDeltaX,
-        yMin: prev.yMin + graphDeltaY,
-        yMax: prev.yMax + graphDeltaY
+  const toggleVisibility = (id: number) => {
+    setFunctions(prev => prev.map(func => 
+      func.id === id ? { ...func, visible: !func.visible } : func
+    ));
+  };
+
+  const applyPreset = useCallback((preset: any) => {
+    setFunctions([]);
+    setIsLoading(true);
+    
+    // Apply domain and range immediately
+    setDomain(preset.domain);
+    setRange(preset.range);
+    
+    // Small delay to ensure state updates
+    setTimeout(() => {
+      const newFunctions = preset.functions.map((func: string, index: number) => ({
+        id: Date.now() + index,
+        expression: func,
+        color: preset.colors[index] || '#00c2a8',
+        visible: true
       }));
       
-      setLastMousePos(currentPos);
+      setFunctions(newFunctions);
+      setIsLoading(false);
+    }, 100);
+  }, []);
+
+  useEffect(() => {
+    if (!canvasRef.current || !ctxRef.current) return;
+    
+    drawGrid();
+    functions.forEach(func => {
+      if (func.visible) {
+        plotFunction(func.expression, func.color);
+      }
+    });
+  }, [functions, domain, range, drawGrid, plotFunction]);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (!canvasRef.current) return;
+    
+    setIsDragging(true);
+    const rect = canvasRef.current.getBoundingClientRect();
+    setLastMousePos({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
+  }, []);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging || !canvasRef.current) return;
+    
+    const rect = canvasRef.current.getBoundingClientRect();
+    const currentPos = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+    
+    const deltaX = currentPos.x - lastMousePos.x;
+    const deltaY = currentPos.y - lastMousePos.y;
+    
+    setPanOffset(prev => ({
+      x: prev.x + deltaX,
+      y: prev.y + deltaY
+    }));
+    
+    setLastMousePos(currentPos);
+  }, [isDragging, lastMousePos]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    
+    const zoomFactor = e.deltaY > 0 ? 1.1 : 0.9;
+    const centerX = (domain.min + domain.max) / 2;
+    const centerY = (range.min + range.max) / 2;
+    const newWidth = (domain.max - domain.min) * zoomFactor;
+    const newHeight = (range.max - range.min) * zoomFactor;
+    
+    setDomain({
+      min: centerX - newWidth / 2,
+      max: centerX + newWidth / 2
+    });
+    
+    setRange({
+      min: centerY - newHeight / 2,
+      max: centerY + newHeight / 2
+    });
+  }, [domain, range]);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      if (canvasRef.current?.requestFullscreen) {
+        canvasRef.current.requestFullscreen().catch(err => {
+          console.error('Error attempting to enable fullscreen:', err);
+          toast({
+            title: "Fullscreen Error",
+            description: "Unable to enter fullscreen mode",
+            variant: "destructive"
+          });
+        });
+      }
+    } else {
+      document.exitFullscreen().catch(err => {
+        console.error('Error attempting to exit fullscreen:', err);
+      });
     }
   };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const zoomFactor = e.deltaY > 0 ? 1.1 : 0.9;
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return;
-
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    const graphMouse = screenToGraph(mouseX, mouseY);
-    
-    const rangeX = viewBounds.xMax - viewBounds.xMin;
-    const rangeY = viewBounds.yMax - viewBounds.yMin;
-    const newRangeX = rangeX * zoomFactor;
-    const newRangeY = rangeY * zoomFactor;
-    
-    setViewBounds({
-      xMin: graphMouse.x - (graphMouse.x - viewBounds.xMin) * zoomFactor,
-      xMax: graphMouse.x + (viewBounds.xMax - graphMouse.x) * zoomFactor,
-      yMin: graphMouse.y - (graphMouse.y - viewBounds.yMin) * zoomFactor,
-      yMax: graphMouse.y + (viewBounds.yMax - graphMouse.y) * zoomFactor
-    });
-  };
-
-  // Update view bounds when props change
-  useEffect(() => {
-    setViewBounds({ xMin, xMax, yMin, yMax });
-  }, [xMin, xMax, yMin, yMax]);
-
-  // Redraw when dependencies change
-  useEffect(() => {
-    drawGraph();
-  }, [drawGraph]);
-
-  // Handle fullscreen changes
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
-
   return (
-    <div 
-      ref={containerRef}
-      className={`${isFullscreen ? 'fixed inset-0 z-50 bg-black' : 'relative'}`}
-    >
-      <Card className={`${isFullscreen ? 'h-full border-0 rounded-none' : ''}`}>
-        <CardContent className="p-4 h-full">
-          {/* Controls */}
-          <div className="flex flex-wrap items-center gap-2 mb-4">
-            <Button size="sm" variant="outline" onClick={toggleFullscreen}>
-              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-            </Button>
-            <Button size="sm" variant="outline" onClick={resetView}>
-              <RotateCcw className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="outline" onClick={zoomIn}>
-              <ZoomIn className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="outline" onClick={zoomOut}>
-              <ZoomOut className="h-4 w-4" />
-            </Button>
-            <Button 
-              size="sm" 
-              variant={showCoordinates ? "default" : "outline"}
-              onClick={() => setShowCoordinates(!showCoordinates)}
-            >
-              <Crosshair className="h-4 w-4" />
-            </Button>
-            
-            <div className="flex items-center space-x-2 ml-auto">
-              <Badge variant="secondary">
-                View: ({viewBounds.xMin.toFixed(1)}, {viewBounds.yMin.toFixed(1)}) to ({viewBounds.xMax.toFixed(1)}, {viewBounds.yMax.toFixed(1)})
-              </Badge>
-              {intersections.length > 0 && (
-                <Badge variant="default">
-                  {intersections.length} intersection{intersections.length !== 1 ? 's' : ''}
-                </Badge>
-              )}
+    <div className="w-full h-full bg-prism-surface rounded-lg border border-prism-border p-4">
+      {/* Header and Controls */}
+      <div className="mb-4 flex items-center justify-between">
+        <CardTitle className="text-lg font-semibold text-prism-text">
+          Advanced Cartesian Graph
+        </CardTitle>
+        
+        {/* Preset Select */}
+        <div className="flex items-center space-x-2">
+          <Label htmlFor="presets" className="text-sm text-prism-text-muted">
+            Presets:
+          </Label>
+          <select
+            id="presets"
+            className="bg-prism-bg border border-prism-border rounded-md text-sm text-prism-text px-2 py-1 focus:outline-none"
+            onChange={(e) => {
+              const selectedPreset = presets.find(p => p.name === e.target.value);
+              if (selectedPreset) {
+                applyPreset(selectedPreset);
+              }
+            }}
+          >
+            <option>Select Preset</option>
+            {presets.map(preset => (
+              <option key={preset.name} value={preset.name}>
+                {preset.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Graph Canvas */}
+      <div className="relative">
+        {isLoading && (
+          <div className="absolute inset-0 bg-prism-bg/80 flex items-center justify-center z-10 rounded-lg">
+            <div className="flex flex-col items-center gap-2">
+              <Loader2 className="h-8 w-8 animate-spin text-prism-primary" />
+              <span className="text-prism-text-muted">Loading graph...</span>
             </div>
           </div>
+        )}
+        
+        <canvas
+          ref={canvasRef}
+          width={800}
+          height={600}
+          className="border border-prism-border rounded-lg bg-prism-bg cursor-move"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onWheel={handleWheel}
+        />
+        
+        <Button
+          onClick={toggleFullscreen}
+          variant="outline"
+          size="sm"
+          className="absolute top-2 right-2 bg-prism-surface/80"
+        >
+          <Maximize2 className="h-4 w-4" />
+        </Button>
+      </div>
 
-          {/* Canvas */}
-          <canvas
-            ref={canvasRef}
-            className="border border-border rounded cursor-move"
-            width={isFullscreen ? window.innerWidth : width}
-            height={isFullscreen ? window.innerHeight - 100 : height}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={() => {
-              setIsDragging(false);
-              setShowCoordinates(false);
-            }}
-            onMouseEnter={() => setShowCoordinates(true)}
-            onWheel={handleWheel}
+      {/* Function List and Controls */}
+      <div className="mt-4">
+        <div className="flex items-center space-x-2 mb-2">
+          <Input
+            type="text"
+            placeholder="Enter function (e.g., x^2, sin(x))"
+            value={newFunction}
+            onChange={(e) => setNewFunction(e.target.value)}
+            className="bg-prism-bg border border-prism-border text-prism-text"
           />
+          <Button onClick={addFunction} className="bg-prism-primary hover:bg-prism-primary-dark text-white">
+            Add Function
+          </Button>
+        </div>
+        
+        {/* Domain and Range Controls */}
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <Label htmlFor="domainMin" className="text-sm text-prism-text-muted">
+              Domain Min: {domain.min.toFixed(1)}
+            </Label>
+            <Slider
+              id="domainMin"
+              min={-20}
+              max={domain.max}
+              step={0.1}
+              value={[domain.min]}
+              onValueChange={(value) => setDomain(prev => ({ ...prev, min: value[0] }))}
+            />
+          </div>
+          <div>
+            <Label htmlFor="domainMax" className="text-sm text-prism-text-muted">
+              Domain Max: {domain.max.toFixed(1)}
+            </Label>
+            <Slider
+              id="domainMax"
+              min={domain.min}
+              max={20}
+              step={0.1}
+              value={[domain.max]}
+              onValueChange={(value) => setDomain(prev => ({ ...prev, max: value[0] }))}
+            />
+          </div>
+          <div>
+            <Label htmlFor="rangeMin" className="text-sm text-prism-text-muted">
+              Range Min: {range.min.toFixed(1)}
+            </Label>
+            <Slider
+              id="rangeMin"
+              min={-20}
+              max={range.max}
+              step={0.1}
+              value={[range.min]}
+              onValueChange={(value) => setRange(prev => ({ ...prev, min: value[0] }))}
+            />
+          </div>
+          <div>
+            <Label htmlFor="rangeMax" className="text-sm text-prism-text-muted">
+              Range Max: {range.max.toFixed(1)}
+            </Label>
+            <Slider
+              id="rangeMax"
+              min={range.min}
+              max={20}
+              step={0.1}
+              value={[range.max]}
+              onValueChange={(value) => setRange(prev => ({ ...prev, max: value[0] }))}
+            />
+          </div>
+        </div>
 
-          {/* Parameter Controls */}
-          {equations.some(eq => eq.parameters && eq.visible) && (
-            <div className="mt-4 space-y-4">
-              <h4 className="font-semibold">Interactive Parameters</h4>
-              {equations.filter(eq => eq.parameters && eq.visible).map(eq => (
-                <div key={eq.id} className="space-y-2">
-                  <h5 className="text-sm font-medium" style={{ color: eq.color }}>
-                    {eq.equation}
-                  </h5>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {eq.parameters?.map((param) => (
-                      <div key={param.name} className="space-y-2">
-                        <Label className="flex justify-between">
-                          <span>{param.name}</span>
-                          <span>{param.value.toFixed(2)}</span>
-                        </Label>
-                        <Slider
-                          value={[param.value]}
-                          onValueChange={(values) => {
-                            if (onEquationUpdate) {
-                              const updatedParams = eq.parameters?.map(p => 
-                                p.name === param.name ? { ...p, value: values[0] } : p
-                              );
-                              onEquationUpdate(eq.id, { parameters: updatedParams });
-                            }
-                          }}
-                          min={param.min}
-                          max={param.max}
-                          step={param.step}
-                          className="flex-1"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        {/* Function List */}
+        <ul>
+          {functions.map(func => (
+            <li key={func.id} className="flex items-center justify-between py-2 border-b border-prism-border">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={`visible-${func.id}`}
+                  className="mr-2"
+                  checked={func.visible}
+                  onChange={() => toggleVisibility(func.id)}
+                />
+                <Label htmlFor={`visible-${func.id}`} className="text-prism-text">
+                  {func.expression}
+                </Label>
+                <div
+                  className="ml-2 w-4 h-4 rounded-full"
+                  style={{ backgroundColor: func.color }}
+                ></div>
+              </div>
+              <Button onClick={() => removeFunction(func.id)} variant="ghost" size="sm">
+                Remove
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 };
