@@ -26,7 +26,6 @@ import DocumentEditor from "./pages/DocumentEditor";
 import PrismMath from "./pages/PrismMath";
 import PrismPhysics from "./pages/PrismPhysics";
 import PrismChemistry from "./pages/PrismChemistry";
-import DeepSearch from "./pages/DeepSearch";
 
 // Create QueryClient with optimized settings for better performance
 const queryClient = new QueryClient({
@@ -51,7 +50,6 @@ const AppContent: React.FC = () => {
         <Route path="/" element={<Home />} />
         <Route path="/search" element={<Index />} />
         <Route path="/chat" element={<Chat />} />
-        <Route path="/deep-search" element={<DeepSearch />} />
         <Route path="/vault" element={<PrismVault />} />
         <Route path="/conversions" element={<PrismConversions />} />
         <Route path="/compressor" element={<PrismCompressor />} />
