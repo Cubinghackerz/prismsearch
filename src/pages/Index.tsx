@@ -18,16 +18,15 @@ const Index = () => {
       title: "AI-Powered Search",
       description: "Revolutionary search experience with intelligent results and atomic thinking processes.",
       link: "/search",
-      gradient: "from-blue-500 to-cyan-500",
-      badge: "Updated"
+      gradient: "from-blue-500 to-cyan-500"
     },
     {
       icon: <Globe className="h-8 w-8 text-indigo-400" />,
       title: "Deep Search",
-      description: "Advanced web scraping with AI analysis. Searches up to 1000 pages and provides intelligent summaries with sources.",
+      description: "Advanced web scraping with AI analysis. Searches multiple pages and provides intelligent summaries with sources.",
       link: "/deep-search",
       gradient: "from-indigo-500 to-purple-500",
-      badge: "Updated"
+      badge: "New"
     },
     {
       icon: <Calculator className="h-8 w-8 text-purple-400" />,
@@ -35,7 +34,7 @@ const Index = () => {
       description: "Advanced mathematical tools and AI-powered problem solving with step-by-step solutions.",
       link: "/math",
       gradient: "from-purple-500 to-pink-500",
-      badge: "Updated"
+      badge: "Beta"
     },
     {
       icon: <BarChart3 className="h-8 w-8 text-indigo-400" />,
@@ -43,7 +42,7 @@ const Index = () => {
       description: "Interactive mathematical graphing with real-time analysis and parameter controls.",
       link: "/graphing",
       gradient: "from-indigo-500 to-purple-500",
-      badge: "Updated"
+      badge: "Beta"
     },
     {
       icon: <Atom className="h-8 w-8 text-green-400" />,
@@ -51,7 +50,7 @@ const Index = () => {
       description: "Comprehensive physics calculations and simulations for complex problem solving.",
       link: "/physics",
       gradient: "from-green-500 to-emerald-500",
-      badge: "Updated"
+      badge: "Beta"
     },
     {
       icon: <FlaskConical className="h-8 w-8 text-red-400" />,
@@ -59,31 +58,28 @@ const Index = () => {
       description: "Advanced chemistry tools and molecular analysis for research and education.",
       link: "/chemistry",
       gradient: "from-orange-500 to-red-500",
-      badge: "Updated"
+      badge: "Beta"
     },
     {
       icon: <Code className="h-8 w-8 text-cyan-400" />,
       title: "Code Generation",
       description: "AI-powered code generation and development tools for modern applications.",
       link: "/code",
-      gradient: "from-cyan-500 to-teal-500",
-      badge: "Updated"
+      gradient: "from-cyan-500 to-teal-500"
     },
     {
       icon: <FileText className="h-8 w-8 text-yellow-400" />,
       title: "Document Suite",
       description: "Advanced document creation and editing with AI assistance and collaboration.",
       link: "/pages",
-      gradient: "from-yellow-500 to-orange-500",
-      badge: "Updated"
+      gradient: "from-yellow-500 to-orange-500"
     },
     {
       icon: <Shield className="h-8 w-8 text-emerald-400" />,
       title: "Secure Vault",
       description: "Military-grade password management and secure data storage solutions.",
       link: "/vault",
-      gradient: "from-emerald-500 to-green-500",
-      badge: "Updated"
+      gradient: "from-emerald-500 to-green-500"
     }
   ];
 

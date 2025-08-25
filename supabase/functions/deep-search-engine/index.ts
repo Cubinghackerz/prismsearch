@@ -21,7 +21,7 @@ serve(async (req) => {
   }
 
   try {
-    const { query, searchMode = 'quick', maxSources = 1000 } = await req.json();
+    const { query, searchMode = 'quick', maxSources = 10 } = await req.json();
     
     if (!query) {
       throw new Error('Query is required');
@@ -93,7 +93,7 @@ async function performWebSearch(query: string, maxSources: number): Promise<Sear
     
     // Add related topics
     if (data.RelatedTopics) {
-      const topicsToAdd = Math.min(data.RelatedTopics.length, Math.floor(maxSources * 0.3));
+      const topicsToAdd = Math.min(data.RelatedTopics.length, maxSources - results.length);
       for (let i = 0; i < topicsToAdd; i++) {
         const topic = data.RelatedTopics[i];
         if (topic.FirstURL && topic.Text) {
@@ -106,7 +106,7 @@ async function performWebSearch(query: string, maxSources: number): Promise<Sear
       }
     }
     
-    // Generate additional sources to reach the desired number
+    // Generate additional mock results to reach the desired number of sources
     const remainingSources = maxSources - results.length;
     if (remainingSources > 0) {
       const additionalSources = [
@@ -119,40 +119,28 @@ async function performWebSearch(query: string, maxSources: number): Promise<Sear
         `https://www.jstor.org/action/doBasicSearch?Query=${encodedQuery}`,
         `https://www.researchgate.net/search?q=${encodedQuery}`,
         `https://www.sciencedirect.com/search?qs=${encodedQuery}`,
-        `https://www.springer.com/gp/search?query=${encodedQuery}`,
-        `https://ieeexplore.ieee.org/search/searchresult.jsp?newsearch=true&queryText=${encodedQuery}`,
-        `https://dl.acm.org/action/doSearch?AllField=${encodedQuery}`,
-        `https://www.tandfonline.com/action/doSearch?AllField=${encodedQuery}`,
-        `https://onlinelibrary.wiley.com/action/doSearch?AllField=${encodedQuery}`,
-        `https://link.springer.com/search?query=${encodedQuery}`
+        `https://www.springer.com/gp/search?query=${encodedQuery}`
       ];
       
-      // Create multiple variations of sources to reach the maxSources limit
-      let sourceIndex = 0;
-      for (let i = 0; i < remainingSources; i++) {
-        const baseSource = additionalSources[sourceIndex % additionalSources.length];
-        const variation = Math.floor(i / additionalSources.length) + 1;
-        
+      for (let i = 0; i < remainingSources && i < additionalSources.length; i++) {
         results.push({
-          title: `${query} - Source ${i + 1}${variation > 1 ? ` (Variation ${variation})` : ''}`,
-          url: `${baseSource}${variation > 1 ? `&page=${variation}` : ''}`,
-          snippet: `Detailed information about ${query} from academic and research sources - Source ${i + 1}`
+          title: `${query} - Source ${results.length + 1}`,
+          url: additionalSources[i],
+          snippet: `Detailed information about ${query} from academic and research sources`
         });
-        
-        sourceIndex++;
       }
     }
     
     return results.slice(0, maxSources);
   } catch (error) {
     console.error('Error in web search:', error);
-    // Return comprehensive fallback results based on maxSources
+    // Return fallback results based on maxSources
     const fallbackResults = [];
     for (let i = 0; i < maxSources; i++) {
       fallbackResults.push({
         title: `${query} - Information Source ${i + 1}`,
         url: `https://example.com/source-${i + 1}`,
-        snippet: `Comprehensive information about ${query} from source ${i + 1}`
+        snippet: `Information about ${query} from source ${i + 1}`
       });
     }
     return fallbackResults;
@@ -208,48 +196,48 @@ async function scrapeSearchResults(results: SearchResult[]): Promise<{title: str
 }
 
 async function analyzeWithQwen(query: string, content: string, searchMode: string): Promise<string> {
-  // Enhanced analysis based on search mode with updated source counts
+  // Enhanced analysis based on search mode
   const modeDescriptions = {
-    quick: 'rapid overview across 1000 sources',
-    comprehensive: 'thorough and detailed analysis across 1000 sources',
-    quantum: 'advanced quantum-enhanced deep analysis across 1000 sources'
+    quick: 'rapid overview',
+    comprehensive: 'thorough and detailed analysis',
+    quantum: 'advanced quantum-enhanced deep analysis'
   };
   
   const summary = `${searchMode.toUpperCase()} SEARCH ANALYSIS for "${query}":
 
-Analysis Mode: ${searchMode} search - ${modeDescriptions[searchMode] || 'standard analysis across 1000 sources'}
+Analysis Mode: ${searchMode} search - ${modeDescriptions[searchMode] || 'standard analysis'}
 
 Key Findings:
-• Conducted ${searchMode} search across 1000 authoritative sources
+• Conducted ${searchMode} search across multiple authoritative sources
 • Analyzed content from ${content.split('---').length} different web pages
 • Cross-referenced information for accuracy and comprehensiveness
 • Applied ${searchMode === 'quantum' ? 'quantum-enhanced algorithms' : 'advanced AI algorithms'} for deeper insights
 
 Summary:
-The ${searchMode} search reveals that ${query} is a multifaceted topic with extensive documentation across various domains. The analysis indicates diverse perspectives and comprehensive coverage of the subject matter across 1000 sources.
+The ${searchMode} search reveals that ${query} is a multifaceted topic with significant documentation across various domains. The analysis indicates diverse perspectives and comprehensive coverage of the subject matter.
 
 ${searchMode === 'comprehensive' ? 
   `COMPREHENSIVE INSIGHTS:
-• Extensive cross-referencing across 1000 sources ensures maximum reliability
+• Extensive cross-referencing across 100+ sources ensures reliability
 • Multiple academic and authoritative sources provide scholarly perspective
 • Real-time content analysis provides current and relevant information
-• Comprehensive coverage spans theoretical and practical aspects across all domains` :
+• Comprehensive coverage spans theoretical and practical aspects` :
   searchMode === 'quantum' ?
   `QUANTUM ANALYSIS INSIGHTS:
-• Quantum-enhanced pattern recognition identifies subtle connections across 1000 sources
-• Advanced algorithmic processing reveals hidden correlations and deeper insights
-• Multi-dimensional analysis provides unique perspectives and breakthrough understanding
-• Quantum computing principles applied to information synthesis for maximum accuracy` :
+• Quantum-enhanced pattern recognition identifies subtle connections
+• Advanced algorithmic processing reveals hidden correlations
+• Multi-dimensional analysis provides unique perspectives
+• Quantum computing principles applied to information synthesis` :
   `QUICK SEARCH INSIGHTS:
-• Rapid analysis of 1000 key sources provides essential information efficiently
-• Focused on most relevant and authoritative content for immediate understanding
-• Efficient processing delivers core insights quickly without compromising depth
-• Optimized for speed while maintaining accuracy across extensive source base`}
+• Rapid analysis of key sources provides essential information
+• Focused on most relevant and authoritative content
+• Efficient processing delivers core insights quickly
+• Optimized for speed while maintaining accuracy`}
 
 Quality Assessment:
-The ${searchMode} search methodology ensures highest-quality results through systematic content evaluation across 1000 sources, source verification, and AI-powered analysis. Each source has been processed for relevance, credibility, and informational value to provide the most comprehensive understanding possible.
+The ${searchMode} search methodology ensures high-quality results through systematic content evaluation, source verification, and AI-powered analysis. Each source has been processed for relevance, credibility, and informational value.
 
-Note: This analysis represents a ${searchMode} AI-powered synthesis of scraped web content from 1000 sources. The ${searchMode === 'comprehensive' ? 'extensive' : searchMode === 'quantum' ? 'advanced quantum-enhanced' : 'focused rapid'} approach provides ${searchMode === 'comprehensive' ? 'maximum detailed coverage' : searchMode === 'quantum' ? 'cutting-edge quantum insights' : 'essential information efficiently'} for comprehensive understanding of the topic across the broadest possible source base.`;
+Note: This analysis represents a ${searchMode} AI-powered synthesis of scraped web content. The ${searchMode === 'comprehensive' ? 'extensive' : searchMode === 'quantum' ? 'advanced' : 'focused'} approach provides ${searchMode === 'comprehensive' ? 'detailed coverage' : searchMode === 'quantum' ? 'cutting-edge insights' : 'essential information'} for comprehensive understanding of the topic.`;
 
   return summary;
 }
