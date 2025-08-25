@@ -1,82 +1,49 @@
 
-import React from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as SonnerToaster } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "@/contexts/ThemeContext";
-import AuthPromptDialog from "@/components/AuthPromptDialog";
-import useAuthPrompt from "@/hooks/useAuthPrompt";
-import PrismAssistant from "@/components/PrismAssistant";
+import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
 import Chat from "./pages/Chat";
-import Home from "./pages/Home";
+import PrismMath from "./pages/PrismMath";
 import PrismVault from "./pages/PrismVault";
-import PrismConversions from "./pages/PrismConversions";
-import PrismCompressor from "./pages/PrismCompressor";
-import PrismDetector from "./pages/PrismDetector";
-import PrismGraphing from "./pages/PrismGraphing";
-import ClerkAuth from "./pages/ClerkAuth";
-import SecureRedirect from "./pages/SecureRedirect";
 import PrismCode from "./pages/PrismCode";
 import PrismPages from "./pages/PrismPages";
-import DocumentEditor from "./pages/DocumentEditor";
-import PrismMath from "./pages/PrismMath";
+import PrismGraphing from "./pages/PrismGraphing";
 import PrismPhysics from "./pages/PrismPhysics";
 import PrismChemistry from "./pages/PrismChemistry";
+import DeepSearch from "./pages/DeepSearch";
+import Auth from "./pages/Auth";
+import Pricing from "./pages/Pricing";
+import Analytics from "./pages/Analytics";
+import NotFound from "./pages/NotFound";
 
-// Create QueryClient with optimized settings for better performance
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-      staleTime: 60000,
-      gcTime: 300000,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
-const AppContent: React.FC = () => {
-  const { showPrompt, closePrompt } = useAuthPrompt();
-
-  return (
-    <div className="bg-gradient-to-b from-background to-secondary/10 text-foreground min-h-screen font-inter">
-      <Toaster />
-      <SonnerToaster />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/search" element={<Index />} />
-        <Route path="/chat" element={<Chat />} />
-        <Route path="/vault" element={<PrismVault />} />
-        <Route path="/conversions" element={<PrismConversions />} />
-        <Route path="/compressor" element={<PrismCompressor />} />
-        <Route path="/detector" element={<PrismDetector />} />
-        <Route path="/graphing" element={<PrismGraphing />} />
-        <Route path="/docs" element={<PrismPages />} />
-        <Route path="/docs/:docId" element={<DocumentEditor />} />
-        <Route path="/code" element={<PrismCode />} />
-        <Route path="/math" element={<PrismMath />} />
-        <Route path="/physics" element={<PrismPhysics />} />
-        <Route path="/chemistry" element={<PrismChemistry />} />
-        <Route path="/auth" element={<ClerkAuth />} />
-        <Route path="/secure-redirect" element={<SecureRedirect />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      <AuthPromptDialog isOpen={showPrompt} onClose={closePrompt} />
-      <PrismAssistant />
-    </div>
-  );
-};
-
-const App: React.FC = () => (
+const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <TooltipProvider>
+        <Toaster />
         <BrowserRouter>
-          <AppContent />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/search" element={<Chat />} />
+            <Route path="/deep-search" element={<DeepSearch />} />
+            <Route path="/math" element={<PrismMath />} />
+            <Route path="/vault" element={<PrismVault />} />
+            <Route path="/code" element={<PrismCode />} />
+            <Route path="/pages" element={<PrismPages />} />
+            <Route path="/graphing" element={<PrismGraphing />} />
+            <Route path="/physics" element={<PrismPhysics />} />
+            <Route path="/chemistry" element={<PrismChemistry />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ArrowRight, Calculator, Search, Shield, Code, FileText, Atom, FlaskConical, BarChart3, Zap, Brain, Crown, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,6 +19,14 @@ const Index = () => {
       description: "Revolutionary search experience with intelligent results and atomic thinking processes.",
       link: "/search",
       gradient: "from-blue-500 to-cyan-500"
+    },
+    {
+      icon: <Brain className="h-8 w-8 text-purple-400" />,
+      title: "Deep Search",
+      description: "Advanced web scraping and AI-powered analysis with comprehensive source aggregation.",
+      link: "/deep-search",
+      gradient: "from-purple-500 to-indigo-500",
+      badge: "New"
     },
     {
       icon: <Calculator className="h-8 w-8 text-purple-400" />,
