@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { ArrowRight, Calculator, Search, Shield, Code, FileText, Atom, FlaskConical, BarChart3, Zap, Brain, Crown, Sparkles } from 'lucide-react';
+import { ArrowRight, Calculator, Search, Shield, Code, FileText, Atom, FlaskConical, BarChart3, Zap, Brain, Crown, Sparkles, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +19,14 @@ const Index = () => {
       description: "Revolutionary search experience with intelligent results and atomic thinking processes.",
       link: "/search",
       gradient: "from-blue-500 to-cyan-500"
+    },
+    {
+      icon: <Globe className="h-8 w-8 text-indigo-400" />,
+      title: "Deep Search",
+      description: "Advanced web scraping with AI analysis. Searches multiple pages and provides intelligent summaries with sources.",
+      link: "/deep-search",
+      gradient: "from-indigo-500 to-purple-500",
+      badge: "New"
     },
     {
       icon: <Calculator className="h-8 w-8 text-purple-400" />,

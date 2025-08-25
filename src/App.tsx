@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
@@ -13,6 +12,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Chat from "./pages/Chat";
 import Home from "./pages/Home";
+import DeepSearch from "./pages/DeepSearch";
 import PrismVault from "./pages/PrismVault";
 import PrismConversions from "./pages/PrismConversions";
 import PrismCompressor from "./pages/PrismCompressor";
@@ -49,6 +49,7 @@ const AppContent: React.FC = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/search" element={<Index />} />
+        <Route path="/deep-search" element={<DeepSearch />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/vault" element={<PrismVault />} />
         <Route path="/conversions" element={<PrismConversions />} />
