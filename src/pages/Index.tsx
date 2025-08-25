@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, MessageSquare, Shield, Code, FileText, Wrench, Calculator, Atom, Beaker, TrendingUp, RotateCcw, Archive, Eye, Globe } from 'lucide-react';
@@ -5,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
-import CountUp from 'react-countup';
+import CountUp from '@/components/CountUp';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 
@@ -70,7 +71,7 @@ const Index = () => {
               className="space-y-2"
             >
               <div className="text-3xl md:text-4xl font-bold text-prism-primary font-fira-code">
-                <CountUp end={50000} suffix="+" />
+                <CountUp to={50000} />+
               </div>
               <p className="text-prism-text-muted">Searches Daily</p>
             </motion.div>
@@ -82,7 +83,7 @@ const Index = () => {
               className="space-y-2"
             >
               <div className="text-3xl md:text-4xl font-bold text-prism-primary font-fira-code">
-                <CountUp end={12} />
+                <CountUp to={12} />
               </div>
               <p className="text-prism-text-muted">AI Models</p>
             </motion.div>
@@ -94,7 +95,7 @@ const Index = () => {
               className="space-y-2"
             >
               <div className="text-3xl md:text-4xl font-bold text-prism-primary font-fira-code">
-                <CountUp end={99} suffix="%" />
+                <CountUp to={99} />%
               </div>
               <p className="text-prism-text-muted">Uptime</p>
             </motion.div>
@@ -106,10 +107,10 @@ const Index = () => {
               className="space-y-2"
             >
               <div className="text-3xl md:text-4xl font-bold text-prism-primary font-fira-code">
-                <CountUp end={15} />
+                <CountUp to={15} />
               </div>
               <p className="text-prism-text-muted">Tools Available</p>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
