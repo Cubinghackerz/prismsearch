@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Search, ExternalLink, Globe, Zap, Database, Atom } from 'lucide-react';
+import { Loader2, Search, ExternalLink, Globe, Zap, Database, Atom, Clock } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { supabase } from '@/integrations/supabase/client';
+import { useDailyQueryLimit } from '@/hooks/useDailyQueryLimit';
 
 interface SearchSource {
   title: string;
@@ -30,29 +31,68 @@ const DeepSearch = () => {
   const [result, setResult] = useState<DeepSearchResult | null>(null);
   const [selectedMode, setSelectedMode] = useState<SearchMode>('quick');
   const { toast } = useToast();
+  const { incrementQueryCount } = useDailyQueryLimit();
+
+  // Daily usage tracking
+  const [dailyUsage, setDailyUsage] = useState(() => {
+    const today = new Date().toDateString();
+    const stored = localStorage.getItem(`deep_search_usage_${today}`);
+    return stored ? JSON.parse(stored) : { quantum: 0, comprehensive: 0 };
+  });
 
   const searchModes = {
     quick: {
       icon: Zap,
       title: 'Quick Search',
-      description: 'Fast search across 10 sources',
-      sources: 10,
-      color: 'from-green-500/20 to-green-600/20 border-green-500/30 text-green-600'
+      description: 'Fast search across 1000 sources',
+      sources: 1000,
+      estimatedTime: '30-60 seconds',
+      color: 'from-green-500/20 to-green-600/20 border-green-500/30 text-green-600',
+      dailyLimit: null
     },
     comprehensive: {
       icon: Database,
       title: 'Comprehensive Search',
-      description: 'Thorough search across 100 sources',
-      sources: 100,
-      color: 'from-blue-500/20 to-blue-600/20 border-blue-500/30 text-blue-600'
+      description: 'Thorough search across 1000 sources',
+      sources: 1000,
+      estimatedTime: '2-5 minutes',
+      color: 'from-blue-500/20 to-blue-600/20 border-blue-500/30 text-blue-600',
+      dailyLimit: 10
     },
     quantum: {
       icon: Atom,
       title: 'Quantum Search',
       description: 'Advanced quantum-enhanced search',
-      sources: 50,
-      color: 'from-purple-500/20 to-purple-600/20 border-purple-500/30 text-purple-600'
+      sources: 1000,
+      estimatedTime: '3-7 minutes',
+      color: 'from-purple-500/20 to-purple-600/20 border-purple-500/30 text-purple-600',
+      dailyLimit: 2
     }
+  };
+
+  const updateDailyUsage = (mode: SearchMode) => {
+    if (mode === 'quick') return;
+    
+    const today = new Date().toDateString();
+    const newUsage = {
+      ...dailyUsage,
+      [mode]: dailyUsage[mode] + 1
+    };
+    
+    setDailyUsage(newUsage);
+    localStorage.setItem(`deep_search_usage_${today}`, JSON.stringify(newUsage));
+  };
+
+  const canUseMode = (mode: SearchMode) => {
+    if (mode === 'quick') return true;
+    const limit = searchModes[mode].dailyLimit;
+    return limit ? dailyUsage[mode] < limit : true;
+  };
+
+  const getRemainingUses = (mode: SearchMode) => {
+    if (mode === 'quick') return null;
+    const limit = searchModes[mode].dailyLimit;
+    return limit ? limit - dailyUsage[mode] : null;
   };
 
   const handleSearch = async (mode: SearchMode) => {
@@ -60,6 +100,15 @@ const DeepSearch = () => {
       toast({
         title: "Error",
         description: "Please enter a search query",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!canUseMode(mode)) {
+      toast({
+        title: "Daily Limit Reached",
+        description: `You've reached your daily limit for ${searchModes[mode].title}. Try again tomorrow.`,
         variant: "destructive",
       });
       return;
@@ -87,6 +136,7 @@ const DeepSearch = () => {
 
       console.log('Deep search response:', data);
       setResult(data);
+      updateDailyUsage(mode);
 
       toast({
         title: "Search Complete",
@@ -156,12 +206,15 @@ const DeepSearch = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {Object.entries(searchModes).map(([mode, config]) => {
                     const IconComponent = config.icon;
+                    const remaining = getRemainingUses(mode as SearchMode);
+                    const canUse = canUseMode(mode as SearchMode);
+                    
                     return (
                       <Button
                         key={mode}
                         onClick={() => handleSearch(mode as SearchMode)}
-                        disabled={isSearching || !query.trim()}
-                        className={`h-auto p-4 flex flex-col items-center space-y-2 bg-gradient-to-r ${config.color} hover:opacity-80 transition-all duration-300`}
+                        disabled={isSearching || !query.trim() || !canUse}
+                        className={`h-auto p-4 flex flex-col items-center space-y-2 bg-gradient-to-r ${config.color} hover:opacity-80 transition-all duration-300 ${!canUse ? 'opacity-50' : ''}`}
                         variant="outline"
                       >
                         {isSearching && selectedMode === mode ? (
@@ -172,9 +225,20 @@ const DeepSearch = () => {
                         <div className="text-center">
                           <div className="font-semibold">{config.title}</div>
                           <div className="text-xs opacity-80">{config.description}</div>
-                          <Badge variant="secondary" className="mt-1">
-                            {config.sources} sources
-                          </Badge>
+                          <div className="flex items-center justify-center gap-1 mt-1">
+                            <Badge variant="secondary" className="text-xs">
+                              {config.sources} sources
+                            </Badge>
+                            <Badge variant="outline" className="text-xs flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {config.estimatedTime}
+                            </Badge>
+                          </div>
+                          {remaining !== null && (
+                            <div className="text-xs mt-1 opacity-70">
+                              {remaining} uses left today
+                            </div>
+                          )}
                         </div>
                       </Button>
                     );
@@ -193,9 +257,13 @@ const DeepSearch = () => {
                   <h3 className="text-lg font-semibold mb-2">
                     Processing {searchModes[selectedMode].title}
                   </h3>
-                  <p className="text-muted-foreground">
+                  <p className="text-muted-foreground mb-2">
                     Searching {searchModes[selectedMode].sources} sources, scraping content, and analyzing with AI...
                   </p>
+                  <div className="text-sm text-muted-foreground flex items-center justify-center gap-1">
+                    <Clock className="h-4 w-4" />
+                    Estimated time: {searchModes[selectedMode].estimatedTime}
+                  </div>
                 </div>
               </CardContent>
             </Card>
