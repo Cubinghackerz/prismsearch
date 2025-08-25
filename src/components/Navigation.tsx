@@ -4,7 +4,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Menu, MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, MoreHorizontal, Brain } from 'lucide-react';
+import { Menu, MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, MoreHorizontal } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import AuthButtons from '@/components/AuthButtons';
 
@@ -19,7 +19,6 @@ const Navigation = () => {
 
   const primaryNavItems = [
     { name: 'Chat', href: '/chat', icon: MessageSquare },
-    { name: 'Deep Search', href: '/deep-search', icon: Brain },
     { name: 'Vault', href: '/vault', icon: Shield },
     { name: 'Math', href: '/math', icon: Calculator },
   ];
