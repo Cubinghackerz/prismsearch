@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Search, ExternalLink, Globe, Zap, Database, Atom } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { Loader2, Search, ExternalLink, Globe, Zap, Database, Atom, FileText, Bot } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { supabase } from '@/integrations/supabase/client';
+import SearchLoadingAnimation from '@/components/search/SearchLoadingAnimation';
 
 interface SearchSource {
   title: string;
@@ -35,22 +36,25 @@ const DeepSearch = () => {
     quick: {
       icon: Zap,
       title: 'Quick Search',
-      description: 'Fast search across 10 sources',
-      sources: 10,
+      description: 'Fast search across 1000 sources',
+      sources: 1000,
+      estimatedTime: '30-60 seconds',
       color: 'from-green-500/20 to-green-600/20 border-green-500/30 text-green-600'
     },
     comprehensive: {
       icon: Database,
       title: 'Comprehensive Search',
-      description: 'Thorough search across 100 sources',
-      sources: 100,
+      description: 'Thorough search across 1000 sources',
+      sources: 1000,
+      estimatedTime: '2-4 minutes',
       color: 'from-blue-500/20 to-blue-600/20 border-blue-500/30 text-blue-600'
     },
     quantum: {
       icon: Atom,
       title: 'Quantum Search',
       description: 'Advanced quantum-enhanced search',
-      sources: 50,
+      sources: 1000,
+      estimatedTime: '3-5 minutes',
       color: 'from-purple-500/20 to-purple-600/20 border-purple-500/30 text-purple-600'
     }
   };
@@ -76,7 +80,8 @@ const DeepSearch = () => {
         body: { 
           query,
           searchMode: mode,
-          maxSources: searchModes[mode].sources
+          maxSources: searchModes[mode].sources,
+          fastMode: true // Enable fast processing
         }
       });
 
@@ -90,7 +95,7 @@ const DeepSearch = () => {
 
       toast({
         title: "Search Complete",
-        description: `${searchModes[mode].title} found and analyzed ${data.totalPages} pages`,
+        description: `${searchModes[mode].title} analyzed ${data.totalPages} pages`,
       });
 
     } catch (error) {
@@ -111,6 +116,11 @@ const DeepSearch = () => {
     }
   };
 
+  // Show loading animation when searching
+  if (isSearching) {
+    return <SearchLoadingAnimation query={query} searchMode={selectedMode} />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10 flex flex-col">
       <Navigation />
@@ -126,7 +136,7 @@ const DeepSearch = () => {
               </h1>
             </div>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Advanced web scraping and AI analysis. Choose your search intensity and get intelligent summaries with sources.
+              Lightning-fast web scraping and AI analysis. Choose your search intensity and get intelligent summaries with sources.
             </p>
           </div>
 
@@ -138,7 +148,7 @@ const DeepSearch = () => {
                 Search Query
               </CardTitle>
               <CardDescription>
-                Enter your search topic. The system will scrape multiple web pages and provide an AI-powered summary.
+                Enter your search topic. The system will rapidly scrape multiple web pages and provide an AI-powered summary.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -164,17 +174,18 @@ const DeepSearch = () => {
                         className={`h-auto p-4 flex flex-col items-center space-y-2 bg-gradient-to-r ${config.color} hover:opacity-80 transition-all duration-300`}
                         variant="outline"
                       >
-                        {isSearching && selectedMode === mode ? (
-                          <Loader2 className="h-6 w-6 animate-spin" />
-                        ) : (
-                          <IconComponent className="h-6 w-6" />
-                        )}
+                        <IconComponent className="h-6 w-6" />
                         <div className="text-center">
                           <div className="font-semibold">{config.title}</div>
                           <div className="text-xs opacity-80">{config.description}</div>
-                          <Badge variant="secondary" className="mt-1">
-                            {config.sources} sources
-                          </Badge>
+                          <div className="flex flex-col items-center space-y-1 mt-2">
+                            <Badge variant="secondary">
+                              {config.sources} sources
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {config.estimatedTime}
+                            </Badge>
+                          </div>
                         </div>
                       </Button>
                     );
@@ -184,23 +195,6 @@ const DeepSearch = () => {
             </CardContent>
           </Card>
 
-          {/* Loading State */}
-          {isSearching && (
-            <Card className="mb-8">
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-                  <h3 className="text-lg font-semibold mb-2">
-                    Processing {searchModes[selectedMode].title}
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Searching {searchModes[selectedMode].sources} sources, scraping content, and analyzing with AI...
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
           {/* Results */}
           {result && (
             <div className="space-y-6">
@@ -208,7 +202,10 @@ const DeepSearch = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
-                    AI Summary
+                    <div className="flex items-center">
+                      <Bot className="h-5 w-5 mr-2" />
+                      AI Summary
+                    </div>
                     <div className="flex items-center space-x-2">
                       <Badge variant="secondary">{result.totalPages} pages analyzed</Badge>
                       <Badge className={searchModes[selectedMode].color}>
