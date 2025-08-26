@@ -1,7 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-import { DeepResearchAgent } from './deepResearchAgent.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -43,7 +41,7 @@ async function scrapeWebPage(url: string): Promise<{ title: string; content: str
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
       },
-      signal: AbortSignal.timeout(8000) // Faster timeout for speed
+      signal: AbortSignal.timeout(5000) // Faster timeout for speed
     });
 
     if (!response.ok) {
@@ -67,14 +65,14 @@ async function scrapeWebPage(url: string): Promise<{ title: string; content: str
       .replace(/<[^>]*>/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
-      .substring(0, 2000); // Limit content for speed
+      .substring(0, 1500); // Limit content for speed
     
     // Extract links (simplified)
     const linkMatches = html.match(/href=["']([^"']+)["']/gi) || [];
     const links = linkMatches
       .map(match => match.replace(/href=["']([^"']+)["']/i, '$1'))
       .filter(link => link.startsWith('http'))
-      .slice(0, 10); // Limit links for speed
+      .slice(0, 8); // Limit links for speed
 
     return { title, content, links };
   } catch (error) {
@@ -93,7 +91,7 @@ async function performSearch(query: string, maxResults: number, fastMode: boolea
   const searchUrls: string[] = [];
   
   // For fast mode, use parallel processing and fewer sources per engine
-  const sourcesPerEngine = fastMode ? Math.min(20, Math.ceil(maxResults / searchEngines.length)) : Math.ceil(maxResults / searchEngines.length);
+  const sourcesPerEngine = fastMode ? Math.min(15, Math.ceil(maxResults / searchEngines.length)) : Math.ceil(maxResults / searchEngines.length);
   
   for (const engine of searchEngines) {
     // Simulate search results (in real implementation, you'd parse search engine results)
@@ -120,7 +118,7 @@ async function performSearch(query: string, maxResults: number, fastMode: boolea
   console.log(`Generated ${searchUrls.length} URLs for scraping`);
 
   // Process URLs in batches for speed
-  const batchSize = fastMode ? 15 : 8; // Larger batches in fast mode
+  const batchSize = fastMode ? 12 : 6; // Larger batches in fast mode
   const batches = [];
   
   for (let i = 0; i < searchUrls.length; i += batchSize) {
@@ -138,7 +136,7 @@ async function performSearch(query: string, maxResults: number, fastMode: boolea
           return {
             title: result.title,
             url: url,
-            snippet: result.content.substring(0, 200) + '...'
+            snippet: result.content.substring(0, 150) + '...'
           };
         }
         return null;
@@ -157,7 +155,7 @@ async function performSearch(query: string, maxResults: number, fastMode: boolea
     });
 
     // Stop early if we have enough sources and in fast mode
-    if (fastMode && sources.length >= maxResults * 0.8) {
+    if (fastMode && sources.length >= maxResults * 0.7) {
       console.log(`Fast mode: Early exit with ${sources.length} sources`);
       break;
     }
@@ -165,6 +163,61 @@ async function performSearch(query: string, maxResults: number, fastMode: boolea
 
   console.log(`Collected ${sources.length} valid sources`);
   return sources.slice(0, maxResults);
+}
+
+// DeepResearchAgent class for AI analysis
+class DeepResearchAgent {
+  private apiKey: string;
+  private modelId: string;
+
+  constructor() {
+    this.apiKey = Deno.env.get('GOOGLE_API_KEY') || '';
+    this.modelId = Deno.env.get('GEMINI_MODEL_ID') || 'gemini-2.0-flash-exp';
+  }
+
+  private async sendPrompt(promptText: string): Promise<string> {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${this.modelId}:generateContent?key=${this.apiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: promptText
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 2048, // Reduced for faster processing
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!content) {
+      throw new Error('No content received from API');
+    }
+
+    return content.trim();
+  }
+
+  async generateAnalysis(prompt: string): Promise<string> {
+    try {
+      return await this.sendPrompt(prompt);
+    } catch (error) {
+      console.error('Error generating AI analysis:', error);
+      throw new Error('Failed to generate AI analysis. Please try again.');
+    }
+  }
 }
 
 serve(async (req) => {
@@ -209,7 +262,7 @@ serve(async (req) => {
 Query: "${query}"
 
 Content:
-${combinedContent.substring(0, 8000)}
+${combinedContent.substring(0, 6000)}
 
 Provide a clear, structured summary highlighting the most important information found across these sources.`;
         break;
@@ -220,7 +273,7 @@ Provide a clear, structured summary highlighting the most important information 
 Query: "${query}"
 
 Content:
-${combinedContent.substring(0, 15000)}
+${combinedContent.substring(0, 12000)}
 
 Provide a comprehensive analysis covering:
 1. Main findings and key points
@@ -272,58 +325,3 @@ Provide an advanced analysis including:
     });
   }
 });
-
-// Updated DeepResearchAgent class for faster processing
-class DeepResearchAgent {
-  private apiKey: string;
-  private modelId: string;
-
-  constructor() {
-    this.apiKey = Deno.env.get('GOOGLE_API_KEY') || '';
-    this.modelId = Deno.env.get('GEMINI_MODEL_ID') || 'gemini-2.0-flash-exp';
-  }
-
-  private async sendPrompt(promptText: string): Promise<string> {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${this.modelId}:generateContent?key=${this.apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: promptText
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 4096, // Reduced for faster processing
-        }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    
-    if (!content) {
-      throw new Error('No content received from API');
-    }
-
-    return content.trim();
-  }
-
-  async generateAnalysis(prompt: string): Promise<string> {
-    try {
-      return await this.sendPrompt(prompt);
-    } catch (error) {
-      console.error('Error generating AI analysis:', error);
-      throw new Error('Failed to generate AI analysis. Please try again.');
-    }
-  }
-}
