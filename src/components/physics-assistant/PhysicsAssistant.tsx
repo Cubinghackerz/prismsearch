@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,7 +11,6 @@ import { toast } from 'sonner';
 import PhysicsKeyboard from './PhysicsKeyboard';
 import MathRenderer from '../math-assistant/MathRenderer';
 import ScientificCalculator from '../calculator/ScientificCalculator';
-import FileUpload from '../assistants/FileUpload';
 
 interface PhysicsResult {
   id: string;
@@ -21,7 +21,6 @@ interface PhysicsResult {
 
 const PhysicsAssistant = () => {
   const [input, setInput] = useState('');
-  const [files, setFiles] = useState<File[]>([]);
   const [results, setResults] = useState<PhysicsResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -51,19 +50,13 @@ const PhysicsAssistant = () => {
 
     setIsLoading(true);
     try {
-      const formData = new FormData();
-      formData.append('problem', input);
-      
-      files.forEach((file) => {
-        formData.append('files', file);
-      });
-
       const response = await fetch(`https://fgpdfkvabwemivzjeitx.supabase.co/functions/v1/physics-assistant`, {
         method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZncGRma3ZhYndlbWl2emplaXR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNTU5ODUsImV4cCI6MjA2MTczMTk4NX0.hbWiDq1_KGBMMmQBbsrZTysKxUm3bqjslSqRUzre-O4`,
         },
-        body: formData,
+        body: JSON.stringify({ problem: input }),
       });
 
       if (!response.ok) {
@@ -81,7 +74,6 @@ const PhysicsAssistant = () => {
 
       setResults(prev => [newResult, ...prev]);
       setInput('');
-      setFiles([]);
       toast.success('Physics problem solved!');
     } catch (error) {
       console.error('Error solving physics:', error);
@@ -118,7 +110,7 @@ const PhysicsAssistant = () => {
           </h1>
         </div>
         <p className="text-lg text-prism-text-muted max-w-2xl mx-auto">
-          Advanced physics problem solver powered by Qwen3-235B-A22B-2507. 
+          Advanced physics problem solver powered by Qwen3-30B-A3B (MoE). 
           Solve mechanics, thermodynamics, electromagnetism, quantum physics, and more with detailed solutions.
         </p>
       </div>
@@ -150,13 +142,7 @@ Examples:
 • Calculate the electric field at point P due to two charges
 • Find the wavelength of light with frequency 5 × 10¹⁴ Hz
 • Determine the momentum of a photon with energy 2.5 eV"
-                  className="min-h-[150px] bg-prism-surface/30 border-prism-border text-prism-text resize-none"
-                />
-
-                <FileUpload 
-                  files={files} 
-                  onFilesChange={setFiles}
-                  maxFiles={10}
+                  className="min-h-[200px] bg-prism-surface/30 border-prism-border text-prism-text resize-none"
                 />
                 
                 <div className="flex justify-between items-center">
