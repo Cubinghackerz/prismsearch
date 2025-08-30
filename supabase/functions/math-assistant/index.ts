@@ -2,23 +2,33 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from '../_shared/cors.ts'
 
-const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY');
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const { problem } = await req.json();
+    const formData = await req.formData();
+    const problem = formData.get('problem') as string;
+    const files = formData.getAll('files') as File[];
 
     if (!problem) {
       throw new Error('Problem is required');
     }
 
     console.log('Solving math problem:', problem);
+    console.log('Number of files uploaded:', files.length);
 
-    const mathPrompt = `You are Qwen3-30B-A3B (MoE), an advanced mathematical reasoning AI model. Given the following mathematical problem or expression, provide a comprehensive solution with deep analytical thinking.
+    let fileContext = '';
+    if (files.length > 0) {
+      fileContext = '\n\nUploaded files context:\n';
+      for (const file of files) {
+        const content = await file.text();
+        fileContext += `File: ${file.name}\nContent: ${content}\n\n`;
+      }
+    }
+
+    const mathPrompt = `You are Qwen2.5-14B-Instruct-1M, an advanced mathematical reasoning AI model. Given the following mathematical problem or expression, provide a comprehensive solution with deep analytical thinking.
 
 Instructions:
 1. Think step-by-step through the problem with detailed reasoning
@@ -32,28 +42,30 @@ Instructions:
 9. Format mathematical expressions clearly using standard notation
 10. Provide the final answer clearly labeled with verification if possible
 11. Use analytical thinking to explore alternative approaches when applicable
+12. If files are provided, analyze them and incorporate relevant information into the solution
 
-Mathematical Problem: ${problem}
+Mathematical Problem: ${problem}${fileContext}
 
 Please provide a detailed, step-by-step solution with deep mathematical reasoning:`;
 
-    // Try local Qwen model first
+    // Try local Qwen2.5-14B-Instruct-1M model first
     let response;
     try {
-      console.log('Attempting to use local Qwen3-30B-A3B (MoE) model...');
+      console.log('Attempting to use local Qwen2.5-14B-Instruct-1M model...');
       response = await fetch('http://localhost:11434/api/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'qwen3-30b-a3b-moe',
+          model: 'qwen2.5:14b-instruct-1m',
           prompt: mathPrompt,
           stream: false,
           options: {
             temperature: 0.1,
             top_p: 0.9,
-            max_tokens: 8192
+            max_tokens: 16384,
+            context_length: 1048576
           }
         })
       });
@@ -63,7 +75,7 @@ Please provide a detailed, step-by-step solution with deep mathematical reasonin
         const solution = data.response;
         
         if (solution) {
-          console.log('Math solution generated successfully with local Qwen model');
+          console.log('Math solution generated successfully with local Qwen2.5-14B-Instruct-1M model');
           return new Response(
             JSON.stringify({ solution }),
             { 
@@ -76,55 +88,28 @@ Please provide a detailed, step-by-step solution with deep mathematical reasonin
         }
       }
     } catch (localError) {
-      console.log('Local Qwen model not available, falling back to Groq:', localError.message);
+      console.log('Local Qwen2.5-14B-Instruct-1M model not available:', localError.message);
     }
 
-    // Fallback to Groq API
-    if (!GROQ_API_KEY) {
-      throw new Error('Local Qwen model unavailable and Groq API key not configured');
-    }
+    // Fallback message
+    const fallbackSolution = `I apologize, but the Qwen2.5-14B-Instruct-1M model is not currently available locally. Please ensure:
 
-    console.log('Using Groq API as fallback...');
-    response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GROQ_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an advanced mathematical reasoning model with deep analytical capabilities. Focus on providing thorough mathematical solutions with step-by-step reasoning.'
-          },
-          {
-            role: 'user',
-            content: mathPrompt
-          }
-        ],
-        max_tokens: 8192,
-        temperature: 0.1
-      })
-    });
+1. Ollama is running locally on port 11434
+2. The qwen2.5:14b-instruct-1m model is installed: \`ollama pull qwen2.5:14b-instruct-1m\`
+3. The model has sufficient system resources (recommended: 16GB+ RAM)
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Groq API error:', response.status, errorText);
-      throw new Error(`API request failed: ${response.status} - ${errorText}`);
-    }
+Problem received: ${problem}
+Files uploaded: ${files.length}
 
-    const data = await response.json();
-    const solution = data.choices?.[0]?.message?.content;
-    
-    if (!solution) {
-      throw new Error('No solution received from API');
-    }
+To install the model locally, run:
+\`\`\`bash
+ollama pull qwen2.5:14b-instruct-1m
+\`\`\`
 
-    console.log('Math solution generated successfully with Groq API');
+Once installed, this assistant will provide comprehensive mathematical solutions with support for unlimited file uploads.`;
 
     return new Response(
-      JSON.stringify({ solution }),
+      JSON.stringify({ solution: fallbackSolution }),
       { 
         headers: { 
           ...corsHeaders,
