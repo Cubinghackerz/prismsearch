@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
@@ -5,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import AuthPromptDialog from "@/components/AuthPromptDialog";
 import useAuthPrompt from "@/hooks/useAuthPrompt";
 import PrismAssistant from "@/components/PrismAssistant";
@@ -68,6 +70,7 @@ const AppContent: React.FC = () => {
       </Routes>
       <AuthPromptDialog isOpen={showPrompt} onClose={closePrompt} />
       <PrismAssistant />
+      <SpeedInsights />
     </div>
   );
 };
