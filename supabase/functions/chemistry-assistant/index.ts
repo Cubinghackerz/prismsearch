@@ -10,43 +10,57 @@ serve(async (req) => {
   }
 
   try {
-    const { problem } = await req.json();
+    const formData = await req.formData();
+    const problem = formData.get('problem') as string;
+    const files = formData.getAll('files') as File[];
 
     if (!problem) {
       throw new Error('Problem is required');
     }
 
     console.log('Solving chemistry problem:', problem);
+    console.log('Number of files uploaded:', files.length);
 
-    const chemistryPrompt = `You are Qwen3-30B-A3B (MoE), an advanced chemistry reasoning AI model. Given the following chemistry problem, provide a comprehensive solution with deep analytical thinking.
+    let fileContext = '';
+    if (files.length > 0) {
+      console.log('Processing uploaded files...');
+      for (const file of files) {
+        const fileContent = await file.arrayBuffer();
+        const base64Content = btoa(String.fromCharCode(...new Uint8Array(fileContent)));
+        fileContext += `\n\nFile: ${file.name}\nContent (base64): ${base64Content}\n`;
+      }
+    }
+
+    const chemistryPrompt = `You are Qwen3-235B-A22B-2507, an advanced chemistry reasoning AI model with multimodal capabilities. Given the following chemistry problem, provide a comprehensive solution with deep analytical thinking.
 
 Instructions:
 1. Identify the type of chemistry problem (stoichiometry, equilibrium, kinetics, thermodynamics, etc.)
-2. List all given information and what needs to be found
-3. Write balanced chemical equations when applicable
-4. Apply relevant chemistry principles and laws systematically
-5. Show all calculations step-by-step with proper units and significant figures
-6. Include molecular structures or reaction mechanisms when helpful
-7. Use proper chemical notation and formulas
-8. Explain the chemical reasoning behind each step
-9. Verify the answer makes chemical sense
-10. Discuss alternative approaches if applicable
+2. If images are provided, analyze molecular structures, diagrams, and chemical equations carefully
+3. List all given information and what needs to be found
+4. Write balanced chemical equations when applicable
+5. Apply relevant chemistry principles and laws systematically
+6. Show all calculations step-by-step with proper units and significant figures
+7. Include molecular structures or reaction mechanisms when helpful
+8. Use proper chemical notation and formulas
+9. Explain the chemical reasoning behind each step
+10. Verify the answer makes chemical sense
+11. Discuss alternative approaches if applicable
 
-Chemistry Problem: ${problem}
+Chemistry Problem: ${problem}${fileContext}
 
 Please provide a detailed, step-by-step solution with clear chemistry reasoning:`;
 
     // Try local Qwen model first
     let response;
     try {
-      console.log('Attempting to use local Qwen3-30B-A3B (MoE) model...');
+      console.log('Attempting to use local Qwen3-235B-A22B-2507 model...');
       response = await fetch('http://localhost:11434/api/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'qwen3-30b-a3b-moe',
+          model: 'qwen3-235b-a22b-2507',
           prompt: chemistryPrompt,
           stream: false,
           options: {

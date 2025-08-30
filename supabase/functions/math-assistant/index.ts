@@ -10,44 +10,58 @@ serve(async (req) => {
   }
 
   try {
-    const { problem } = await req.json();
+    const formData = await req.formData();
+    const problem = formData.get('problem') as string;
+    const files = formData.getAll('files') as File[];
 
     if (!problem) {
       throw new Error('Problem is required');
     }
 
     console.log('Solving math problem:', problem);
+    console.log('Number of files uploaded:', files.length);
 
-    const mathPrompt = `You are Qwen3-30B-A3B (MoE), an advanced mathematical reasoning AI model. Given the following mathematical problem or expression, provide a comprehensive solution with deep analytical thinking.
+    let fileContext = '';
+    if (files.length > 0) {
+      console.log('Processing uploaded files...');
+      for (const file of files) {
+        const fileContent = await file.arrayBuffer();
+        const base64Content = btoa(String.fromCharCode(...new Uint8Array(fileContent)));
+        fileContext += `\n\nFile: ${file.name}\nContent (base64): ${base64Content}\n`;
+      }
+    }
+
+    const mathPrompt = `You are Qwen3-235B-A22B-2507, an advanced mathematical reasoning AI model with multimodal capabilities. Given the following mathematical problem or expression, provide a comprehensive solution with deep analytical thinking.
 
 Instructions:
 1. Think step-by-step through the problem with detailed reasoning
 2. Identify the type of mathematical problem (algebra, calculus, geometry, statistics, etc.)
-3. Provide step-by-step solution with clear explanations
-4. Show all intermediate steps and reasoning processes
-5. If it's an equation, solve for the variable(s) systematically
-6. If it's calculus, show the integration/differentiation process with justification
-7. If it's a word problem, set up the mathematical model first and explain your approach
-8. Include any relevant mathematical concepts, theorems, or principles used
-9. Format mathematical expressions clearly using standard notation
-10. Provide the final answer clearly labeled with verification if possible
-11. Use analytical thinking to explore alternative approaches when applicable
+3. If images are provided, analyze them carefully and extract relevant mathematical information
+4. Provide step-by-step solution with clear explanations
+5. Show all intermediate steps and reasoning processes
+6. If it's an equation, solve for the variable(s) systematically
+7. If it's calculus, show the integration/differentiation process with justification
+8. If it's a word problem, set up the mathematical model first and explain your approach
+9. Include any relevant mathematical concepts, theorems, or principles used
+10. Format mathematical expressions clearly using standard notation
+11. Provide the final answer clearly labeled with verification if possible
+12. Use analytical thinking to explore alternative approaches when applicable
 
-Mathematical Problem: ${problem}
+Mathematical Problem: ${problem}${fileContext}
 
 Please provide a detailed, step-by-step solution with deep mathematical reasoning:`;
 
     // Try local Qwen model first
     let response;
     try {
-      console.log('Attempting to use local Qwen3-30B-A3B (MoE) model...');
+      console.log('Attempting to use local Qwen3-235B-A22B-2507 model...');
       response = await fetch('http://localhost:11434/api/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'qwen3-30b-a3b-moe',
+          model: 'qwen3-235b-a22b-2507',
           prompt: mathPrompt,
           stream: false,
           options: {

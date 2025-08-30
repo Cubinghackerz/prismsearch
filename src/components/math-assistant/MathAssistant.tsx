@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,6 +10,7 @@ import { toast } from 'sonner';
 import EquationKeyboard from './EquationKeyboard';
 import MathRenderer from './MathRenderer';
 import ScientificCalculator from '../calculator/ScientificCalculator';
+import FileUpload from '../assistants/FileUpload';
 
 interface MathResult {
   id: string;
@@ -21,6 +21,7 @@ interface MathResult {
 
 const MathAssistant = () => {
   const [input, setInput] = useState('');
+  const [files, setFiles] = useState<File[]>([]);
   const [results, setResults] = useState<MathResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -50,13 +51,19 @@ const MathAssistant = () => {
 
     setIsLoading(true);
     try {
+      const formData = new FormData();
+      formData.append('problem', input);
+      
+      files.forEach((file) => {
+        formData.append('files', file);
+      });
+
       const response = await fetch(`https://fgpdfkvabwemivzjeitx.supabase.co/functions/v1/math-assistant`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZncGRma3ZhYndlbWl2emplaXR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNTU5ODUsImV4cCI6MjA2MTczMTk4NX0.hbWiDq1_KGBMMmQBbsrZTysKxUm3bqjslSqRUzre-O4`,
         },
-        body: JSON.stringify({ problem: input }),
+        body: formData,
       });
 
       if (!response.ok) {
@@ -74,6 +81,7 @@ const MathAssistant = () => {
 
       setResults(prev => [newResult, ...prev]);
       setInput('');
+      setFiles([]);
       toast.success('Problem solved successfully!');
     } catch (error) {
       console.error('Error solving math:', error);
@@ -110,7 +118,7 @@ const MathAssistant = () => {
           </h1>
         </div>
         <p className="text-lg text-prism-text-muted max-w-2xl mx-auto">
-          Advanced mathematical problem solver powered by Qwen3-30B-A3B (MoE). 
+          Advanced mathematical problem solver powered by Qwen3-235B-A22B-2507. 
           Solve algebra, calculus, geometry, statistics, and more with detailed step-by-step solutions.
         </p>
       </div>
@@ -142,7 +150,13 @@ Examples:
 • Find the derivative of sin(x) * e^x
 • Calculate the integral of x² from 0 to 5
 • Simplify (2x + 3)(x - 1)"
-                  className="min-h-[200px] bg-prism-surface/30 border-prism-border text-prism-text resize-none"
+                  className="min-h-[150px] bg-prism-surface/30 border-prism-border text-prism-text resize-none"
+                />
+
+                <FileUpload 
+                  files={files} 
+                  onFilesChange={setFiles}
+                  maxFiles={10}
                 />
                 
                 <div className="flex justify-between items-center">
