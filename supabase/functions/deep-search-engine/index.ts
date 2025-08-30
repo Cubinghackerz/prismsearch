@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -70,7 +71,7 @@ async function scrapeWebPage(url: string): Promise<{ title: string; content: str
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
       },
-      signal: AbortSignal.timeout(2000) // Reduced timeout for speed
+      signal: AbortSignal.timeout(3000) // Reduced timeout for speed
     });
 
     if (!response.ok) {
@@ -95,14 +96,14 @@ async function scrapeWebPage(url: string): Promise<{ title: string; content: str
       .replace(/<[^>]*>/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
-      .substring(0, 600); // Reduced for speed
+      .substring(0, 800); // Reduced for speed
     
     // Extract links
     const linkMatches = html.match(/href=["']([^"']+)["']/gi) || [];
     const links = linkMatches
       .map(match => match.replace(/href=["']([^"']+)["']/i, '$1'))
       .filter(link => link.startsWith('http'))
-      .slice(0, 3);
+      .slice(0, 5);
 
     return { title, content, links };
   } catch (error) {
@@ -171,13 +172,13 @@ async function performSearch(query: string, maxResults: number, fastMode: boolea
   
   const sources: SearchSource[] = [];
   
-  // Generate real web URLs - limit to 10 for faster processing
-  const searchUrls = generateRealWebSources(query, 10);
+  // Generate real web URLs
+  const searchUrls = generateRealWebSources(query, Math.min(maxResults, 20)); // Limit for performance
   
   console.log(`Generated ${searchUrls.length} URLs for scraping`);
 
   // Process URLs in smaller batches for better performance
-  const batchSize = fastMode ? 5 : 3;
+  const batchSize = fastMode ? 8 : 4;
   const batches = [];
   
   for (let i = 0; i < searchUrls.length; i += batchSize) {
@@ -214,7 +215,7 @@ async function performSearch(query: string, maxResults: number, fastMode: boolea
     });
 
     // Stop early if we have enough sources
-    if (sources.length >= 10) {
+    if (sources.length >= maxResults * 0.5) {
       console.log(`Early exit with ${sources.length} sources`);
       break;
     }
@@ -228,7 +229,7 @@ async function performSearch(query: string, maxResults: number, fastMode: boolea
   }
 
   console.log(`Collected ${sources.length} valid sources`);
-  return sources.slice(0, 10); // Limit to exactly 10 sources
+  return sources.slice(0, maxResults);
 }
 
 function generateFallbackSources(query: string, count: number): SearchSource[] {
@@ -277,7 +278,7 @@ class DeepResearchAgent {
           temperature: 0.7,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 1200, // Reduced for faster processing
+          maxOutputTokens: 1500, // Reduced for faster processing
         }
       })
     });
@@ -341,8 +342,8 @@ serve(async (req) => {
       throw new Error('Query parameter is required');
     }
 
-    // Perform web scraping and content extraction - limit to 10 sources
-    const sources = await performSearch(query, 10, fastMode);
+    // Perform web scraping and content extraction
+    const sources = await performSearch(query, Math.min(maxSources, 50), fastMode); // Limit for performance
     
     if (sources.length === 0) {
       // Generate fallback sources instead of throwing error
@@ -370,7 +371,7 @@ serve(async (req) => {
 Query: "${query}"
 
 Content:
-${combinedContent.substring(0, 3000)}
+${combinedContent.substring(0, 4000)}
 
 Provide a clear, structured summary highlighting the most important information found across these sources.`;
         break;
@@ -381,7 +382,7 @@ Provide a clear, structured summary highlighting the most important information 
 Query: "${query}"
 
 Content:
-${combinedContent.substring(0, 5000)}
+${combinedContent.substring(0, 8000)}
 
 Provide a comprehensive analysis covering:
 1. Main findings and key points
