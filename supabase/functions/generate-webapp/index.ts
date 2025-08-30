@@ -57,11 +57,6 @@ serve(async (req) => {
         }
     }
 
-    // Fix navigation issues in generated web apps
-    if (response.html) {
-      response.html = fixNavigationIssues(response.html);
-    }
-
     return new Response(
       JSON.stringify(response),
       { 
@@ -89,66 +84,6 @@ serve(async (req) => {
     );
   }
 });
-
-// Function to fix navigation issues in generated HTML
-function fixNavigationIssues(html: string): string {
-  // Replace absolute paths that might cause issues
-  html = html.replace(/href="\//g, 'href="#');
-  html = html.replace(/href="\/home"/g, 'href="#home"');
-  html = html.replace(/href="\/index"/g, 'href="#"');
-  
-  // Fix common navigation patterns that cause issues
-  html = html.replace(/href="home"/g, 'href="#home"');
-  html = html.replace(/href="index.html"/g, 'href="#"');
-  html = html.replace(/href="#\/"/g, 'href="#"');
-  
-  // Add JavaScript to handle navigation properly
-  const navigationScript = `
-    <script>
-      // Handle navigation links to prevent 404 errors
-      document.addEventListener('DOMContentLoaded', function() {
-        const links = document.querySelectorAll('a[href^="#"]');
-        links.forEach(link => {
-          link.addEventListener('click', function(e) {
-            const href = this.getAttribute('href');
-            if (href === '#' || href === '#home') {
-              e.preventDefault();
-              // Scroll to top or handle home navigation
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            } else if (href.startsWith('#')) {
-              // Handle hash navigation
-              const target = document.querySelector(href);
-              if (target) {
-                e.preventDefault();
-                target.scrollIntoView({ behavior: 'smooth' });
-              }
-            }
-          });
-        });
-        
-        // Prevent external navigation that could cause issues
-        document.querySelectorAll('a').forEach(link => {
-          const href = link.getAttribute('href');
-          if (href && !href.startsWith('#') && !href.startsWith('http') && !href.startsWith('mailto') && !href.startsWith('tel')) {
-            link.addEventListener('click', function(e) {
-              e.preventDefault();
-              console.log('Navigation prevented to avoid 404:', href);
-            });
-          }
-        });
-      });
-    </script>
-  `;
-  
-  // Insert the navigation script before closing body tag
-  if (html.includes('</body>')) {
-    html = html.replace('</body>', navigationScript + '\n</body>');
-  } else {
-    html += navigationScript;
-  }
-  
-  return html;
-}
 
 async function generateWithGemini(prompt: string) {
   if (!GEMINI_API_KEY) {
@@ -526,19 +461,11 @@ function createSystemPrompt(): string {
   return `You are a professional web developer AI that creates complete, functional web applications. 
 
 Given a user prompt, generate a complete web application with the following structure:
-- HTML: Complete, semantic HTML structure with proper navigation
+- HTML: Complete, semantic HTML structure
 - CSS: Modern, responsive styling with animations and good UX
-- JavaScript: Functional, well-commented JavaScript code with proper navigation handling
+- JavaScript: Functional, well-commented JavaScript code
 - Description: Brief description of the application
 - Features: Array of key features implemented
-
-CRITICAL NAVIGATION REQUIREMENTS:
-1. Use hash-based navigation (#) for internal links to avoid 404 errors
-2. Never use absolute paths (/) that would redirect outside the sandbox
-3. All internal navigation should use onclick handlers or hash links
-4. Home links should use href="#" or onclick="scrollTo(0,0)"
-5. Include proper JavaScript to handle navigation smoothly
-6. Avoid any external redirects or links that leave the current page context
 
 Guidelines:
 1. Use modern web standards (HTML5, CSS3, ES6+)
@@ -568,19 +495,11 @@ function createCodeFocusedSystemPrompt(): string {
   return `You are a specialized code generation AI that creates complete, functional web applications with a focus on clean, efficient code.
 
 Given a user prompt, generate a complete web application with the following structure:
-- HTML: Semantic, well-structured HTML with proper navigation
+- HTML: Semantic, well-structured HTML
 - CSS: Clean, modern styling with best practices
-- JavaScript: Efficient, well-commented, and maintainable code with proper navigation
+- JavaScript: Efficient, well-commented, and maintainable code
 - Description: Technical description of the application
 - Features: Array of implemented features
-
-CRITICAL NAVIGATION REQUIREMENTS:
-1. Use hash-based navigation (#) for internal links to avoid 404 errors
-2. Never use absolute paths (/) that would redirect outside the sandbox
-3. All internal navigation should use onclick handlers or hash links
-4. Home links should use href="#" or onclick="scrollTo(0,0)"
-5. Include proper JavaScript to handle navigation smoothly
-6. Avoid any external redirects or links that leave the current page context
 
 Code Quality Guidelines:
 1. Write clean, readable, and maintainable code

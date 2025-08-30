@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,21 +11,18 @@ import { toast } from 'sonner';
 import EquationKeyboard from './EquationKeyboard';
 import MathRenderer from './MathRenderer';
 import ScientificCalculator from '../calculator/ScientificCalculator';
-import FileUpload from '../assistants/FileUpload';
 
 interface MathResult {
   id: string;
   input: string;
   output: string;
   timestamp: Date;
-  files?: string[];
 }
 
 const MathAssistant = () => {
   const [input, setInput] = useState('');
   const [results, setResults] = useState<MathResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const insertAtCursor = (text: string) => {
@@ -52,19 +50,13 @@ const MathAssistant = () => {
 
     setIsLoading(true);
     try {
-      const formData = new FormData();
-      formData.append('problem', input);
-      
-      uploadedFiles.forEach((file) => {
-        formData.append('files', file);
-      });
-
       const response = await fetch(`https://fgpdfkvabwemivzjeitx.supabase.co/functions/v1/math-assistant`, {
         method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZncGRma3ZhYndlbWl2emplaXR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNTU5ODUsImV4cCI6MjA2MTczMTk4NX0.hbWiDq1_KGBMMmQBbsrZTysKxUm3bqjslSqRUzre-O4`,
         },
-        body: formData,
+        body: JSON.stringify({ problem: input }),
       });
 
       if (!response.ok) {
@@ -78,13 +70,11 @@ const MathAssistant = () => {
         input: input,
         output: data.solution,
         timestamp: new Date(),
-        files: uploadedFiles.map(f => f.name),
       };
 
       setResults(prev => [newResult, ...prev]);
       setInput('');
-      setUploadedFiles([]);
-      toast.success('Problem solved with Qwen2.5-14B-Instruct-1M!');
+      toast.success('Problem solved successfully!');
     } catch (error) {
       console.error('Error solving math:', error);
       toast.error('Failed to solve the problem');
@@ -120,8 +110,8 @@ const MathAssistant = () => {
           </h1>
         </div>
         <p className="text-lg text-prism-text-muted max-w-2xl mx-auto">
-          Advanced mathematical problem solver powered by Qwen2.5-14B-Instruct-1M (locally hosted). 
-          Solve algebra, calculus, geometry, statistics, and more with unlimited file upload support.
+          Advanced mathematical problem solver powered by Qwen3-30B-A3B (MoE). 
+          Solve algebra, calculus, geometry, statistics, and more with detailed step-by-step solutions.
         </p>
       </div>
 
@@ -133,64 +123,49 @@ const MathAssistant = () => {
 
         <TabsContent value="solver" className="space-y-6">
           <div className="grid lg:grid-cols-2 gap-6">
-            <div className="space-y-6">
-              <Card className="bg-prism-surface/50 border-prism-border">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Calculator className="h-5 w-5" />
-                    <span>Mathematical Problem Input</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Textarea
-                    ref={textareaRef}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={handleKeyPress}
-                    placeholder="Enter your mathematical problem here...
+            <Card className="bg-prism-surface/50 border-prism-border">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Calculator className="h-5 w-5" />
+                  <span>Mathematical Problem Input</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  placeholder="Enter your mathematical problem here...
 Examples:
 • Solve x² + 5x + 6 = 0
 • Find the derivative of sin(x) * e^x
 • Calculate the integral of x² from 0 to 5
 • Simplify (2x + 3)(x - 1)"
-                    className="min-h-[150px] bg-prism-surface/30 border-prism-border text-prism-text resize-none"
-                  />
-                  
-                  <div className="flex justify-between items-center">
-                    <div className="text-sm text-prism-text-muted">
-                      Use Ctrl+Enter to solve quickly
-                    </div>
-                    <Button 
-                      onClick={solveMath} 
-                      disabled={isLoading || !input.trim()}
-                      className="bg-prism-primary hover:bg-prism-primary/90"
-                    >
-                      {isLoading ? (
-                        <>Solving...</>
-                      ) : (
-                        <>
-                          <Send className="h-4 w-4 mr-2" />
-                          Solve Problem
-                        </>
-                      )}
-                    </Button>
+                  className="min-h-[200px] bg-prism-surface/30 border-prism-border text-prism-text resize-none"
+                />
+                
+                <div className="flex justify-between items-center">
+                  <div className="text-sm text-prism-text-muted">
+                    Use Ctrl+Enter to solve quickly
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-prism-surface/50 border-prism-border">
-                <CardHeader>
-                  <CardTitle>File Upload (Unlimited)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <FileUpload
-                    files={uploadedFiles}
-                    onFilesChange={setUploadedFiles}
-                    maxFiles={100}
-                  />
-                </CardContent>
-              </Card>
-            </div>
+                  <Button 
+                    onClick={solveMath} 
+                    disabled={isLoading || !input.trim()}
+                    className="bg-prism-primary hover:bg-prism-primary/90"
+                  >
+                    {isLoading ? (
+                      <>Solving...</>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 mr-2" />
+                        Solve Problem
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
             <Card className="bg-prism-surface/50 border-prism-border">
               <CardHeader>
@@ -205,7 +180,7 @@ Examples:
                 </div>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[500px]">
+                <ScrollArea className="h-[400px]">
                   {results.length === 0 ? (
                     <div className="text-center text-prism-text-muted py-12">
                       <Calculator className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -219,11 +194,6 @@ Examples:
                             <div className="flex justify-between items-start">
                               <span className="text-sm text-prism-text-muted">
                                 Problem #{results.length - index}
-                                {result.files && result.files.length > 0 && (
-                                  <span className="ml-2 text-prism-accent">
-                                    ({result.files.length} files)
-                                  </span>
-                                )}
                               </span>
                               <Button 
                                 variant="ghost" 
