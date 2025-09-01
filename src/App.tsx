@@ -10,6 +10,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import AuthPromptDialog from "@/components/AuthPromptDialog";
 import useAuthPrompt from "@/hooks/useAuthPrompt";
 import PrismAssistant from "@/components/PrismAssistant";
+import Prism2AnnouncementDialog from "@/components/Prism2AnnouncementDialog";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Chat from "./pages/Chat";
@@ -69,6 +70,7 @@ const AppContent: React.FC = () => {
         <Route path="*" element={<NotFound />} />
       </Routes>
       <AuthPromptDialog isOpen={showPrompt} onClose={closePrompt} />
+      <Prism2AnnouncementDialog />
       <PrismAssistant />
       <SpeedInsights />
     </div>
