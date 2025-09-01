@@ -77,7 +77,7 @@ const Home = () => {
           <motion.div variants={itemVariants} className="space-y-6 mb-12">
             <h1 className="text-6xl md:text-8xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent leading-tight">
               The Future of{' '}
-              <span className="inline-block animate-gradient-shift bg-gradient-to-r from-accent via-primary to-accent bg-clip-text text-transparent">
+              <span className="inline-block bg-gradient-to-r from-accent via-primary to-accent bg-clip-text text-transparent">
                 Digital Intelligence
               </span>
             </h1>
@@ -87,7 +87,7 @@ const Home = () => {
             </p>
           </motion.div>
 
-          <motion.div variants={itemVariands} className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+          <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
             <Button 
               asChild 
               size="lg" 
@@ -116,19 +116,19 @@ const Home = () => {
           <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             <div className="text-center">
               <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
-                <CountUp end={50} duration={2} suffix="K+" />
+                <CountUp to={50} duration={2} />K+
               </div>
               <p className="text-muted-foreground text-lg">Active Users</p>
             </div>
             <div className="text-center">
               <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent mb-2">
-                <CountUp end={99.9} duration={2.5} suffix="%" decimals={1} />
+                <CountUp to={99.9} duration={2.5} />%
               </div>
               <p className="text-muted-foreground text-lg">Uptime</p>
             </div>
             <div className="text-center">
               <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
-                <CountUp end={1} duration={3} suffix="M+" />
+                <CountUp to={1} duration={3} />M+
               </div>
               <p className="text-muted-foreground text-lg">Queries Processed</p>
             </div>
