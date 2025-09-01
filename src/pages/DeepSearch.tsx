@@ -1,199 +1,274 @@
 
 import React, { useState } from 'react';
-import { Search, Filter, BookOpen, Globe, Database, Image as ImageIcon, Clock, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import SearchResults from '@/components/SearchResults';
+import { Loader2, Search, ExternalLink, Globe, Zap, Database, Atom, FileText, Bot } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import Navigation from '@/components/Navigation';
-import FocusMode from '@/components/ui/focus-mode';
+import Footer from '@/components/Footer';
+import { supabase } from '@/integrations/supabase/client';
+import SearchLoadingAnimation from '@/components/search/SearchLoadingAnimation';
+
+interface SearchSource {
+  title: string;
+  url: string;
+  snippet: string;
+}
+
+interface DeepSearchResult {
+  summary: string;
+  sources: SearchSource[];
+  totalPages: number;
+}
+
+type SearchMode = 'quick' | 'comprehensive' | 'quantum';
 
 const DeepSearch = () => {
   const [query, setQuery] = useState('');
-  const [activeSource, setActiveSource] = useState('all');
-  const [searchHistory, setSearchHistory] = useState([
-    'quantum computing applications',
-    'renewable energy trends 2024',
-    'artificial intelligence ethics',
-  ]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [result, setResult] = useState<DeepSearchResult | null>(null);
+  const [selectedMode, setSelectedMode] = useState<SearchMode>('quick');
+  const { toast } = useToast();
 
-  const sources = [
-    { id: 'all', label: 'All Sources', icon: Globe, color: 'bg-primary' },
-    { id: 'web', label: 'Web Search', icon: Globe, color: 'bg-blue-500' },
-    { id: 'academic', label: 'Academic Papers', icon: BookOpen, color: 'bg-green-500' },
-    { id: 'databases', label: 'Databases', icon: Database, color: 'bg-purple-500' },
-    { id: 'visual', label: 'Visual Content', icon: ImageIcon, color: 'bg-orange-500' },
-  ];
+  const searchModes = {
+    quick: {
+      icon: Zap,
+      title: 'Quick Search',
+      description: 'Fast search across 1000 sources',
+      sources: 1000,
+      estimatedTime: '30-60 seconds',
+      color: 'from-green-500/20 to-green-600/20 border-green-500/30 text-green-600'
+    },
+    comprehensive: {
+      icon: Database,
+      title: 'Comprehensive Search',
+      description: 'Thorough search across 1000 sources',
+      sources: 1000,
+      estimatedTime: '2-4 minutes',
+      color: 'from-blue-500/20 to-blue-600/20 border-blue-500/30 text-blue-600'
+    },
+    quantum: {
+      icon: Atom,
+      title: 'Quantum Search',
+      description: 'Advanced quantum-enhanced search',
+      sources: 1000,
+      estimatedTime: '3-5 minutes',
+      color: 'from-purple-500/20 to-purple-600/20 border-purple-500/30 text-purple-600'
+    }
+  };
+
+  const handleSearch = async (mode: SearchMode) => {
+    if (!query.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a search query",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSearching(true);
+    setResult(null);
+    setSelectedMode(mode);
+
+    try {
+      console.log(`Starting ${mode} search for:`, query);
+      
+      const { data, error } = await supabase.functions.invoke('deep-search-engine', {
+        body: { 
+          query,
+          searchMode: mode,
+          maxSources: searchModes[mode].sources,
+          fastMode: true // Enable fast processing
+        }
+      });
+
+      if (error) {
+        console.error('Deep search error:', error);
+        throw error;
+      }
+
+      console.log('Deep search response:', data);
+      setResult(data);
+
+      toast({
+        title: "Search Complete",
+        description: `${searchModes[mode].title} analyzed ${data.totalPages} pages`,
+      });
+
+    } catch (error) {
+      console.error('Error during deep search:', error);
+      toast({
+        title: "Search Failed",
+        description: error.message || "An error occurred during the search",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !isSearching) {
+      handleSearch('quick');
+    }
+  };
+
+  // Show loading animation when searching
+  if (isSearching) {
+    return <SearchLoadingAnimation query={query} searchMode={selectedMode} />;
+  }
 
   return (
-    <FocusMode toolName="Deep Search 2.0">
-      <div className="h-full overflow-auto">
-        <Navigation />
-        
-        <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10 flex flex-col">
+      <Navigation />
+      
+      <main className="container mx-auto px-4 py-8 pt-32 flex-1">
+        <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="flex items-center justify-center space-x-3 mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20">
-                <Search className="w-8 h-8 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  Deep Search 2.0
-                </h1>
-                <Badge variant="secondary" className="mt-1">Multi-Source Intelligence</Badge>
-              </div>
+            <div className="flex items-center justify-center mb-4">
+              <Globe className="h-12 w-12 text-primary mr-3" />
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                Deep Search
+              </h1>
             </div>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Advanced AI-powered search across web, academic papers, databases, and visual content
+              Lightning-fast web scraping and AI analysis. Choose your search intensity and get intelligent summaries with sources.
             </p>
           </div>
 
-          {/* Search Interface */}
+          {/* Search Input */}
           <Card className="mb-8">
-            <CardContent className="p-6">
-              <div className="flex space-x-4 mb-6">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    placeholder="Enter your research query..."
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    className="pl-10 h-12 text-lg"
-                  />
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Search className="h-5 w-5 mr-2" />
+                Search Query
+              </CardTitle>
+              <CardDescription>
+                Enter your search topic. The system will rapidly scrape multiple web pages and provide an AI-powered summary.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Input
+                  placeholder="Enter your search query..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  disabled={isSearching}
+                  className="text-lg"
+                />
+                
+                {/* Search Mode Buttons */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {Object.entries(searchModes).map(([mode, config]) => {
+                    const IconComponent = config.icon;
+                    return (
+                      <Button
+                        key={mode}
+                        onClick={() => handleSearch(mode as SearchMode)}
+                        disabled={isSearching || !query.trim()}
+                        className={`h-auto p-4 flex flex-col items-center space-y-2 bg-gradient-to-r ${config.color} hover:opacity-80 transition-all duration-300`}
+                        variant="outline"
+                      >
+                        <IconComponent className="h-6 w-6" />
+                        <div className="text-center">
+                          <div className="font-semibold">{config.title}</div>
+                          <div className="text-xs opacity-80">{config.description}</div>
+                          <div className="flex flex-col items-center space-y-1 mt-2">
+                            <Badge variant="secondary">
+                              {config.sources} sources
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {config.estimatedTime}
+                            </Badge>
+                          </div>
+                        </div>
+                      </Button>
+                    );
+                  })}
                 </div>
-                <Button size="lg" className="px-8">
-                  <Search className="w-5 h-5 mr-2" />
-                  Search
-                </Button>
-              </div>
-
-              {/* Source Selection */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                {sources.map((source) => {
-                  const Icon = source.icon;
-                  return (
-                    <Button
-                      key={source.id}
-                      variant={activeSource === source.id ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setActiveSource(source.id)}
-                      className="flex items-center space-x-2"
-                    >
-                      <div className={`w-3 h-3 rounded-full ${source.color}`} />
-                      <Icon className="w-4 h-4" />
-                      <span>{source.label}</span>
-                    </Button>
-                  );
-                })}
-              </div>
-
-              {/* Advanced Filters */}
-              <div className="flex items-center space-x-4 text-sm">
-                <Button variant="ghost" size="sm">
-                  <Filter className="w-4 h-4 mr-2" />
-                  Filters
-                </Button>
-                <Button variant="ghost" size="sm">
-                  <Clock className="w-4 h-4 mr-2" />
-                  Time Range
-                </Button>
-                <Button variant="ghost" size="sm">
-                  <Star className="w-4 h-4 mr-2" />
-                  Source Quality
-                </Button>
               </div>
             </CardContent>
           </Card>
 
-          {/* Search Results and Features */}
-          <Tabs defaultValue="results" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="results">Search Results</TabsTrigger>
-              <TabsTrigger value="threads">Research Threads</TabsTrigger>
-              <TabsTrigger value="history">Search History</TabsTrigger>
-              <TabsTrigger value="insights">AI Insights</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="results">
-              <SearchResults />
-            </TabsContent>
-
-            <TabsContent value="threads">
+          {/* Results */}
+          {result && (
+            <div className="space-y-6">
+              {/* Summary */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Research Threads</CardTitle>
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Bot className="h-5 w-5 mr-2" />
+                      AI Summary
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Badge variant="secondary">{result.totalPages} pages analyzed</Badge>
+                      <Badge className={searchModes[selectedMode].color}>
+                        {searchModes[selectedMode].title}
+                      </Badge>
+                    </div>
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="p-4 rounded-lg border border-border hover:bg-accent/5 transition-colors cursor-pointer">
-                      <h3 className="font-medium mb-2">AI Ethics in Healthcare</h3>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Continuing research on ethical implications of AI in medical diagnosis...
-                      </p>
-                      <div className="flex space-x-2">
-                        <Badge variant="outline">5 sources</Badge>
-                        <Badge variant="outline">3 papers</Badge>
-                        <Badge variant="outline">Updated 2h ago</Badge>
-                      </div>
-                    </div>
+                  <div className="prose prose-sm max-w-none dark:prose-invert">
+                    <p className="whitespace-pre-wrap">{result.summary}</p>
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
 
-            <TabsContent value="history">
+              {/* Sources */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Search History</CardTitle>
+                  <CardTitle className="flex items-center">
+                    <ExternalLink className="h-5 w-5 mr-2" />
+                    Sources ({result.sources.length})
+                  </CardTitle>
+                  <CardDescription>
+                    Web pages that were scraped and analyzed for this search
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    {searchHistory.map((search, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-accent/5 transition-colors cursor-pointer"
-                      >
-                        <span className="text-sm">{search}</span>
-                        <Button variant="ghost" size="sm">
-                          <Search className="w-4 h-4" />
-                        </Button>
+                  <div className="space-y-4">
+                    {result.sources.map((source, index) => (
+                      <div key={index} className="border rounded-lg p-4 hover:bg-accent/50 transition-colors">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-sm mb-1 truncate">
+                              {source.title}
+                            </h4>
+                            <p className="text-xs text-muted-foreground mb-2 break-all">
+                              {source.url}
+                            </p>
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              {source.snippet}
+                            </p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(source.url, '_blank')}
+                            className="shrink-0"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
-
-            <TabsContent value="insights">
-              <Card>
-                <CardHeader>
-                  <CardTitle>AI-Powered Insights</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-                      <h3 className="font-medium text-primary mb-2">Trending Topics</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Based on your search patterns, AI safety and quantum computing are trending in your research area.
-                      </p>
-                    </div>
-                    <div className="p-4 rounded-lg bg-accent/5 border border-accent/20">
-                      <h3 className="font-medium text-accent mb-2">Source Recommendations</h3>
-                      <p className="text-sm text-muted-foreground">
-                        New academic papers from Nature and Science journals match your research interests.
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+            </div>
+          )}
         </div>
-      </div>
-    </FocusMode>
+      </main>
+      
+      <Footer />
+    </div>
   );
 };
 
