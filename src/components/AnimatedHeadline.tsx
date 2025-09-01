@@ -25,32 +25,34 @@ const AnimatedHeadline = memo(() => {
           }
 
           .static-text {
-            background: linear-gradient(45deg, #00C2A8, #9B5DE5, #A855F7, #00C2A8);
+            background: linear-gradient(135deg, #00D4AA 0%, #A855F7 25%, #EC4899 50%, #00D4AA 100%);
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-size: 300% 300%;
-            animation: gradientShift 4s ease infinite;
+            background-size: 400% 400%;
+            animation: gradientShift 5s ease infinite;
             text-align: center;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            font-weight: 600;
+            font-weight: 700;
             letter-spacing: -0.025em;
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             align-items: center;
             gap: 0.5rem;
+            filter: brightness(1.1) contrast(1.1);
           }
 
           .animated-word {
-            background: linear-gradient(45deg, #A855F7, #EC4899, #EF4444, #9B5DE5);
+            background: linear-gradient(135deg, #A855F7 0%, #EC4899 25%, #EF4444 50%, #F59E0B 75%, #A855F7 100%);
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-size: 300% 300%;
-            animation: wordGlow 3s ease infinite, wordPulse 2s ease-in-out infinite alternate;
+            background-size: 400% 400%;
+            animation: wordGlow 4s ease infinite, wordPulse 3s ease-in-out infinite alternate;
             position: relative;
             display: inline-block;
+            filter: brightness(1.2) contrast(1.1);
           }
 
           .animated-word::after {
@@ -60,12 +62,12 @@ const AnimatedHeadline = memo(() => {
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(45deg, #A855F7, #EC4899, #EF4444, #9B5DE5);
-            background-size: 300% 300%;
-            filter: blur(8px);
-            opacity: 0.3;
+            background: linear-gradient(135deg, #A855F7 0%, #EC4899 25%, #EF4444 50%, #F59E0B 75%, #A855F7 100%);
+            background-size: 400% 400%;
+            filter: blur(12px);
+            opacity: 0.4;
             z-index: -1;
-            animation: wordGlow 3s ease infinite;
+            animation: wordGlow 4s ease infinite;
           }
 
           @media (min-width: 768px) {
@@ -77,28 +79,28 @@ const AnimatedHeadline = memo(() => {
 
           @keyframes gradientShift {
             0% { background-position: 0% 50%; }
-            25% { background-position: 100% 0%; }
-            50% { background-position: 100% 100%; }
-            75% { background-position: 0% 100%; }
+            25% { background-position: 100% 25%; }
+            50% { background-position: 0% 75%; }
+            75% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
           }
 
           @keyframes wordGlow {
-            0% { background-position: 0% 0%; }
+            0% { background-position: 0% 25%; }
             25% { background-position: 100% 0%; }
-            50% { background-position: 100% 100%; }
-            75% { background-position: 0% 100%; }
-            100% { background-position: 0% 0%; }
+            50% { background-position: 0% 100%; }
+            75% { background-position: 100% 75%; }
+            100% { background-position: 0% 25%; }
           }
 
           @keyframes wordPulse {
             0% { 
               transform: scale(1);
-              filter: brightness(1);
+              filter: brightness(1.2) contrast(1.1);
             }
             100% { 
-              transform: scale(1.02);
-              filter: brightness(1.1);
+              transform: scale(1.03);
+              filter: brightness(1.3) contrast(1.2);
             }
           }
         `

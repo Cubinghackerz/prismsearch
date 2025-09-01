@@ -34,7 +34,7 @@ const Index = () => {
       description: "Advanced mathematical tools and AI-powered problem solving with step-by-step solutions.",
       link: "/math",
       gradient: "from-purple-500 to-pink-500",
-      badge: "Beta"
+      badge: "Enhanced"
     },
     {
       icon: <BarChart3 className="h-8 w-8 text-indigo-400" />,
@@ -42,7 +42,7 @@ const Index = () => {
       description: "Interactive mathematical graphing with real-time analysis and parameter controls.",
       link: "/graphing",
       gradient: "from-indigo-500 to-purple-500",
-      badge: "Beta"
+      badge: "Enhanced"
     },
     {
       icon: <Atom className="h-8 w-8 text-green-400" />,
@@ -50,7 +50,7 @@ const Index = () => {
       description: "Comprehensive physics calculations and simulations for complex problem solving.",
       link: "/physics",
       gradient: "from-green-500 to-emerald-500",
-      badge: "Beta"
+      badge: "Enhanced"
     },
     {
       icon: <FlaskConical className="h-8 w-8 text-red-400" />,
@@ -58,14 +58,15 @@ const Index = () => {
       description: "Advanced chemistry tools and molecular analysis for research and education.",
       link: "/chemistry",
       gradient: "from-orange-500 to-red-500",
-      badge: "Beta"
+      badge: "Enhanced"
     },
     {
       icon: <Code className="h-8 w-8 text-cyan-400" />,
       title: "Code Generation",
       description: "AI-powered code generation and development tools for modern applications.",
       link: "/code",
-      gradient: "from-cyan-500 to-teal-500"
+      gradient: "from-cyan-500 to-teal-500",
+      badge: "Enhanced"
     },
     {
       icon: <FileText className="h-8 w-8 text-yellow-400" />,
@@ -133,12 +134,19 @@ const Index = () => {
               <Link key={index} to={feature.link}>
                 <Card className="h-full hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer group border-border/50 backdrop-blur-sm">
                   <CardHeader className="pb-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-start justify-between">
                       <div className={`p-3 rounded-lg bg-gradient-to-r ${feature.gradient} text-white mb-4 group-hover:scale-110 transition-transform`}>
                         {feature.icon}
                       </div>
                       {feature.badge && (
-                        <Badge variant="secondary" className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                        <Badge 
+                          variant="secondary" 
+                          className={`text-xs font-semibold border-0 ${
+                            feature.badge === 'New' 
+                              ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' 
+                              : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
+                          }`}
+                        >
                           {feature.badge}
                         </Badge>
                       )}
