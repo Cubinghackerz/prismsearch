@@ -10,11 +10,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-xl border border-prism-border bg-prism-surface/50 text-card-foreground shadow-xl backdrop-blur-md transition-all duration-300 hover:shadow-prism-primary/10 group relative overflow-hidden",
-      // Simplified gradient overlay with better contrast
-      "before:absolute before:inset-0 before:bg-gradient-to-br before:from-prism-primary/5 before:to-transparent before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 before:pointer-events-none",
-      // Subtle hover effect
-      "hover:translate-y-[-2px]",
+      "rounded-xl border bg-card text-card-foreground shadow-sm transition-all duration-300",
       className
     )}
     {...props}
@@ -28,7 +24,7 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-6 relative", className)}
+    className={cn("flex flex-col space-y-1.5 p-6", className)}
     {...props}
   />
 ))
@@ -41,10 +37,7 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "text-xl font-semibold leading-tight tracking-tight font-inter text-prism-text",
-      // Removed background clip text for better readability
-      // Added subtle underline effect with improved spacing
-      "relative after:absolute after:bottom-0 after:left-0 after:w-16 after:h-[1px] after:bg-gradient-to-r after:from-prism-primary-light after:to-transparent after:opacity-0 after:translate-y-1 group-hover:after:opacity-60 group-hover:after:translate-y-0 after:transition-all after:duration-500",
+      "text-2xl font-semibold leading-none tracking-tight",
       className
     )}
     {...props}
@@ -58,7 +51,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-prism-text-muted font-inter leading-relaxed tracking-wide", className)}
+    className={cn("text-sm text-muted-foreground", className)}
     {...props}
   />
 ))
@@ -68,7 +61,7 @@ const CardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-6 pt-0 font-inter", className)} {...props} />
+  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
 ))
 CardContent.displayName = "CardContent"
 

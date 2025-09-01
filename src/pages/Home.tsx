@@ -14,7 +14,9 @@ import {
   Zap,
   Sparkles,
   ChevronRight,
-  Star
+  Star,
+  ArrowRight,
+  CheckCircle
 } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
@@ -89,48 +91,92 @@ const Home = () => {
     { value: 100000, label: "Lines of Code Generated", suffix: "+" }
   ];
 
+  const benefits = [
+    "Advanced AI-powered assistance",
+    "Military-grade security",
+    "Cross-platform compatibility",
+    "Real-time collaboration"
+  ];
+
   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ scrollBehavior: 'smooth' }}>
-      {/* Optimized Prism Background with better performance */}
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-background via-background to-secondary/5">
+      {/* Enhanced Prism Background */}
       <div className="absolute inset-0 -z-10 will-change-transform">
         <Prism
           animationType="rotate"
-          timeScale={0.2}
-          height={3}
-          baseWidth={5}
-          scale={3.2}
-          hueShift={220}
-          colorFrequency={0.6}
-          noise={0.15}
-          glow={0.25}
-          bloom={0.4}
+          timeScale={0.15}
+          height={3.5}
+          baseWidth={6}
+          scale={3.5}
+          hueShift={240}
+          colorFrequency={0.7}
+          noise={0.12}
+          glow={0.3}
+          bloom={0.5}
           suspendWhenOffscreen={true}
         />
       </div>
 
+      {/* Subtle overlay for better text readability */}
+      <div className="absolute inset-0 -z-5 bg-gradient-to-b from-transparent via-background/10 to-background/20" />
+
       <Navigation />
       
-      {/* Hero Section */}
-      <section className="relative pt-24 pb-20 px-4">
+      {/* Enhanced Hero Section */}
+      <section className="relative pt-32 pb-24 px-4">
         <div className="container mx-auto text-center">
-          <div className="max-w-4xl mx-auto space-y-8">
-            <Badge variant="secondary" className="bg-white/10 text-white border-white/20 hover:bg-white/20 transition-colors">
-              <Sparkles className="h-4 w-4 mr-2" />
-              Powered by Advanced AI
-            </Badge>
+          <div className="max-w-5xl mx-auto space-y-12">
+            {/* Floating Badge */}
+            <div className="inline-flex">
+              <Badge 
+                variant="secondary" 
+                className="bg-gradient-to-r from-primary/20 via-secondary/20 to-accent/20 text-white border border-white/30 hover:border-white/50 transition-all duration-300 px-6 py-2 text-sm font-medium backdrop-blur-md shadow-lg"
+              >
+                <Sparkles className="h-4 w-4 mr-2 animate-pulse" />
+                Powered by Advanced AI
+              </Badge>
+            </div>
             
-            <AnimatedHeadline />
-            
-            <p className="text-xl text-white/90 max-w-2xl mx-auto leading-relaxed">
-              Your all-in-one AI-powered productivity suite. From solving complex equations to generating code, 
-              Prism transforms how you work, learn, and create.
-            </p>
+            {/* Enhanced Headline */}
+            <div className="space-y-6">
+              <AnimatedHeadline />
+              
+              <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed font-light">
+                Your all-in-one AI-powered productivity suite. From solving complex equations to generating code, 
+                <span className="font-semibold text-white"> Prism transforms</span> how you work, learn, and create.
+              </p>
+            </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
-              <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 font-semibold px-8">
+            {/* Benefits List */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+              {benefits.map((benefit, index) => (
+                <div key={index} className="flex items-center justify-center space-x-2 text-white/80 bg-white/5 backdrop-blur-sm rounded-lg p-3 border border-white/10">
+                  <CheckCircle className="h-4 w-4 text-green-400 flex-shrink-0" />
+                  <span className="text-sm font-medium">{benefit}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Enhanced CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center pt-8">
+              <Button 
+                size="lg" 
+                className="bg-gradient-to-r from-white to-gray-100 text-gray-900 hover:from-gray-100 hover:to-white font-semibold px-8 py-4 shadow-2xl hover:shadow-white/20 transition-all duration-300 group"
+              >
                 <Link to="/chat" className="flex items-center">
                   Get Started Free
-                  <ChevronRight className="h-5 w-5 ml-2" />
+                  <ChevronRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="lg"
+                className="border-white/30 text-white hover:bg-white/10 hover:border-white/50 font-medium px-8 py-4 backdrop-blur-sm transition-all duration-300"
+              >
+                <Link to="/vault" className="flex items-center">
+                  Explore Features
+                  <ArrowRight className="h-4 w-4 ml-2" />
                 </Link>
               </Button>
             </div>
@@ -138,60 +184,74 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-16 px-4 bg-white/5 backdrop-blur-sm">
+      {/* Enhanced Stats Section */}
+      <section className="py-20 px-4">
         <div className="container mx-auto">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-3xl lg:text-4xl font-bold text-white mb-2">
-                  <CountUp to={stat.value} />
-                  <span>{stat.suffix}</span>
+          <div className="bg-gradient-to-r from-white/10 via-white/5 to-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-2xl p-8 md:p-12">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+              {stats.map((stat, index) => (
+                <div key={index} className="text-center group">
+                  <div className="text-4xl lg:text-5xl font-bold text-white mb-3 group-hover:scale-110 transition-transform duration-300">
+                    <CountUp to={stat.value} />
+                    <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{stat.suffix}</span>
+                  </div>
+                  <div className="text-white/70 text-sm lg:text-base font-medium">{stat.label}</div>
                 </div>
-                <div className="text-white/70 text-sm lg:text-base">{stat.label}</div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section className="py-20 px-4">
+      {/* Enhanced Features Grid */}
+      <section className="py-24 px-4">
         <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
-              Everything You Need in One Platform
+          <div className="text-center mb-20">
+            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
+              Everything You Need in 
+              <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent"> One Platform</span>
             </h2>
-            <p className="text-xl text-white/80 max-w-2xl mx-auto">
-              Discover powerful AI tools designed to enhance your productivity and creativity
+            <p className="text-xl text-white/80 max-w-3xl mx-auto leading-relaxed">
+              Discover powerful AI tools designed to enhance your productivity and unleash your creativity
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <Link key={index} to={feature.link} className="group block">
-                <Card className="h-full bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-2xl relative overflow-visible">
+                <Card className="h-full bg-gradient-to-br from-white/10 via-white/5 to-white/10 backdrop-blur-md border border-white/20 hover:border-white/30 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-primary/20 relative overflow-hidden">
+                  {/* Animated background on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  
                   {feature.isNew && (
                     <Badge 
                       variant="secondary" 
-                      className="absolute -top-3 -right-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold px-3 py-1 text-xs shadow-lg z-10"
+                      className="absolute -top-3 -right-3 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-black font-bold px-3 py-1 text-xs shadow-lg z-10 animate-pulse"
                       style={{ transform: 'rotate(12deg)' }}
                     >
                       NEW
                     </Badge>
                   )}
-                  <CardHeader className="relative">
-                    <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${feature.color} p-2.5 mb-4 group-hover:scale-110 transition-transform`}>
+                  
+                  <CardHeader className="relative pb-4">
+                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-r ${feature.color} p-3 mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-lg`}>
                       {React.cloneElement(feature.icon, { className: "h-full w-full text-white" })}
                     </div>
-                    <CardTitle className="text-white group-hover:text-white/90 transition-colors">
+                    <CardTitle className="text-white group-hover:text-white text-xl font-semibold mb-3">
                       {feature.title}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <CardDescription className="text-white/70 group-hover:text-white/80 transition-colors">
+                  
+                  <CardContent className="relative">
+                    <CardDescription className="text-white/70 group-hover:text-white/90 transition-colors duration-300 leading-relaxed">
                       {feature.description}
                     </CardDescription>
+                    
+                    {/* Subtle arrow indicator */}
+                    <div className="mt-4 flex items-center text-white/50 group-hover:text-primary transition-colors duration-300">
+                      <span className="text-sm font-medium mr-2">Learn more</span>
+                      <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                    </div>
                   </CardContent>
                 </Card>
               </Link>
@@ -200,23 +260,48 @@ const Home = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-sm">
-        <div className="container mx-auto text-center">
-          <div className="max-w-3xl mx-auto space-y-8">
-            <h2 className="text-3xl lg:text-4xl font-bold text-white">
-              Ready to Transform Your Workflow?
-            </h2>
-            <p className="text-xl text-white/80">
-              Join thousands of users who have already discovered the power of AI-driven productivity
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 font-semibold px-8">
-                <Link to="/auth?mode=sign-up" className="flex items-center">
-                  Sign Up
-                  <Star className="h-5 w-5 ml-2" />
-                </Link>
-              </Button>
+      {/* Enhanced CTA Section */}
+      <section className="py-24 px-4">
+        <div className="container mx-auto">
+          <div className="relative">
+            {/* Background gradient */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-secondary/20 to-accent/20 rounded-3xl blur-3xl" />
+            
+            <div className="relative bg-gradient-to-r from-white/10 via-white/5 to-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-2xl p-12 md:p-16 text-center">
+              <div className="max-w-4xl mx-auto space-y-10">
+                <div className="space-y-6">
+                  <h2 className="text-4xl lg:text-5xl font-bold text-white leading-tight">
+                    Ready to Transform Your 
+                    <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent"> Workflow?</span>
+                  </h2>
+                  <p className="text-xl text-white/80 leading-relaxed max-w-2xl mx-auto">
+                    Join thousands of users who have already discovered the power of AI-driven productivity
+                  </p>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+                  <Button 
+                    size="lg" 
+                    className="bg-gradient-to-r from-white to-gray-100 text-gray-900 hover:from-gray-100 hover:to-white font-semibold px-10 py-4 shadow-2xl hover:shadow-white/20 transition-all duration-300 group"
+                  >
+                    <Link to="/auth?mode=sign-up" className="flex items-center">
+                      Start Free Today
+                      <Star className="h-5 w-5 ml-2 group-hover:rotate-12 transition-transform duration-300" />
+                    </Link>
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="lg"
+                    className="border-white/30 text-white hover:bg-white/10 hover:border-white/50 font-medium px-10 py-4 backdrop-blur-sm transition-all duration-300"
+                  >
+                    <Link to="/chat" className="flex items-center">
+                      Try Demo
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Link>
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
