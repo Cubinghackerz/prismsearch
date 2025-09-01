@@ -1,32 +1,14 @@
 
 import React, { memo } from 'react';
-import RotatingText from './RotatingText';
 
 const AnimatedHeadline = memo(() => {
-  const rotatingTexts = [
-    'Digital Intelligence',
-    'Agentic Coding',
-    'Problem Solving',
-    'Password Management',
-    'Graphing Functions'
-  ];
-
   return (
     <div className="animated-headline-wrapper">
       <h1 className="static-text">
         The Future of{' '}
-        <RotatingText
-          texts={rotatingTexts}
-          mainClassName="inline-block"
-          staggerFrom="first"
-          initial={{ y: "100%", opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: "-120%", opacity: 0 }}
-          staggerDuration={0.025}
-          splitLevelClassName="overflow-hidden"
-          transition={{ type: "spring", damping: 30, stiffness: 400 }}
-          rotationInterval={2500}
-        />
+        <span className="animated-word">
+          Productivity
+        </span>
       </h1>
       
       <style dangerouslySetInnerHTML={{
@@ -60,13 +42,30 @@ const AnimatedHeadline = memo(() => {
             gap: 0.5rem;
           }
 
-          .static-text .inline-block {
-            background: linear-gradient(45deg, #A855F7, #EC4899, #EF4444, #9B5DE5) !important;
-            background-clip: text !important;
-            -webkit-background-clip: text !important;
-            -webkit-text-fill-color: transparent !important;
-            background-size: 300% 300% !important;
-            animation: rotatingGradient 5s ease infinite !important;
+          .animated-word {
+            background: linear-gradient(45deg, #A855F7, #EC4899, #EF4444, #9B5DE5);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 300% 300%;
+            animation: wordGlow 3s ease infinite, wordPulse 2s ease-in-out infinite alternate;
+            position: relative;
+            display: inline-block;
+          }
+
+          .animated-word::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, #A855F7, #EC4899, #EF4444, #9B5DE5);
+            background-size: 300% 300%;
+            filter: blur(8px);
+            opacity: 0.3;
+            z-index: -1;
+            animation: wordGlow 3s ease infinite;
           }
 
           @media (min-width: 768px) {
@@ -84,12 +83,23 @@ const AnimatedHeadline = memo(() => {
             100% { background-position: 0% 50%; }
           }
 
-          @keyframes rotatingGradient {
+          @keyframes wordGlow {
             0% { background-position: 0% 0%; }
             25% { background-position: 100% 0%; }
             50% { background-position: 100% 100%; }
             75% { background-position: 0% 100%; }
             100% { background-position: 0% 0%; }
+          }
+
+          @keyframes wordPulse {
+            0% { 
+              transform: scale(1);
+              filter: brightness(1);
+            }
+            100% { 
+              transform: scale(1.02);
+              filter: brightness(1.1);
+            }
           }
         `
       }} />
