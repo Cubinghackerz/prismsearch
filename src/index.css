@@ -32,6 +32,16 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+
+    /* Enhanced theme variables */
+    --sidebar-background: var(--card);
+    --sidebar-foreground: var(--card-foreground);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent);
+    --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--ring);
   }
 }
 
@@ -42,6 +52,7 @@
   body {
     @apply bg-background text-foreground;
     line-height: 1.6;
+    font-family: 'Inter', sans-serif;
   }
   
   /* Fix text clipping issues */
@@ -54,6 +65,45 @@
   .text-5xl, .text-7xl {
     line-height: 1.1;
     padding-bottom: 0.25rem;
+  }
+}
+
+/* Enhanced UI Components */
+@layer components {
+  .glass-effect {
+    @apply bg-background/80 backdrop-blur-md border border-border/50;
+  }
+  
+  .gradient-border {
+    @apply relative;
+  }
+  
+  .gradient-border::before {
+    content: '';
+    @apply absolute inset-0 rounded-lg p-[1px];
+    background: linear-gradient(45deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--secondary)));
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: subtract;
+  }
+  
+  .tool-card {
+    @apply relative p-6 rounded-xl border border-border bg-card/50 backdrop-blur-sm;
+    @apply hover:bg-card/70 hover:border-primary/20 transition-all duration-300;
+    @apply hover:shadow-lg hover:shadow-primary/5;
+  }
+  
+  .enhanced-button {
+    @apply relative overflow-hidden;
+  }
+  
+  .enhanced-button::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-r from-primary/20 via-transparent to-accent/20;
+    @apply translate-x-[-100%] transition-transform duration-500;
+  }
+  
+  .enhanced-button:hover::before {
+    @apply translate-x-[100%];
   }
 }
 
@@ -119,144 +169,148 @@
   z-index: 10;
 }
 
-/* Prism Vault Custom Animations */
-@keyframes prism-pulse {
+/* Prism 2.0 Enhanced Animations */
+@keyframes prism-pulse-enhanced {
   0%, 100% {
-    opacity: 1;
+    opacity: 0.8;
     transform: scale(1);
+    filter: hue-rotate(0deg);
   }
   50% {
-    opacity: 0.8;
+    opacity: 1;
     transform: scale(1.05);
+    filter: hue-rotate(10deg);
   }
 }
 
-@keyframes prism-rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes prism-glow {
+@keyframes prism-glow-cycle {
   0%, 100% {
-    opacity: 0.5;
-    transform: scale(1);
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+  }
+  33% {
+    box-shadow: 0 0 30px hsl(var(--accent) / 0.4);
+  }
+  66% {
+    box-shadow: 0 0 25px hsl(var(--secondary) / 0.3);
+  }
+}
+
+@keyframes float-gentle {
+  0%, 100% {
+    transform: translateY(0px);
   }
   50% {
-    opacity: 0.8;
-    transform: scale(1.1);
+    transform: translateY(-8px);
   }
 }
 
-@keyframes prism-ray-0 {
-  0%, 100% {
-    opacity: 0.3;
-    transform: rotate(0deg) scaleY(1);
+@keyframes gradient-shift-enhanced {
+  0% {
+    background-position: 0% 50%;
   }
   50% {
-    opacity: 0.8;
-    transform: rotate(0deg) scaleY(1.2);
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
   }
 }
 
-@keyframes prism-ray-1 {
-  0%, 100% {
-    opacity: 0.4;
-    transform: rotate(60deg) scaleY(1);
-  }
-  50% {
-    opacity: 0.9;
-    transform: rotate(60deg) scaleY(1.3);
-  }
+/* Focus Mode Styles */
+.focus-mode {
+  overflow: hidden;
 }
 
-@keyframes prism-ray-2 {
-  0%, 100% {
-    opacity: 0.3;
-    transform: rotate(120deg) scaleY(1);
-  }
-  50% {
-    opacity: 0.7;
-    transform: rotate(120deg) scaleY(1.1);
-  }
+.focus-mode-active * {
+  transition: all 0.3s ease;
 }
 
-@keyframes prism-ray-3 {
-  0%, 100% {
-    opacity: 0.5;
-    transform: rotate(180deg) scaleY(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: rotate(180deg) scaleY(1.2);
-  }
+.focus-mode-active .sidebar,
+.focus-mode-active nav:not(.tool-nav),
+.focus-mode-active footer {
+  opacity: 0;
+  pointer-events: none;
 }
 
-@keyframes prism-ray-4 {
-  0%, 100% {
-    opacity: 0.3;
-    transform: rotate(240deg) scaleY(1);
-  }
-  50% {
-    opacity: 0.9;
-    transform: rotate(240deg) scaleY(1.4);
-  }
+/* Enhanced Workspace Styles */
+.workspace-tab {
+  @apply relative;
 }
 
-@keyframes prism-ray-5 {
-  0%, 100% {
-    opacity: 0.4;
-    transform: rotate(300deg) scaleY(1);
-  }
-  50% {
-    opacity: 0.7;
-    transform: rotate(300deg) scaleY(1.1);
-  }
+.workspace-tab::after {
+  content: '';
+  @apply absolute bottom-0 left-0 right-0 h-0.5 bg-primary transform scale-x-0 transition-transform duration-200;
 }
 
-@keyframes prism-particle-0 {
-  0%, 100% {
-    opacity: 0.6;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.2);
-  }
+.workspace-tab.active::after {
+  @apply scale-x-100;
 }
 
-@keyframes prism-particle-1 {
-  0%, 100% {
-    opacity: 0.8;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.3);
-  }
+/* Adaptive Sidebar Animations */
+.sidebar-item {
+  @apply relative overflow-hidden;
 }
 
-@keyframes prism-particle-2 {
-  0%, 100% {
-    opacity: 0.5;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    opacity: 0.9;
-    transform: translate(-50%, -50%) scale(1.1);
-  }
+.sidebar-item::before {
+  content: '';
+  @apply absolute left-0 top-0 bottom-0 w-1 bg-primary transform scale-y-0 transition-transform duration-200;
 }
 
-@keyframes prism-particle-3 {
-  0%, 100% {
-    opacity: 0.7;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.4);
-  }
+.sidebar-item.active::before {
+  @apply scale-y-100;
+}
+
+/* Enhanced Tool Cards */
+.tool-card-enhanced {
+  @apply relative;
+  background: linear-gradient(135deg, 
+    hsl(var(--card)) 0%, 
+    hsl(var(--card) / 0.8) 100%
+  );
+  backdrop-filter: blur(16px);
+  border: 1px solid hsl(var(--border) / 0.5);
+}
+
+.tool-card-enhanced::before {
+  content: '';
+  @apply absolute inset-0 rounded-xl opacity-0 transition-opacity duration-300;
+  background: linear-gradient(135deg, 
+    hsl(var(--primary) / 0.1) 0%, 
+    hsl(var(--accent) / 0.1) 100%
+  );
+}
+
+.tool-card-enhanced:hover::before {
+  @apply opacity-100;
+}
+
+/* Pro Badge Styling */
+.pro-badge {
+  @apply relative;
+  background: linear-gradient(135deg, 
+    hsl(var(--primary)) 0%, 
+    hsl(var(--accent)) 100%
+  );
+  animation: prism-glow-cycle 3s ease-in-out infinite;
+}
+
+/* Utility Classes */
+.text-gradient {
+  @apply bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent;
+}
+
+.border-gradient {
+  @apply relative;
+}
+
+.border-gradient::before {
+  content: '';
+  @apply absolute inset-0 rounded-lg p-[1px];
+  background: linear-gradient(45deg, 
+    hsl(var(--primary)), 
+    hsl(var(--accent)), 
+    hsl(var(--secondary))
+  );
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: xor;
 }

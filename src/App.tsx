@@ -6,10 +6,14 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { EnhancedThemeProvider } from "@/components/ui/enhanced-theme-system";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import AuthPromptDialog from "@/components/AuthPromptDialog";
 import useAuthPrompt from "@/hooks/useAuthPrompt";
 import PrismAssistant from "@/components/PrismAssistant";
+import CommandPalette from "@/components/ui/command-palette";
+import WorkspaceTabs from "@/components/ui/workspace-tabs";
+import AdaptiveSidebar from "@/components/ui/adaptive-sidebar";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Chat from "./pages/Chat";
@@ -45,30 +49,46 @@ const AppContent: React.FC = () => {
   const { showPrompt, closePrompt } = useAuthPrompt();
 
   return (
-    <div className="bg-gradient-to-b from-background to-secondary/10 text-foreground min-h-screen font-inter">
+    <div className="flex h-screen bg-background text-foreground font-inter overflow-hidden">
       <Toaster />
       <SonnerToaster />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/search" element={<Index />} />
-        <Route path="/deep-search" element={<DeepSearch />} />
-        <Route path="/chat" element={<Chat />} />
-        <Route path="/vault" element={<PrismVault />} />
-        <Route path="/conversions" element={<PrismConversions />} />
-        <Route path="/compressor" element={<PrismCompressor />} />
-        <Route path="/detector" element={<PrismDetector />} />
-        <Route path="/graphing" element={<PrismGraphing />} />
-        <Route path="/docs" element={<PrismPages />} />
-        <Route path="/docs/:docId" element={<DocumentEditor />} />
-        <Route path="/code" element={<PrismCode />} />
-        <Route path="/math" element={<PrismMath />} />
-        <Route path="/physics" element={<PrismPhysics />} />
-        <Route path="/chemistry" element={<PrismChemistry />} />
-        <Route path="/auth" element={<ClerkAuth />} />
-        <Route path="/secure-redirect" element={<SecureRedirect />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      
+      {/* Adaptive Sidebar */}
+      <AdaptiveSidebar />
+      
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Workspace Tabs */}
+        <WorkspaceTabs />
+        
+        {/* Page Content */}
+        <div className="flex-1 overflow-hidden bg-gradient-to-b from-background to-secondary/5">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/search" element={<Index />} />
+            <Route path="/deep-search" element={<DeepSearch />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/vault" element={<PrismVault />} />
+            <Route path="/conversions" element={<PrismConversions />} />
+            <Route path="/compressor" element={<PrismCompressor />} />
+            <Route path="/detector" element={<PrismDetector />} />
+            <Route path="/graphing" element={<PrismGraphing />} />
+            <Route path="/docs" element={<PrismPages />} />
+            <Route path="/docs/:docId" element={<DocumentEditor />} />
+            <Route path="/code" element={<PrismCode />} />
+            <Route path="/math" element={<PrismMath />} />
+            <Route path="/physics" element={<PrismPhysics />} />
+            <Route path="/chemistry" element={<PrismChemistry />} />
+            <Route path="/auth" element={<ClerkAuth />} />
+            <Route path="/secure-redirect" element={<SecureRedirect />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
+      </div>
+      
+      {/* Global Components */}
       <AuthPromptDialog isOpen={showPrompt} onClose={closePrompt} />
+      <CommandPalette />
       <PrismAssistant />
       <SpeedInsights />
     </div>
@@ -78,11 +98,13 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <TooltipProvider>
-        <BrowserRouter>
-          <AppContent />
-        </BrowserRouter>
-      </TooltipProvider>
+      <EnhancedThemeProvider>
+        <TooltipProvider>
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
+        </TooltipProvider>
+      </EnhancedThemeProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );
