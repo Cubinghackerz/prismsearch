@@ -85,10 +85,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    if (!chatId) {
-      console.warn('No chatId available. Starting a new chat.');
-      await startNewChat();
-      return;
+    // Initialize chat if needed
+    let currentChatId = chatId;
+    if (!currentChatId) {
+      currentChatId = uuidv4();
+      setChatId(currentChatId);
     }
 
     const userMessage: ChatMessage = {
@@ -114,7 +115,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const responsePromise = supabase.functions.invoke('ai-search-assistant', {
         body: {
           query: content,
-          chatId: chatId,
+          chatId: currentChatId,
           chatHistory: messages,
           model: selectedModel // Use selected model instead of forcing Gemini
         }

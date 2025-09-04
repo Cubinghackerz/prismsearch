@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { ChatMessage } from '@/context/ChatContext';
@@ -18,11 +18,6 @@ const MessageList: React.FC<MessageListProps> = ({
   onReply, 
   typingIndicator 
 }) => {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, typingIndicator]);
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
@@ -87,7 +82,6 @@ const MessageList: React.FC<MessageListProps> = ({
       ))}
       
       {typingIndicator && <ChatMessageSkeleton isUser={false} count={1} />}
-      <div ref={messagesEndRef} />
     </div>
   );
 };

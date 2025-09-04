@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useChat, ChatModel } from '@/context/ChatContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -6,9 +6,10 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
-import { MessageSquare, Settings, Trash2, Archive, Plus, ToggleLeft, ToggleRight } from 'lucide-react';
+import ModelSelector from './ModelSelector';
+import { MessageSquare, Settings, Trash2, Archive, Plus, ToggleLeft, ToggleRight, Home } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import '../search/searchStyles.css';
+import { useNavigate } from 'react-router-dom';
 
 interface SavedChat {
   id: string;
@@ -30,10 +31,13 @@ const ChatInterface = () => {
     chatId
   } = useChat();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [savedChats, setSavedChats] = useState<SavedChat[]>([]);
   const [currentChatTitle, setCurrentChatTitle] = useState<string>('');
   const [isTemporaryMode, setIsTemporaryMode] = useState(false);
+  const [showModelSelector, setShowModelSelector] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Load saved chats from localStorage
   useEffect(() => {
@@ -57,6 +61,13 @@ const ChatInterface = () => {
       saveCurrentChat();
     }
   }, [messages, chatId, isTemporaryMode]);
+
+  // Initialize chat on mount
+  useEffect(() => {
+    if (!chatId) {
+      startNewChat();
+    }
+  }, [chatId, startNewChat]);
 
   // Generate chat title from first user message
   const generateChatTitle = (chatMessages: any[]): string => {
@@ -143,12 +154,28 @@ const ChatInterface = () => {
 
   const handleSubmit = async (content: string, parentMessageId: string | null = null) => {
     if (!content.trim() || isLoading) return;
+    
+    // Ensure we have a chat ID
+    if (!chatId) {
+      startNewChat();
+    }
+    
     await sendMessage(content, parentMessageId || undefined);
+    
+    // Auto-scroll to bottom after sending
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   const handleReplyClick = (messageId: string) => {
     setReplyingTo(messageId);
   };
+
+  // Auto-scroll when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isTyping]);
 
   // When there are no messages and no active chat, show the welcome screen
   const showWelcomeScreen = !chatId || (messages.length === 0 && !isTyping);
@@ -157,6 +184,17 @@ const ChatInterface = () => {
     <div className="flex h-screen bg-background">
       {/* Left Sidebar */}
       <div className="w-16 bg-muted/20 border-r border-border/30 flex flex-col items-center py-4 space-y-4">
+        {/* Home Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate('/')}
+          className="h-10 w-10 rounded-lg hover:bg-primary/20 text-muted-foreground hover:text-primary"
+          title="Go to Home"
+        >
+          <Home className="h-5 w-5" />
+        </Button>
+
         {/* New Chat Button */}
         <Button
           variant="ghost"
@@ -166,6 +204,17 @@ const ChatInterface = () => {
           title="New Chat"
         >
           <MessageSquare className="h-5 w-5" />
+        </Button>
+
+        {/* Model Selector Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setShowModelSelector(!showModelSelector)}
+          className="h-10 w-10 rounded-lg hover:bg-primary/20 text-muted-foreground hover:text-primary"
+          title="AI Model Selector"
+        >
+          <Settings className="h-5 w-5" />
         </Button>
 
         {/* Settings/Chats Button */}
@@ -198,6 +247,27 @@ const ChatInterface = () => {
           </span>
         </div>
       </div>
+
+      {/* Model Selector Sidebar */}
+      <AnimatePresence>
+        {showModelSelector && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 320, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="bg-card/50 backdrop-blur-sm border-r border-border/30 overflow-hidden"
+          >
+            <div className="p-4 h-full overflow-y-auto">
+              <ModelSelector
+                selectedModel={selectedModel}
+                onModelChange={selectModel}
+                onNewChat={startNewChat}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
@@ -283,11 +353,14 @@ const ChatInterface = () => {
               </div>
             </div>
 
-            <MessageList 
-              messages={messages} 
-              typingIndicator={isTyping} 
-              onReply={handleReplyClick} 
-            />
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <MessageList 
+                messages={messages} 
+                typingIndicator={isTyping} 
+                onReply={handleReplyClick} 
+              />
+              <div ref={messagesEndRef} />
+            </div>
             
             <div className="p-4">
               <MessageInput 
