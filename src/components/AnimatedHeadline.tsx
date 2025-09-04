@@ -6,7 +6,7 @@ const AnimatedHeadline = memo(() => {
     <div className="animated-headline-wrapper">
       <h1 className="static-text">
         The Future of{' '}
-        <span className="animated-word">
+        <span>
           Productivity
         </span>
       </h1>

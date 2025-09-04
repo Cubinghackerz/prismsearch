@@ -48,6 +48,14 @@ Instructions:
 10. Provide the final answer clearly labeled with verification if possible
 11. Use analytical thinking to explore alternative approaches when applicable
 
+IMPORTANT: Format your response in this exact structure:
+
+**ANSWER:**
+[Provide the final answer here - just the result, clearly and concisely]
+
+**SOLUTION:**
+[Provide the detailed step-by-step solution here]
+
 Mathematical Problem: ${problem}
 
 Please provide a detailed, step-by-step solution with deep mathematical reasoning:`;

@@ -47,6 +47,14 @@ Instructions:
 9. Discuss alternative approaches if applicable
 10. Format equations clearly and use proper physics notation
 
+IMPORTANT: Format your response in this exact structure:
+
+**ANSWER:**
+[Provide the final answer here - just the result with units, clearly and concisely]
+
+**SOLUTION:**
+[Provide the detailed step-by-step solution here]
+
 Physics Problem: ${problem}
 
 Please provide a detailed, step-by-step solution with clear physics reasoning:`;

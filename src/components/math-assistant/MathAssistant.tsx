@@ -209,11 +209,23 @@ Examples:
                               <MathRenderer content={result.input} />
                             </div>
                             
+                            {result.output.includes('**ANSWER:**') && (
+                              <>
+                                <Separator />
+                                <div className="space-y-2">
+                                  <div className="text-sm font-medium text-emerald-400">Answer:</div>
+                                  <div className="bg-emerald-950/30 border border-emerald-500/30 rounded-lg p-3">
+                                    <MathRenderer content={result.output.split('**ANSWER:**')[1]?.split('**SOLUTION:**')[0]?.trim() || 'No answer found'} />
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                            
                             <Separator />
                             
                             <div className="space-y-2">
                               <div className="text-sm font-medium text-prism-primary">Solution:</div>
-                              <MathRenderer content={result.output} />
+                              <MathRenderer content={result.output.includes('**SOLUTION:**') ? result.output.split('**SOLUTION:**')[1]?.trim() || result.output : result.output} />
                             </div>
                             
                             <div className="text-xs text-prism-text-muted">
