@@ -28,7 +28,7 @@ export const QueryLimitDisplay: React.FC = () => {
       key={`${queriesLeft}-${updateTrigger}`} // Use both values to trigger re-animation
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex items-center justify-center space-x-2 py-2 px-4 bg-prism-bg/50 border-b border-prism-border/30"
+      className="flex items-center justify-center space-x-3 py-3 px-6 bg-card/20 backdrop-blur-sm"
     >
       <div className={`flex items-center space-x-2 ${getStatusColor()}`}>
         {getStatusIcon()}
@@ -44,8 +44,8 @@ export const QueryLimitDisplay: React.FC = () => {
       </div>
       
       {!isSignedIn && (
-        <div className="text-xs text-prism-text-muted">
-          • Sign up for 70 more daily queries
+        <div className="text-xs text-muted-foreground px-3 py-1 bg-muted/30 rounded-full border border-border/30">
+          Sign up for 70 more daily queries
         </div>
       )}
     </motion.div>

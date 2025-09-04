@@ -1,10 +1,13 @@
 
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ChatModel } from '@/context/ChatContext';
-import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
-import { Alert } from '@/components/ui/alert';
+import React from 'react';
 import { motion } from 'framer-motion';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Plus, Info } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ChatModel } from '@/context/ChatContext';
 
 interface ModelSelectorProps {
   selectedModel: ChatModel;
@@ -12,77 +15,57 @@ interface ModelSelectorProps {
   onNewChat: () => void;
 }
 
-const ModelSelector: React.FC<ModelSelectorProps> = ({ 
-  selectedModel, 
-  onModelChange, 
-  onNewChat 
-}) => {
-  return (
-    <div className="p-3 border-b border-prism-border bg-prism-primary/5">
-      <Alert className="mb-3 py-2 bg-prism-primary/10 border-prism-border text-prism-text-muted text-xs">
-        <p>AI Models: Multiple models available</p>
-      </Alert>
-      
-      <RadioGroup 
-        defaultValue={selectedModel} 
-        value={selectedModel} 
-        onValueChange={onModelChange} 
-        className="grid grid-cols-1 gap-2"
-      >
-        <ModelOption 
-          value="gemini" 
-          name="Gemini 2.5" 
-          description="Google's latest AI model" 
-          badge={{ text: "Active", color: "green" }} 
-          isSelected={selectedModel === 'gemini'}
-        />
-        <ModelOption 
-          value="groq-llama4-maverick" 
-          name="Llama 4 Maverick 17B" 
-          description="Meta's Llama 4 Maverick model" 
-          badge={{ text: "New", color: "orange" }} 
-          isSelected={selectedModel === 'groq-llama4-maverick'}
-        />
-        <ModelOption 
-          value="groq-llama4-scout" 
-          name="Llama 4 Scout 17B" 
-          description="Meta's Llama 4 Scout model" 
-          badge={{ text: "New", color: "orange" }} 
-          isSelected={selectedModel === 'groq-llama4-scout'}
-        />
-        <ModelOption 
-          value="groq-llama-guard" 
-          name="Llama Guard 4 12B" 
-          description="Meta's content moderation model" 
-          badge={{ text: "Guard", color: "yellow" }} 
-          isSelected={selectedModel === 'groq-llama-guard'}
-        />
-        <ModelOption 
-          value="groq-llama31-8b-instant" 
-          name="Llama 3.1 8B Instant" 
-          description="Fast Llama 3.1 model" 
-          badge={{ text: "Fast", color: "green" }} 
-          isSelected={selectedModel === 'groq-llama31-8b-instant'}
-        />
-        <ModelOption 
-          value="groq-llama3-8b" 
-          name="Llama 3 8B" 
-          description="Llama 3 8B model" 
-          badge={{ text: "Classic", color: "yellow" }} 
-          isSelected={selectedModel === 'groq-llama3-8b'}
-        />
-      </RadioGroup>
+const ModelSelector: React.FC<ModelSelectorProps> = ({ selectedModel, onModelChange, onNewChat }) => {
+  const models = [
+    {
+      value: 'gemini',
+      name: 'Gemini 2.5',
+      description: 'Google\'s most advanced AI model with exceptional reasoning capabilities.',
+      badge: { text: 'Active', color: 'green' as const }
+    },
+    {
+      value: 'groq-llama4-maverick',
+      name: 'Llama 4 Maverick',
+      description: 'Meta\'s latest Llama 4 model with enhanced performance and speed.',
+      badge: { text: 'New', color: 'orange' as const }
+    },
+    {
+      value: 'groq-llama31-8b-instant',
+      name: 'Llama 3.1 8B Instant',
+      description: 'Ultra-fast responses with reliable performance for quick tasks.',
+      badge: { text: 'Fast', color: 'yellow' as const }
+    }
+  ];
 
-      <div className="mt-3 flex justify-end">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={onNewChat} 
-          className="border-prism-border text-prism-text-muted hover:border-prism-primary/60 transition-all duration-300 bg-transparent text-xs h-8"
-        >
-          <RefreshCw className="mr-1.5 h-3 w-3" /> New Chat
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-foreground">AI Model</h3>
+        <Button onClick={onNewChat} size="sm" variant="outline" className="text-xs h-8 px-3 border-border/50">
+          <Plus className="h-3 w-3 mr-1" />
+          New
         </Button>
       </div>
+      
+      <Alert className="border-border/50 bg-muted/30 backdrop-blur-sm">
+        <Info className="h-4 w-4 text-primary" />
+        <AlertDescription className="text-xs text-muted-foreground">
+          Choose your preferred AI model for this conversation
+        </AlertDescription>
+      </Alert>
+
+      <RadioGroup value={selectedModel} onValueChange={onModelChange} className="space-y-3">
+        {models.map((model) => (
+          <ModelOption
+            key={model.value}
+            value={model.value}
+            name={model.name}
+            description={model.description}
+            badge={model.badge}
+            isSelected={selectedModel === model.value}
+          />
+        ))}
+      </RadioGroup>
     </div>
   );
 };
@@ -91,42 +74,52 @@ interface ModelOptionProps {
   value: string;
   name: string;
   description: string;
-  badge: {
-    text: string;
-    color: "green" | "yellow" | "orange";
-  };
+  badge: { text: string; color: "green" | "yellow" | "orange" };
   isSelected: boolean;
 }
 
 const ModelOption: React.FC<ModelOptionProps> = ({ value, name, description, badge, isSelected }) => {
-  const badgeColors = {
-    green: "bg-green-500/30 text-green-300",
-    yellow: "bg-yellow-500/30 text-yellow-300",
-    orange: "bg-orange-500/20 text-orange-300",
+  const getBadgeClass = (color: "green" | "yellow" | "orange") => {
+    switch (color) {
+      case 'green':
+        return 'bg-green-500/20 text-green-400 border-green-500/30';
+      case 'yellow':
+        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+      case 'orange':
+        return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+      default:
+        return 'bg-primary/20 text-primary border-primary/30';
+    }
   };
 
   return (
-    <div className="relative flex items-center">
-      <RadioGroupItem value={value} id={value} className="peer sr-only" />
-      <motion.label 
-        htmlFor={value} 
-        animate={isSelected ? { scale: [1, 1.02, 1] } : {}}
-        transition={{ duration: 0.2 }}
-        className={`flex flex-col w-full p-2 border rounded-lg cursor-pointer transition-all duration-200 ${
-          isSelected
-            ? 'bg-prism-primary/30 border-prism-primary-light ring-1 ring-prism-primary-light/50 shadow-md'
-            : 'bg-prism-surface/20 border-prism-border hover:bg-prism-surface/30'
-        }`}
-      >
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold text-prism-text">{name}</span>
-          <span className={`px-1.5 py-0.5 text-[10px] ${badgeColors[badge.color]} rounded-full`}>
-            {badge.text}
-          </span>
-        </div>
-        <span className="mt-1 text-xs text-prism-text-muted/70">{description}</span>
-      </motion.label>
-    </div>
+    <motion.div
+      initial={{ scale: 1 }}
+      animate={{ scale: isSelected ? 1.01 : 1 }}
+      transition={{ duration: 0.2 }}
+      className={`
+        flex items-start space-x-3 p-4 rounded-xl border cursor-pointer transition-all backdrop-blur-sm
+        ${isSelected 
+          ? 'bg-primary/10 border-primary/40 shadow-sm' 
+          : 'bg-card/30 border-border/40 hover:bg-card/50 hover:border-border/60'
+        }
+      `}
+    >
+      <RadioGroupItem value={value} id={value} className={`mt-0.5 ${isSelected ? 'border-primary text-primary' : 'border-border'}`} />
+      <div className="flex-1 min-w-0">
+        <Label htmlFor={value} className="cursor-pointer">
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-medium text-foreground text-sm">{name}</span>
+            <Badge variant="outline" className={`text-xs border ${getBadgeClass(badge.color)}`}>
+              {badge.text}
+            </Badge>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            {description}
+          </p>
+        </Label>
+      </div>
+    </motion.div>
   );
 };
 

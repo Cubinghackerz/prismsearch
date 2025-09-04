@@ -60,99 +60,60 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const isInputDisabled = isLoading || isLimitReached;
 
   return (
-    <div className="border-t border-prism-blue-primary/40 bg-prism-dark-bg-800/10">
-      <QueryLimitDisplay />
-      <form onSubmit={handleSubmit} className="p-4 md:p-6">
+    <div className="border-t border-border/30 bg-card/20 backdrop-blur-sm">
+      <form onSubmit={handleSubmit} className="p-6">
         {/* Replying to message indicator */}
         {replyingTo && (
-          <div className="mb-2 p-2 rounded-lg bg-prism-primary/30 border border-prism-primary/30 flex justify-between items-center">
-            <div className="flex items-center text-sm text-prism-primary-light">
+          <div className="mb-4 p-3 rounded-xl bg-secondary/50 border border-border/50 flex justify-between items-center backdrop-blur-sm">
+            <div className="flex items-center text-sm text-foreground">
               <span>
                 Replying to: "{getReplyingToMessage()?.content.substring(0, 50)}
                 {getReplyingToMessage()?.content.length! > 50 ? '...' : ''}
                 "
               </span>
             </div>
-            <Button type="button" variant="ghost" size="sm" onClick={() => setReplyingTo(null)} className="p-1 h-6 w-6">
+            <Button type="button" variant="ghost" size="sm" onClick={() => setReplyingTo(null)} className="h-8 w-8 p-0">
               <X className="h-4 w-4" />
             </Button>
           </div>
         )}
         
-        <div className="relative flex items-center max-w-4xl mx-auto">
-          <Textarea 
-            ref={textAreaRef}
-            value={inputValue} 
-            onChange={e => setInputValue(e.target.value)} 
-            onKeyDown={handleKeyDown} 
-            onFocus={() => setIsFocused(true)} 
-            onBlur={() => setIsFocused(false)} 
-            placeholder={isLimitReached ? "Daily limit reached" : "Ask anything..."}
-            className={`
-              resize-none bg-prism-bg/90 border text-prism-text pr-24 
-              min-h-[56px] py-3 rounded-xl md:min-h-[64px] shadow-lg
-              transition-all duration-300 placeholder:text-prism-text-muted/30 
-              focus:placeholder:opacity-50 focus:text-prism-text-light
-              ${isLimitReached ? 'opacity-50 cursor-not-allowed' : ''}
-              ${isFocused || inputValue ? 'shadow-[0_0_35px_rgba(79,70,229,0.4)] border-prism-blue-light/50 scale-[1.02]' : 'border-prism-blue-primary/30'}
-              ${isFocused ? 'shadow-[0_0_40px_rgba(79,70,229,0.4)] border-prism-blue-light/50' : ''}
-              hover:shadow-[0_0_30px_rgba(79,70,229,0.35)] hover:border-prism-blue-light/40
-              ${isFocused || inputValue ? 'shadow-[0_0_35px_rgba(0,194,168,0.4)] border-prism-primary-light/50 scale-[1.02]' : 'border-prism-border'}
-              ${isFocused ? 'shadow-[0_0_40px_rgba(0,194,168,0.4)] border-prism-primary-light/50' : ''}
-              hover:shadow-[0_0_30px_rgba(0,194,168,0.35)] hover:border-prism-primary-light/40
-              hover:scale-[1.01] hover:bg-prism-bg/95
-            `} 
-            disabled={isInputDisabled} 
-          />
+        <div className="relative flex items-end gap-3 max-w-4xl mx-auto">
+          <div className="relative flex-1">
+            <Textarea 
+              ref={textAreaRef}
+              value={inputValue} 
+              onChange={e => setInputValue(e.target.value)} 
+              onKeyDown={handleKeyDown} 
+              onFocus={() => setIsFocused(true)} 
+              onBlur={() => setIsFocused(false)} 
+              placeholder={isLimitReached ? "Daily limit reached" : "Ask anything..."}
+              className={`
+                resize-none bg-background/90 backdrop-blur-sm border-border/50 text-foreground
+                min-h-[60px] py-4 px-4 rounded-2xl shadow-sm
+                transition-all duration-300 placeholder:text-muted-foreground/60
+                focus:placeholder:opacity-40 focus:shadow-lg focus:border-primary/50
+                ${isLimitReached ? 'opacity-50 cursor-not-allowed' : ''}
+                ${isFocused ? 'border-primary/50 shadow-[0_0_20px_rgba(59,130,246,0.15)]' : ''}
+                hover:border-primary/30 hover:shadow-md
+              `} 
+              disabled={isInputDisabled}
+              rows={1}
+            />
+            
+            {/* Modern glow effect */}
+            {isFocused && !isLoading && !isLimitReached && (
+              <motion.div
+                className="absolute inset-0 -z-10 rounded-2xl bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 blur-xl"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              />
+            )}
+          </div>
           
-          {/* Fiery sparks animation */}
-          {isFocused && !isLoading && !isLimitReached && (
-            <>
-              {sparks.map((i) => {
-                const position = getRandomPosition();
-                const delay = (i * 0.2) % 3; // Staggered delays that loop
-                
-                return (
-                  <motion.div
-                    key={`chat-spark-${i}`}
-                    className="absolute pointer-events-none fiery-spark"
-                    style={{ 
-                      bottom: '0px',
-                      left: `${position}%`,
-                      zIndex: 5
-                    }}
-                    initial={{ opacity: 0, scale: 0, y: 0 }}
-                    animate={{
-                      opacity: [0, 1, 0], 
-                      scale: [0.2, 1, 0.2],
-                      y: [-5, -25, -45], 
-                      transition: { 
-                        duration: 1.5, 
-                        repeat: Infinity,
-                        repeatType: "loop" as const, 
-                        delay: delay, 
-                        ease: "easeOut" 
-                      } 
-                    }} 
-                  >
-                    <div className="spark-animation w-2 h-2 rounded-full 
-                      bg-gradient-to-t from-prism-primary via-prism-primary-light to-prism-accent-light
-                      shadow-[0_0_10px_rgba(79,70,229,0.7)]" 
-                    />
-                  </motion.div>
-                );
-              })}
-            </>
-          )}
-          
-          <div className={`
-              absolute inset-0 -z-10 transition-opacity duration-500
-              bg-gradient-to-r from-prism-primary/20 via-prism-primary/20 to-prism-accent/20
-              blur-3xl rounded-full
-              ${isFocused && !isLimitReached ? 'opacity-100' : 'opacity-0'}
-            `} />
-          
-          <div className="absolute right-2 flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <DeepResearchButton 
               topic={inputValue}
               disabled={!inputValue.trim() || isInputDisabled}
@@ -162,15 +123,20 @@ const MessageInput: React.FC<MessageInputProps> = ({
               type="submit" 
               size="icon" 
               className={`
-                rounded-full text-white
-                w-10 h-10 flex items-center justify-center shadow-md
+                rounded-2xl h-[60px] w-[60px] shadow-md
                 transition-all duration-300
-                ${!inputValue.trim() || isInputDisabled ? 'bg-gray-700/30 cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-prism-blue-primary to-prism-purple-primary hover:from-prism-blue-dark hover:to-prism-purple-dark cursor-pointer shadow-lg shadow-prism-dark-bg/30 hover:shadow-prism-blue-primary/40 hover:scale-105 active:scale-95 ember-glow'}
-                ${!inputValue.trim() || isInputDisabled ? 'bg-gray-700/30 cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-prism-primary to-prism-accent hover:from-prism-primary-dark hover:to-prism-accent-dark cursor-pointer shadow-lg shadow-prism-bg/30 hover:shadow-prism-primary/40 hover:scale-105 active:scale-95 ember-glow'}
+                ${!inputValue.trim() || isInputDisabled 
+                  ? 'bg-muted/50 text-muted-foreground cursor-not-allowed opacity-50' 
+                  : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/30 hover:scale-105 active:scale-95'
+                }
               `} 
               disabled={!inputValue.trim() || isInputDisabled}
             >
-              {isLoading ? <Loader2 className="h-5 w-5 animate-spin text-white" /> : <ArrowUp className="h-5 w-5 text-white" />}
+              {isLoading ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+              ) : (
+                <ArrowUp className="h-6 w-6" />
+              )}
             </Button>
           </div>
         </div>
