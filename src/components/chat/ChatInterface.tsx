@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useChat, ChatModel } from '@/context/ChatContext';
 import { useToast } from '@/hooks/use-toast';
@@ -9,6 +8,7 @@ import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import RecentChats from './RecentChats';
 import { QueryLimitDisplay } from './QueryLimitDisplay';
+import { Settings, Plus, MessageSquare } from 'lucide-react';
 import '../search/searchStyles.css';
 
 const ChatInterface = () => {
@@ -24,7 +24,7 @@ const ChatInterface = () => {
   } = useChat();
   const { toast } = useToast();
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
 
   const handleSubmit = async (content: string, parentMessageId: string | null = null) => {
     if (!content.trim() || isLoading) return;
@@ -39,112 +39,143 @@ const ChatInterface = () => {
     setReplyingTo(messageId);
   };
 
-  const toggleMobileSidebar = () => {
-    setMobileSidebarOpen(prev => !prev);
-  };
+  // When there are no messages and no active chat, show the welcome screen
+  const showWelcomeScreen = !chatId || (messages.length === 0 && !isTyping);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-16rem)] max-w-7xl mx-auto">
-      <div className="flex flex-1 overflow-hidden rounded-2xl border border-border/50 bg-card/30 backdrop-blur-sm shadow-lg">
-        {/* Left sidebar with recent chats - desktop */}
+    <div className="flex flex-col h-[calc(100vh-16rem)] max-w-4xl mx-auto">
+      <div className="flex flex-1 overflow-hidden">
+        {/* Collapsible Sidebar */}
         <AnimatePresence>
-          <motion.div 
-            className="w-72 border-r border-border/50 bg-card/20 backdrop-blur-sm hidden lg:block overflow-y-auto" 
-            initial={{ opacity: 0, x: -20 }} 
-            animate={{ opacity: 1, x: 0 }} 
-            transition={{ duration: 0.3 }}
-          >
-            <div className="p-4 space-y-4">
-              <RecentChats />
-              
-              <div className="border-t border-border/30 pt-4">
-                <ModelSelector 
-                  selectedModel={selectedModel} 
-                  onModelChange={handleModelChange} 
-                  onNewChat={startNewChat} 
-                />
+          {showSidebar && (
+            <motion.div 
+              className="w-80 bg-card/20 backdrop-blur-sm border-r border-border/50 overflow-y-auto" 
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 320, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="p-6 space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Chat Settings</h3>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setShowSidebar(false)}
+                    className="h-8 w-8 p-0"
+                  >
+                    ×
+                  </Button>
+                </div>
+                
+                <RecentChats />
+                
+                <div className="border-t border-border/30 pt-6">
+                  <ModelSelector 
+                    selectedModel={selectedModel} 
+                    onModelChange={handleModelChange} 
+                    onNewChat={startNewChat} 
+                  />
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          )}
         </AnimatePresence>
         
         {/* Main chat area */}
         <div className="flex-1 flex flex-col overflow-hidden bg-background/50 backdrop-blur-sm">
-          {/* Query limit display */}
-          <div className="border-b border-border/30">
+          {/* Top bar with controls */}
+          <div className="flex items-center justify-between p-4 border-b border-border/30">
+            <div className="flex items-center space-x-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowSidebar(!showSidebar)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+              {chatId && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={startNewChat}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  New Chat
+                </Button>
+              )}
+            </div>
             <QueryLimitDisplay />
           </div>
-          
-          {/* Mobile-only sidebar toggle and model selector */}
-          <div className="lg:hidden border-b border-border/30 bg-card/20 backdrop-blur-sm">
-            <div className="p-4">
-              <ModelSelector 
-                selectedModel={selectedModel} 
-                onModelChange={handleModelChange} 
-                onNewChat={startNewChat} 
-              />
-              <button 
-                className="w-full mt-3 px-4 py-2 flex items-center justify-center text-sm rounded-lg bg-secondary/50 text-muted-foreground hover:bg-secondary/70 transition-colors border border-border/30" 
-                onClick={toggleMobileSidebar}
-              >
-                Recent Chats {mobileSidebarOpen ? '▲' : '▼'}
-              </button>
-            </div>
-            
-            <AnimatePresence>
-              {mobileSidebarOpen && (
-                <motion.div 
-                  initial={{ height: 0, opacity: 0 }} 
-                  animate={{ height: 'auto', opacity: 1 }} 
-                  exit={{ height: 0, opacity: 0 }} 
-                  className="px-4 pb-4 overflow-hidden border-t border-border/30" 
-                  transition={{ duration: 0.3 }}
-                >
-                  <RecentChats />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
 
-          {chatId ? (
-            <>
-              <MessageList messages={messages} typingIndicator={isTyping} onReply={handleReplyClick} />
-              <MessageInput 
-                onSendMessage={handleSubmit} 
-                isLoading={isLoading} 
-                messages={messages} 
-                replyingTo={replyingTo} 
-                setReplyingTo={setReplyingTo} 
-              />
-            </>
-          ) : (
+          {showWelcomeScreen ? (
+            /* Welcome Screen */
             <motion.div 
               className="flex-1 flex items-center justify-center p-8" 
               initial={{ opacity: 0, y: 20 }} 
               animate={{ opacity: 1, y: 0 }} 
               transition={{ duration: 0.5 }}
             >
-              <div className="text-center max-w-lg mx-auto">
-                <div className="p-6 rounded-2xl bg-card/30 backdrop-blur-sm border border-border/50 shadow-lg">
-                  <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
-                    <img 
-                      src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" 
-                      alt="Prism Chat Logo" 
-                      className="h-8 w-8 brightness-0 invert"
-                    />
-                  </div>
-                  <h3 className="text-2xl font-semibold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">Welcome to Prism Chat</h3>
-                  <p className="text-muted-foreground mb-6 leading-relaxed">Choose your AI model and start a conversation to experience the power of advanced artificial intelligence.</p>
-                  <Button
-                    onClick={startNewChat}
-                    size="lg"
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold"
+              <div className="text-center max-w-2xl mx-auto space-y-8">
+                {/* Welcome Message */}
+                <div className="space-y-4">
+                  <h1 className="text-4xl md:text-5xl font-bold text-foreground">
+                    What's on the agenda today?
+                  </h1>
+                </div>
+
+                {/* Input Area */}
+                <div className="relative max-w-2xl mx-auto">
+                  <MessageInput 
+                    onSendMessage={handleSubmit} 
+                    isLoading={isLoading} 
+                    messages={messages} 
+                    replyingTo={replyingTo} 
+                    setReplyingTo={setReplyingTo}
+                    isWelcomeMode={true}
+                  />
+                </div>
+
+                {/* Quick Start Options */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl mx-auto mt-8">
+                  <Button 
+                    variant="outline" 
+                    className="p-4 h-auto flex-col space-y-2 border-border/50 hover:border-primary/50"
+                    onClick={() => handleSubmit("Help me solve a complex math problem")}
                   >
-                    Start New Chat
+                    <span className="font-medium">Solve Math Problems</span>
+                    <span className="text-sm text-muted-foreground">Get step-by-step solutions</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="p-4 h-auto flex-col space-y-2 border-border/50 hover:border-primary/50"
+                    onClick={() => handleSubmit("Explain a scientific concept to me")}
+                  >
+                    <span className="font-medium">Learn Science</span>
+                    <span className="text-sm text-muted-foreground">Get detailed explanations</span>
                   </Button>
                 </div>
               </div>
             </motion.div>
+          ) : (
+            /* Active Chat View */
+            <>
+              <MessageList 
+                messages={messages} 
+                typingIndicator={isTyping} 
+                onReply={handleReplyClick} 
+              />
+              <MessageInput 
+                onSendMessage={handleSubmit} 
+                isLoading={isLoading} 
+                messages={messages} 
+                replyingTo={replyingTo} 
+                setReplyingTo={setReplyingTo}
+                isWelcomeMode={false}
+              />
+            </>
           )}
         </div>
       </div>

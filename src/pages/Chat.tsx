@@ -24,43 +24,23 @@ const Chat = () => {
   });
 
   return (
-    <div className={`${isFullscreen ? 'fixed inset-0 z-50' : 'min-h-screen'} bg-gradient-to-b from-background to-secondary/10 relative overflow-hidden flex flex-col`}>
+    <div className={`${isFullscreen ? 'fixed inset-0 z-50' : 'min-h-screen'} bg-background relative overflow-hidden flex flex-col`}>
       <ScrollToTop />
       
       <div className="relative z-10 h-full flex flex-col flex-1">
         {!isFullscreen && <Navigation />}
         
         <div className={`${isFullscreen ? 'flex-1 p-4' : 'container mx-auto px-4 flex-1 pt-20'}`}>
-          {!isFullscreen && (
-            <div className="text-center mb-8">
-              <div className="flex items-center justify-center gap-3 mb-6">
-                <div className="p-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600">
-                  <img 
-                    src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" 
-                    alt="Prism Chat Logo" 
-                    className="h-6 w-6 brightness-0 invert"
-                  />
-                </div>
-                <motion.h1 
-                  className="text-3xl font-bold bg-clip-text text-transparent 
-                    bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 
-                    bg-size-200 animate-gradient-text"
-                  animate={{
-                    backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
-                  }} 
-                  transition={{
-                    duration: 4,
-                    repeat: Infinity,
-                    ease: "linear"
-                  }}
-                >
-                  Prism Chat
-                </motion.h1>
-              </div>
-              
-              <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-                Engage with advanced AI models in a sleek, modern interface designed for productivity.
-              </p>
+          <main className={`${isFullscreen ? 'h-full flex flex-col flex-1' : 'flex-1'}`}>
+            <ChatProvider>
+              <ChatInterface />
+            </ChatProvider>
+          </main>
+        </div>
+        
+        {!isFullscreen && (
+          <div className="px-4 mb-8">
+            <div className="text-center">
               
               <div className="flex justify-center gap-3 mb-8">
                 <Button 
@@ -89,14 +69,8 @@ const Chat = () => {
                 </Button>
               </div>
             </div>
-          )}
-
-          <main className={`${isFullscreen ? 'h-full flex flex-col flex-1' : 'flex-1'}`}>
-            <ChatProvider>
-              <ChatInterface />
-            </ChatProvider>
-          </main>
-        </div>
+          </div>
+        )}
         
         {!isFullscreen && <Footer />}
 
