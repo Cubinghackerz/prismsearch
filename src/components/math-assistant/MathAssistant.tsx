@@ -110,7 +110,7 @@ const MathAssistant = () => {
           </h1>
         </div>
         <p className="text-lg text-prism-text-muted max-w-2xl mx-auto">
-          Advanced mathematical problem solver powered by Qwen3-30B-A3B (MoE). 
+          Advanced mathematical problem solver powered by Gemini 2.5 Pro. 
           Solve algebra, calculus, geometry, statistics, and more with detailed step-by-step solutions.
         </p>
       </div>
