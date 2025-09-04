@@ -3,7 +3,8 @@ import React, {
   createContext,
   useState,
   useContext,
-  useCallback
+  useCallback,
+  useEffect
 } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,6 +44,10 @@ interface ChatContextType {
   selectedModel: ChatModel;
   chatId: string | null;
   runDeepResearch: (topic: string) => Promise<void>;
+  isTemporaryMode: boolean;
+  setIsTemporaryMode: (mode: boolean) => void;
+  loadChat: (chatId: string) => void;
+  getSavedChats: () => Array<{id: string, preview: string, timestamp: number}>;
 }
 
 export const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -61,8 +66,41 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [selectedModel, setSelectedModel] = useState<ChatModel>('gemini');
   const [chatId, setChatId] = useState<string | null>(null);
+  const [isTemporaryMode, setIsTemporaryMode] = useState<boolean>(false);
   const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
   const { toast } = useToast();
+
+  // Save chats to localStorage when not in temporary mode
+  useEffect(() => {
+    if (!isTemporaryMode && messages.length > 0 && chatId) {
+      const chatData = {
+        id: chatId,
+        messages: messages,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(`chat_${chatId}`, JSON.stringify(chatData));
+      
+      // Also update the list of chat IDs
+      const chatIds = JSON.parse(localStorage.getItem('chatIds') || '[]');
+      if (!chatIds.includes(chatId)) {
+        chatIds.push(chatId);
+        localStorage.setItem('chatIds', JSON.stringify(chatIds));
+      }
+    }
+  }, [messages, chatId, isTemporaryMode]);
+
+  // Load chat from localStorage
+  const loadChat = useCallback((loadChatId: string) => {
+    const savedChat = localStorage.getItem(`chat_${loadChatId}`);
+    if (savedChat) {
+      const chatData = JSON.parse(savedChat);
+      setMessages(chatData.messages.map((msg: any) => ({
+        ...msg,
+        timestamp: new Date(msg.timestamp)
+      })));
+      setChatId(loadChatId);
+    }
+  }, []);
 
   const sendMessage = async (content: string, parentMessageId?: string) => {
     // Check query limit before processing
@@ -139,7 +177,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const assistantMessage: ChatMessage = {
         id: uuidv4(),
         content: responseText,
-        formattedContent: responseText.replace(/\* /g, '• ').replace(/\n\* /g, '\n• '),
         isUser: false,
         timestamp: new Date(),
         parentMessageId: parentMessageId,
@@ -171,6 +208,23 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const selectModel = (model: ChatModel) => {
     setSelectedModel(model);
   };
+
+  const getSavedChats = useCallback(() => {
+    const chatIds = JSON.parse(localStorage.getItem('chatIds') || '[]');
+    return chatIds.map((id: string) => {
+      const savedChat = localStorage.getItem(`chat_${id}`);
+      if (savedChat) {
+        const chatData = JSON.parse(savedChat);
+        const firstUserMessage = chatData.messages.find((msg: any) => msg.isUser);
+        return {
+          id,
+          preview: firstUserMessage ? firstUserMessage.content.substring(0, 50) + '...' : 'New Chat',
+          timestamp: chatData.timestamp
+        };
+      }
+      return null;
+    }).filter(Boolean).sort((a: any, b: any) => b.timestamp - a.timestamp);
+  }, []);
 
   const runDeepResearch = async (topic: string) => {
     if (isLoading) return;
@@ -247,7 +301,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const assistantMessage: ChatMessage = {
         id: `msg-${Date.now() + 1}`,
         content: responseText,
-        formattedContent: responseText.replace(/\* /g, '• ').replace(/\n\* /g, '\n• '),
         isUser: false,
         timestamp: new Date(),
       };
@@ -278,7 +331,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       selectModel,
       selectedModel,
       chatId,
-      runDeepResearch
+      runDeepResearch,
+      isTemporaryMode,
+      setIsTemporaryMode,
+      loadChat,
+      getSavedChats
     }}>
       {children}
     </ChatContext.Provider>

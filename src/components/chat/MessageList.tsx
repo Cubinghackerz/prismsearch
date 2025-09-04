@@ -50,9 +50,9 @@ const MessageList: React.FC<MessageListProps> = ({
             } relative
           `}>
             {message.isUser ? (
-              <div className="whitespace-pre-wrap">{message.content}</div>
+              <div className="whitespace-pre-wrap pr-12">{message.content}</div>
             ) : (
-              <div className="prose prose-neutral dark:prose-invert max-w-none pb-6">
+              <div className="prose prose-neutral dark:prose-invert max-w-none pr-12">
                 <ReactMarkdown components={{
                   strong: ({ node, ...props }) => <span className="font-semibold text-foreground" {...props} />,
                   em: ({ node, ...props }) => <span className="italic text-foreground" {...props} />,
@@ -67,12 +67,12 @@ const MessageList: React.FC<MessageListProps> = ({
                   code: ({ node, ...props }) => <code className="bg-muted px-2 py-1 rounded text-sm font-mono" {...props} />,
                   pre: ({ node, ...props }) => <pre className="bg-muted p-4 rounded-lg overflow-x-auto my-4 border border-border/50" {...props} />
                 }}>
-                  {(message.formattedContent || message.content).replace(/\* /g, '• ').replace(/\n\* /g, '\n• ')}
+                  {message.content}
                 </ReactMarkdown>
               </div>
             )}
             
-            <div className="absolute bottom-2 right-3 z-10">
+            <div className="absolute bottom-2 right-3">
               <span className={`text-xs opacity-50 ${message.isUser ? 'text-white/70' : 'text-muted-foreground'}`}>
                 {format(message.timestamp, 'HH:mm')}
               </span>

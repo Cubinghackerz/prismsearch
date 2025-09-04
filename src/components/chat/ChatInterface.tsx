@@ -2,22 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useChat, ChatModel } from '@/context/ChatContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import ModelSelector from './ModelSelector';
-import { MessageSquare, Settings, Trash2, Archive, Plus, ToggleLeft, ToggleRight, Home } from 'lucide-react';
+import { MessageSquare, Settings, Archive, ToggleLeft, ToggleRight, Home } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
-interface SavedChat {
-  id: string;
-  title: string;
-  messages: any[];
-  timestamp: Date;
-  model: ChatModel;
-}
 
 const ChatInterface = () => {
   const {
@@ -28,39 +19,17 @@ const ChatInterface = () => {
     startNewChat,
     selectModel,
     selectedModel,
-    chatId
+    chatId,
+    isTemporaryMode,
+    setIsTemporaryMode,
+    loadChat,
+    getSavedChats
   } = useChat();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [savedChats, setSavedChats] = useState<SavedChat[]>([]);
-  const [currentChatTitle, setCurrentChatTitle] = useState<string>('');
-  const [isTemporaryMode, setIsTemporaryMode] = useState(false);
   const [showModelSelector, setShowModelSelector] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Load saved chats from localStorage
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('prism_saved_chats');
-      if (stored) {
-        const chats = JSON.parse(stored).map((chat: any) => ({
-          ...chat,
-          timestamp: new Date(chat.timestamp)
-        }));
-        setSavedChats(chats);
-      }
-    } catch (error) {
-      console.error('Error loading saved chats:', error);
-    }
-  }, []);
-
-  // Auto-save current chat when messages change (if not in temporary mode)
-  useEffect(() => {
-    if (chatId && messages.length > 0 && !isTemporaryMode) {
-      saveCurrentChat();
-    }
-  }, [messages, chatId, isTemporaryMode]);
 
   // Initialize chat on mount
   useEffect(() => {
@@ -69,56 +38,20 @@ const ChatInterface = () => {
     }
   }, [chatId, startNewChat]);
 
-  // Generate chat title from first user message
-  const generateChatTitle = (chatMessages: any[]): string => {
-    const firstUserMessage = chatMessages.find(m => m.isUser);
-    if (firstUserMessage) {
-      const title = firstUserMessage.content.substring(0, 50);
-      return title.length < firstUserMessage.content.length ? title + '...' : title;
-    }
-    return 'New Chat';
-  };
-
-  const saveCurrentChat = () => {
-    if (!chatId || messages.length === 0) return;
-
-    const title = generateChatTitle(messages);
-    const chatToSave: SavedChat = {
-      id: chatId,
-      title,
-      messages,
-      timestamp: new Date(),
-      model: selectedModel
-    };
-
-    try {
-      const updatedChats = savedChats.filter(chat => chat.id !== chatId);
-      updatedChats.unshift(chatToSave);
-      
-      // Keep only the last 50 chats
-      const trimmedChats = updatedChats.slice(0, 50);
-      
-      setSavedChats(trimmedChats);
-      localStorage.setItem('prism_saved_chats', JSON.stringify(trimmedChats));
-      setCurrentChatTitle(title);
-    } catch (error) {
-      console.error('Error saving chat:', error);
-    }
-  };
-
-  const loadSavedChat = (savedChat: SavedChat) => {
-    // This would require updating the ChatProvider to load a specific chat
-    // For now, we'll show a toast that this feature needs implementation
+  const loadSavedChat = (chatToLoad: {id: string, preview: string, timestamp: number}) => {
+    loadChat(chatToLoad.id);
     toast({
-      title: "Chat Loading",
-      description: "Chat loading from saved chats will be implemented soon.",
+      title: "Chat Loaded",
+      description: "Successfully loaded your saved chat.",
     });
   };
 
   const deleteSavedChat = (chatId: string) => {
-    const updatedChats = savedChats.filter(chat => chat.id !== chatId);
-    setSavedChats(updatedChats);
-    localStorage.setItem('prism_saved_chats', JSON.stringify(updatedChats));
+    // Remove from localStorage
+    localStorage.removeItem(`chat_${chatId}`);
+    const chatIds = JSON.parse(localStorage.getItem('chatIds') || '[]');
+    const updatedIds = chatIds.filter((id: string) => id !== chatId);
+    localStorage.setItem('chatIds', JSON.stringify(updatedIds));
     
     toast({
       title: "Chat Deleted",
@@ -128,8 +61,12 @@ const ChatInterface = () => {
 
   const clearAllChats = () => {
     if (confirm('Are you sure you want to delete all saved chats? This action cannot be undone.')) {
-      setSavedChats([]);
-      localStorage.removeItem('prism_saved_chats');
+      const chatIds = JSON.parse(localStorage.getItem('chatIds') || '[]');
+      chatIds.forEach((id: string) => {
+        localStorage.removeItem(`chat_${id}`);
+      });
+      localStorage.removeItem('chatIds');
+      
       toast({
         title: "All Chats Deleted",
         description: "All saved chats have been cleared.",
@@ -332,7 +269,7 @@ const ChatInterface = () => {
                   className="h-5 w-5"
                 />
                 <span className="font-medium text-foreground">
-                  {currentChatTitle || 'Chat'}
+                  Prism Chat
                 </span>
                 {isTemporaryMode && (
                   <div className="px-2 py-1 bg-amber-500/20 text-amber-400 text-xs rounded-full border border-amber-500/30">
