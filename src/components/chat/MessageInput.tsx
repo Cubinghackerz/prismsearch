@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { X, ArrowUp, Loader2, Plus, Mic, Paperclip } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChatMessage } from '@/context/ChatContext';
 import { useDailyQueryLimit } from '@/hooks/useDailyQueryLimit';
 
@@ -132,9 +132,10 @@ const MessageInput: React.FC<MessageInputProps> = ({
                   <Mic className="h-4 w-4" />
                 </Button>
 
-                {/* Send button - only show when there's text */}
-                {inputValue.trim() && (
+                {/* Send button */}
+                <AnimatePresence>
                   <motion.div
+                    key="send-button"
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0, opacity: 0 }}
@@ -159,7 +160,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
                       )}
                     </Button>
                   </motion.div>
-                )}
+                </AnimatePresence>
               </div>
             </div>
             
