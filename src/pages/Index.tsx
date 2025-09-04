@@ -179,7 +179,7 @@ const Index = () => {
                 <div className="text-4xl font-bold text-primary mb-2 font-fira-code">
                   <CountUp to={stat.number} />
                   {stat.suffix}
-                {stat.number}
+                </div>
                 <div className="text-muted-foreground font-medium">{stat.label}</div>
               </div>
             ))}
