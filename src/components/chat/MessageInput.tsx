@@ -133,10 +133,10 @@ const MessageInput: React.FC<MessageInputProps> = ({
                 </Button>
 
                 {/* Send button - only show when there's text */}
-                {inputValue.trim() && (
-                  <motion.div
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
+                      ${!inputValue.trim() || isInputDisabled
+                        ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
+                        : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                      }
                     exit={{ scale: 0, opacity: 0 }}
                     transition={{ duration: 0.2 }}
                   >
