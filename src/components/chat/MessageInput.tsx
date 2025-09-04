@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { X, ArrowUp, Loader2, Plus, Mic, Paperclip } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChatMessage } from '@/context/ChatContext';
 import { useDailyQueryLimit } from '@/hooks/useDailyQueryLimit';
 
@@ -129,32 +129,34 @@ const MessageInput: React.FC<MessageInputProps> = ({
                   className="h-8 w-8 text-muted-foreground hover:text-foreground"
                   disabled={isInputDisabled}
                 >
-                  <Mic className="h-4 w-4" />
-                </Button>
-
-                {/* Send button - only show when there's text */}
-                    exit={{ scale: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Button 
-                      type="submit" 
-                      size="icon" 
-                      className={`
-                        h-8 w-8 rounded-full shadow-sm
-                        ${!inputValue.trim() || isInputDisabled 
-                          ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-50' 
-                          : 'bg-foreground text-background hover:bg-foreground/90'
-                        }
-                      `} 
-                      disabled={!inputValue.trim() || isInputDisabled}
+                  <AnimatePresence>
+                    <motion.div
+                      key="send-button"
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
                     >
-                      {isLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <ArrowUp className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </motion.div>
+                      <Button 
+                        type="submit" 
+                        size="icon" 
+                        className={`
+                          h-8 w-8 rounded-full shadow-sm
+                          ${!inputValue.trim() || isInputDisabled 
+                            ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-50' 
+                            : 'bg-foreground text-background hover:bg-foreground/90'
+                          }
+                        `} 
+                        disabled={!inputValue.trim() || isInputDisabled}
+                      >
+                        {isLoading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <ArrowUp className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </motion.div>
+                  </AnimatePresence>
                 )}
               </div>
             </div>
