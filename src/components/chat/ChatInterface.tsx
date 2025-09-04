@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import ModelSelector from './ModelSelector';
-import { MessageSquare, Settings, Archive, ToggleLeft, ToggleRight, Home } from 'lucide-react';
+import { MessageSquare, Settings, Home, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -19,11 +19,7 @@ const ChatInterface = () => {
     startNewChat,
     selectModel,
     selectedModel,
-    chatId,
-    isTemporaryMode,
-    setIsTemporaryMode,
-    loadChat,
-    getSavedChats
+    chatId
   } = useChat();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -38,56 +34,6 @@ const ChatInterface = () => {
     }
   }, [chatId, startNewChat]);
 
-  const loadSavedChat = (chatToLoad: {id: string, preview: string, timestamp: number}) => {
-    loadChat(chatToLoad.id);
-    toast({
-      title: "Chat Loaded",
-      description: "Successfully loaded your saved chat.",
-    });
-  };
-
-  const deleteSavedChat = (chatId: string) => {
-    // Remove from localStorage
-    localStorage.removeItem(`chat_${chatId}`);
-    const chatIds = JSON.parse(localStorage.getItem('chatIds') || '[]');
-    const updatedIds = chatIds.filter((id: string) => id !== chatId);
-    localStorage.setItem('chatIds', JSON.stringify(updatedIds));
-    
-    toast({
-      title: "Chat Deleted",
-      description: "The chat has been removed from your saved chats.",
-    });
-  };
-
-  const clearAllChats = () => {
-    if (confirm('Are you sure you want to delete all saved chats? This action cannot be undone.')) {
-      const chatIds = JSON.parse(localStorage.getItem('chatIds') || '[]');
-      chatIds.forEach((id: string) => {
-        localStorage.removeItem(`chat_${id}`);
-      });
-      localStorage.removeItem('chatIds');
-      
-      toast({
-        title: "All Chats Deleted",
-        description: "All saved chats have been cleared.",
-      });
-    }
-  };
-
-  const toggleTemporaryMode = () => {
-    setIsTemporaryMode(!isTemporaryMode);
-    if (!isTemporaryMode) {
-      toast({
-        title: "Temporary Mode Enabled",
-        description: "Your chats will not be saved in this mode.",
-      });
-    } else {
-      toast({
-        title: "Temporary Mode Disabled",  
-        description: "Your chats will now be saved automatically.",
-      });
-    }
-  };
 
   const handleSubmit = async (content: string, parentMessageId: string | null = null) => {
     if (!content.trim() || isLoading) return;
@@ -154,33 +100,22 @@ const ChatInterface = () => {
           <Settings className="h-5 w-5" />
         </Button>
 
-        {/* Settings/Chats Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-10 w-10 rounded-lg hover:bg-primary/20 text-muted-foreground hover:text-primary"
-          title="Chat History"
-        >
-          <Archive className="h-5 w-5" />
-        </Button>
-
-        {/* Temporary Mode Toggle */}
+        {/* Info Button */}
         <div className="flex flex-col items-center space-y-2 mt-auto">
           <Button
             variant="ghost"
             size="icon"
-            onClick={toggleTemporaryMode}
-            className={`h-10 w-10 rounded-lg transition-colors ${
-              isTemporaryMode 
-                ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' 
-                : 'hover:bg-primary/20 text-muted-foreground hover:text-primary'
-            }`}
-            title={isTemporaryMode ? "Temporary Mode: ON" : "Temporary Mode: OFF"}
+            onClick={() => toast({
+              title: "Temporary Chats",
+              description: "All chats are temporary and will be lost when you refresh or close the page.",
+            })}
+            className="h-10 w-10 rounded-lg hover:bg-primary/20 text-muted-foreground hover:text-primary"
+            title="Chat Information"
           >
-            {isTemporaryMode ? <ToggleLeft className="h-5 w-5" /> : <ToggleRight className="h-5 w-5" />}
+            <Info className="h-5 w-5" />
           </Button>
           <span className="text-xs text-muted-foreground transform -rotate-90 whitespace-nowrap">
-            {isTemporaryMode ? 'TEMP' : 'SAVE'}
+            INFO
           </span>
         </div>
       </div>
@@ -230,11 +165,9 @@ const ChatInterface = () => {
                   </span>
                 </div>
                 
-                {isTemporaryMode && (
-                  <div className="px-2 py-1 bg-amber-500/20 text-amber-400 text-xs rounded-full border border-amber-500/30">
-                    Temporary Mode
-                  </div>
-                )}
+                <div className="px-3 py-1 bg-amber-500/20 text-amber-400 text-xs rounded-full border border-amber-500/30">
+                  Temporary Chats
+                </div>
               </div>
 
               {/* Welcome Message */}
@@ -242,6 +175,9 @@ const ChatInterface = () => {
                 <h1 className="text-3xl md:text-4xl font-medium text-foreground">
                   What's on the agenda today?
                 </h1>
+                <p className="text-sm text-muted-foreground opacity-75">
+                  Note: Chats are temporary and will be lost when you refresh or close the page
+                </p>
               </div>
 
               {/* Input Area */}
@@ -271,21 +207,23 @@ const ChatInterface = () => {
                 <span className="font-medium text-foreground">
                   Prism Chat
                 </span>
-                {isTemporaryMode && (
-                  <div className="px-2 py-1 bg-amber-500/20 text-amber-400 text-xs rounded-full border border-amber-500/30">
-                    Temporary
-                  </div>
-                )}
+                <div className="px-2 py-1 bg-amber-500/20 text-amber-400 text-xs rounded-full border border-amber-500/30">
+                  Temporary
+                </div>
               </div>
               
               <div className="flex items-center space-x-2">
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={toggleTemporaryMode}
+                  onClick={() => toast({
+                    title: "Temporary Chats",
+                    description: "All chats are temporary and will be lost when you refresh or close the page.",
+                  })}
                   className="text-muted-foreground hover:text-foreground"
                 >
-                  {isTemporaryMode ? 'Enable Saving' : 'Temporary Mode'}
+                  <Info className="h-4 w-4 mr-2" />
+                  Chat Info
                 </Button>
               </div>
             </div>
