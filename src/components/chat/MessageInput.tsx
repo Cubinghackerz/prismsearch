@@ -158,7 +158,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
                         <ArrowUp className="h-4 w-4" />
                       )}
                     </Button>
-            ref={textAreaRef as any}
+                  </motion.div>
                 )}
               </div>
             </div>
@@ -176,6 +176,8 @@ const MessageInput: React.FC<MessageInputProps> = ({
           </div>
           
           {/* Deep Research Button - only show when not in welcome mode */}
+        </div>
+      </form>
     </div>
   );
 };
