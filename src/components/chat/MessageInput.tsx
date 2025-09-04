@@ -129,35 +129,38 @@ const MessageInput: React.FC<MessageInputProps> = ({
                   className="h-8 w-8 text-muted-foreground hover:text-foreground"
                   disabled={isInputDisabled}
                 >
-                  <AnimatePresence>
-                    <motion.div
-                      key="send-button"
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
+                  <Mic className="h-4 w-4" />
+                </Button>
+
+                {/* Send button */}
+                <AnimatePresence>
+                  <motion.div
+                    key="send-button"
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Button 
+                      type="submit" 
+                      size="icon" 
+                      className={`
+                        h-8 w-8 rounded-full shadow-sm
+                        ${!inputValue.trim() || isInputDisabled 
+                          ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-50' 
+                          : 'bg-foreground text-background hover:bg-foreground/90'
+                        }
+                      `} 
+                      disabled={!inputValue.trim() || isInputDisabled}
                     >
-                      <Button 
-                        type="submit" 
-                        size="icon" 
-                        className={`
-                          h-8 w-8 rounded-full shadow-sm
-                          ${!inputValue.trim() || isInputDisabled 
-                            ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-50' 
-                            : 'bg-foreground text-background hover:bg-foreground/90'
-                          }
-                        `} 
-                        disabled={!inputValue.trim() || isInputDisabled}
-                      >
-                        {isLoading ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <ArrowUp className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </motion.div>
-                  </AnimatePresence>
-                )}
+                      {isLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <ArrowUp className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </motion.div>
+                </AnimatePresence>
               </div>
             </div>
             
