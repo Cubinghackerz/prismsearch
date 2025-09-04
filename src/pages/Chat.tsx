@@ -1,84 +1,71 @@
-
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { BookmarkPlus, Maximize, Minimize } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import ChatInterface from '../components/chat/ChatInterface';
-import Footer from '../components/Footer';
-import BookmarksDrawer from '../components/BookmarksDrawer';
-import ScrollToTop from '../components/ScrollToTop';
 import { ChatProvider } from '../context/ChatContext';
 import Navigation from '../components/Navigation';
-import { QueryLimitDisplay } from '../components/chat/QueryLimitDisplay';
 
 const Chat = () => {
-  const [isBookmarksOpen, setIsBookmarksOpen] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [bookmarksCount, setBookmarksCount] = useState<number>(() => {
-    try {
-      const bookmarks = JSON.parse(localStorage.getItem('prism_bookmarks') || '[]');
-      return bookmarks.length;
-    } catch {
-      return 0;
-    }
-  });
+  const [showNavigation, setShowNavigation] = useState(false);
+  const [mouseAtTop, setMouseAtTop] = useState(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const isAtTop = e.clientY < 60;
+      setMouseAtTop(isAtTop);
+      
+      if (isAtTop && !showNavigation) {
+        setShowNavigation(true);
+      } else if (!isAtTop && showNavigation) {
+        // Add a small delay before hiding to prevent flickering
+        setTimeout(() => {
+          if (!mouseAtTop) {
+            setShowNavigation(false);
+          }
+        }, 500);
+      }
+    };
+
+    const handleMouseLeave = () => {
+      setMouseAtTop(false);
+      setTimeout(() => {
+        setShowNavigation(false);
+      }, 300);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, [showNavigation, mouseAtTop]);
 
   return (
-    <div className={`${isFullscreen ? 'fixed inset-0 z-50' : 'min-h-screen'} bg-background relative overflow-hidden flex flex-col`}>
-      <ScrollToTop />
-      
-      <div className="relative z-10 h-full flex flex-col flex-1">
-        {!isFullscreen && <Navigation />}
-        
-        <div className={`${isFullscreen ? 'flex-1 p-4' : 'container mx-auto px-4 flex-1 pt-20'}`}>
-          <main className={`${isFullscreen ? 'h-full flex flex-col flex-1' : 'flex-1'}`}>
-            <ChatProvider>
-              <ChatInterface />
-            </ChatProvider>
-          </main>
-        </div>
-        
-        {!isFullscreen && (
-          <div className="px-4 mb-8">
-            <div className="text-center">
-              
-              <div className="flex justify-center gap-3 mb-8">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsBookmarksOpen(true)}
-                  className="relative border-border/50 hover:border-primary/50 backdrop-blur-sm"
-                  size="sm"
-                >
-                  <BookmarkPlus className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">Bookmarks</span>
-                  {bookmarksCount > 0 && (
-                    <span className="absolute -top-2 -right-2 w-5 h-5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full text-xs flex items-center justify-center text-white">
-                      {bookmarksCount}
-                    </span>
-                  )}
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsFullscreen(!isFullscreen)}
-                  className="border-border/50 hover:border-primary/50 backdrop-blur-sm"
-                  size="sm"
-                >
-                  {isFullscreen ? <Minimize className="mr-2 h-4 w-4" /> : <Maximize className="mr-2 h-4 w-4" />}
-                  <span className="hidden sm:inline">{isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>
-                </Button>
-              </div>
-            </div>
-          </div>
+    <div className="fixed inset-0 bg-background text-foreground overflow-hidden">
+      {/* Hover-activated Navigation */}
+      <AnimatePresence>
+        {showNavigation && (
+          <motion.div
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -100, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="fixed top-0 left-0 right-0 z-50"
+            onMouseEnter={() => setShowNavigation(true)}
+            onMouseLeave={() => setShowNavigation(false)}
+          >
+            <Navigation />
+          </motion.div>
         )}
-        
-        {!isFullscreen && <Footer />}
+      </AnimatePresence>
 
-        <BookmarksDrawer 
-          isOpen={isBookmarksOpen} 
-          onClose={() => setIsBookmarksOpen(false)} 
-        />
-      </div>
+      {/* Full Screen Chat Interface */}
+      <main className="h-full w-full">
+        <ChatProvider>
+          <ChatInterface />
+        </ChatProvider>
+      </main>
     </div>
   );
 };

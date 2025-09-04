@@ -9,12 +9,10 @@ import AuthButtons from '@/components/AuthButtons';
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isHomePage = location.pathname === '/';
+  const isChatPage = location.pathname === '/chat';
 
   const primaryNavItems = [
     { name: 'Chat', href: '/chat', icon: MessageSquare },
@@ -32,45 +30,8 @@ const Navigation = () => {
 
   const allNavItems = [...primaryNavItems, ...moreNavItems];
 
-  useEffect(() => {
-    if (isHomePage) {
-      setIsVisible(true);
-      return;
-    }
-
-    const controlNavbar = () => {
-      const currentScrollY = window.scrollY;
-      
-      if (currentScrollY < 100) {
-        setIsVisible(true);
-      } else if (currentScrollY > lastScrollY) {
-        setIsVisible(false);
-      } else {
-        setIsVisible(true);
-      }
-      
-      setLastScrollY(currentScrollY);
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (e.clientY < 100) {
-        setIsVisible(true);
-      }
-    };
-
-    window.addEventListener('scroll', controlNavbar);
-    window.addEventListener('mousemove', handleMouseMove);
-
-    return () => {
-      window.removeEventListener('scroll', controlNavbar);
-      window.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, [lastScrollY, isHomePage]);
-
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border transition-transform duration-300 ${
-      isVisible ? 'translate-y-0' : '-translate-y-full'
-    }`}>
+    <nav className="w-full bg-background/80 backdrop-blur-md border-b border-border">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}

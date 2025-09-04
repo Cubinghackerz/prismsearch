@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { ChatMessage } from '@/context/ChatContext';
 import { useDailyQueryLimit } from '@/hooks/useDailyQueryLimit';
-import DeepResearchButton from './DeepResearchButton';
 
 interface MessageInputProps {
   onSendMessage: (content: string, parentMessageId?: string | null) => void;
@@ -159,7 +158,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
                         <ArrowUp className="h-4 w-4" />
                       )}
                     </Button>
-                  </motion.div>
+            ref={textAreaRef as any}
                 )}
               </div>
             </div>
@@ -177,14 +176,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
           </div>
           
           {/* Deep Research Button - only show when not in welcome mode */}
-          {!isWelcomeMode && inputValue.trim() && (
-            <DeepResearchButton 
-              topic={inputValue}
-              disabled={!inputValue.trim() || isInputDisabled}
-            />
-          )}
-        </div>
-      </form>
     </div>
   );
 };

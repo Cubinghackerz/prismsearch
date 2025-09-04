@@ -1,15 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useChat, ChatModel } from '@/context/ChatContext';
-import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import ModelSelector from './ModelSelector';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
-import RecentChats from './RecentChats';
-import { QueryLimitDisplay } from './QueryLimitDisplay';
-import { Settings, Plus, MessageSquare } from 'lucide-react';
+import { MessageSquare, Settings, Trash2, Archive, Plus, ToggleLeft, ToggleRight } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import '../search/searchStyles.css';
+
+interface SavedChat {
+  id: string;
+  title: string;
+  messages: any[];
+  timestamp: Date;
+  model: ChatModel;
+}
 
 const ChatInterface = () => {
   const {
@@ -24,15 +31,119 @@ const ChatInterface = () => {
   } = useChat();
   const { toast } = useToast();
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [showSidebar, setShowSidebar] = useState(false);
+  const [savedChats, setSavedChats] = useState<SavedChat[]>([]);
+  const [currentChatTitle, setCurrentChatTitle] = useState<string>('');
+  const [isTemporaryMode, setIsTemporaryMode] = useState(false);
+
+  // Load saved chats from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('prism_saved_chats');
+      if (stored) {
+        const chats = JSON.parse(stored).map((chat: any) => ({
+          ...chat,
+          timestamp: new Date(chat.timestamp)
+        }));
+        setSavedChats(chats);
+      }
+    } catch (error) {
+      console.error('Error loading saved chats:', error);
+    }
+  }, []);
+
+  // Auto-save current chat when messages change (if not in temporary mode)
+  useEffect(() => {
+    if (chatId && messages.length > 0 && !isTemporaryMode) {
+      saveCurrentChat();
+    }
+  }, [messages, chatId, isTemporaryMode]);
+
+  // Generate chat title from first user message
+  const generateChatTitle = (chatMessages: any[]): string => {
+    const firstUserMessage = chatMessages.find(m => m.isUser);
+    if (firstUserMessage) {
+      const title = firstUserMessage.content.substring(0, 50);
+      return title.length < firstUserMessage.content.length ? title + '...' : title;
+    }
+    return 'New Chat';
+  };
+
+  const saveCurrentChat = () => {
+    if (!chatId || messages.length === 0) return;
+
+    const title = generateChatTitle(messages);
+    const chatToSave: SavedChat = {
+      id: chatId,
+      title,
+      messages,
+      timestamp: new Date(),
+      model: selectedModel
+    };
+
+    try {
+      const updatedChats = savedChats.filter(chat => chat.id !== chatId);
+      updatedChats.unshift(chatToSave);
+      
+      // Keep only the last 50 chats
+      const trimmedChats = updatedChats.slice(0, 50);
+      
+      setSavedChats(trimmedChats);
+      localStorage.setItem('prism_saved_chats', JSON.stringify(trimmedChats));
+      setCurrentChatTitle(title);
+    } catch (error) {
+      console.error('Error saving chat:', error);
+    }
+  };
+
+  const loadSavedChat = (savedChat: SavedChat) => {
+    // This would require updating the ChatProvider to load a specific chat
+    // For now, we'll show a toast that this feature needs implementation
+    toast({
+      title: "Chat Loading",
+      description: "Chat loading from saved chats will be implemented soon.",
+    });
+  };
+
+  const deleteSavedChat = (chatId: string) => {
+    const updatedChats = savedChats.filter(chat => chat.id !== chatId);
+    setSavedChats(updatedChats);
+    localStorage.setItem('prism_saved_chats', JSON.stringify(updatedChats));
+    
+    toast({
+      title: "Chat Deleted",
+      description: "The chat has been removed from your saved chats.",
+    });
+  };
+
+  const clearAllChats = () => {
+    if (confirm('Are you sure you want to delete all saved chats? This action cannot be undone.')) {
+      setSavedChats([]);
+      localStorage.removeItem('prism_saved_chats');
+      toast({
+        title: "All Chats Deleted",
+        description: "All saved chats have been cleared.",
+      });
+    }
+  };
+
+  const toggleTemporaryMode = () => {
+    setIsTemporaryMode(!isTemporaryMode);
+    if (!isTemporaryMode) {
+      toast({
+        title: "Temporary Mode Enabled",
+        description: "Your chats will not be saved in this mode.",
+      });
+    } else {
+      toast({
+        title: "Temporary Mode Disabled",  
+        description: "Your chats will now be saved automatically.",
+      });
+    }
+  };
 
   const handleSubmit = async (content: string, parentMessageId: string | null = null) => {
     if (!content.trim() || isLoading) return;
     await sendMessage(content, parentMessageId || undefined);
-  };
-
-  const handleModelChange = (value: string) => {
-    selectModel(value as ChatModel);
   };
 
   const handleReplyClick = (messageId: string) => {
@@ -43,130 +154,142 @@ const ChatInterface = () => {
   const showWelcomeScreen = !chatId || (messages.length === 0 && !isTyping);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-16rem)] max-w-4xl mx-auto">
-      <div className="flex flex-1 overflow-hidden">
-        {/* Collapsible Sidebar */}
-        <AnimatePresence>
-          {showSidebar && (
-            <motion.div 
-              className="w-80 bg-card/20 backdrop-blur-sm border-r border-border/50 overflow-y-auto" 
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 320, opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="p-6 space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Chat Settings</h3>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => setShowSidebar(false)}
-                    className="h-8 w-8 p-0"
-                  >
-                    ×
-                  </Button>
-                </div>
-                
-                <RecentChats />
-                
-                <div className="border-t border-border/30 pt-6">
-                  <ModelSelector 
-                    selectedModel={selectedModel} 
-                    onModelChange={handleModelChange} 
-                    onNewChat={startNewChat} 
+    <div className="flex h-screen bg-background">
+      {/* Left Sidebar */}
+      <div className="w-16 bg-muted/20 border-r border-border/30 flex flex-col items-center py-4 space-y-4">
+        {/* New Chat Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={startNewChat}
+          className="h-10 w-10 rounded-lg hover:bg-primary/20 text-muted-foreground hover:text-primary"
+          title="New Chat"
+        >
+          <MessageSquare className="h-5 w-5" />
+        </Button>
+
+        {/* Settings/Chats Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-10 w-10 rounded-lg hover:bg-primary/20 text-muted-foreground hover:text-primary"
+          title="Chat History"
+        >
+          <Archive className="h-5 w-5" />
+        </Button>
+
+        {/* Temporary Mode Toggle */}
+        <div className="flex flex-col items-center space-y-2 mt-auto">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTemporaryMode}
+            className={`h-10 w-10 rounded-lg transition-colors ${
+              isTemporaryMode 
+                ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' 
+                : 'hover:bg-primary/20 text-muted-foreground hover:text-primary'
+            }`}
+            title={isTemporaryMode ? "Temporary Mode: ON" : "Temporary Mode: OFF"}
+          >
+            {isTemporaryMode ? <ToggleLeft className="h-5 w-5" /> : <ToggleRight className="h-5 w-5" />}
+          </Button>
+          <span className="text-xs text-muted-foreground transform -rotate-90 whitespace-nowrap">
+            {isTemporaryMode ? 'TEMP' : 'SAVE'}
+          </span>
+        </div>
+      </div>
+
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col">
+        {showWelcomeScreen ? (
+          /* Welcome Screen */
+          <motion.div 
+            className="flex-1 flex items-center justify-center p-8" 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.5 }}
+          >
+            <div className="text-center max-w-2xl mx-auto space-y-8">
+              {/* Chat Title with Model Selector */}
+              <div className="flex items-center justify-center space-x-3 mb-6">
+                <div className="flex items-center space-x-2">
+                  <img 
+                    src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" 
+                    alt="Prism Logo" 
+                    className="h-6 w-6"
                   />
+                  <span className="text-lg font-semibold text-foreground">
+                    Prism {selectedModel === 'gemini' ? '2.5' : '4'} 
+                  </span>
                 </div>
+                
+                {isTemporaryMode && (
+                  <div className="px-2 py-1 bg-amber-500/20 text-amber-400 text-xs rounded-full border border-amber-500/30">
+                    Temporary Mode
+                  </div>
+                )}
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
-        {/* Main chat area */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-background/50 backdrop-blur-sm">
-          {/* Top bar with controls */}
-          <div className="flex items-center justify-between p-4 border-b border-border/30">
-            <div className="flex items-center space-x-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowSidebar(!showSidebar)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
-              {chatId && (
+
+              {/* Welcome Message */}
+              <div className="space-y-4">
+                <h1 className="text-3xl md:text-4xl font-medium text-foreground">
+                  What's on the agenda today?
+                </h1>
+              </div>
+
+              {/* Input Area */}
+              <div className="relative max-w-2xl mx-auto">
+                <MessageInput 
+                  onSendMessage={handleSubmit} 
+                  isLoading={isLoading} 
+                  messages={messages} 
+                  replyingTo={replyingTo} 
+                  setReplyingTo={setReplyingTo}
+                  isWelcomeMode={true}
+                />
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          /* Active Chat View */
+          <>
+            {/* Chat Header */}
+            <div className="flex items-center justify-between p-4 border-b border-border/20">
+              <div className="flex items-center space-x-3">
+                <img 
+                  src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" 
+                  alt="Prism Logo" 
+                  className="h-5 w-5"
+                />
+                <span className="font-medium text-foreground">
+                  {currentChatTitle || 'Chat'}
+                </span>
+                {isTemporaryMode && (
+                  <div className="px-2 py-1 bg-amber-500/20 text-amber-400 text-xs rounded-full border border-amber-500/30">
+                    Temporary
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex items-center space-x-2">
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={startNewChat}
+                  onClick={toggleTemporaryMode}
                   className="text-muted-foreground hover:text-foreground"
                 >
-                  <Plus className="h-4 w-4 mr-1" />
-                  New Chat
+                  {isTemporaryMode ? 'Enable Saving' : 'Temporary Mode'}
                 </Button>
-              )}
-            </div>
-            <QueryLimitDisplay />
-          </div>
-
-          {showWelcomeScreen ? (
-            /* Welcome Screen */
-            <motion.div 
-              className="flex-1 flex items-center justify-center p-8" 
-              initial={{ opacity: 0, y: 20 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              transition={{ duration: 0.5 }}
-            >
-              <div className="text-center max-w-2xl mx-auto space-y-8">
-                {/* Welcome Message */}
-                <div className="space-y-4">
-                  <h1 className="text-4xl md:text-5xl font-bold text-foreground">
-                    What's on the agenda today?
-                  </h1>
-                </div>
-
-                {/* Input Area */}
-                <div className="relative max-w-2xl mx-auto">
-                  <MessageInput 
-                    onSendMessage={handleSubmit} 
-                    isLoading={isLoading} 
-                    messages={messages} 
-                    replyingTo={replyingTo} 
-                    setReplyingTo={setReplyingTo}
-                    isWelcomeMode={true}
-                  />
-                </div>
-
-                {/* Quick Start Options */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl mx-auto mt-8">
-                  <Button 
-                    variant="outline" 
-                    className="p-4 h-auto flex-col space-y-2 border-border/50 hover:border-primary/50"
-                    onClick={() => handleSubmit("Help me solve a complex math problem")}
-                  >
-                    <span className="font-medium">Solve Math Problems</span>
-                    <span className="text-sm text-muted-foreground">Get step-by-step solutions</span>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="p-4 h-auto flex-col space-y-2 border-border/50 hover:border-primary/50"
-                    onClick={() => handleSubmit("Explain a scientific concept to me")}
-                  >
-                    <span className="font-medium">Learn Science</span>
-                    <span className="text-sm text-muted-foreground">Get detailed explanations</span>
-                  </Button>
-                </div>
               </div>
-            </motion.div>
-          ) : (
-            /* Active Chat View */
-            <>
-              <MessageList 
-                messages={messages} 
-                typingIndicator={isTyping} 
-                onReply={handleReplyClick} 
-              />
+            </div>
+
+            <MessageList 
+              messages={messages} 
+              typingIndicator={isTyping} 
+              onReply={handleReplyClick} 
+            />
+            
+            <div className="p-4">
               <MessageInput 
                 onSendMessage={handleSubmit} 
                 isLoading={isLoading} 
@@ -175,9 +298,9 @@ const ChatInterface = () => {
                 setReplyingTo={setReplyingTo}
                 isWelcomeMode={false}
               />
-            </>
-          )}
-        </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
