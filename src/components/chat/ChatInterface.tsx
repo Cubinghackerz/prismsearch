@@ -45,9 +45,8 @@ const ChatInterface = () => {
       startNewChat();
     }
   }, [chatId, startNewChat]);
-  
-  const handleSubmitWithFiles = async (content: string, attachments: any[] = [], parentMessageId: string | null = null) => {
-    if ((!content.trim() && attachments.length === 0) || isLoading) return;
+  const handleSubmit = async (content: string, parentMessageId: string | null = null) => {
+    if (!content.trim() || isLoading) return;
 
     // Show thinking animation
     setCurrentQuery(content);
@@ -65,10 +64,6 @@ const ChatInterface = () => {
         behavior: 'smooth'
       });
     }, 100);
-  };
-
-  const handleSubmit = async (content: string, parentMessageId: string | null = null) => {
-    await handleSubmitWithFiles(content, [], parentMessageId);
   };
   
   // Hide thinking animation when loading is done
@@ -90,7 +85,7 @@ const ChatInterface = () => {
   }, [messages, isTyping]);
 
   // When there are no messages and no active chat, show the welcome screen
-  const showWelcomeScreen = !chatId || (messages.length === 0 && !isTyping);
+  const showWelcomeScreen = !chatId || messages.length === 0 && !isTyping;
 
   const handleDeleteChat = (chatIdToDelete: string) => {
     if (confirm('Are you sure you want to delete this chat?')) {
@@ -284,8 +279,8 @@ const ChatInterface = () => {
               {/* Input Area */}
               <div className="relative max-w-2xl mx-auto">
                 <MessageInput onSendMessage={handleSubmit} isLoading={isLoading} messages={messages} replyingTo={replyingTo} setReplyingTo={setReplyingTo} isWelcomeMode={true} />
+              </div>
             </div>
-          </div>
           </motion.div>) : (/* Active Chat View */
       <>
             {/* Chat Header */}

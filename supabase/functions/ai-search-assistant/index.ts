@@ -116,14 +116,14 @@ class DeepResearchAgent {
     }
   }
 
-  private async sendPrompt(promptText: string, attachments?: any[]): Promise<string> {
+  private async sendPrompt(promptText: string): Promise<string> {
     try {
       switch (this.model) {
         case 'gemini':
-          return await this.sendGeminiPrompt(promptText, attachments);
+          return await this.sendGeminiPrompt(promptText);
         case 'mistral':
         case 'mistral-medium-3':
-          return await this.sendMistralPrompt(promptText, attachments);
+          return await this.sendMistralPrompt(promptText);
         case 'groq':
         case 'groq-qwen-qwq':
         case 'groq-llama4-scout':
@@ -131,12 +131,12 @@ class DeepResearchAgent {
         case 'groq-llama-guard':
         case 'groq-llama31-8b-instant':
         case 'groq-llama3-8b':
-          return await this.sendGroqPrompt(promptText, attachments);
+          return await this.sendGroqPrompt(promptText);
         case 'azure-gpt4-nano':
         case 'azure-o4-mini':
-          return await this.sendAzurePrompt(promptText, attachments);
+          return await this.sendAzurePrompt(promptText);
         default:
-          return await this.sendGeminiPrompt(promptText, attachments);
+          return await this.sendGeminiPrompt(promptText);
       }
     } catch (error) {
       console.error(`Error with ${this.model}:`, error);
@@ -144,7 +144,7 @@ class DeepResearchAgent {
     }
   }
 
-  private async sendGeminiPrompt(promptText: string, attachments?: any[]): Promise<string> {
+  private async sendGeminiPrompt(promptText: string): Promise<string> {
     let attempts = 0;
     const maxAttempts = GEMINI_API_KEYS.length;
 
@@ -154,24 +154,6 @@ class DeepResearchAgent {
       try {
         console.log(`Attempting Gemini request with key index ${this.currentGeminiKeyIndex} (attempt ${attempts + 1})`);
         
-        // Prepare content parts
-        const parts: any[] = [{ text: promptText }];
-        
-        // Add image attachments if present
-        if (attachments && attachments.length > 0) {
-          for (const attachment of attachments) {
-            if (attachment.type.startsWith('image/')) {
-              parts.push({
-                inline_data: {
-                  mime_type: attachment.type,
-                  data: attachment.data
-                }
-              });
-              console.log(`Added image attachment: ${attachment.name}`);
-            }
-          }
-        }
-        
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${this.modelId}:generateContent?key=${currentApiKey}`, {
           method: 'POST',
           headers: {
@@ -179,13 +161,15 @@ class DeepResearchAgent {
           },
           body: JSON.stringify({
             contents: [{
-              parts: parts
+              parts: [{
+                text: promptText
+              }]
             }],
             generationConfig: {
               temperature: 0.7,
               topK: 40,
               topP: 0.95,
-              maxOutputTokens: 4096,
+              maxOutputTokens: 4096, // Reduced to avoid potential token limit issues
             }
           })
         });
@@ -236,20 +220,7 @@ class DeepResearchAgent {
     throw new Error('All Gemini API keys failed');
   }
 
-  private async sendMistralPrompt(promptText: string, attachments?: any[]): Promise<string> {
-    // Add attachment information to prompt for models that can't process images
-    let enhancedPrompt = promptText;
-    if (attachments && attachments.length > 0) {
-      const attachmentInfo = attachments.map((att: any) => {
-        if (att.type.startsWith('image/')) {
-          return `[Image file attached: ${att.name}. Please analyze this image and provide relevant insights.]`;
-        } else {
-          return `[File attached: ${att.name} (${att.type}). Please consider this file in your response.]`;
-        }
-      }).join(' ');
-      enhancedPrompt = `${attachmentInfo}\n\n${promptText}`;
-    }
-
+  private async sendMistralPrompt(promptText: string): Promise<string> {
     const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -258,7 +229,7 @@ class DeepResearchAgent {
       },
       body: JSON.stringify({
         model: this.modelId,
-        messages: [{ role: 'user', content: enhancedPrompt }],
+        messages: [{ role: 'user', content: promptText }],
         temperature: 0.7,
         max_tokens: 8192,
       })
@@ -280,7 +251,7 @@ class DeepResearchAgent {
     return content.trim();
   }
 
-  private async sendGroqPrompt(promptText: string, attachments?: any[]): Promise<string> {
+  private async sendGroqPrompt(promptText: string): Promise<string> {
     // Try with primary API key first
     let currentApiKey = this.apiKey;
     let attempts = 0;
@@ -288,19 +259,6 @@ class DeepResearchAgent {
 
     while (attempts < maxAttempts) {
       try {
-        // Add attachment information to prompt for models that can't process images
-        let enhancedPrompt = promptText;
-        if (attachments && attachments.length > 0) {
-          const attachmentInfo = attachments.map((att: any) => {
-            if (att.type.startsWith('image/')) {
-              return `[Image file attached: ${att.name}. Please note that you cannot see this image, but please acknowledge its presence and ask for a description if needed.]`;
-            } else {
-              return `[File attached: ${att.name} (${att.type}). Please consider this file in your response.]`;
-            }
-          }).join(' ');
-          enhancedPrompt = `${attachmentInfo}\n\n${promptText}`;
-        }
-
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -309,7 +267,7 @@ class DeepResearchAgent {
           },
           body: JSON.stringify({
             model: this.modelId,
-            messages: [{ role: 'user', content: enhancedPrompt }],
+            messages: [{ role: 'user', content: promptText }],
             temperature: 0.7,
             max_tokens: 8192,
           })
@@ -363,26 +321,12 @@ class DeepResearchAgent {
     throw new Error('All Groq API attempts failed');
   }
 
-  private async sendAzurePrompt(promptText: string, attachments?: any[]): Promise<string> {
+  private async sendAzurePrompt(promptText: string): Promise<string> {
     const endpoint = Deno.env.get('AZURE_OPENAI_ENDPOINT');
     const deploymentName = Deno.env.get('AZURE_DEPLOYMENT_NAME') || 'gpt-4';
     
     if (!endpoint) {
       throw new Error('Azure OpenAI endpoint not configured');
-    }
-
-    
-    // Add attachment information to prompt for models that can't process images
-    let enhancedPrompt = promptText;
-    if (attachments && attachments.length > 0) {
-      const attachmentInfo = attachments.map((att: any) => {
-        if (att.type.startsWith('image/')) {
-          return `[Image file attached: ${att.name}. Please note that you cannot see this image, but please acknowledge its presence and ask for a description if needed.]`;
-        } else {
-          return `[File attached: ${att.name} (${att.type}). Please consider this file in your response.]`;
-        }
-      }).join(' ');
-      enhancedPrompt = `${attachmentInfo}\n\n${promptText}`;
     }
 
     const response = await fetch(`${endpoint}/openai/deployments/${deploymentName}/chat/completions?api-version=2024-08-01-preview`, {
@@ -392,7 +336,7 @@ class DeepResearchAgent {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        messages: [{ role: 'user', content: enhancedPrompt }],
+        messages: [{ role: 'user', content: promptText }],
         temperature: 0.7,
         max_tokens: 8192,
       })
@@ -414,7 +358,7 @@ class DeepResearchAgent {
     return content.trim();
   }
 
-  async determineResearchPlan(topic: string, attachments?: any[]): Promise<ResearchTask[]> {
+  async determineResearchPlan(topic: string): Promise<ResearchTask[]> {
     const prompt = `System: You are a research-optimized AI agent. Given a broad research topic, break it into an ordered list of specific subtasks. Return a JSON array of objects with 'id' and 'description'.
 
 User: Research Topic: ${topic}
@@ -422,7 +366,7 @@ User: Research Topic: ${topic}
 Create at least four subtasks covering literature review, data gathering, analysis, and synthesis. Output exactly as a JSON array.`;
 
     try {
-      const response = await this.sendPrompt(prompt, attachments);
+      const response = await this.sendPrompt(prompt);
       
       // Extract JSON from response if it's wrapped in markdown or other text
       const jsonMatch = response.match(/\[[\s\S]*\]/);
@@ -441,7 +385,7 @@ Create at least four subtasks covering literature review, data gathering, analys
     }
   }
 
-  async conductResearchTasks(tasks: ResearchTask[], attachments?: any[]): Promise<TaskResult[]> {
+  async conductResearchTasks(tasks: ResearchTask[]): Promise<TaskResult[]> {
     const results: TaskResult[] = [];
     
     for (const task of tasks) {
@@ -453,7 +397,7 @@ Description: ${task.description}
 Execute this subtask and provide a comprehensive response.`;
 
       try {
-        const content = await this.sendPrompt(prompt, attachments);
+        const content = await this.sendPrompt(prompt);
         results.push({
           taskId: task.id,
           content: content.trim()
@@ -473,7 +417,7 @@ Execute this subtask and provide a comprehensive response.`;
     return results;
   }
 
-  async compileReport(topic: string, taskResults: TaskResult[], attachments?: any[]): Promise<string> {
+  async compileReport(topic: string, taskResults: TaskResult[]): Promise<string> {
     const findingsText = taskResults
       .map(result => `Task ${result.taskId} Findings: ${result.content}`)
       .join('\n\n');
@@ -487,26 +431,26 @@ ${findingsText}
 
 Please produce a coherent final report.`;
 
-    const report = await this.sendPrompt(prompt, attachments);
+    const report = await this.sendPrompt(prompt);
     return report.trim();
   }
 
-  async runDeepResearch(topic: string, attachments?: any[]): Promise<string> {
+  async runDeepResearch(topic: string): Promise<string> {
     console.log('Plan generated');
-    const tasks = await this.determineResearchPlan(topic, attachments);
+    const tasks = await this.determineResearchPlan(topic);
     
     console.log('Tasks complete');
-    const taskResults = await this.conductResearchTasks(tasks, attachments);
+    const taskResults = await this.conductResearchTasks(tasks);
     
     console.log('Report compiled');
-    const finalReport = await this.compileReport(topic, taskResults, attachments);
+    const finalReport = await this.compileReport(topic, taskResults);
     
     return finalReport;
   }
 }
 
 // Regular chat functionality
-async function sendRegularChat(prompt: string, model: string, attachments?: any[]): Promise<string> {
+async function sendRegularChat(prompt: string, model: string): Promise<string> {
   // Check if any API keys are available
   if (!Object.values(availableModels).some(available => available)) {
     return "I'm sorry, but I'm currently unable to generate a response as no AI models are available. Please try again later or contact support.";
@@ -514,7 +458,7 @@ async function sendRegularChat(prompt: string, model: string, attachments?: any[
 
   try {
     const agent = new DeepResearchAgent(model);
-    return await agent.sendPrompt(prompt, attachments);
+    return await agent.sendPrompt(prompt);
   } catch (error) {
     console.error(`Error with regular chat for ${model}:`, error);
     
@@ -523,7 +467,7 @@ async function sendRegularChat(prompt: string, model: string, attachments?: any[
       console.log('Falling back to Gemini...');
       try {
         const geminiAgent = new DeepResearchAgent('gemini');
-        return await geminiAgent.sendPrompt(prompt, attachments);
+        return await geminiAgent.sendPrompt(prompt);
       } catch (geminiError) {
         console.error('Gemini fallback also failed:', geminiError);
         throw new Error('All AI models are currently unavailable. Please try again later.');
@@ -534,7 +478,7 @@ async function sendRegularChat(prompt: string, model: string, attachments?: any[
   }
 }
 
-async function processDeepResearch(query: string, model: string, attachments?: any[]): Promise<string> {
+async function processDeepResearch(query: string, model: string): Promise<string> {
   console.log(`Starting deep research for topic: ${query} using model: ${model}`);
 
   // Check if any API keys are available
@@ -544,7 +488,7 @@ async function processDeepResearch(query: string, model: string, attachments?: a
   
   try {
     const researchAgent = new DeepResearchAgent(model);
-    const report = await researchAgent.runDeepResearch(query, attachments);
+    const report = await researchAgent.runDeepResearch(query);
     return report;
   } catch (error) {
     console.error('Error in deep research:', error);
@@ -554,7 +498,7 @@ async function processDeepResearch(query: string, model: string, attachments?: a
       console.log('Falling back to Gemini for deep research...');
       try {
         const geminiAgent = new DeepResearchAgent('gemini');
-        const report = await geminiAgent.runDeepResearch(query, attachments);
+        const report = await geminiAgent.runDeepResearch(query);
         return report;
       } catch (geminiError) {
         console.error('Gemini fallback for deep research also failed:', geminiError);
@@ -567,7 +511,7 @@ async function processDeepResearch(query: string, model: string, attachments?: a
 }
 
 // Function to generate search result summaries
-async function generateSearchSummary(query: string, searchResults: any, model: string, attachments?: any[]): Promise<string> {
+async function generateSearchSummary(query: string, searchResults: any, model: string): Promise<string> {
   // Check if any API keys are available
   if (!Object.values(availableModels).some(available => available)) {
     return "I'm sorry, but I'm currently unable to generate a search summary as no AI models are available. Please try again later or contact support.";
@@ -594,7 +538,7 @@ Focus on synthesizing information rather than just listing what each source says
 Format your response clearly with sections, but keep it concise and focused.`;
 
   try {
-    return await sendRegularChat(summaryPrompt, model, attachments);
+    return await sendRegularChat(summaryPrompt, model);
   } catch (error) {
     console.error('Error generating search summary:', error);
     throw new Error('Failed to generate search summary. Please try again later.');
@@ -607,7 +551,7 @@ serve(async (req) => {
   }
 
   try {
-    const { query, chatId, chatHistory, model = 'gemini', deepResearch, summaryMode, searchResults, attachments } = await req.json();
+    const { query, chatId, chatHistory, model = 'gemini', deepResearch, summaryMode, searchResults } = await req.json();
     
     console.log(`Processing ${model} request for chat ${chatId}${deepResearch ? ' (Deep Research Mode)' : ''}${summaryMode ? ' (Summary Mode)' : ''}`);
 
@@ -630,10 +574,10 @@ serve(async (req) => {
 
     if (summaryMode && searchResults) {
       // Generate search result summary
-      result = await generateSearchSummary(query, searchResults, model, attachments);
+      result = await generateSearchSummary(query, searchResults, model);
     } else if (deepResearch) {
       // Use deep research mode with the selected model
-      result = await processDeepResearch(query, model, attachments);
+      result = await processDeepResearch(query, model);
     } else {
       // Regular chat mode
       let prompt = '';
@@ -642,26 +586,12 @@ serve(async (req) => {
         const historyContext = chatHistory.map((msg: any) => 
           `${msg.isUser ? 'User' : 'Assistant'}: ${msg.content}`
         ).join('\n');
-        prompt = `Previous conversation:\n${historyContext}\n\nUser: ${query}`;
+        prompt = `Previous conversation:\n${historyContext}\n\nUser: ${query}\n\nAssistant:`;
       } else {
-        prompt = `User: ${query}`;
+        prompt = `User: ${query}\n\nAssistant:`;
       }
 
-      // Add attachment information to prompt if present
-      if (attachments && attachments.length > 0) {
-        const attachmentInfo = attachments.map((att: any) => {
-          if (att.type.startsWith('image/')) {
-            return `[Image attached: ${att.name}]`;
-          } else {
-            return `[File attached: ${att.name} (${att.type})]`;
-          }
-        }).join(' ');
-        prompt += `\n${attachmentInfo}`;
-      }
-
-      prompt += `\n\nAssistant:`;
-
-      result = await sendRegularChat(prompt, model, attachments);
+      result = await sendRegularChat(prompt, model);
     }
 
     return new Response(
