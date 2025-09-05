@@ -180,6 +180,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const sendMessage = async (content: string, parentMessageId?: string) => {
     const sendMessageWithFiles = async (content: string, attachments: any[] = [], parentMessageId?: string) => {
+    }
     // Check query limit before processing
     if (isLimitReached) {
       toast({
