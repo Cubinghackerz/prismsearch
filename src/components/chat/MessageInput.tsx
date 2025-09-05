@@ -62,14 +62,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
           </div>}
         
         <div className={`relative flex items-end gap-3 ${isWelcomeMode ? 'max-w-2xl mx-auto' : 'max-w-4xl mx-auto'}`}>
-                variant="ghost"
-                size="icon"
-                className="ml-3 h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
-                disabled={isInputDisabled}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-
               {/* Text input */}
               <Textarea ref={textAreaRef} value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyDown={handleKeyDown} onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)} placeholder={isLimitReached ? "Daily limit reached" : "Ask anything"} className={`
                   flex-1 border-0 bg-transparent resize-none text-foreground placeholder:text-muted-foreground/60
