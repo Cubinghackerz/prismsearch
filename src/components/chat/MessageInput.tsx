@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, ArrowUp, Loader2 } from 'lucide-react';
+import { X, ArrowUp, Loader2, Plus, Mic, Paperclip } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -62,10 +62,29 @@ const MessageInput: React.FC<MessageInputProps> = ({
           </div>}
         
         <div className={`relative flex items-end gap-3 ${isWelcomeMode ? 'max-w-2xl mx-auto' : 'max-w-4xl mx-auto'}`}>
+          <div className="relative flex-1">
+            {/* ChatGPT-style input container */}
+            <div className={`
+              relative flex items-center bg-muted/30 backdrop-blur-sm rounded-3xl border border-border/30 
+              transition-all duration-300 
+              ${isFocused ? 'border-primary/50 shadow-lg shadow-primary/10' : 'hover:border-border/50'}
+              ${isLimitReached ? 'opacity-50 cursor-not-allowed' : ''}
+            `}>
+              {/* Plus button on the left */}
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="ml-3 h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+                disabled={isInputDisabled}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+
               {/* Text input */}
               <Textarea ref={textAreaRef} value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyDown={handleKeyDown} onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)} placeholder={isLimitReached ? "Daily limit reached" : "Ask anything"} className={`
                   flex-1 border-0 bg-transparent resize-none text-foreground placeholder:text-muted-foreground/60
-                  focus-visible:ring-0 focus-visible:ring-offset-0 min-h-0 py-4 px-6
+                  focus-visible:ring-0 focus-visible:ring-offset-0 min-h-0 py-4 px-4
                   ${isInputDisabled ? 'cursor-not-allowed' : ''}
                 `} disabled={isInputDisabled} rows={1} style={{
               minHeight: '24px',
@@ -74,6 +93,28 @@ const MessageInput: React.FC<MessageInputProps> = ({
               
               {/* Right side buttons */}
               <div className="flex items-center space-x-2 mr-3 flex-shrink-0">
+                {/* Attachment button */}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                  disabled={isInputDisabled}
+                >
+                  <Paperclip className="h-4 w-4" />
+                </Button>
+
+                {/* Microphone button */}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                  disabled={isInputDisabled}
+                >
+                  <Mic className="h-4 w-4" />
+                </Button>
+
                 {/* Send button */}
                 <AnimatePresence>
                   <motion.div key="send-button" initial={{
