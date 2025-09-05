@@ -46,7 +46,8 @@ const ChatInterface = () => {
     }
   }, [chatId, startNewChat]);
   const handleSubmit = async (content: string, parentMessageId: string | null = null) => {
-    if (!content.trim() || isLoading) return;
+    const handleSubmitWithFiles = async (content: string, attachments: any[] = [], parentMessageId: string | null = null) => {
+    if ((!content.trim() && attachments.length === 0) || isLoading) return;
 
     // Show thinking animation
     setCurrentQuery(content);
@@ -56,7 +57,7 @@ const ChatInterface = () => {
     if (!chatId) {
       startNewChat();
     }
-    await sendMessage(content, parentMessageId || undefined);
+    await sendMessageWithFiles(content, attachments, parentMessageId || undefined);
 
     // Auto-scroll to bottom after sending
     setTimeout(() => {
@@ -64,6 +65,10 @@ const ChatInterface = () => {
         behavior: 'smooth'
       });
     }, 100);
+  };
+
+  const handleSubmit = async (content: string, parentMessageId: string | null = null) => {
+    await handleSubmitWithFiles(content, [], parentMessageId);
   };
   
   // Hide thinking animation when loading is done
@@ -279,7 +284,6 @@ const ChatInterface = () => {
               {/* Input Area */}
               <div className="relative max-w-2xl mx-auto">
                 <MessageInput onSendMessage={handleSubmit} isLoading={isLoading} messages={messages} replyingTo={replyingTo} setReplyingTo={setReplyingTo} isWelcomeMode={true} />
-              </div>
             </div>
           </motion.div>) : (/* Active Chat View */
       <>

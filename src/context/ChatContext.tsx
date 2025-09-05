@@ -27,6 +27,7 @@ export interface ChatMessage {
   isUser: boolean;
   timestamp: Date;
   parentMessageId?: string;
+  attachments?: any[];
 }
 
 export type ChatModel =
@@ -46,6 +47,7 @@ export type ChatModel =
 interface ChatContextType {
   messages: ChatMessage[];
   sendMessage: (content: string, parentMessageId?: string) => Promise<void>;
+  sendMessageWithFiles: (content: string, attachments: any[], parentMessageId?: string) => Promise<void>;
   isLoading: boolean;
   isTyping: boolean;
   startNewChat: () => void;
@@ -177,6 +179,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [messages, isTemporaryMode, chatId]);
 
   const sendMessage = async (content: string, parentMessageId?: string) => {
+    const sendMessageWithFiles = async (content: string, attachments: any[] = [], parentMessageId?: string) => {
     // Check query limit before processing
     if (isLimitReached) {
       toast({
@@ -210,6 +213,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isUser: true,
       timestamp: new Date(),
       parentMessageId: parentMessageId,
+      attachments: attachments,
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -230,6 +234,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           chatId: currentChatId,
           chatHistory: messages,
           model: selectedModel // Use selected model instead of forcing Gemini
+          attachments: attachments
         }
       });
       
@@ -271,6 +276,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
       setIsTyping(false);
     }
+  };
+
+  const sendMessage = async (content: string, parentMessageId?: string) => {
+    await sendMessageWithFiles(content, [], parentMessageId);
   };
 
   const startNewChat = useCallback(() => {
@@ -436,6 +445,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <ChatContext.Provider value={{
       messages,
       sendMessage,
+      sendMessageWithFiles,
       isLoading,
       isTyping,
       startNewChat,

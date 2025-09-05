@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatMessage } from '@/context/ChatContext';
 import { useDailyQueryLimit } from '@/hooks/useDailyQueryLimit';
-interface MessageInputProps {
+import FileUpload from './FileUpload';
+import { useChat } from '@/context/ChatContext';
   onSendMessage: (content: string, parentMessageId?: string | null) => void;
   isLoading: boolean;
   messages: ChatMessage[];
@@ -14,7 +15,6 @@ interface MessageInputProps {
   isWelcomeMode?: boolean;
 }
 const MessageInput: React.FC<MessageInputProps> = ({
-  onSendMessage,
   isLoading,
   messages,
   replyingTo,
@@ -23,15 +23,18 @@ const MessageInput: React.FC<MessageInputProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const [attachedFiles, setAttachedFiles] = useState<any[]>([]);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const {
+  const { sendMessageWithFiles } = useChat();
     isLimitReached
   } = useDailyQueryLimit();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || isLoading || isLimitReached) return;
-    await onSendMessage(inputValue, replyingTo);
+    await sendMessageWithFiles(inputValue, attachedFiles, replyingTo);
     setInputValue('');
+    setAttachedFiles([]);
     setReplyingTo(null);
   };
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -47,6 +50,13 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const isInputDisabled = isLoading || isLimitReached;
   return <div className={`${isWelcomeMode ? '' : 'border-t border-border/30 bg-card/20 backdrop-blur-sm'}`}>
       <form onSubmit={handleSubmit} className={isWelcomeMode ? "" : "p-6"}>
+  const handleFileAdd = (file: any) => {
+    setAttachedFiles(prev => [...prev, file]);
+  };
+
+  const handleFileRemove = (fileId: string) => {
+    setAttachedFiles(prev => prev.filter(f => f.id !== fileId));
+  };
         {/* Replying to message indicator */}
         {replyingTo && !isWelcomeMode && <div className="mb-4 p-3 rounded-xl bg-secondary/50 border border-border/50 flex justify-between items-center backdrop-blur-sm">
             <div className="flex items-center text-sm text-foreground">
@@ -70,16 +80,16 @@ const MessageInput: React.FC<MessageInputProps> = ({
               ${isFocused ? 'border-primary/50 shadow-lg shadow-primary/10' : 'hover:border-border/50'}
               ${isLimitReached ? 'opacity-50 cursor-not-allowed' : ''}
             `}>
-              {/* Plus button on the left */}
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="ml-3 h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
-                disabled={isInputDisabled}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
+              {/* File Upload Button */}
+              <div className="ml-3 flex-shrink-0">
+                <FileUpload
+                  attachedFiles={attachedFiles}
+                  onFileAdd={handleFileAdd}
+                  onFileRemove={handleFileRemove}
+                  disabled={isInputDisabled}
+                  maxFiles={5}
+                />
+              </div>
 
               {/* Text input */}
               <Textarea ref={textAreaRef} value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyDown={handleKeyDown} onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)} placeholder={isLimitReached ? "Daily limit reached" : "Ask anything"} className={`
@@ -105,27 +115,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
                 </Button>
 
                 {/* Microphone button */}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                  disabled={isInputDisabled}
-                >
-                  <Mic className="h-4 w-4" />
-                </Button>
-
-                {/* Send button */}
-                <AnimatePresence>
-                  <motion.div key="send-button" initial={{
-                  scale: 0,
-                  opacity: 0
-                }} animate={{
-                  scale: 1,
-                  opacity: 1
-                }} exit={{
-                  scale: 0,
-                  opacity: 0
                 }} transition={{
                   duration: 0.2
                 }}>
@@ -141,11 +130,11 @@ const MessageInput: React.FC<MessageInputProps> = ({
             </div>
             
             {/* Glow effect when focused */}
-            {isFocused && !isLoading && !isLimitReached && <motion.div className="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 blur-xl" initial={{
+            {isFocused && !isLoading && !isLimitReached && (
             opacity: 0
           }} animate={{
             opacity: 1
-          }} exit={{
+                      disabled={(!inputValue.trim() && attachedFiles.length === 0) || isInputDisabled}
             opacity: 0
           }} transition={{
             duration: 0.3

@@ -11,18 +11,21 @@ import { toast } from 'sonner';
 import ChemistryKeyboard from './ChemistryKeyboard';
 import MathRenderer from '../math-assistant/MathRenderer';
 import ScientificCalculator from '../calculator/ScientificCalculator';
+import FileUpload from '../chat/FileUpload';
 
 interface ChemistryResult {
   id: string;
   input: string;
   output: string;
   timestamp: Date;
+  attachments?: any[];
 }
 
 const ChemistryAssistant = () => {
   const [input, setInput] = useState('');
   const [results, setResults] = useState<ChemistryResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [attachedFiles, setAttachedFiles] = useState<any[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const insertAtCursor = (text: string) => {
@@ -56,7 +59,10 @@ const ChemistryAssistant = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZncGRma3ZhYndlbWl2emplaXR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNTU5ODUsImV4cCI6MjA2MTczMTk4NX0.hbWiDq1_KGBMMmQBbsrZTysKxUm3bqjslSqRUzre-O4`,
         },
-        body: JSON.stringify({ problem: input }),
+        body: JSON.stringify({ 
+          problem: input,
+          attachments: attachedFiles
+        }),
       });
 
       if (!response.ok) {
@@ -70,10 +76,12 @@ const ChemistryAssistant = () => {
         input: input,
         output: data.solution,
         timestamp: new Date(),
+        attachments: attachedFiles,
       };
 
       setResults(prev => [newResult, ...prev]);
       setInput('');
+      setAttachedFiles([]);
       toast.success('Chemistry problem solved!');
     } catch (error) {
       console.error('Error solving chemistry:', error);
@@ -83,6 +91,13 @@ const ChemistryAssistant = () => {
     }
   };
 
+  const handleFileAdd = (file: any) => {
+    setAttachedFiles(prev => [...prev, file]);
+  };
+
+  const handleFileRemove = (fileId: string) => {
+    setAttachedFiles(prev => prev.filter(f => f.id !== fileId));
+  };
   const copyResult = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success('Copied to clipboard');
@@ -145,13 +160,23 @@ Examples:
                   className="min-h-[200px] bg-prism-surface/30 border-prism-border text-prism-text resize-none"
                 />
                 
+                <div className="mt-3">
+                  <FileUpload
+                    attachedFiles={attachedFiles}
+                    onFileAdd={handleFileAdd}
+                    onFileRemove={handleFileRemove}
+                    disabled={isLoading}
+                    maxFiles={3}
+                  />
+                </div>
+                
                 <div className="flex justify-between items-center">
                   <div className="text-sm text-prism-text-muted">
                     Use Ctrl+Enter to solve quickly
                   </div>
                   <Button 
                     onClick={solveChemistry} 
-                    disabled={isLoading || !input.trim()}
+                    disabled={isLoading || (!input.trim() && attachedFiles.length === 0)}
                     className="bg-prism-primary hover:bg-prism-primary/90"
                   >
                     {isLoading ? (
