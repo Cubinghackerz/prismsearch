@@ -71,15 +71,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
               ${isLimitReached ? 'opacity-50 cursor-not-allowed' : ''}
             `}>
               {/* Plus button on the left */}
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="ml-3 h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
-                disabled={isInputDisabled}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
+              
 
               {/* Text input */}
               <Textarea ref={textAreaRef} value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyDown={handleKeyDown} onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)} placeholder={isLimitReached ? "Daily limit reached" : "Ask anything"} className={`
@@ -94,26 +86,10 @@ const MessageInput: React.FC<MessageInputProps> = ({
               {/* Right side buttons */}
               <div className="flex items-center space-x-2 mr-3 flex-shrink-0">
                 {/* Attachment button */}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                  disabled={isInputDisabled}
-                >
-                  <Paperclip className="h-4 w-4" />
-                </Button>
+                
 
                 {/* Microphone button */}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                  disabled={isInputDisabled}
-                >
-                  <Mic className="h-4 w-4" />
-                </Button>
+                
 
                 {/* Send button */}
                 <AnimatePresence>
