@@ -7,6 +7,8 @@ import { ChatMessage } from '@/context/ChatContext';
 import { useDailyQueryLimit } from '@/hooks/useDailyQueryLimit';
 import FileUpload from './FileUpload';
 import { useChat } from '@/context/ChatContext';
+
+interface MessageInputProps {
   onSendMessage: (content: string, parentMessageId?: string | null) => void;
   isLoading: boolean;
   messages: ChatMessage[];
@@ -14,6 +16,7 @@ import { useChat } from '@/context/ChatContext';
   setReplyingTo: (id: string | null) => void;
   isWelcomeMode?: boolean;
 }
+
 const MessageInput: React.FC<MessageInputProps> = ({
   isLoading,
   messages,
@@ -25,10 +28,19 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const [isFocused, setIsFocused] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<any[]>([]);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
-  const {
   const { sendMessageWithFiles } = useChat();
+  const {
     isLimitReached
   } = useDailyQueryLimit();
+
+  const handleFileAdd = (file: any) => {
+    setAttachedFiles(prev => [...prev, file]);
+  };
+
+  const handleFileRemove = (fileId: string) => {
+    setAttachedFiles(prev => prev.filter(f => f.id !== fileId));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || isLoading || isLimitReached) return;
@@ -37,26 +49,23 @@ const MessageInput: React.FC<MessageInputProps> = ({
     setAttachedFiles([]);
     setReplyingTo(null);
   };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
   };
+
   const getReplyingToMessage = () => {
     if (!replyingTo) return null;
     return messages.find(m => m.id === replyingTo);
   };
+
   const isInputDisabled = isLoading || isLimitReached;
+
   return <div className={`${isWelcomeMode ? '' : 'border-t border-border/30 bg-card/20 backdrop-blur-sm'}`}>
       <form onSubmit={handleSubmit} className={isWelcomeMode ? "" : "p-6"}>
-  const handleFileAdd = (file: any) => {
-    setAttachedFiles(prev => [...prev, file]);
-  };
-
-  const handleFileRemove = (fileId: string) => {
-    setAttachedFiles(prev => prev.filter(f => f.id !== fileId));
-  };
         {/* Replying to message indicator */}
         {replyingTo && !isWelcomeMode && <div className="mb-4 p-3 rounded-xl bg-secondary/50 border border-border/50 flex justify-between items-center backdrop-blur-sm">
             <div className="flex items-center text-sm text-foreground">
@@ -115,9 +124,16 @@ const MessageInput: React.FC<MessageInputProps> = ({
                 </Button>
 
                 {/* Microphone button */}
-                }} transition={{
-                  duration: 0.2
-                }}>
+                <AnimatePresence>
+                  <motion.div initial={{
+                    opacity: 0
+                  }} animate={{
+                    opacity: 1
+                  }} exit={{
+                    opacity: 0
+                  }} transition={{
+                    duration: 0.2
+                  }}>
                     <Button type="submit" size="icon" className={`
                         h-8 w-8 rounded-full shadow-sm
                         ${!inputValue.trim() || isInputDisabled ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-50' : 'bg-foreground text-background hover:bg-foreground/90'}
@@ -131,14 +147,16 @@ const MessageInput: React.FC<MessageInputProps> = ({
             
             {/* Glow effect when focused */}
             {isFocused && !isLoading && !isLimitReached && (
-            opacity: 0
-          }} animate={{
-            opacity: 1
-                      disabled={(!inputValue.trim() && attachedFiles.length === 0) || isInputDisabled}
-            opacity: 0
-          }} transition={{
-            duration: 0.3
-          }} />}
+              <motion.div className="absolute inset-0 rounded-3xl bg-primary/20 blur-xl -z-10" initial={{
+                opacity: 0
+              }} animate={{
+                opacity: 1
+              }} exit={{
+                opacity: 0
+              }} transition={{
+                duration: 0.3
+              }} />
+            )}
           </div>
           
           {/* Deep Research Button - only show when not in welcome mode */}
@@ -146,4 +164,5 @@ const MessageInput: React.FC<MessageInputProps> = ({
       </form>
     </div>;
 };
+
 export default MessageInput;
