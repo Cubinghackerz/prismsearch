@@ -178,9 +178,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [messages, isTemporaryMode, chatId]);
 
-  const sendMessage = async (content: string, parentMessageId?: string) => {
-    const sendMessageWithFiles = async (content: string, attachments: any[] = [], parentMessageId?: string) => {
-    }
+  const sendMessageWithFiles = async (content: string, attachments: any[] = [], parentMessageId?: string) => {
     // Check query limit before processing
     if (isLimitReached) {
       toast({
@@ -234,7 +232,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           query: content,
           chatId: currentChatId,
           chatHistory: messages,
-          model: selectedModel // Use selected model instead of forcing Gemini
+          model: selectedModel, // Use selected model instead of forcing Gemini
           attachments: attachments
         }
       });
