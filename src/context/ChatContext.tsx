@@ -11,6 +11,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useDailyQueryLimit } from '@/hooks/useDailyQueryLimit';
 import { useToast } from '@/hooks/use-toast';
 
+export interface SavedChat {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+  model: ChatModel;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface ChatMessage {
   id: string;
   content: string;
@@ -44,6 +53,13 @@ interface ChatContextType {
   selectedModel: ChatModel;
   chatId: string | null;
   runDeepResearch: (topic: string) => Promise<void>;
+  savedChats: SavedChat[];
+  loadChat: (chatId: string) => void;
+  deleteChat: (chatId: string) => void;
+  clearAllChats: () => void;
+  isTemporaryMode: boolean;
+  toggleTemporaryMode: () => void;
+  saveCurrentChat: () => void;
 }
 
 export const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -62,8 +78,103 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [selectedModel, setSelectedModel] = useState<ChatModel>('gemini');
   const [chatId, setChatId] = useState<string | null>(null);
+  const [savedChats, setSavedChats] = useState<SavedChat[]>([]);
+  const [isTemporaryMode, setIsTemporaryMode] = useState<boolean>(false);
   const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
   const { toast } = useToast();
+
+  // Load saved chats on mount
+  useEffect(() => {
+    loadSavedChats();
+    loadTemporaryMode();
+  }, []);
+
+  const loadSavedChats = () => {
+    try {
+      const stored = localStorage.getItem('prism_saved_chats');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const chats = parsed.map((chat: any) => ({
+          ...chat,
+          createdAt: new Date(chat.createdAt),
+          updatedAt: new Date(chat.updatedAt),
+          messages: chat.messages.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          }))
+        }));
+        setSavedChats(chats);
+      }
+    } catch (error) {
+      console.error('Error loading saved chats:', error);
+    }
+  };
+
+  const loadTemporaryMode = () => {
+    try {
+      const stored = localStorage.getItem('prism_temporary_mode');
+      if (stored) {
+        setIsTemporaryMode(JSON.parse(stored));
+      }
+    } catch (error) {
+      console.error('Error loading temporary mode:', error);
+    }
+  };
+
+  const saveChatToStorage = (chatToSave: SavedChat) => {
+    try {
+      const existingChats = [...savedChats];
+      const existingIndex = existingChats.findIndex(chat => chat.id === chatToSave.id);
+      
+      if (existingIndex >= 0) {
+        existingChats[existingIndex] = chatToSave;
+      } else {
+        existingChats.unshift(chatToSave);
+      }
+      
+      // Keep only the 50 most recent chats
+      const limitedChats = existingChats.slice(0, 50);
+      
+      setSavedChats(limitedChats);
+      localStorage.setItem('prism_saved_chats', JSON.stringify(limitedChats));
+    } catch (error) {
+      console.error('Error saving chat:', error);
+    }
+  };
+
+  const generateChatTitle = (firstMessage: string): string => {
+    const truncated = firstMessage.slice(0, 50);
+    return truncated.length < firstMessage.length ? truncated + '...' : truncated;
+  };
+
+  const saveCurrentChat = () => {
+    if (isTemporaryMode || !chatId || messages.length === 0) return;
+
+    const firstUserMessage = messages.find(msg => msg.isUser)?.content || 'New Chat';
+    const chatTitle = generateChatTitle(firstUserMessage);
+
+    const chatToSave: SavedChat = {
+      id: chatId,
+      title: chatTitle,
+      messages: messages,
+      model: selectedModel,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    saveChatToStorage(chatToSave);
+  };
+
+  // Auto-save chat after each message (when not in temporary mode)
+  useEffect(() => {
+    if (!isTemporaryMode && chatId && messages.length > 0) {
+      const timeoutId = setTimeout(() => {
+        saveCurrentChat();
+      }, 1000); // Debounce saves
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [messages, isTemporaryMode, chatId]);
 
   const sendMessage = async (content: string, parentMessageId?: string) => {
     // Check query limit before processing
@@ -167,6 +278,60 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setChatId(newChatId);
     setMessages([]);
   }, []);
+
+  const loadChat = (loadChatId: string) => {
+    const chatToLoad = savedChats.find(chat => chat.id === loadChatId);
+    if (chatToLoad) {
+      setChatId(chatToLoad.id);
+      setMessages(chatToLoad.messages);
+      setSelectedModel(chatToLoad.model);
+      
+      toast({
+        title: "Chat loaded",
+        description: `Loaded "${chatToLoad.title}"`
+      });
+    }
+  };
+
+  const deleteChat = (deleteChatId: string) => {
+    const updatedChats = savedChats.filter(chat => chat.id !== deleteChatId);
+    setSavedChats(updatedChats);
+    localStorage.setItem('prism_saved_chats', JSON.stringify(updatedChats));
+    
+    // If we're deleting the current chat, start a new one
+    if (deleteChatId === chatId) {
+      startNewChat();
+    }
+    
+    toast({
+      title: "Chat deleted",
+      description: "The chat has been removed from your saved chats."
+    });
+  };
+
+  const clearAllChats = () => {
+    setSavedChats([]);
+    localStorage.removeItem('prism_saved_chats');
+    startNewChat();
+    
+    toast({
+      title: "All chats cleared",
+      description: "All saved chats have been removed."
+    });
+  };
+
+  const toggleTemporaryMode = () => {
+    const newMode = !isTemporaryMode;
+    setIsTemporaryMode(newMode);
+    localStorage.setItem('prism_temporary_mode', JSON.stringify(newMode));
+    
+    toast({
+      title: newMode ? "Temporary mode enabled" : "Temporary mode disabled",
+      description: newMode 
+        ? "Your chats will not be saved to device storage."
+        : "Your chats will be automatically saved to device storage."
+    });
+  };
 
   const selectModel = (model: ChatModel) => {
     setSelectedModel(model);
@@ -277,7 +442,14 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       selectModel,
       selectedModel,
       chatId,
-      runDeepResearch
+      runDeepResearch,
+      savedChats,
+      loadChat,
+      deleteChat,
+      clearAllChats,
+      isTemporaryMode,
+      toggleTemporaryMode,
+      saveCurrentChat
     }}>
       {children}
     </ChatContext.Provider>
