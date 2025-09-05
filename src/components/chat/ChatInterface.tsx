@@ -45,8 +45,8 @@ const ChatInterface = () => {
       startNewChat();
     }
   }, [chatId, startNewChat]);
-  const handleSubmit = async (content: string, parentMessageId: string | null = null) => {
-    const handleSubmitWithFiles = async (content: string, attachments: any[] = [], parentMessageId: string | null = null) => {
+  
+  const handleSubmitWithFiles = async (content: string, attachments: any[] = [], parentMessageId: string | null = null) => {
     if ((!content.trim() && attachments.length === 0) || isLoading) return;
 
     // Show thinking animation
@@ -57,7 +57,7 @@ const ChatInterface = () => {
     if (!chatId) {
       startNewChat();
     }
-    await sendMessageWithFiles(content, attachments, parentMessageId || undefined);
+    await sendMessage(content, parentMessageId || undefined);
 
     // Auto-scroll to bottom after sending
     setTimeout(() => {
@@ -90,7 +90,7 @@ const ChatInterface = () => {
   }, [messages, isTyping]);
 
   // When there are no messages and no active chat, show the welcome screen
-  const showWelcomeScreen = !chatId || messages.length === 0 && !isTyping;
+  const showWelcomeScreen = !chatId || (messages.length === 0 && !isTyping);
 
   const handleDeleteChat = (chatIdToDelete: string) => {
     if (confirm('Are you sure you want to delete this chat?')) {
@@ -285,6 +285,7 @@ const ChatInterface = () => {
               <div className="relative max-w-2xl mx-auto">
                 <MessageInput onSendMessage={handleSubmit} isLoading={isLoading} messages={messages} replyingTo={replyingTo} setReplyingTo={setReplyingTo} isWelcomeMode={true} />
             </div>
+          </div>
           </motion.div>) : (/* Active Chat View */
       <>
             {/* Chat Header */}
