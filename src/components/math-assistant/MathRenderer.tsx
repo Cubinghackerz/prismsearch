@@ -1,6 +1,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { mathJaxService } from '../../services/mathJaxService';
 
 interface MathRendererProps {
   content: string;
@@ -11,12 +12,18 @@ const MathRenderer: React.FC<MathRendererProps> = ({ content, className = '' }) 
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (containerRef.current && typeof window !== 'undefined' && window.MathJax) {
-      // Process with MathJax after markdown is rendered
-      window.MathJax.typesetPromise([containerRef.current]).catch((err: any) => {
-        console.log('MathJax rendering error:', err);
-      });
-    }
+    const renderMath = async () => {
+      if (containerRef.current) {
+        // Small delay to ensure markdown is rendered first
+        setTimeout(async () => {
+          if (containerRef.current) {
+            await mathJaxService.renderMath(containerRef.current);
+          }
+        }, 50);
+      }
+    };
+
+    renderMath();
   }, [content]);
 
   return (

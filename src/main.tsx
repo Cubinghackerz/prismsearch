@@ -5,6 +5,7 @@ import { ClerkProvider } from '@clerk/clerk-react'
 import App from './App.tsx'
 import './index.css'
 import './components/search/searchStyles.css'
+import { mathJaxService } from './services/mathJaxService'
 
 const PUBLISHABLE_KEY = "pk_test_bWFnaWNhbC1maXJlZmx5LTExLmNsZXJrLmFjY291bnRzLmRldiQ";
 
@@ -32,6 +33,13 @@ document.head.appendChild(fontDisplayMeta);
 
 // Add class for font smoothing
 document.documentElement.classList.add('antialiased');
+
+// Initialize MathJax service
+mathJaxService.initialize().then(() => {
+  console.log('MathJax service initialized');
+}).catch((error) => {
+  console.error('Failed to initialize MathJax service:', error);
+});
 
 // Enable improved font rendering
 const fontRenderingStyle = document.createElement('style');
