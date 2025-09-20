@@ -177,7 +177,7 @@ const PrismDetector = () => {
   return <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10 font-fira-code flex flex-col">
       <Navigation />
       
-      <main className="container mx-auto px-6 py-16 flex-1">
+      <main className="container mx-auto px-6 py-16 pt-32 flex-1">
         <div className="text-center mb-12">
           <div className="flex items-center justify-center space-x-3 mb-4">
             <Shield className="h-12 w-12 text-primary" />
