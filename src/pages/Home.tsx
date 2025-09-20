@@ -60,8 +60,8 @@ const Home = () => {
     isNew: true
   }, {
     icon: <FileText className="h-6 w-6" />,
-    title: "File Converter",
-    description: "Convert between different file formats with ease using AI-powered conversion tools.",
+    title: "File Manager",
+    description: "Convert between different file formats and compress files with advanced algorithms.",
     link: "/compressor",
     color: "from-yellow-500 to-orange-600",
     isNew: true
