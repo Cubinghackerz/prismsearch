@@ -21,7 +21,7 @@ class BreachDetectionService {
   private static readonly BREACH_CACHE_KEY = 'prism_vault_breach_cache';
   private static readonly RATE_LIMIT_KEY = 'prism_vault_rate_limit';
   private static readonly CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours
-  private static readonly HIBP_API_URL = 'https://api.pwnedpasswords.com/range/';
+  private static readonly HIBP_API_URL = '/api/pwnedpasswords/range/';
   private static readonly MAX_REQUESTS_PER_HOUR = 100;
   private static readonly REQUEST_DELAY = 1500; // 1.5 second delay between requests
 
@@ -343,7 +343,7 @@ class BreachDetectionService {
 
   static async testConnection(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.HIBP_API_URL}5E884`, {
+      const response = await fetch('/api/pwnedpasswords/range/5E884', {
         method: 'GET',
         headers: {
           'User-Agent': 'PrismVault-PasswordManager/1.0'

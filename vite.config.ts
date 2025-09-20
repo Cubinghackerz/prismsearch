@@ -8,6 +8,13 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      '/api/pwnedpasswords': {
+        target: 'https://api.pwnedpasswords.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/pwnedpasswords/, ''),
+      },
+    },
   },
   plugins: [
     react(),
