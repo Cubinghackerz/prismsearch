@@ -1,12 +1,12 @@
 import React from 'react';
-import { ArrowRight, Calculator, Search, Shield, Code, FileText, Atom, FlaskConical, BarChart3, Zap, Brain, Crown, Sparkles, Globe } from 'lucide-react';
+import { ArrowRight, Calculator, Search, Shield, Code, FileText, Atom, FlaskConical, BarChart3, Zap, Brain, Crown, Sparkles, Globe, RefreshCw, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import AnimatedHeadline from '@/components/AnimatedHeadline';
-import CountUp from '@/components/CountUp';
+
 import Prism from '@/components/Prism';
 import ParticleBackground from '@/components/ParticleBackground';
 import { Link } from 'react-router-dom';
@@ -81,6 +81,22 @@ const Index = () => {
       description: "Military-grade password management and secure data storage solutions.",
       link: "/vault",
       gradient: "from-emerald-500 to-green-500"
+    },
+    {
+      icon: <RefreshCw className="h-8 w-8 text-orange-400" />,
+      title: "File Converter",
+      description: "Convert between multiple file formats with advanced processing capabilities.",
+      link: "/conversions",
+      gradient: "from-orange-500 to-red-500",
+      badge: "New"
+    },
+    {
+      icon: <ShieldCheck className="h-8 w-8 text-red-400" />,
+      title: "Threat Detector",
+      description: "Advanced file scanning and threat detection with comprehensive security analysis.",
+      link: "/detector",
+      gradient: "from-red-500 to-rose-500",
+      badge: "New"
     }
   ];
 
@@ -177,8 +193,7 @@ const Index = () => {
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
                 <div className="text-4xl font-bold text-primary mb-2 font-fira-code">
-                  <CountUp to={stat.number} />
-                  {stat.suffix}
+                  {stat.number}{stat.suffix}
                 </div>
                 <div className="text-muted-foreground font-medium">{stat.label}</div>
               </div>
