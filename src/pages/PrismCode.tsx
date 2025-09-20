@@ -8,11 +8,15 @@ import { Globe, Code, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import WebAppGenerator from "@/components/prism-code/WebAppGenerator";
 import CodeNotebook from "@/components/prism-code/CodeNotebook";
+import BetaWebAppGenerator from "@/components/prism-code/beta/BetaWebAppGenerator";
+import BetaCodeNotebook from "@/components/prism-code/beta/BetaCodeNotebook";
+import VersionSelector from "@/components/prism-code/VersionSelector";
 import { QueryLimitDisplay } from "@/components/chat/QueryLimitDisplay";
 
 const PrismCode = () => {
   const { isSignedIn, isLoaded } = useAuth();
   const [activeTab, setActiveTab] = useState("webapp");
+  const [version, setVersion] = useState<'legacy' | 'beta'>('legacy');
 
   if (!isLoaded) {
     return <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10 flex items-center justify-center">
@@ -44,13 +48,17 @@ const PrismCode = () => {
             </div>
           </div>
 
-          <Alert className="border-orange-500/30 bg-orange-500/5 mb-6">
-            <AlertTriangle className="h-4 w-4 text-orange-500" />
-            <AlertDescription className="text-orange-300">
-              <strong>Beta Features:</strong> AI Web App Generator and Code Notebook are in beta. 
-              Some features may not work as expected. You have 10 queries per day for the AI Web App Generator.
-            </AlertDescription>
-          </Alert>
+          <VersionSelector version={version} onVersionChange={setVersion} />
+
+          {version === 'legacy' && (
+            <Alert className="border-orange-500/30 bg-orange-500/5 mb-6">
+              <AlertTriangle className="h-4 w-4 text-orange-500" />
+              <AlertDescription className="text-orange-300">
+                <strong>Legacy Version:</strong> Stable web app generation with HTML/CSS/JS support. 
+                You have 10 queries per day for the AI Web App Generator.
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -66,11 +74,11 @@ const PrismCode = () => {
           </TabsList>
 
           <TabsContent value="webapp" className="space-y-6">
-            <WebAppGenerator />
+            {version === 'legacy' ? <WebAppGenerator /> : <BetaWebAppGenerator />}
           </TabsContent>
 
           <TabsContent value="notebook" className="space-y-6">
-            <CodeNotebook />
+            {version === 'legacy' ? <CodeNotebook /> : <BetaCodeNotebook />}
           </TabsContent>
         </Tabs>
       </div>
