@@ -170,10 +170,9 @@ const PrismConversions = () => {
   const compatibleFormats = getCompatibleFormats(files);
 
   return (
-    <div className="space-y-6">
-      {/* Header - only shown when not embedded */}
-      {!window.location.pathname.includes('/compressor') && (
-        <div className="container mx-auto px-6 py-8 pt-32">
+    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10">
+      <Navigation />
+      <div className="container mx-auto px-6 py-8 pt-32">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-4 mb-4">
@@ -198,12 +197,11 @@ const PrismConversions = () => {
           <Alert className="border-orange-500/30 bg-orange-500/5">
             <AlertTriangle className="h-4 w-4 text-orange-500" />
             <AlertDescription className="text-orange-300">
-               <strong>Beta Feature:</strong> File conversion service supports multiple formats. 
-               Large files may take longer to process. Maximum file size: 100MB per file.
-             </AlertDescription>
-           </Alert>
-         </div>
-       )}
+              <strong>Beta Feature:</strong> File conversion service supports multiple formats. 
+              Large files may take longer to process. Maximum file size: 100MB per file.
+            </AlertDescription>
+          </Alert>
+        </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* File Upload */}
