@@ -3,11 +3,10 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, Sparkles, ChevronRight, Star, ArrowRight, CheckCircle } from 'lucide-react';
+import { MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, Sparkles, ChevronRight, Star, ArrowRight, CheckCircle, FileText, ShieldAlert } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import Prism from '@/components/Prism';
-import CountUp from '@/components/CountUp';
 import AnimatedHeadline from '@/components/AnimatedHeadline';
 const Home = () => {
   const features = [{
@@ -58,6 +57,20 @@ const Home = () => {
     description: "Generate, edit, and deploy web applications with AI-powered development tools.",
     link: "/code",
     color: "from-cyan-500 to-blue-600",
+    isNew: true
+  }, {
+    icon: <FileText className="h-6 w-6" />,
+    title: "File Converter",
+    description: "Convert between different file formats with ease using AI-powered conversion tools.",
+    link: "/compressor",
+    color: "from-yellow-500 to-orange-600",
+    isNew: true
+  }, {
+    icon: <ShieldAlert className="h-6 w-6" />,
+    title: "Threat Detector",
+    description: "Scan files and URLs for potential security threats with advanced detection algorithms.",
+    link: "/detector",
+    color: "from-red-600 to-purple-600",
     isNew: true
   }];
   const stats = [{
@@ -141,8 +154,9 @@ const Home = () => {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
               {stats.map((stat, index) => <div key={index} className="text-center group">
                   <div className="text-4xl lg:text-5xl font-bold text-white mb-3 group-hover:scale-110 transition-transform duration-300">
-                    <CountUp to={stat.value} />
-                    <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{stat.suffix}</span>
+                    <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                      {stat.value.toLocaleString()}{stat.suffix}
+                    </span>
                   </div>
                   <div className="text-white/70 text-sm lg:text-base font-medium">{stat.label}</div>
                 </div>)}
