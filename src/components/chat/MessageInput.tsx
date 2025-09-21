@@ -124,6 +124,21 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || isLoading || isLimitReached) return;
+
+    // Check for /code command
+    if (inputValue.trim().startsWith('/code')) {
+      const codePrompt = inputValue.replace('/code', '').trim();
+      if (!codePrompt) {
+        toast({
+          title: "Code Command Usage",
+          description: "Use: /code [description] to generate code. Example: /code create a todo app",
+          variant: "default"
+        });
+        setInputValue('');
+        return;
+      }
+    }
+
     await sendMessageWithFiles(inputValue, attachedFiles, replyingTo);
     setInputValue('');
     setAttachedFiles([]);
@@ -181,6 +196,13 @@ const MessageInput: React.FC<MessageInputProps> = ({
               ${isLimitReached ? 'opacity-50 cursor-not-allowed' : ''}
             `}>
               {/* Text input */}
+              onKeyDown={(e) => {
+                // Show command help on "/" key
+                if (e.key === '/' && inputValue === '') {
+                  // Could show command suggestions here
+                }
+                handleKeyDown(e);
+              }}
               <Textarea ref={textAreaRef} value={inputValue} onChange={e => setInputValue(e.target.value)} onKeyDown={handleKeyDown} onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)} placeholder={isLimitReached ? "Daily limit reached" : "Ask anything"} className={`
                   flex-1 border-0 bg-transparent resize-none text-foreground placeholder:text-muted-foreground/60
                   focus-visible:ring-0 focus-visible:ring-offset-0 min-h-0 py-4 px-4
@@ -189,6 +211,15 @@ const MessageInput: React.FC<MessageInputProps> = ({
               minHeight: '24px',
               maxHeight: '120px'
             }} />
+              
+              {/* Command indicator */}
+              {inputValue.startsWith('/') && (
+                <div className="absolute bottom-full left-0 mb-2 px-3 py-2 bg-blue-600/90 backdrop-blur-sm text-white text-xs rounded-lg shadow-lg border border-blue-500/30">
+                  <div className="font-semibold mb-1">💡 Available Commands:</div>
+                  <div className="text-blue-100">/code [description] - Generate and preview code</div>
+                  <div className="text-xs text-blue-200 mt-1">Example: /code create a calculator app</div>
+                </div>
+              )}
               
               {/* Right side buttons */}
               <div className="flex items-center space-x-2 mr-3 flex-shrink-0">

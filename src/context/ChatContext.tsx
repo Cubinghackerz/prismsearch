@@ -179,6 +179,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [messages, isTemporaryMode, chatId]);
 
   const sendMessageWithFiles = async (content: string, attachments: any[] = [], parentMessageId?: string) => {
+    // Handle /code command
+    if (content.trim().startsWith('/code')) {
+      const codePrompt = content.replace('/code', '').trim();
+      await handleCodeCommand(codePrompt, attachments, parentMessageId);
+      return;
+    }
+
     // Check query limit before processing
     if (isLimitReached) {
       toast({
@@ -266,6 +273,95 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const errorMessage: ChatMessage = {
         id: uuidv4(),
         content: 'Sorry, there was an error processing your request. Please try again.',
+        isUser: false,
+        timestamp: new Date(),
+        parentMessageId: parentMessageId,
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+      setIsTyping(false);
+    }
+  };
+
+  const handleCodeCommand = async (codePrompt: string, attachments: any[] = [], parentMessageId?: string) => {
+    // Initialize chat if needed
+    let currentChatId = chatId;
+    if (!currentChatId) {
+      currentChatId = uuidv4();
+      setChatId(currentChatId);
+    }
+
+    const userMessage: ChatMessage = {
+      id: uuidv4(),
+      content: `/code ${codePrompt}`,
+      isUser: true,
+      timestamp: new Date(),
+      parentMessageId: parentMessageId,
+      attachments: attachments,
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+    setIsTyping(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-webapp', {
+        body: {
+          prompt: codePrompt || 'Create a simple web application',
+          model: 'gemini'
+        }
+      });
+
+      if (error) {
+        console.error('Code generation error:', error);
+        throw error;
+      }
+
+      // Format the response as a code generation result
+      const codeResponse = `🔧 **Code Generated Successfully!**
+
+**App Description:** ${data.description}
+
+**Features:**
+${data.features.map((feature: string) => `• ${feature}`).join('\n')}
+
+**Files Generated:**
+• index.html
+• styles.css
+• script.js
+
+**HTML:**
+\`\`\`html
+${data.html.substring(0, 300)}${data.html.length > 300 ? '...' : ''}
+\`\`\`
+
+**CSS:**
+\`\`\`css
+${data.css.substring(0, 200)}${data.css.length > 200 ? '...' : ''}
+\`\`\`
+
+**JavaScript:**
+\`\`\`javascript
+${data.javascript.substring(0, 200)}${data.javascript.length > 200 ? '...' : ''}
+\`\`\`
+
+💡 **Tip:** Visit the [Code Generator](/code) for full editing capabilities, terminal access, and deployment options!`;
+
+      const assistantMessage: ChatMessage = {
+        id: uuidv4(),
+        content: codeResponse,
+        isUser: false,
+        timestamp: new Date(),
+        parentMessageId: parentMessageId,
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error('Error in code command:', error);
+      const errorMessage: ChatMessage = {
+        id: uuidv4(),
+        content: 'Sorry, there was an error generating code. Please try again or visit the [Code Generator](/code) directly.',
         isUser: false,
         timestamp: new Date(),
         parentMessageId: parentMessageId,

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain, Rocket } from "lucide-react";
+import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain, Rocket, Terminal, Code, Play, Stop, Monitor } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyQueryLimit } from "@/hooks/useDailyQueryLimit";
@@ -16,6 +16,8 @@ import ProjectHistory from "./ProjectHistory";
 import DevelopmentPlanDialog from "./DevelopmentPlanDialog";
 import { v4 as uuidv4 } from 'uuid';
 import DeploymentDialog from "./DeploymentDialog";
+import EnhancedTerminal from "./EnhancedTerminal";
+import VSCodeInterface from "./VSCodeInterface";
 
 interface GeneratedApp {
   html: string;
@@ -69,6 +71,9 @@ const WebAppGenerator = () => {
   const [isThinking, setIsThinking] = useState(false);
   const [developmentPlan, setDevelopmentPlan] = useState<DevelopmentPlan | null>(null);
   const [showPlanDialog, setShowPlanDialog] = useState(false);
+  const [isServerRunning, setIsServerRunning] = useState(false);
+  const [serverPort, setServerPort] = useState<number | null>(null);
+  const [activeLanguage, setActiveLanguage] = useState<string>('javascript');
   const { toast } = useToast();
   const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
 
@@ -663,7 +668,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
         {/* Right Side - Tabs - Increased width significantly */}
         <div className="w-[32rem] flex flex-col">
           <Tabs value={activeRightTab} onValueChange={setActiveRightTab} className="flex-1 flex flex-col">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="generator" className="flex items-center space-x-1">
                 <Wand2 className="w-4 h-4" />
                 <span>Generate</span>
@@ -671,6 +676,14 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
               <TabsTrigger value="editor" className="flex items-center space-x-1" disabled={!generatedApp}>
                 <FileText className="w-4 h-4" />
                 <span>Editor</span>
+              </TabsTrigger>
+              <TabsTrigger value="vscode" className="flex items-center space-x-1" disabled={!generatedApp}>
+                <Code className="w-4 h-4" />
+                <span>VS Code</span>
+              </TabsTrigger>
+              <TabsTrigger value="terminal" className="flex items-center space-x-1">
+                <Terminal className="w-4 h-4" />
+                <span>Terminal</span>
               </TabsTrigger>
               <TabsTrigger value="packages" className="flex items-center space-x-1">
                 <Package className="w-4 h-4" />
@@ -789,6 +802,40 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
 
             <TabsContent value="packages" className="flex-1 mt-4">
               <PackageManager />
+            </TabsContent>
+
+            <TabsContent value="vscode" className="flex-1 mt-4">
+              {generatedApp ? (
+                <VSCodeInterface 
+                  generatedApp={generatedApp}
+                  onFileChange={handleFileChange}
+                  activeLanguage={activeLanguage}
+                  onLanguageChange={setActiveLanguage}
+                />
+              ) : (
+                <Card className="h-full flex items-center justify-center">
+                  <CardContent className="text-center py-20">
+                    <Code className="w-12 h-12 text-prism-text-muted mx-auto mb-4" />
+                    <p className="text-prism-text-muted">Generate a web app to start coding</p>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            <TabsContent value="terminal" className="flex-1 mt-4">
+              <EnhancedTerminal 
+                generatedApp={generatedApp}
+                isServerRunning={isServerRunning}
+                serverPort={serverPort}
+                onServerStart={(port) => {
+                  setIsServerRunning(true);
+                  setServerPort(port);
+                }}
+                onServerStop={() => {
+                  setIsServerRunning(false);
+                  setServerPort(null);
+                }}
+              />
             </TabsContent>
           </Tabs>
         </div>
