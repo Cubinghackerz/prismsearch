@@ -11,8 +11,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useDailyQueryLimit } from '@/hooks/useDailyQueryLimit';
 import { useToast } from '@/hooks/use-toast';
 import {
+  CodeGenerationPlan,
   DEFAULT_CODE_GENERATION_FALLBACK_ORDER,
   GeneratedApp,
+  generateCodePlan,
   generateWebApp,
 } from '@/services/codeGenerationService';
 
@@ -25,6 +27,19 @@ export interface SavedChat {
   updatedAt: Date;
 }
 
+export type CodePlanStatus = 'awaiting-user' | 'generating' | 'declined' | 'error' | 'completed';
+
+export interface CodePlanState {
+  plan: CodeGenerationPlan;
+  prompt: string;
+  status: CodePlanStatus;
+  planModel?: string;
+  rawResponse?: string;
+  generationModel?: string;
+  error?: string;
+  lastUpdated: string;
+}
+
 export interface ChatMessage {
   id: string;
   content: string;
@@ -33,11 +48,12 @@ export interface ChatMessage {
   timestamp: Date;
   parentMessageId?: string;
   attachments?: any[];
-  type?: 'text' | 'code';
+  type?: 'text' | 'code' | 'code-plan';
   codeResult?: GeneratedApp;
   codePrompt?: string;
   usedModel?: string;
   rawResponse?: string;
+  codePlan?: CodePlanState;
 }
 
 export type ChatModel =
@@ -60,6 +76,9 @@ interface ChatContextType {
   sendMessage: (content: string, parentMessageId?: string) => Promise<void>;
   sendMessageWithFiles: (content: string, attachments: any[], parentMessageId?: string) => Promise<void>;
   generateCodeFromPrompt: (prompt: string) => Promise<void>;
+  approveCodePlan: (messageId: string) => Promise<void>;
+  declineCodePlan: (messageId: string) => void;
+  updateCodePlan: (messageId: string, updatedPlan: CodeGenerationPlan) => void;
   isLoading: boolean;
   isTyping: boolean;
   startNewChat: () => void;
@@ -337,12 +356,118 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const generationChatId = `chat-code-${currentChatId}`;
 
     try {
-      const { app, usedModel, rawResponse } = await generateWebApp({
+      const { plan, usedModel, rawResponse } = await generateCodePlan({
         prompt: trimmedPrompt,
         model: selectedModel,
-        chatId: generationChatId,
+        chatId: `${generationChatId}-plan`,
         fallbackModels: DEFAULT_CODE_GENERATION_FALLBACK_ORDER,
       });
+
+      const planMessage: ChatMessage = {
+        id: uuidv4(),
+        content: plan.summary || 'Proposed development plan',
+        isUser: false,
+        timestamp: new Date(),
+        type: 'code-plan',
+        codePlan: {
+          plan,
+          prompt: trimmedPrompt,
+          status: 'awaiting-user',
+          planModel: usedModel,
+          rawResponse,
+          lastUpdated: new Date().toISOString(),
+        },
+      };
+
+      setMessages(prev => [...prev, planMessage]);
+
+      toast({
+        title: 'Plan ready',
+        description: 'Review the proposed plan, then approve or edit it before generation.',
+      });
+    } catch (error) {
+      console.error('Error generating development plan:', error);
+      const errorMessage: ChatMessage = {
+        id: uuidv4(),
+        content: 'Sorry, there was an error creating the development plan. Please try again.',
+        isUser: false,
+        timestamp: new Date(),
+        type: 'text',
+      };
+      setMessages(prev => [...prev, errorMessage]);
+
+      toast({
+        title: 'Plan generation failed',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+      setIsTyping(false);
+    }
+  };
+
+  const approveCodePlan = async (messageId: string) => {
+    const planMessage = messages.find((msg) => msg.id === messageId);
+    if (!planMessage || !planMessage.codePlan) {
+      return;
+    }
+
+    if (planMessage.codePlan.status === 'generating') {
+      return;
+    }
+
+    let currentChatId = chatId;
+    if (!currentChatId) {
+      currentChatId = uuidv4();
+      setChatId(currentChatId);
+    }
+
+    const generationChatId = `chat-code-${currentChatId}`;
+
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === messageId && msg.codePlan
+          ? {
+              ...msg,
+              codePlan: {
+                ...msg.codePlan,
+                status: 'generating',
+                error: undefined,
+                lastUpdated: new Date().toISOString(),
+              },
+            }
+          : msg
+      )
+    );
+
+    setIsLoading(true);
+    setIsTyping(true);
+
+    try {
+      const { app, usedModel, rawResponse } = await generateWebApp({
+        prompt: planMessage.codePlan.prompt,
+        model: selectedModel,
+        chatId: `${generationChatId}-build`,
+        fallbackModels: DEFAULT_CODE_GENERATION_FALLBACK_ORDER,
+        plan: planMessage.codePlan.plan,
+      });
+
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === messageId && msg.codePlan
+            ? {
+                ...msg,
+                codePlan: {
+                  ...msg.codePlan!,
+                  status: 'completed',
+                  generationModel: usedModel,
+                  lastUpdated: new Date().toISOString(),
+                },
+              }
+            : msg
+        )
+      );
 
       const assistantMessage: ChatMessage = {
         id: uuidv4(),
@@ -351,29 +476,38 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         timestamp: new Date(),
         type: 'code',
         codeResult: app,
-        codePrompt: trimmedPrompt,
+        codePrompt: planMessage.codePlan.prompt,
         usedModel,
         rawResponse,
       };
 
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages((prev) => [...prev, assistantMessage]);
 
       toast({
         title: 'Web app generated',
-        description: usedModel !== selectedModel
-          ? `Primary model unavailable. Used ${usedModel} instead.`
-          : 'Preview and refine your new app using the embedded tools.',
+        description:
+          usedModel !== selectedModel
+            ? `Primary model unavailable. Used ${usedModel} instead.`
+            : 'Preview and refine your new app using the embedded tools.',
       });
     } catch (error) {
-      console.error('Error generating code from prompt:', error);
-      const errorMessage: ChatMessage = {
-        id: uuidv4(),
-        content: 'Sorry, there was an error generating the web application. Please try again.',
-        isUser: false,
-        timestamp: new Date(),
-        type: 'text',
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      console.error('Error generating code from approved plan:', error);
+
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === messageId && msg.codePlan
+            ? {
+                ...msg,
+                codePlan: {
+                  ...msg.codePlan!,
+                  status: 'error',
+                  error: error instanceof Error ? error.message : 'Unknown error',
+                  lastUpdated: new Date().toISOString(),
+                },
+              }
+            : msg
+        )
+      );
 
       toast({
         title: 'Generation failed',
@@ -384,6 +518,49 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
       setIsTyping(false);
     }
+  };
+
+  const declineCodePlan = (messageId: string) => {
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === messageId && msg.codePlan
+          ? {
+              ...msg,
+              codePlan: {
+                ...msg.codePlan,
+                status: 'declined',
+                lastUpdated: new Date().toISOString(),
+              },
+            }
+          : msg
+      )
+    );
+  };
+
+  const updateCodePlan = (messageId: string, updatedPlan: CodeGenerationPlan) => {
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === messageId && msg.codePlan
+          ? {
+              ...msg,
+              content: updatedPlan.summary || msg.content,
+              codePlan: {
+                ...msg.codePlan,
+                plan: updatedPlan,
+                status: 'awaiting-user',
+                error: undefined,
+                generationModel: undefined,
+                lastUpdated: new Date().toISOString(),
+              },
+            }
+          : msg
+      )
+    );
+
+    toast({
+      title: 'Plan updated',
+      description: 'Your modifications have been applied. Approve the plan to continue.',
+    });
   };
 
   const sendMessage = async (content: string, parentMessageId?: string) => {
@@ -558,6 +735,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       sendMessage,
       sendMessageWithFiles,
       generateCodeFromPrompt,
+      approveCodePlan,
+      declineCodePlan,
+      updateCodePlan,
       isLoading,
       isTyping,
       startNewChat,

@@ -9,7 +9,7 @@ import AdvancedCodeEditor from '@/components/prism-code/AdvancedCodeEditor';
 import WebAppPreview from '@/components/prism-code/WebAppPreview';
 import VSCodeWorkspace from '@/components/prism-code/VSCodeWorkspace';
 import { useNavigate } from 'react-router-dom';
-import { Code2, ExternalLink, LayoutTemplate, Monitor, Sparkles } from 'lucide-react';
+import { Code2, ExternalLink, FileCode2, LayoutTemplate, Maximize2, Monitor, Sparkles } from 'lucide-react';
 
 interface CodeGenerationBubbleProps {
   result: GeneratedApp;
@@ -22,6 +22,7 @@ const CodeGenerationBubble = ({ result, prompt, usedModel, rawResponse }: CodeGe
   const [showPreview, setShowPreview] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isVSCodeOpen, setIsVSCodeOpen] = useState(false);
+  const [isPreviewFullscreen, setIsPreviewFullscreen] = useState(false);
   const [appState, setAppState] = useState<GeneratedApp>(result);
   const navigate = useNavigate();
 
@@ -33,11 +34,74 @@ const CodeGenerationBubble = ({ result, prompt, usedModel, rawResponse }: CodeGe
     return (appState.features || []).slice(0, 6);
   }, [appState.features]);
 
+  const workspaceFiles = useMemo(() => {
+    const map = new Map<string, { path: string; language: string; content: string }>();
+
+    map.set('index.html', { path: 'index.html', language: 'html', content: appState.html });
+    map.set('styles.css', { path: 'styles.css', language: 'css', content: appState.css });
+    map.set('script.js', { path: 'script.js', language: 'javascript', content: appState.javascript });
+
+    if (appState.previewHtml) {
+      map.set('preview.html', { path: 'preview.html', language: 'html', content: appState.previewHtml });
+    }
+
+    (appState.files || []).forEach((file) => {
+      if (file.path) {
+        map.set(file.path, {
+          path: file.path,
+          language: file.language || 'plaintext',
+          content: file.content,
+        });
+      }
+    });
+
+    return Array.from(map.values());
+  }, [appState]);
+
   const handleFileChange = (fileType: string, content: string) => {
-    setAppState((prev) => ({
-      ...prev,
-      [fileType]: content,
-    }));
+    setAppState((prev) => {
+      if (!prev) {
+        return prev;
+      }
+
+      if (fileType === 'html' || fileType === 'css' || fileType === 'javascript') {
+        return {
+          ...prev,
+          [fileType]: content,
+        };
+      }
+
+      if (fileType === 'previewHtml') {
+        return {
+          ...prev,
+          previewHtml: content,
+        };
+      }
+
+      if (fileType.startsWith('file:')) {
+        const path = fileType.replace(/^file:/, '');
+        const existingFiles = prev.files || [];
+        const existingIndex = existingFiles.findIndex((file) => file.path === path);
+        const sourceFile = existingFiles[existingIndex] || result.files?.find((file) => file.path === path);
+        const updatedFile = {
+          path,
+          language: sourceFile?.language || 'plaintext',
+          description: sourceFile?.description,
+          content,
+        };
+
+        const updatedFiles = existingIndex >= 0
+          ? existingFiles.map((file, index) => (index === existingIndex ? updatedFile : file))
+          : [...existingFiles, updatedFile];
+
+        return {
+          ...prev,
+          files: updatedFiles,
+        };
+      }
+
+      return prev;
+    });
   };
 
   const handleOpenInPrismCode = () => {
@@ -91,6 +155,15 @@ const CodeGenerationBubble = ({ result, prompt, usedModel, rawResponse }: CodeGe
               <Monitor className="h-4 w-4" />
               {showPreview ? 'Hide preview' : 'Preview app'}
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+              onClick={() => setIsPreviewFullscreen(true)}
+            >
+              <Maximize2 className="h-4 w-4" />
+              Fullscreen preview
+            </Button>
             <Button variant="outline" size="sm" className="flex items-center gap-2" onClick={() => setIsEditorOpen(true)}>
               <Code2 className="h-4 w-4" />
               View code
@@ -111,9 +184,63 @@ const CodeGenerationBubble = ({ result, prompt, usedModel, rawResponse }: CodeGe
                 html={appState.html}
                 css={appState.css}
                 javascript={appState.javascript}
+                previewHtml={appState.previewHtml}
               />
             </div>
           )}
+
+          {appState.stack && (
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Stack details</p>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="secondary" className="text-xs">
+                  Language: {appState.stack.language}
+                </Badge>
+                <Badge variant="secondary" className="text-xs">
+                  Framework: {appState.stack.framework}
+                </Badge>
+              </div>
+              {appState.stack.libraries?.length ? (
+                <div className="text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">Libraries:</span>{' '}
+                  {appState.stack.libraries.join(', ')}
+                </div>
+              ) : null}
+              {appState.stack.tooling?.length ? (
+                <div className="text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">Tooling:</span>{' '}
+                  {appState.stack.tooling.join(', ')}
+                </div>
+              ) : null}
+              {appState.stack.notes && (
+                <div className="text-xs text-muted-foreground">{appState.stack.notes}</div>
+              )}
+            </div>
+          )}
+
+          {appState.files?.length ? (
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Generated files</p>
+              <div className="space-y-2">
+                {appState.files.map((file) => (
+                  <div key={file.path} className="flex items-start gap-2 rounded-md border border-border/40 p-2 bg-muted/10">
+                    <FileCode2 className="h-4 w-4 text-primary mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-medium text-foreground truncate">{file.path}</span>
+                        <Badge variant="outline" className="text-[10px]">
+                          {file.language}
+                        </Badge>
+                      </div>
+                      {file.description && (
+                        <p className="text-xs text-muted-foreground mt-1">{file.description}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
 
@@ -128,21 +255,38 @@ const CodeGenerationBubble = ({ result, prompt, usedModel, rawResponse }: CodeGe
         </DialogContent>
       </Dialog>
 
+      <Dialog open={isPreviewFullscreen} onOpenChange={setIsPreviewFullscreen}>
+        <DialogContent className="max-w-6xl w-full h-[90vh] p-0 flex flex-col overflow-hidden">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/50 bg-muted/40 backdrop-blur">
+            <DialogTitle>Live preview</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 bg-background">
+            <WebAppPreview
+              html={appState.html}
+              css={appState.css}
+              javascript={appState.javascript}
+              previewHtml={appState.previewHtml}
+              standalone
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <VSCodeWorkspace
         open={isVSCodeOpen}
         onOpenChange={setIsVSCodeOpen}
-        files={[
-          { path: 'index.html', language: 'html', content: appState.html },
-          { path: 'styles.css', language: 'css', content: appState.css },
-          { path: 'script.js', language: 'javascript', content: appState.javascript },
-        ]}
+        files={workspaceFiles}
         onFileChange={(path, content) => {
-          if (path.endsWith('.html')) {
+          if (path === 'index.html') {
             handleFileChange('html', content);
-          } else if (path.endsWith('.css')) {
+          } else if (path === 'styles.css') {
             handleFileChange('css', content);
-          } else if (path.endsWith('.js')) {
+          } else if (path === 'script.js') {
             handleFileChange('javascript', content);
+          } else if (path === 'preview.html') {
+            handleFileChange('previewHtml', content);
+          } else {
+            handleFileChange(`file:${path}`, content);
           }
         }}
       />

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -67,6 +67,29 @@ const WebAppGenerator = () => {
   const [developmentPlan, setDevelopmentPlan] = useState<DevelopmentPlan | null>(null);
   const [showPlanDialog, setShowPlanDialog] = useState(false);
   const [isVSCodeOpen, setIsVSCodeOpen] = useState(false);
+  const workspaceFiles = useMemo(() => {
+    if (!generatedApp) return [] as { path: string; language: string; content: string }[];
+
+    const map = new Map<string, { path: string; language: string; content: string }>();
+    map.set('index.html', { path: 'index.html', language: 'html', content: generatedApp.html });
+    map.set('styles.css', { path: 'styles.css', language: 'css', content: generatedApp.css });
+    map.set('script.js', { path: 'script.js', language: 'javascript', content: generatedApp.javascript });
+
+    if (generatedApp.previewHtml) {
+      map.set('preview.html', { path: 'preview.html', language: 'html', content: generatedApp.previewHtml });
+    }
+
+    (generatedApp.files || []).forEach((file) => {
+      if (!file.path) return;
+      map.set(file.path, {
+        path: file.path,
+        language: file.language || 'plaintext',
+        content: file.content,
+      });
+    });
+
+    return Array.from(map.values());
+  }, [generatedApp]);
   const { toast } = useToast();
   const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
 
@@ -413,19 +436,38 @@ Please modify or enhance the current application accordingly.`;
   const downloadApp = () => {
     if (!generatedApp) return;
 
-    const files = [
-      { name: 'index.html', content: generatedApp.html },
-      { name: 'styles.css', content: generatedApp.css },
-      { name: 'script.js', content: generatedApp.javascript },
-      { name: 'README.txt', content: `Generated Web App\n\nDescription: ${generatedApp.description}\n\nFeatures:\n${generatedApp.features.map(f => `- ${f}`).join('\n')}` }
-    ];
+    const fileMap = new Map<string, string>();
+    fileMap.set('index.html', generatedApp.html);
+    fileMap.set('styles.css', generatedApp.css);
+    fileMap.set('script.js', generatedApp.javascript);
 
-    files.forEach(file => {
-      const blob = new Blob([file.content], { type: 'text/plain' });
+    if (generatedApp.previewHtml) {
+      fileMap.set('preview.html', generatedApp.previewHtml);
+    }
+
+    (generatedApp.files || []).forEach((file) => {
+      if (!file.path) return;
+      const cleanPath = file.path.startsWith('/') ? file.path.slice(1) : file.path;
+      fileMap.set(cleanPath, file.content);
+    });
+
+    const stackSummary = generatedApp.stack
+      ? `\n\nStack:\n- Language: ${generatedApp.stack.language}\n- Framework: ${generatedApp.stack.framework}\n- Libraries: ${generatedApp.stack.libraries?.join(', ') || 'None'}\n- Tooling: ${generatedApp.stack.tooling?.join(', ') || 'None'}`
+      : '';
+
+    fileMap.set(
+      'README.txt',
+      `Generated Web App\n\nDescription: ${generatedApp.description}\n\nFeatures:\n${generatedApp.features
+        .map((feature) => `- ${feature}`)
+        .join('\n')}${stackSummary}`
+    );
+
+    fileMap.forEach((content, name) => {
+      const blob = new Blob([content], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = file.name;
+      link.download = name;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -441,15 +483,54 @@ Please modify or enhance the current application accordingly.`;
   const handleFileChange = (fileType: string, content: string) => {
     if (!generatedApp) return;
 
-    setGeneratedApp(prev => ({
-      ...prev!,
-      [fileType]: content
-    }));
+    let updatedApp: GeneratedApp | null = null;
+
+    setGeneratedApp(prev => {
+      if (!prev) return prev;
+
+      let nextApp: GeneratedApp;
+
+      if (fileType === 'html' || fileType === 'css' || fileType === 'javascript') {
+        nextApp = {
+          ...prev,
+          [fileType]: content,
+        };
+      } else if (fileType === 'previewHtml') {
+        nextApp = {
+          ...prev,
+          previewHtml: content,
+        };
+      } else if (fileType.startsWith('file:')) {
+        const path = fileType.replace(/^file:/, '');
+        const existingFiles = prev.files || [];
+        const existingIndex = existingFiles.findIndex((file) => file.path === path);
+        const sourceFile = existingFiles[existingIndex] || generatedApp.files?.find((file) => file.path === path);
+        const updatedFile = {
+          path,
+          language: sourceFile?.language || 'plaintext',
+          description: sourceFile?.description,
+          content,
+        };
+        const files = existingIndex >= 0
+          ? existingFiles.map((file, index) => (index === existingIndex ? updatedFile : file))
+          : [...existingFiles, updatedFile];
+
+        nextApp = {
+          ...prev,
+          files,
+        };
+      } else {
+        nextApp = prev;
+      }
+
+      updatedApp = nextApp;
+      return nextApp;
+    });
 
     // Auto-save changes
     if (currentProjectId) {
-      const updatedApp = { ...generatedApp, [fileType]: content };
-      saveProject(conversationHistory[0]?.prompt || 'Modified project', updatedApp, selectedModel);
+      const appToSave = updatedApp || { ...generatedApp, [fileType]: content };
+      saveProject(conversationHistory[0]?.prompt || 'Modified project', appToSave, selectedModel);
     }
   };
 
@@ -473,6 +554,7 @@ Please modify or enhance the current application accordingly.`;
               html={generatedApp.html}
               css={generatedApp.css}
               javascript={generatedApp.javascript}
+              previewHtml={generatedApp.previewHtml}
             />
           </div>
         </div>
@@ -568,14 +650,16 @@ Please modify or enhance the current application accordingly.`;
                   </Button>
                 </div>
               </div>
-              <div className="flex-1">
-                <WebAppPreview
-                  html={generatedApp.html}
-                  css={generatedApp.css}
-                  javascript={generatedApp.javascript}
-                />
-              </div>
-            </div>
+          <div className="flex-1">
+            <WebAppPreview
+              html={generatedApp.html}
+              css={generatedApp.css}
+              javascript={generatedApp.javascript}
+              previewHtml={generatedApp.previewHtml}
+              showAlert={false}
+            />
+          </div>
+        </div>
           ) : (
             <Card className="h-full flex items-center justify-center">
               <CardContent className="text-center py-20">
@@ -741,18 +825,18 @@ Please modify or enhance the current application accordingly.`;
         <VSCodeWorkspace
           open={isVSCodeOpen}
           onOpenChange={setIsVSCodeOpen}
-          files={[
-            { path: 'index.html', language: 'html', content: generatedApp.html },
-            { path: 'styles.css', language: 'css', content: generatedApp.css },
-            { path: 'script.js', language: 'javascript', content: generatedApp.javascript },
-          ]}
+          files={workspaceFiles}
           onFileChange={(path, content) => {
-            if (path.endsWith('.html')) {
+            if (path === 'index.html') {
               handleFileChange('html', content);
-            } else if (path.endsWith('.css')) {
+            } else if (path === 'styles.css') {
               handleFileChange('css', content);
-            } else if (path.endsWith('.js')) {
+            } else if (path === 'script.js') {
               handleFileChange('javascript', content);
+            } else if (path === 'preview.html') {
+              handleFileChange('previewHtml', content);
+            } else {
+              handleFileChange(`file:${path}`, content);
             }
           }}
         />

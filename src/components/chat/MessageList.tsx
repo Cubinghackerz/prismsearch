@@ -10,6 +10,7 @@ import MathRenderer from '@/components/math-assistant/MathRenderer';
 import { Paperclip, Download, Image, FileText, File } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CodeGenerationBubble from './CodeGenerationBubble';
+import CodePlanBubble from './CodePlanBubble';
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -118,6 +119,10 @@ const MessageList: React.FC<MessageListProps> = ({
                   usedModel={message.usedModel}
                   rawResponse={message.rawResponse}
                 />
+              </div>
+            ) : message.type === 'code-plan' && message.codePlan ? (
+              <div className="pr-6">
+                <CodePlanBubble messageId={message.id} planState={message.codePlan} />
               </div>
             ) : (
               <div className="prose prose-neutral dark:prose-invert max-w-none pr-12">

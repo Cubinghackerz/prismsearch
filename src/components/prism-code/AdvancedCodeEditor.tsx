@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import Editor from '@monaco-editor/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,34 +25,94 @@ const AdvancedCodeEditor: React.FC<AdvancedCodeEditorProps> = ({
   const { toast } = useToast();
   const editorRef = useRef<any>(null);
 
-  const files = [
-    { 
-      key: 'html', 
-      label: 'HTML', 
-      content: generatedApp.html, 
-      icon: FileText, 
-      language: 'html',
-      filename: 'index.html'
-    },
-    { 
-      key: 'css', 
-      label: 'CSS', 
-      content: generatedApp.css, 
-      icon: Palette, 
-      language: 'css',
-      filename: 'styles.css'
-    },
-    { 
-      key: 'javascript', 
-      label: 'JavaScript', 
-      content: generatedApp.javascript, 
-      icon: Code, 
-      language: 'javascript',
-      filename: 'script.js'
-    },
-  ];
+  const editorFiles = useMemo(() => {
+    const normaliseLanguage = (language: string | undefined) => {
+      if (!language) return 'plaintext';
+      const lower = language.toLowerCase();
+      if (lower.includes('typescript') || lower === 'ts' || lower === 'tsx') return 'typescript';
+      if (lower.includes('javascript') || lower === 'js' || lower === 'jsx') return 'javascript';
+      if (lower.includes('json')) return 'json';
+      if (lower.includes('css')) return 'css';
+      if (lower.includes('html') || lower.includes('vue') || lower.includes('svelte')) return 'html';
+      if (lower.includes('markdown') || lower === 'md') return 'markdown';
+      return 'plaintext';
+    };
 
-  const activeFile = files.find(f => f.key === activeTab);
+    const base = [
+      {
+        key: 'html',
+        label: 'HTML',
+        content: generatedApp.html,
+        icon: FileText,
+        language: 'html',
+        filename: 'index.html',
+        identifier: 'html',
+      },
+      {
+        key: 'css',
+        label: 'CSS',
+        content: generatedApp.css,
+        icon: Palette,
+        language: 'css',
+        filename: 'styles.css',
+        identifier: 'css',
+      },
+      {
+        key: 'javascript',
+        label: 'JavaScript',
+        content: generatedApp.javascript,
+        icon: Code,
+        language: 'javascript',
+        filename: 'script.js',
+        identifier: 'javascript',
+      },
+    ];
+
+    const additional = [] as Array<{
+      key: string;
+      label: string;
+      content: string;
+      icon: typeof FileText;
+      language: string;
+      filename: string;
+      identifier: string;
+    }>;
+
+    if (generatedApp.previewHtml) {
+      additional.push({
+        key: 'previewHtml',
+        label: 'Preview HTML',
+        content: generatedApp.previewHtml,
+        icon: FileText,
+        language: 'html',
+        filename: 'preview.html',
+        identifier: 'previewHtml',
+      });
+    }
+
+    (generatedApp.files || []).forEach((file) => {
+      if (!file.path) return;
+      additional.push({
+        key: `file:${file.path}`,
+        label: file.path.split('/').pop() || file.path,
+        content: file.content,
+        icon: FileText,
+        language: normaliseLanguage(file.language),
+        filename: file.path,
+        identifier: `file:${file.path}`,
+      });
+    });
+
+    return [...base, ...additional];
+  }, [generatedApp]);
+
+  useEffect(() => {
+    if (!editorFiles.some((file) => file.key === activeTab)) {
+      setActiveTab(editorFiles[0]?.key ?? 'html');
+    }
+  }, [editorFiles, activeTab]);
+
+  const activeFile = editorFiles.find(f => f.key === activeTab);
 
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
@@ -102,8 +162,8 @@ const AdvancedCodeEditor: React.FC<AdvancedCodeEditorProps> = ({
   };
 
   const handleEditorChange = (value: string | undefined) => {
-    if (value !== undefined && onFileChange) {
-      onFileChange(activeTab, value);
+    if (value !== undefined && onFileChange && activeFile) {
+      onFileChange(activeFile.identifier, value);
     }
   };
 
@@ -145,8 +205,8 @@ const AdvancedCodeEditor: React.FC<AdvancedCodeEditorProps> = ({
             <div className="flex items-center space-x-4">
               <h2 className="text-xl font-semibold text-prism-text">Code Editor - {activeFile?.filename}</h2>
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="bg-prism-surface/20">
-                  {files.map((file) => {
+                <TabsList className="flex flex-wrap gap-2 bg-prism-surface/20">
+                  {editorFiles.map((file) => {
                     const IconComponent = file.icon;
                     return (
                       <TabsTrigger key={file.key} value={file.key} className="flex items-center space-x-1">
@@ -242,7 +302,7 @@ const AdvancedCodeEditor: React.FC<AdvancedCodeEditorProps> = ({
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
           <div className="px-6">
             <TabsList className="grid w-full grid-cols-3">
-              {files.map((file) => {
+              {editorFiles.map((file) => {
                 const IconComponent = file.icon;
                 return (
                   <TabsTrigger key={file.key} value={file.key} className="flex items-center space-x-1">
@@ -254,7 +314,7 @@ const AdvancedCodeEditor: React.FC<AdvancedCodeEditorProps> = ({
             </TabsList>
           </div>
           
-          {files.map((file) => (
+          {editorFiles.map((file) => (
             <TabsContent key={file.key} value={file.key} className="flex-1 flex flex-col mt-4">
               <div className="flex items-center justify-between px-6 pb-2">
                 <span className="text-sm font-medium text-prism-text">
