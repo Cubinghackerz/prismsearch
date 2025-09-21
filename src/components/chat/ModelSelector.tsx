@@ -18,9 +18,15 @@ interface ModelSelectorProps {
 const ModelSelector: React.FC<ModelSelectorProps> = ({ selectedModel, onModelChange, onNewChat }) => {
   const models = [
     {
+      value: 'gemini-2.5-pro',
+      name: 'Gemini 2.5 Pro',
+      description: 'Full development access with VS Code workspace integration and coding tools.',
+      badge: { text: 'Pro', color: 'green' as const }
+    },
+    {
       value: 'gemini',
-      name: 'Gemini 2.5',
-      description: 'Google\'s most advanced AI model with exceptional reasoning capabilities.',
+      name: 'Gemini 2.5 Flash',
+      description: 'Fast, responsive model ideal for everyday assistance.',
       badge: { text: 'Active', color: 'green' as const }
     },
     {

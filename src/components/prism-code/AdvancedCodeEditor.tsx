@@ -7,14 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Copy, Download, FileText, Code, Palette, Settings, Maximize2, Minimize2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-interface GeneratedApp {
-  html: string;
-  css: string;
-  javascript: string;
-  description: string;
-  features: string[];
-}
+import { GeneratedApp } from '@/services/codeGenerationService';
 
 interface AdvancedCodeEditorProps {
   generatedApp: GeneratedApp;

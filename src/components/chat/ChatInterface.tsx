@@ -256,7 +256,7 @@ const ChatInterface = () => {
                 <div className="flex items-center space-x-2">
                   <img src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" alt="Prism Logo" className="h-6 w-6" />
                   <span className="text-lg font-semibold text-foreground">
-                    Prism {selectedModel === 'gemini' ? '2.5' : '4'} 
+                    Prism {selectedModel.startsWith('gemini') ? '2.5' : '4'}
                   </span>
                 </div>
                 

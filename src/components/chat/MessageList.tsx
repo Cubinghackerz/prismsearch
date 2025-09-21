@@ -9,6 +9,7 @@ import ReactMarkdown from 'react-markdown';
 import MathRenderer from '@/components/math-assistant/MathRenderer';
 import { Paperclip, Download, Image, FileText, File } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import CodeGenerationBubble from './CodeGenerationBubble';
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -109,9 +110,18 @@ const MessageList: React.FC<MessageListProps> = ({
 
             {message.isUser ? (
               <div className="whitespace-pre-wrap pr-12">{message.content}</div>
+            ) : message.type === 'code' && message.codeResult ? (
+              <div className="pr-6">
+                <CodeGenerationBubble
+                  result={message.codeResult}
+                  prompt={message.codePrompt || message.content}
+                  usedModel={message.usedModel}
+                  rawResponse={message.rawResponse}
+                />
+              </div>
             ) : (
               <div className="prose prose-neutral dark:prose-invert max-w-none pr-12">
-                <MathRenderer 
+                <MathRenderer
                   content={message.content}
                   className="text-foreground leading-relaxed"
                 />

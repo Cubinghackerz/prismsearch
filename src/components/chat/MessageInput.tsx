@@ -28,7 +28,8 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
-    sendMessageWithFiles
+    sendMessageWithFiles,
+    generateCodeFromPrompt
   } = useChat();
   const {
     toast
@@ -123,8 +124,36 @@ const MessageInput: React.FC<MessageInputProps> = ({
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputValue.trim() || isLoading || isLimitReached) return;
-    await sendMessageWithFiles(inputValue, attachedFiles, replyingTo);
+    const trimmed = inputValue.trim();
+    if (!trimmed || isLoading || isLimitReached) return;
+
+    if (trimmed.toLowerCase().startsWith('/code')) {
+      if (attachedFiles.length > 0) {
+        toast({
+          title: 'Attachments ignored',
+          description: 'File attachments are not supported with /code. They have been cleared.',
+          variant: 'destructive',
+        });
+        setAttachedFiles([]);
+      }
+
+      const prompt = trimmed.replace(/^\/code\s*/i, '');
+      if (!prompt) {
+        toast({
+          title: 'Missing details',
+          description: 'Please provide a description after /code to generate an app.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      await generateCodeFromPrompt(prompt);
+      setInputValue('');
+      setReplyingTo(null);
+      return;
+    }
+
+    await sendMessageWithFiles(trimmed, attachedFiles, replyingTo);
     setInputValue('');
     setAttachedFiles([]);
     setReplyingTo(null);

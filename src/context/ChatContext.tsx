@@ -10,6 +10,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { useDailyQueryLimit } from '@/hooks/useDailyQueryLimit';
 import { useToast } from '@/hooks/use-toast';
+import {
+  DEFAULT_CODE_GENERATION_FALLBACK_ORDER,
+  GeneratedApp,
+  generateWebApp,
+} from '@/services/codeGenerationService';
 
 export interface SavedChat {
   id: string;
@@ -28,10 +33,16 @@ export interface ChatMessage {
   timestamp: Date;
   parentMessageId?: string;
   attachments?: any[];
+  type?: 'text' | 'code';
+  codeResult?: GeneratedApp;
+  codePrompt?: string;
+  usedModel?: string;
+  rawResponse?: string;
 }
 
 export type ChatModel =
   | 'gemini'
+  | 'gemini-2.5-pro'
   | 'mistral'
   | 'mistral-medium-3'
   | 'groq'
@@ -48,6 +59,7 @@ interface ChatContextType {
   messages: ChatMessage[];
   sendMessage: (content: string, parentMessageId?: string) => Promise<void>;
   sendMessageWithFiles: (content: string, attachments: any[], parentMessageId?: string) => Promise<void>;
+  generateCodeFromPrompt: (prompt: string) => Promise<void>;
   isLoading: boolean;
   isTyping: boolean;
   startNewChat: () => void;
@@ -78,7 +90,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isTyping, setIsTyping] = useState<boolean>(false);
-  const [selectedModel, setSelectedModel] = useState<ChatModel>('gemini');
+  const [selectedModel, setSelectedModel] = useState<ChatModel>('gemini-2.5-pro');
   const [chatId, setChatId] = useState<string | null>(null);
   const [savedChats, setSavedChats] = useState<SavedChat[]>([]);
   const [isTemporaryMode, setIsTemporaryMode] = useState<boolean>(false);
@@ -213,6 +225,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       timestamp: new Date(),
       parentMessageId: parentMessageId,
       attachments: attachments,
+      type: 'text',
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -258,6 +271,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isUser: false,
         timestamp: new Date(),
         parentMessageId: parentMessageId,
+        type: 'text',
       };
 
       setMessages(prev => [...prev, assistantMessage]);
@@ -269,8 +283,103 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isUser: false,
         timestamp: new Date(),
         parentMessageId: parentMessageId,
+        type: 'text',
       };
       setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+      setIsTyping(false);
+    }
+  };
+
+  const generateCodeFromPrompt = async (rawPrompt: string) => {
+    const trimmedPrompt = rawPrompt.trim();
+    if (!trimmedPrompt) {
+      return;
+    }
+
+    if (isLimitReached) {
+      toast({
+        title: "Daily limit reached",
+        description: "You've reached your daily query limit. Please try again tomorrow or sign up for more queries.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!incrementQueryCount()) {
+      toast({
+        title: "Daily limit reached",
+        description: "You've reached your daily query limit. Please try again tomorrow.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    let currentChatId = chatId;
+    if (!currentChatId) {
+      currentChatId = uuidv4();
+      setChatId(currentChatId);
+    }
+
+    const userMessage: ChatMessage = {
+      id: uuidv4(),
+      content: trimmedPrompt,
+      isUser: true,
+      timestamp: new Date(),
+      type: 'text',
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+    setIsTyping(true);
+
+    const generationChatId = `chat-code-${currentChatId}`;
+
+    try {
+      const { app, usedModel, rawResponse } = await generateWebApp({
+        prompt: trimmedPrompt,
+        model: selectedModel,
+        chatId: generationChatId,
+        fallbackModels: DEFAULT_CODE_GENERATION_FALLBACK_ORDER,
+      });
+
+      const assistantMessage: ChatMessage = {
+        id: uuidv4(),
+        content: app.description || 'Web application generated successfully.',
+        isUser: false,
+        timestamp: new Date(),
+        type: 'code',
+        codeResult: app,
+        codePrompt: trimmedPrompt,
+        usedModel,
+        rawResponse,
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+
+      toast({
+        title: 'Web app generated',
+        description: usedModel !== selectedModel
+          ? `Primary model unavailable. Used ${usedModel} instead.`
+          : 'Preview and refine your new app using the embedded tools.',
+      });
+    } catch (error) {
+      console.error('Error generating code from prompt:', error);
+      const errorMessage: ChatMessage = {
+        id: uuidv4(),
+        content: 'Sorry, there was an error generating the web application. Please try again.',
+        isUser: false,
+        timestamp: new Date(),
+        type: 'text',
+      };
+      setMessages(prev => [...prev, errorMessage]);
+
+      toast({
+        title: 'Generation failed',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
       setIsTyping(false);
@@ -378,6 +487,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       content: topic,
       isUser: true,
       timestamp: new Date(),
+      type: 'text',
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -422,6 +532,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         content: responseText,
         isUser: false,
         timestamp: new Date(),
+        type: 'text',
       };
 
       setMessages(prev => [...prev, assistantMessage]);
@@ -432,6 +543,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         content: 'Sorry, there was an error processing your deep research request. Please try again.',
         isUser: false,
         timestamp: new Date(),
+        type: 'text',
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -445,6 +557,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       messages,
       sendMessage,
       sendMessageWithFiles,
+      generateCodeFromPrompt,
       isLoading,
       isTyping,
       startNewChat,
