@@ -316,7 +316,6 @@ I'll help you build: *${codePrompt.trim() || 'a web application'}*
         detail: { prompt: codePrompt.trim() }
       }));
     }, 1000);
-    }
     
     setIsLoading(false);
     setIsTyping(false);
