@@ -20,7 +20,6 @@ import {
 import { mathJaxService } from '@/services/mathJaxService';
 import {
   DEFAULT_FINANCE_SYMBOLS,
-  StockQuote,
   fetchStockQuotes,
 } from '@/services/financeService';
 
@@ -266,7 +265,7 @@ const CHAT_COMMAND_DEFINITIONS: Record<ChatCommandKey, ChatCommandDefinition> = 
       const tickers = extractTickerSymbols(input);
       const fallbackUsed = tickers.length === 0;
       const symbolsToQuery = fallbackUsed ? DEFAULT_FINANCE_SYMBOLS : tickers;
-      const quotes = await fetchStockQuotes(symbolsToQuery);
+      const { quotes, source, usedFallbackSource } = await fetchStockQuotes(symbolsToQuery);
 
       if (!quotes.length) {
         return {
@@ -289,17 +288,26 @@ const CHAT_COMMAND_DEFINITIONS: Record<ChatCommandKey, ChatCommandDefinition> = 
         ? 'Showing a quick market pulse for today\'s most-watched tickers:'
         : `Here\'s the latest snapshot for ${symbolsToQuery.join(', ')}:`;
 
+      const sourceLabel = usedFallbackSource
+        ? `${source} (web snapshot fallback)`
+        : source;
+
       return {
-        content: `**/finance (beta)** Live market data\n\n${intro}\n\n${summaryLines}\n\n_Data refreshes every few seconds in Prism Finance. Market data provided for informational purposes only._`,
+        content: `**/finance (beta)** Live market data\n\n${intro}\n\n${summaryLines}\n\n_Data refreshes at least six times per day in Prism Finance. Source: ${sourceLabel}. Market data provided for informational purposes only._`,
         financeData: {
           quotes,
           fetchedAt,
           symbols: symbolsToQuery,
-          source: 'Financial Modeling Prep (demo API)',
+          source: sourceLabel,
           fallbackUsed,
-          note: fallbackUsed
-            ? 'Showing default market movers while no specific tickers were supplied.'
-            : 'Live data for your requested tickers. Refresh Prism Finance for full dashboards.',
+          note: [
+            fallbackUsed
+              ? 'Showing default market movers while no specific tickers were supplied.'
+              : 'Live data for your requested tickers. Refresh Prism Finance for full dashboards.',
+            usedFallbackSource
+              ? 'Primary market feed was unavailable, so we captured the latest trusted web snapshot.'
+              : 'Powered by the primary live market feed.',
+          ].join(' '),
         },
       };
     },

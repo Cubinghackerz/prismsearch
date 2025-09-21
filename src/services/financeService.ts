@@ -18,13 +18,34 @@ export interface StockQuote {
   updatedAt: string;
 }
 
+export interface StockQuoteResponse {
+  quotes: StockQuote[];
+  source: string;
+  fetchedAt: string;
+  usedFallbackSource: boolean;
+}
+
+export interface MarketMoversResponse {
+  quotes: StockQuote[];
+  source: string;
+  fetchedAt: string;
+  usedFallbackSource: boolean;
+}
+
 const API_BASE_URL = 'https://financialmodelingprep.com/api/v3';
 const API_KEY = import.meta.env.VITE_FINANCE_API_KEY || 'demo';
+
+const YAHOO_QUOTE_URL = 'https://query1.finance.yahoo.com/v7/finance/quote';
+const YAHOO_SCREENER_URL = 'https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved';
+
+const SIX_TIMES_DAILY_INTERVAL_MS = 1000 * 60 * 60 * 4; // 4 hours
+
+export const FINANCE_REFRESH_INTERVAL_MS = SIX_TIMES_DAILY_INTERVAL_MS;
 
 export const DEFAULT_FINANCE_SYMBOLS = ['AAPL', 'MSFT', 'GOOGL', 'NVDA', 'META'];
 
 const parseChangePercent = (value: unknown): number => {
-  if (typeof value === 'number') {
+  if (typeof value === 'number' && Number.isFinite(value)) {
     return value;
   }
 
@@ -51,17 +72,26 @@ const getFirstValue = (record: QuoteRecord, keys: string[]): unknown => {
   return undefined;
 };
 
+const toNumber = (value: unknown): number | undefined => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const numeric = Number(value.replace(/[^0-9+\-.]/g, ''));
+    if (Number.isFinite(numeric)) {
+      return numeric;
+    }
+  }
+
+  return undefined;
+};
+
 const readNumber = (record: QuoteRecord, keys: string[]): number | undefined => {
   for (const key of keys) {
-    const value = record[key];
-    if (typeof value === 'number' && Number.isFinite(value)) {
-      return value;
-    }
-    if (typeof value === 'string') {
-      const numeric = Number(value.replace(/[^0-9+\-.]/g, ''));
-      if (Number.isFinite(numeric)) {
-        return numeric;
-      }
+    const candidate = toNumber(record[key]);
+    if (candidate !== undefined) {
+      return candidate;
     }
   }
 
@@ -80,7 +110,13 @@ const readString = (record: QuoteRecord, keys: string[], fallback: string): stri
 };
 
 const resolveTimestamp = (record: QuoteRecord): number => {
-  const rawValue = getFirstValue(record, ['timestamp', 'lastUpdated', 'lastUpdate', 'updated']);
+  const rawValue = getFirstValue(record, [
+    'timestamp',
+    'lastUpdated',
+    'lastUpdate',
+    'updated',
+    'regularMarketTime',
+  ]);
 
   if (typeof rawValue === 'number' && Number.isFinite(rawValue)) {
     return rawValue > 1e12 ? rawValue : rawValue * 1000;
@@ -101,20 +137,25 @@ const normalizeQuote = (quote: QuoteRecord): StockQuote => {
 
   return {
     symbol: readString(quote, ['symbol', 'ticker'], 'N/A'),
-    name: readString(quote, ['name', 'companyName', 'symbol'], 'Unknown'),
-    price: readNumber(quote, ['price', 'currentPrice', 'c']) ?? 0,
-    change: readNumber(quote, ['change', 'd', 'dayChange']) ?? 0,
-    changePercent: parseChangePercent(
-      getFirstValue(quote, ['changesPercentage', 'dp', 'dayChangePerc'])
+    name: readString(
+      quote,
+      ['name', 'companyName', 'symbol', 'shortName', 'longName', 'displayName'],
+      'Unknown'
     ),
+    price: readNumber(quote, ['price', 'currentPrice', 'c', 'regularMarketPrice']) ?? 0,
+    change: readNumber(quote, ['change', 'd', 'dayChange', 'regularMarketChange']) ?? 0,
+    changePercent:
+      parseChangePercent(
+        getFirstValue(quote, ['changesPercentage', 'dp', 'dayChangePerc', 'regularMarketChangePercent'])
+      ) ?? 0,
     marketCap: readNumber(quote, ['marketCap', 'marketCapitalization']),
-    volume: readNumber(quote, ['volume', 'avgVolume', 'volAvg']),
-    open: readNumber(quote, ['open']),
-    previousClose: readNumber(quote, ['previousClose', 'pc']),
-    dayHigh: readNumber(quote, ['dayHigh', 'h']),
-    dayLow: readNumber(quote, ['dayLow', 'l']),
-    yearHigh: readNumber(quote, ['yearHigh', 'yearHigh52Weeks']),
-    yearLow: readNumber(quote, ['yearLow', 'yearLow52Weeks']),
+    volume: readNumber(quote, ['volume', 'avgVolume', 'volAvg', 'regularMarketVolume']),
+    open: readNumber(quote, ['open', 'regularMarketOpen']),
+    previousClose: readNumber(quote, ['previousClose', 'pc', 'regularMarketPreviousClose']),
+    dayHigh: readNumber(quote, ['dayHigh', 'h', 'regularMarketDayHigh']),
+    dayLow: readNumber(quote, ['dayLow', 'l', 'regularMarketDayLow']),
+    yearHigh: readNumber(quote, ['yearHigh', 'yearHigh52Weeks', 'fiftyTwoWeekHigh']),
+    yearLow: readNumber(quote, ['yearLow', 'yearLow52Weeks', 'fiftyTwoWeekLow']),
     currency: readString(quote, ['currency', 'currencyCode'], 'USD'),
     updatedAt: format(timestamp, "yyyy-MM-dd'T'HH:mm:ssXXX"),
   };
@@ -134,17 +175,34 @@ const createUrl = (path: string, params: Record<string, string | number | undefi
   return url.toString();
 };
 
-export const fetchStockQuotes = async (symbols: string[]): Promise<StockQuote[]> => {
+const toCacheKey = (symbols: string[]): string =>
+  symbols
+    .map((symbol) => symbol.trim().toUpperCase())
+    .filter(Boolean)
+    .sort()
+    .join(',');
+
+const isCacheValid = (timestamp: number, forceRefresh?: boolean) => {
+  if (forceRefresh) {
+    return false;
+  }
+  return Date.now() - timestamp < SIX_TIMES_DAILY_INTERVAL_MS;
+};
+
+interface CacheEntry<T> {
+  timestamp: number;
+  payload: T;
+}
+
+const quoteCache = new Map<string, CacheEntry<StockQuoteResponse>>();
+const moversCache = new Map<string, CacheEntry<MarketMoversResponse>>();
+
+const fetchFromFmp = async (symbols: string[]): Promise<StockQuote[]> => {
   if (!symbols.length) {
     return [];
   }
 
-  const uniqueSymbols = Array.from(new Set(symbols.map((symbol) => symbol.trim().toUpperCase()))).filter(Boolean);
-  if (uniqueSymbols.length === 0) {
-    return [];
-  }
-
-  const endpoint = createUrl(`quote/${uniqueSymbols.join(',')}`);
+  const endpoint = createUrl(`quote/${symbols.join(',')}`);
   const response = await fetch(endpoint);
 
   if (!response.ok) {
@@ -159,9 +217,7 @@ export const fetchStockQuotes = async (symbols: string[]): Promise<StockQuote[]>
   return payload.map(normalizeQuote).filter((quote) => Number.isFinite(quote.price));
 };
 
-export const fetchMarketMovers = async (
-  type: 'gainers' | 'losers' | 'actives'
-): Promise<StockQuote[]> => {
+const fetchMoversFromFmp = async (type: 'gainers' | 'losers' | 'actives'): Promise<StockQuote[]> => {
   const endpoint = createUrl(`stock_market/${type}`);
   const response = await fetch(endpoint);
 
@@ -175,6 +231,152 @@ export const fetchMarketMovers = async (
   }
 
   return payload.slice(0, 8).map(normalizeQuote);
+};
+
+const fetchFromYahoo = async (symbols: string[]): Promise<StockQuote[]> => {
+  if (!symbols.length) {
+    return [];
+  }
+
+  const endpoint = `${YAHOO_QUOTE_URL}?symbols=${encodeURIComponent(symbols.join(','))}`;
+  const response = await fetch(endpoint);
+
+  if (!response.ok) {
+    throw new Error(`Unable to fetch Yahoo Finance data (${response.status})`);
+  }
+
+  const payload = await response.json();
+  const results: QuoteRecord[] = payload?.quoteResponse?.result ?? [];
+
+  return results.map(normalizeQuote).filter((quote) => Number.isFinite(quote.price));
+};
+
+const YAHOO_SCREENER_IDS: Record<'gainers' | 'losers' | 'actives', string> = {
+  gainers: 'day_gainers',
+  losers: 'day_losers',
+  actives: 'most_actives',
+};
+
+const fetchMoversFromYahoo = async (type: 'gainers' | 'losers' | 'actives'): Promise<StockQuote[]> => {
+  const endpoint = `${YAHOO_SCREENER_URL}?scrIds=${YAHOO_SCREENER_IDS[type]}&count=25`;
+  const response = await fetch(endpoint);
+
+  if (!response.ok) {
+    throw new Error(`Unable to fetch Yahoo Finance ${type}`);
+  }
+
+  const payload = await response.json();
+  const results: QuoteRecord[] = payload?.finance?.result?.[0]?.quotes ?? [];
+
+  return results.slice(0, 8).map(normalizeQuote).filter((quote) => Number.isFinite(quote.price));
+};
+
+export const fetchStockQuotes = async (
+  symbols: string[],
+  options: { forceRefresh?: boolean } = {}
+): Promise<StockQuoteResponse> => {
+  const uniqueSymbols = Array.from(new Set(symbols.map((symbol) => symbol.trim().toUpperCase()))).filter(Boolean);
+
+  if (uniqueSymbols.length === 0) {
+    const now = format(new Date(), "yyyy-MM-dd'T'HH:mm:ssXXX");
+    return {
+      quotes: [],
+      source: 'No symbols provided',
+      fetchedAt: now,
+      usedFallbackSource: false,
+    };
+  }
+
+  const cacheKey = toCacheKey(uniqueSymbols);
+  const cached = quoteCache.get(cacheKey);
+  if (cached && isCacheValid(cached.timestamp, options.forceRefresh)) {
+    return cached.payload;
+  }
+
+  let quotes: StockQuote[] = [];
+  let sourceLabel = 'Financial Modeling Prep API';
+  let usedFallbackSource = false;
+  let lastError: unknown = null;
+
+  try {
+    quotes = await fetchFromFmp(uniqueSymbols);
+  } catch (error) {
+    lastError = error;
+    console.warn('Primary finance API failed:', error);
+  }
+
+  if (!quotes.length) {
+    try {
+      quotes = await fetchFromYahoo(uniqueSymbols);
+      sourceLabel = 'Yahoo Finance snapshot via Prism Web Agent';
+      usedFallbackSource = true;
+    } catch (fallbackError) {
+      lastError = fallbackError;
+      console.error('Fallback finance fetch failed:', fallbackError);
+    }
+  }
+
+  if (!quotes.length && lastError) {
+    sourceLabel = 'Live market data temporarily unavailable';
+  }
+
+  const payload: StockQuoteResponse = {
+    quotes,
+    source: sourceLabel,
+    fetchedAt: format(new Date(), "yyyy-MM-dd'T'HH:mm:ssXXX"),
+    usedFallbackSource,
+  };
+
+  quoteCache.set(cacheKey, { timestamp: Date.now(), payload });
+  return payload;
+};
+
+export const fetchMarketMovers = async (
+  type: 'gainers' | 'losers' | 'actives',
+  options: { forceRefresh?: boolean } = {}
+): Promise<MarketMoversResponse> => {
+  const cacheKey = `movers:${type}`;
+  const cached = moversCache.get(cacheKey);
+  if (cached && isCacheValid(cached.timestamp, options.forceRefresh)) {
+    return cached.payload;
+  }
+
+  let quotes: StockQuote[] = [];
+  let sourceLabel = 'Financial Modeling Prep API';
+  let usedFallbackSource = false;
+  let lastError: unknown = null;
+
+  try {
+    quotes = await fetchMoversFromFmp(type);
+  } catch (error) {
+    lastError = error;
+    console.warn(`Primary finance movers fetch failed (${type}):`, error);
+  }
+
+  if (!quotes.length) {
+    try {
+      quotes = await fetchMoversFromYahoo(type);
+      sourceLabel = 'Yahoo Finance screener via Prism Web Agent';
+      usedFallbackSource = true;
+    } catch (fallbackError) {
+      lastError = fallbackError;
+      console.error(`Fallback movers fetch failed (${type}):`, fallbackError);
+    }
+  }
+
+  if (!quotes.length && lastError) {
+    sourceLabel = 'Market movers temporarily unavailable';
+  }
+
+  const payload: MarketMoversResponse = {
+    quotes,
+    source: sourceLabel,
+    fetchedAt: format(new Date(), "yyyy-MM-dd'T'HH:mm:ssXXX"),
+    usedFallbackSource,
+  };
+
+  moversCache.set(cacheKey, { timestamp: Date.now(), payload });
+  return payload;
 };
 
 export interface SymbolSearchResult {
@@ -209,4 +411,3 @@ export const searchSymbols = async (query: string): Promise<SymbolSearchResult[]
     currency: item.currency ?? 'USD',
   }));
 };
-

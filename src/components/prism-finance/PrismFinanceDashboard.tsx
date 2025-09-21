@@ -1,8 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import {
   DEFAULT_FINANCE_SYMBOLS,
+  FINANCE_REFRESH_INTERVAL_MS,
+  MarketMoversResponse,
   StockQuote,
   fetchMarketMovers,
   fetchStockQuotes,
@@ -94,7 +96,11 @@ const WatchlistCard: React.FC<{ quote: StockQuote }> = ({ quote }) => {
   );
 };
 
-const MoversList: React.FC<{ title: string; movers?: StockQuote[]; isLoading: boolean }> = ({ title, movers, isLoading }) => (
+const MoversList: React.FC<{ title: string; response?: MarketMoversResponse; isLoading: boolean }> = ({
+  title,
+  response,
+  isLoading,
+}) => (
   <Card className="border-border/60 bg-card/60 backdrop-blur">
     <CardHeader className="pb-2">
       <CardTitle className="text-sm font-semibold tracking-tight text-foreground flex items-center gap-2">
@@ -102,7 +108,7 @@ const MoversList: React.FC<{ title: string; movers?: StockQuote[]; isLoading: bo
         {title}
       </CardTitle>
       <CardDescription className="text-xs text-muted-foreground">
-        Updates every minute from live market feeds.
+        Auto-refreshes at least six times per day. Manual refresh pulls the latest web snapshot when available.
       </CardDescription>
     </CardHeader>
     <CardContent className="space-y-2">
@@ -112,9 +118,9 @@ const MoversList: React.FC<{ title: string; movers?: StockQuote[]; isLoading: bo
           Fetching latest movers…
         </div>
       )}
-      {!isLoading && movers && movers.length > 0 && (
+      {!isLoading && response && response.quotes.length > 0 && (
         <ul className="space-y-2 text-sm">
-          {movers.slice(0, 6).map((quote) => {
+          {response.quotes.slice(0, 6).map((quote) => {
             const isUp = quote.changePercent >= 0;
             return (
               <li
@@ -134,8 +140,14 @@ const MoversList: React.FC<{ title: string; movers?: StockQuote[]; isLoading: bo
           })}
         </ul>
       )}
-      {!isLoading && (!movers || movers.length === 0) && (
+      {!isLoading && (!response || response.quotes.length === 0) && (
         <p className="text-xs text-muted-foreground">No data available right now. Please check back shortly.</p>
+      )}
+      {!isLoading && response && (
+        <p className="text-[0.65rem] text-muted-foreground/80">
+          Source: {response.source}
+          {response.usedFallbackSource ? ' • Web snapshot fallback active' : ''}
+        </p>
       )}
     </CardContent>
   </Card>
@@ -146,9 +158,10 @@ const PrismFinanceDashboard: React.FC = () => {
   const [newSymbol, setNewSymbol] = useState('');
   const [addingSymbol, setAddingSymbol] = useState(false);
   const [symbolError, setSymbolError] = useState('');
+  const [manualRefreshLoading, setManualRefreshLoading] = useState(false);
 
   const {
-    data: watchlistQuotes,
+    data: watchlistResponse,
     isLoading: isWatchlistLoading,
     error: watchlistError,
     refetch: refetchWatchlist,
@@ -156,36 +169,44 @@ const PrismFinanceDashboard: React.FC = () => {
     queryKey: ['finance', 'watchlist', watchlist],
     queryFn: () => fetchStockQuotes(watchlist),
     enabled: watchlist.length > 0,
-    refetchInterval: 15000,
+    refetchInterval: FINANCE_REFRESH_INTERVAL_MS,
   });
 
-  const { data: gainers, isLoading: gainersLoading } = useQuery({
+  const watchlistQuotes = watchlistResponse?.quotes ?? [];
+
+  const { data: gainersResponse, isLoading: gainersLoading, refetch: refetchGainers } = useQuery({
     queryKey: ['finance', 'movers', 'gainers'],
     queryFn: () => fetchMarketMovers('gainers'),
-    refetchInterval: 60000,
+    refetchInterval: FINANCE_REFRESH_INTERVAL_MS,
   });
 
-  const { data: losers, isLoading: losersLoading } = useQuery({
+  const { data: losersResponse, isLoading: losersLoading, refetch: refetchLosers } = useQuery({
     queryKey: ['finance', 'movers', 'losers'],
     queryFn: () => fetchMarketMovers('losers'),
-    refetchInterval: 60000,
+    refetchInterval: FINANCE_REFRESH_INTERVAL_MS,
   });
 
-  const { data: actives, isLoading: activesLoading } = useQuery({
+  const { data: activesResponse, isLoading: activesLoading, refetch: refetchActives } = useQuery({
     queryKey: ['finance', 'movers', 'actives'],
     queryFn: () => fetchMarketMovers('actives'),
-    refetchInterval: 60000,
+    refetchInterval: FINANCE_REFRESH_INTERVAL_MS,
   });
 
-  const lastUpdated = useMemo(() => {
-    if (!watchlistQuotes || watchlistQuotes.length === 0) {
-      return null;
+  const lastUpdated = watchlistResponse?.fetchedAt ?? null;
+
+  const handleManualRefresh = async () => {
+    setManualRefreshLoading(true);
+    try {
+      await Promise.all([
+        refetchWatchlist({ throwOnError: false, cancelRefetch: false }),
+        refetchGainers({ throwOnError: false, cancelRefetch: false }),
+        refetchLosers({ throwOnError: false, cancelRefetch: false }),
+        refetchActives({ throwOnError: false, cancelRefetch: false }),
+      ]);
+    } finally {
+      setManualRefreshLoading(false);
     }
-    const mostRecent = watchlistQuotes.reduce((latest, quote) =>
-      new Date(quote.updatedAt) > new Date(latest.updatedAt) ? quote : latest
-    );
-    return mostRecent.updatedAt;
-  }, [watchlistQuotes]);
+  };
 
   const handleRemoveSymbol = (symbol: string) => {
     setWatchlist((prev) => prev.filter((ticker) => ticker !== symbol));
@@ -207,7 +228,8 @@ const PrismFinanceDashboard: React.FC = () => {
     setAddingSymbol(true);
 
     try {
-      const [quote] = await fetchStockQuotes([trimmed]);
+      const response = await fetchStockQuotes([trimmed], { forceRefresh: true });
+      const [quote] = response.quotes;
       if (!quote) {
         setSymbolError('Ticker not found. Double-check the symbol and try again.');
         return;
@@ -231,7 +253,7 @@ const PrismFinanceDashboard: React.FC = () => {
           <div>
             <h2 className="text-2xl font-semibold tracking-tight text-foreground">Live watchlist</h2>
             <p className="text-sm text-muted-foreground">
-              Refreshes every 15 seconds. Add tickers to monitor price, momentum, and volume in real time.
+              Refreshes automatically throughout the trading day (six scheduled updates). Use manual refresh for the newest web snapshot.
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -252,12 +274,24 @@ const PrismFinanceDashboard: React.FC = () => {
                 Add
               </Button>
             </div>
-            {lastUpdated && (
-              <span className="flex items-center gap-2 text-xs text-muted-foreground">
-                <RefreshCw className="h-3.5 w-3.5 animate-spin text-primary/80" />
-                Updated {formatDistanceToNow(new Date(lastUpdated), { addSuffix: true })}
-              </span>
-            )}
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-1 rounded-full"
+                onClick={handleManualRefresh}
+                disabled={manualRefreshLoading}
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${manualRefreshLoading ? 'animate-spin' : ''}`} />
+                Refresh now
+              </Button>
+              {lastUpdated && (
+                <span className="flex items-center gap-2">
+                  Updated {formatDistanceToNow(new Date(lastUpdated), { addSuffix: true })}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -287,21 +321,28 @@ const PrismFinanceDashboard: React.FC = () => {
             </div>
           )}
 
-          {!isWatchlistLoading && watchlistQuotes && watchlistQuotes.length > 0 &&
+          {!isWatchlistLoading && watchlistQuotes.length > 0 &&
             watchlistQuotes.map((quote) => <WatchlistCard key={`${quote.symbol}-${quote.updatedAt}`} quote={quote} />)}
 
-          {!isWatchlistLoading && (!watchlistQuotes || watchlistQuotes.length === 0) && (
+          {!isWatchlistLoading && watchlistQuotes.length === 0 && (
             <div className="col-span-full rounded-2xl border border-dashed border-border/60 bg-muted/20 p-6 text-sm text-muted-foreground">
               Add a ticker above to start tracking live market data.
             </div>
           )}
         </div>
+
+        {watchlistResponse && (
+          <p className="text-[0.7rem] text-muted-foreground">
+            Source: {watchlistResponse.source}
+            {watchlistResponse.usedFallbackSource ? ' • Web scraping fallback active due to API limits.' : ''}
+          </p>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <MoversList title="Top gainers" movers={gainers} isLoading={gainersLoading} />
-        <MoversList title="Top losers" movers={losers} isLoading={losersLoading} />
-        <MoversList title="Most active" movers={actives} isLoading={activesLoading} />
+        <MoversList title="Top gainers" response={gainersResponse} isLoading={gainersLoading} />
+        <MoversList title="Top losers" response={losersResponse} isLoading={losersLoading} />
+        <MoversList title="Most active" response={activesResponse} isLoading={activesLoading} />
       </div>
     </section>
   );

@@ -61,10 +61,30 @@ const FileAttachment: React.FC<{ file: any }> = ({ file }) => {
     </div>
   );
 };
-const MessageList: React.FC<MessageListProps> = ({ 
-  messages, 
-  onReply, 
-  typingIndicator 
+const containsMathMarkup = (value: string): boolean => {
+  if (!value) {
+    return false;
+  }
+
+  return /\$[^$]+\$|\\\(|\\\)|\\\[|\\\]|\\begin\{|\\end\{|∑|∫|√|∞|≈|≅|≥|≤/.test(value);
+};
+
+const shouldShowMathFormatter = (message: ChatMessage): boolean => {
+  if (message.isUser) {
+    return false;
+  }
+
+  if (message.command === 'math' || message.command === 'calc') {
+    return true;
+  }
+
+  return containsMathMarkup(message.content);
+};
+
+const MessageList: React.FC<MessageListProps> = ({
+  messages,
+  onReply,
+  typingIndicator
 }) => {
 
   return (
@@ -164,6 +184,7 @@ const MessageList: React.FC<MessageListProps> = ({
                 <MathRenderer
                   content={message.content}
                   className="text-foreground leading-relaxed"
+                  enableManualFormat={shouldShowMathFormatter(message)}
                 />
               </div>
             )}
