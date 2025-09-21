@@ -3,10 +3,11 @@ import React, { useState } from "react";
 import Navigation from "@/components/Navigation";
 import { useAuth } from "@clerk/clerk-react";
 import { Navigate } from "react-router-dom";
+import { Suspense, lazy } from "react";
 import { Code } from "lucide-react";
-import CodingWorkspace from "@/components/coding-workspace/CodingWorkspace";
 import { QueryLimitDisplay } from "@/components/chat/QueryLimitDisplay";
 
+const CodingWorkspace = lazy(() => import("@/components/coding-workspace/CodingWorkspace"));
 const PrismCode = () => {
   const { isSignedIn, isLoaded } = useAuth();
 
@@ -38,7 +39,13 @@ const PrismCode = () => {
         </div>
 
         <div className="h-[calc(100vh-12rem)]">
-          <CodingWorkspace />
+          <Suspense fallback={
+            <div className="h-full flex items-center justify-center">
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+            </div>
+          }>
+            <CodingWorkspace />
+          </Suspense>
         </div>
       </div>
     </div>

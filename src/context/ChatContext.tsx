@@ -285,6 +285,18 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleCodeCommand = async (codePrompt: string, attachments: any[] = [], parentMessageId?: string) => {
+    if (!codePrompt.trim()) {
+      const errorMessage: ChatMessage = {
+        id: uuidv4(),
+        content: "Please provide a description for the code you want to generate. For example: `/code create a todo app with React`",
+        isUser: false,
+        timestamp: new Date(),
+        parentMessageId: parentMessageId,
+      };
+      setMessages(prev => [...prev, errorMessage]);
+      return;
+    }
+
     // Open the coding workspace with the initial prompt
     const assistantMessage: ChatMessage = {
       id: uuidv4(),

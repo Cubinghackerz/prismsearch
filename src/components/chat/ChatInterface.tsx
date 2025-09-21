@@ -11,7 +11,9 @@ import { MessageSquare, Settings, Home, Info, Clock, Trash2, Eye } from 'lucide-
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
-import CodingWorkspace from '@/components/coding-workspace/CodingWorkspace';
+import { Suspense, lazy } from 'react';
+
+const CodingWorkspace = lazy(() => import('@/components/coding-workspace/CodingWorkspace'));
 
 const ChatInterface = () => {
   const {
@@ -112,11 +114,17 @@ const ChatInterface = () => {
   // Show coding workspace if requested
   if (showCodingWorkspace) {
     return (
-      <CodingWorkspace 
-        initialPrompt={codingPrompt}
-        onClose={() => setShowCodingWorkspace(false)}
-        isFullscreen={true}
-      />
+      <Suspense fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        </div>
+      }>
+        <CodingWorkspace 
+          initialPrompt={codingPrompt}
+          onClose={() => setShowCodingWorkspace(false)}
+          isFullscreen={true}
+        />
+      </Suspense>
     );
   }
 

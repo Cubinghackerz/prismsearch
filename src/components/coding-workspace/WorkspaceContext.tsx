@@ -1,6 +1,4 @@
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 interface WorkspaceFile {
   path: string;

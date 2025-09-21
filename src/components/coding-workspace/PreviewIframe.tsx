@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Globe, AlertTriangle, Loader2 } from 'lucide-react';

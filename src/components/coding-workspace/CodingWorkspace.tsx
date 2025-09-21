@@ -28,6 +28,7 @@ const CodingWorkspaceContent: React.FC<CodingWorkspaceProps> = ({
   onClose,
   isFullscreen = false 
 }) => {
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('chat');
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -44,6 +45,24 @@ const CodingWorkspaceContent: React.FC<CodingWorkspaceProps> = ({
   } = useWorkspace();
   const { toast } = useToast();
 
+  // Initialize workspace
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Initializing workspace...</p>
+        </div>
+      </div>
+    );
+  }
   useEffect(() => {
     if (serverPort && !previewUrl) {
       setPreviewUrl(`http://localhost:${serverPort}`);
