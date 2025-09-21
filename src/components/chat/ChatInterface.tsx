@@ -11,6 +11,7 @@ import { MessageSquare, Settings, Home, Info, Clock, Trash2, Eye } from 'lucide-
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
+import CodingWorkspace from '@/components/coding-workspace/CodingWorkspace';
 
 const ChatInterface = () => {
   const {
@@ -38,6 +39,8 @@ const ChatInterface = () => {
   const [showThinking, setShowThinking] = useState(false);
   const [currentQuery, setCurrentQuery] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showCodingWorkspace, setShowCodingWorkspace] = useState(false);
+  const [codingPrompt, setCodingPrompt] = useState('');
 
   // Initialize chat on mount
   useEffect(() => {
@@ -45,6 +48,20 @@ const ChatInterface = () => {
       startNewChat();
     }
   }, [chatId, startNewChat]);
+  
+  // Listen for coding workspace events
+  useEffect(() => {
+    const handleOpenCodingWorkspace = (event: CustomEvent) => {
+      setCodingPrompt(event.detail.prompt);
+      setShowCodingWorkspace(true);
+    };
+
+    window.addEventListener('openCodingWorkspace', handleOpenCodingWorkspace as EventListener);
+    
+    return () => {
+      window.removeEventListener('openCodingWorkspace', handleOpenCodingWorkspace as EventListener);
+    };
+  }, []);
   
   const handleSubmitWithFiles = async (content: string, attachments: any[] = [], parentMessageId: string | null = null) => {
     if ((!content.trim() && attachments.length === 0) || isLoading) return;
@@ -91,6 +108,17 @@ const ChatInterface = () => {
 
   // When there are no messages and no active chat, show the welcome screen
   const showWelcomeScreen = !chatId || (messages.length === 0 && !isTyping);
+
+  // Show coding workspace if requested
+  if (showCodingWorkspace) {
+    return (
+      <CodingWorkspace 
+        initialPrompt={codingPrompt}
+        onClose={() => setShowCodingWorkspace(false)}
+        isFullscreen={true}
+      />
+    );
+  }
 
   const handleDeleteChat = (chatIdToDelete: string) => {
     if (confirm('Are you sure you want to delete this chat?')) {

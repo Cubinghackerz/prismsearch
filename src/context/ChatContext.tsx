@@ -285,172 +285,37 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleCodeCommand = async (codePrompt: string, attachments: any[] = [], parentMessageId?: string) => {
-    if (!codePrompt.trim()) {
-      toast({
-        title: "Code Command Usage",
-        description: "Use: /code [description] to generate code. Example: /code create a calculator app",
-        variant: "default"
-      });
-      return;
-    }
-
-    // Initialize chat if needed
-    let currentChatId = chatId;
-    if (!currentChatId) {
-      currentChatId = uuidv4();
-      setChatId(currentChatId);
-    }
-
-    const userMessage: ChatMessage = {
+    // Open the coding workspace with the initial prompt
+    const assistantMessage: ChatMessage = {
       id: uuidv4(),
-      content: `/code ${codePrompt}`,
-      isUser: true,
+      content: `🚀 **Opening AI Coding Workspace**
+
+I'll help you build: *${codePrompt.trim() || 'a web application'}*
+
+**What I can do:**
+• Generate code in multiple frameworks (React, Vue, Svelte, Next.js, Django, Flask, etc.)
+• Create complete file structures with proper setup
+• Provide live preview with development server
+• Execute commands and manage dependencies
+• Show file diffs before applying changes
+
+**Opening the enhanced coding workspace now...**
+
+💡 **Pro tip:** I'll automatically detect the best framework and language for your project!`,
+      isUser: false,
       timestamp: new Date(),
       parentMessageId: parentMessageId,
-      attachments: attachments,
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    setIsLoading(true);
-    setIsTyping(true);
+    setMessages(prev => [...prev, assistantMessage]);
 
-    let retryCount = 0;
-    const maxRetries = 2;
-
-    while (retryCount <= maxRetries) {
-      try {
-        console.log(`Attempting code generation (attempt ${retryCount + 1}/${maxRetries + 1})`);
-        
-        // Add timeout for edge function calls
-        const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => {
-            reject(new Error('Code generation timed out after 45 seconds'));
-          }, 45000);
-        });
-
-        const responsePromise = supabase.functions.invoke('generate-webapp', {
-          body: {
-            prompt: codePrompt || 'Create a simple web application',
-            model: 'gemini'
-          }
-        });
-
-        const { data, error } = await Promise.race([
-          responsePromise,
-          timeoutPromise
-        ]);
-
-        if (error) {
-          console.error('Code generation error:', error);
-          
-          // Check if it's a network error and retry
-          if ((error.message?.includes('fetch') || error.message?.includes('network') || error.message?.includes('Failed to fetch')) && retryCount < maxRetries) {
-            retryCount++;
-            console.log(`Network error detected, retrying... (${retryCount}/${maxRetries})`);
-            await new Promise(resolve => setTimeout(resolve, 2000 * retryCount)); // Exponential backoff
-            continue;
-          }
-          
-          throw new Error(`Code generation failed: ${error.message || 'Unknown error'}`);
-        }
-
-        if (!data) {
-          throw new Error('No data received from code generation service');
-        }
-
-        if (data.error) {
-          // Check if it's a retryable error
-          if ((data.error.includes('fetch') || data.error.includes('network') || data.error.includes('timeout')) && retryCount < maxRetries) {
-            retryCount++;
-            console.log(`Service error detected, retrying... (${retryCount}/${maxRetries})`);
-            await new Promise(resolve => setTimeout(resolve, 2000 * retryCount));
-            continue;
-          }
-          throw new Error(data.error);
-        }
-
-        // Format the response as a code generation result
-        const codeResponse = `🔧 **Code Generated Successfully!**
-
-**App Description:** ${data.description}
-
-**Features:**
-${data.features.map((feature: string) => `• ${feature}`).join('\n')}
-
-**Files Generated:**
-• index.html
-• styles.css
-• script.js
-
-**HTML:**
-\`\`\`html
-${data.html.substring(0, 300)}${data.html.length > 300 ? '...' : ''}
-\`\`\`
-
-**CSS:**
-\`\`\`css
-${data.css.substring(0, 200)}${data.css.length > 200 ? '...' : ''}
-\`\`\`
-
-**JavaScript:**
-\`\`\`javascript
-${data.javascript.substring(0, 200)}${data.javascript.length > 200 ? '...' : ''}
-\`\`\`
-
-💡 **Tip:** Visit the [Code Generator](/code) for full editing capabilities, terminal access, and deployment options!`;
-
-        const assistantMessage: ChatMessage = {
-          id: uuidv4(),
-          content: codeResponse,
-          isUser: false,
-          timestamp: new Date(),
-          parentMessageId: parentMessageId,
-        };
-
-        setMessages(prev => [...prev, assistantMessage]);
-        break; // Success, exit retry loop
-        
-      } catch (error) {
-        console.error(`Code generation attempt ${retryCount + 1} failed:`, error);
-        
-        // If this is the last attempt, show error
-        if (retryCount >= maxRetries) {
-          let errorMessage = 'Sorry, there was an error generating code after multiple attempts.';
-          
-          // Provide more specific error messages
-          if (error.message?.includes('timed out')) {
-            errorMessage = 'Code generation timed out after multiple attempts. Please try with a simpler prompt or try again later.';
-          } else if (error.message?.includes('not configured')) {
-            errorMessage = 'Code generation service is temporarily unavailable. Please try again later.';
-          } else if (error.message?.includes('Failed to fetch') || error.message?.includes('fetch') || error.message?.includes('network')) {
-            errorMessage = 'Connection error after multiple attempts. The service may be temporarily unavailable. Please try again later.';
-          }
-          
-          const errorMsg: ChatMessage = {
-            id: uuidv4(),
-            content: `❌ **Code Generation Failed**
-
-${errorMessage}
-
-**Alternative Options:**
-• Visit the [Code Generator](/code) for direct access
-• Try a simpler prompt (e.g., "/code simple calculator")
-• Check your internet connection and try again in a few minutes
-
-💡 **Tip:** The Code Generator page has more advanced features and better error handling.`,
-            isUser: false,
-            timestamp: new Date(),
-            parentMessageId: parentMessageId,
-          };
-          setMessages(prev => [...prev, errorMsg]);
-          break;
-        } else {
-          // Retry with exponential backoff
-          retryCount++;
-          console.log(`Retrying code generation... (${retryCount}/${maxRetries})`);
-          await new Promise(resolve => setTimeout(resolve, 2000 * retryCount));
-        }
-      }
+    // Trigger opening the coding workspace
+    setTimeout(() => {
+      // This will be handled by the chat interface to open the coding workspace
+      window.dispatchEvent(new CustomEvent('openCodingWorkspace', { 
+        detail: { prompt: codePrompt.trim() }
+      }));
+    }, 1000);
     }
     
     setIsLoading(false);

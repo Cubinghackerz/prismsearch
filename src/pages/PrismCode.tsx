@@ -3,20 +3,12 @@ import React, { useState } from "react";
 import Navigation from "@/components/Navigation";
 import { useAuth } from "@clerk/clerk-react";
 import { Navigate } from "react-router-dom";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Code, AlertTriangle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import WebAppGenerator from "@/components/prism-code/WebAppGenerator";
-import CodeNotebook from "@/components/prism-code/CodeNotebook";
-import BetaWebAppGenerator from "@/components/prism-code/beta/BetaWebAppGenerator";
-import BetaCodeNotebook from "@/components/prism-code/beta/BetaCodeNotebook";
-import VersionSelector from "@/components/prism-code/VersionSelector";
+import { Code } from "lucide-react";
+import CodingWorkspace from "@/components/coding-workspace/CodingWorkspace";
 import { QueryLimitDisplay } from "@/components/chat/QueryLimitDisplay";
 
 const PrismCode = () => {
   const { isSignedIn, isLoaded } = useAuth();
-  const [activeTab, setActiveTab] = useState("webapp");
-  const [version, setVersion] = useState<'legacy' | 'beta'>('legacy');
 
   if (!isLoaded) {
     return <div className="min-h-screen bg-gradient-to-b from-background to-secondary/10 flex items-center justify-center">
@@ -33,54 +25,21 @@ const PrismCode = () => {
       <Navigation />
       <QueryLimitDisplay />
       <div className="container mx-auto px-6 py-8 pt-24">
-        <div className="mb-6">
-          <div className="flex items-center space-x-4 mb-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/10 to-yellow-500/10 border border-orange-500/20">
-              <Globe className="w-8 h-8 text-orange-400" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent font-fira-code">
-                Prism Code
-              </h1>
-              <p className="text-prism-text-muted mt-1 font-inter">
-                Generate web applications and run code snippets with AI assistance
-              </p>
-            </div>
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <Code className="h-12 w-12 text-primary" />
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-fira-code">
+              Prism Code
+            </h1>
           </div>
-
-          <VersionSelector version={version} onVersionChange={setVersion} />
-
-          {version === 'legacy' && (
-            <Alert className="border-orange-500/30 bg-orange-500/5 mb-6">
-              <AlertTriangle className="h-4 w-4 text-orange-500" />
-              <AlertDescription className="text-orange-300">
-                <strong>Legacy Version:</strong> Stable web app generation with HTML/CSS/JS support. 
-                You have 10 queries per day for the AI Web App Generator.
-              </AlertDescription>
-            </Alert>
-          )}
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto font-fira-code">
+            AI-powered coding workspace with live preview, multi-framework support, and integrated development tools
+          </p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
-            <TabsTrigger value="webapp" className="flex items-center space-x-2">
-              <Globe className="w-4 h-4" />
-              <span>AI Web App Generator</span>
-            </TabsTrigger>
-            <TabsTrigger value="notebook" className="flex items-center space-x-2">
-              <Code className="w-4 h-4" />
-              <span>Code Notebook</span>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="webapp" className="space-y-6">
-            {version === 'legacy' ? <WebAppGenerator /> : <BetaWebAppGenerator />}
-          </TabsContent>
-
-          <TabsContent value="notebook" className="space-y-6">
-            {version === 'legacy' ? <CodeNotebook /> : <BetaCodeNotebook />}
-          </TabsContent>
-        </Tabs>
+        <div className="h-[calc(100vh-12rem)]">
+          <CodingWorkspace />
+        </div>
       </div>
     </div>
   );
