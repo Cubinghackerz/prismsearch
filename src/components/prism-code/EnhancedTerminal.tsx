@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Terminal, Play, Stop, RefreshCw, Server, Globe, Folder, Code, Monitor } from 'lucide-react';
+import { Terminal, Play, Store as Stop, RefreshCw, Server, Globe, Folder, Code, Monitor } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface GeneratedApp {
