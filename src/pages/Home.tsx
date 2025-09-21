@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy, Suspense, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,10 +6,13 @@ import { Badge } from '@/components/ui/badge';
 import { MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, Sparkles, ChevronRight, Star, ArrowRight, CheckCircle, FileText, ShieldAlert } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
-import Prism from '@/components/Prism';
-import AnimatedHeadline from '@/components/AnimatedHeadline';
+
+// Lazy load heavy components
+const Prism = lazy(() => import('@/components/Prism'));
+const AnimatedHeadline = lazy(() => import('@/components/AnimatedHeadline'));
 const Home = () => {
-  const features = [{
+  // Memoize static data to prevent unnecessary re-renders
+  const features = useMemo(() => [{
     icon: <MessageSquare className="h-6 w-6" />,
     title: "Intelligent Chat",
     description: "Engage with multiple AI models in dynamic conversations with file attachments and deep research.",
@@ -72,8 +75,9 @@ const Home = () => {
     link: "/detector",
     color: "from-red-600 to-purple-600",
     isNew: true
-  }];
-  const stats = [{
+  }], []);
+  
+  const stats = useMemo(() => [{
     value: 10000,
     label: "Passwords Stored",
     suffix: "+"
@@ -89,12 +93,27 @@ const Home = () => {
     value: 100000,
     label: "Lines of Code Generated",
     suffix: "+"
-  }];
-  const benefits = ["Advanced AI-powered assistance", "Military-grade security", "Cross-platform compatibility", "Real-time collaboration"];
+  }], []);
+  
+  const benefits = useMemo(() => ["Advanced AI-powered assistance", "Military-grade security", "Cross-platform compatibility", "Real-time collaboration"], []);
   return <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-background via-background to-secondary/5">
-      {/* Enhanced Prism Background */}
+      {/* Optimized Prism Background with Suspense */}
       <div className="absolute inset-0 -z-10 will-change-transform">
-        <Prism animationType="rotate" timeScale={0.15} height={3.5} baseWidth={6} scale={3.5} hueShift={240} colorFrequency={0.7} noise={0.12} glow={0.3} bloom={0.5} suspendWhenOffscreen={true} />
+        <Suspense fallback={<div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />}>
+          <Prism 
+            animationType="rotate" 
+            timeScale={0.08} 
+            height={2.5} 
+            baseWidth={4} 
+            scale={2.5} 
+            hueShift={240} 
+            colorFrequency={0.5} 
+            noise={0.08} 
+            glow={0.2} 
+            bloom={0.3} 
+            suspendWhenOffscreen={true} 
+          />
+        </Suspense>
       </div>
 
       {/* Subtle overlay for better text readability */}
@@ -114,9 +133,17 @@ const Home = () => {
               </Badge>
             </div>
             
-            {/* Enhanced Headline */}
+            {/* Optimized Headline with Suspense */}
             <div className="space-y-6">
-              <AnimatedHeadline />
+              <Suspense fallback={
+                <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight">
+                  <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
+                    Prism AI Suite
+                  </span>
+                </h1>
+              }>
+                <AnimatedHeadline />
+              </Suspense>
               
               <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed font-light">
                 Your all-in-one AI-powered productivity suite. From solving complex equations to generating code, 
@@ -124,12 +151,14 @@ const Home = () => {
               </p>
             </div>
 
-            {/* Benefits List */}
+            {/* Optimized Benefits List */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-              {benefits.map((benefit, index) => <div key={index} className="flex items-center justify-center space-x-2 text-white/80 bg-white/5 backdrop-blur-sm rounded-lg p-3 border border-white/10">
+              {benefits.map((benefit, index) => (
+                <div key={`benefit-${index}`} className="flex items-center justify-center space-x-2 text-white/80 bg-white/5 backdrop-blur-sm rounded-lg p-3 border border-white/10 transform transition-transform duration-200 hover:scale-[1.02]">
                   <CheckCircle className="h-4 w-4 text-green-400 flex-shrink-0" />
                   <span className="text-sm font-medium">{benefit}</span>
-                </div>)}
+                </div>
+              ))}
             </div>
 
             {/* Enhanced CTA Buttons */}
@@ -152,14 +181,16 @@ const Home = () => {
         <div className="container mx-auto">
           <div className="bg-gradient-to-r from-white/10 via-white/5 to-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-2xl p-8 md:p-12">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-              {stats.map((stat, index) => <div key={index} className="text-center group">
-                  <div className="text-4xl lg:text-5xl font-bold text-white mb-3 group-hover:scale-110 transition-transform duration-300">
+              {stats.map((stat, index) => (
+                <div key={`stat-${index}`} className="text-center group">
+                  <div className="text-4xl lg:text-5xl font-bold text-white mb-3 transform transition-transform duration-200 group-hover:scale-105">
                     <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                       {stat.value.toLocaleString()}{stat.suffix}
                     </span>
                   </div>
                   <div className="text-white/70 text-sm lg:text-base font-medium">{stat.label}</div>
-                </div>)}
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -179,41 +210,47 @@ const Home = () => {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => <Link key={index} to={feature.link} className="group block">
-                <Card className="h-full bg-gradient-to-br from-white/10 via-white/5 to-white/10 backdrop-blur-md border border-white/20 hover:border-white/30 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-primary/20 relative overflow-hidden">
-                  {/* Animated background on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            {features.map((feature, index) => (
+              <Link key={`feature-${index}`} to={feature.link} className="group block">
+                <Card className="h-full bg-gradient-to-br from-white/10 via-white/5 to-white/10 backdrop-blur-md border border-white/20 hover:border-white/30 transition-all duration-300 hover:scale-[1.01] hover:shadow-xl hover:shadow-primary/10 relative overflow-hidden">
+                  {/* Simplified hover background */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/3 via-transparent to-secondary/3 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   
-                  {feature.isNew && <Badge variant="secondary" className="absolute -top-3 -right-3 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-black font-bold px-3 py-1 text-xs shadow-lg z-10 animate-pulse" style={{
-                transform: 'rotate(12deg)'
-              }}>
+                  {feature.isNew && (
+                    <Badge 
+                      variant="secondary" 
+                      className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-black font-bold px-2 py-1 text-xs shadow-lg z-10"
+                      style={{ transform: 'rotate(12deg)' }}
+                    >
                       NEW
-                    </Badge>}
+                    </Badge>
+                  )}
                   
                   <CardHeader className="relative pb-4">
-                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-r ${feature.color} p-3 mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-lg`}>
+                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-r ${feature.color} p-3 mb-6 transform transition-transform duration-200 group-hover:scale-105 shadow-lg`}>
                       {React.cloneElement(feature.icon, {
-                    className: "h-full w-full text-white"
-                  })}
+                        className: "h-full w-full text-white"
+                      })}
                     </div>
-                    <CardTitle className="text-white group-hover:text-white text-xl font-semibold mb-3">
+                    <CardTitle className="text-white text-xl font-semibold mb-3">
                       {feature.title}
                     </CardTitle>
                   </CardHeader>
                   
                   <CardContent className="relative">
-                    <CardDescription className="text-white/70 group-hover:text-white/90 transition-colors duration-300 leading-relaxed">
+                    <CardDescription className="text-white/70 group-hover:text-white/90 transition-colors duration-200 leading-relaxed">
                       {feature.description}
                     </CardDescription>
                     
-                    {/* Subtle arrow indicator */}
-                    <div className="mt-4 flex items-center text-white/50 group-hover:text-primary transition-colors duration-300">
+                    {/* Simplified arrow indicator */}
+                    <div className="mt-4 flex items-center text-white/50 group-hover:text-primary transition-colors duration-200">
                       <span className="text-sm font-medium mr-2">Learn more</span>
-                      <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                      <ArrowRight className="h-4 w-4 transform transition-transform duration-200 group-hover:translate-x-1" />
                     </div>
                   </CardContent>
                 </Card>
-              </Link>)}
+              </Link>
+            ))}
           </div>
         </div>
       </section>
