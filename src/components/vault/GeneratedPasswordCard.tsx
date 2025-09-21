@@ -103,31 +103,32 @@ export const GeneratedPasswordCard: React.FC<GeneratedPasswordCardProps> = ({
   const displayPassword = isEditing ? editedPassword : passwordData.password;
 
   return (
-    <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm shadow-xl">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center space-x-2 text-cyan-300">
-          <Shield className="h-5 w-5" />
-          <span>Encrypted Password</span>
+    <Card className="border-border bg-card shadow-md">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center space-x-2 text-base font-semibold">
+          <div className="w-6 h-6 rounded bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+            <Shield className="h-4 w-4 text-primary" />
+          </div>
+          <span>Generated Password</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label className="text-slate-200 font-medium">Password</Label>
           <div className="flex space-x-2">
             <Input
               type={isVisible ? "text" : "password"}
               value={displayPassword}
               readOnly={!isEditing}
               onChange={(e) => isEditing && setEditedPassword(e.target.value)}
-              className={`font-mono text-sm bg-slate-800/50 text-slate-200 border-slate-600 focus:border-cyan-500 ${
-                isEditing ? 'border-cyan-500' : ''
+              className={`font-mono text-sm ${
+                isEditing ? 'border-primary' : ''
               }`}
             />
             <Button
               variant="outline"
               size="icon"
               onClick={onToggleVisibility}
-              className="border-slate-600 hover:bg-slate-700 hover:border-cyan-500"
+              className="shrink-0"
             >
               {isVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </Button>
@@ -135,7 +136,7 @@ export const GeneratedPasswordCard: React.FC<GeneratedPasswordCardProps> = ({
               variant="outline"
               size="icon"
               onClick={handleEditToggle}
-              className="border-slate-600 hover:bg-slate-700 hover:border-amber-500"
+              className="shrink-0"
             >
               {isEditing ? <Save className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
             </Button>
@@ -143,7 +144,7 @@ export const GeneratedPasswordCard: React.FC<GeneratedPasswordCardProps> = ({
               variant="outline"
               size="icon"
               onClick={handleCopy}
-              className="border-slate-600 hover:bg-slate-700 hover:border-emerald-500"
+              className="shrink-0"
             >
               <Copy className="h-4 w-4" />
             </Button>
@@ -152,8 +153,8 @@ export const GeneratedPasswordCard: React.FC<GeneratedPasswordCardProps> = ({
 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label className="text-slate-200 font-medium">AI Security Analysis</Label>
-            <Badge className={getStrengthColor(passwordData.strengthAssessment.level)}>
+            <span className="text-sm font-medium">Security Analysis</span>
+            <Badge variant="outline" className={getStrengthColor(passwordData.strengthAssessment.level)}>
               {getStrengthIcon(passwordData.strengthAssessment.level)}
               <span className="ml-1 capitalize">{passwordData.strengthAssessment.level.replace('-', ' ')}</span>
             </Badge>
@@ -161,12 +162,12 @@ export const GeneratedPasswordCard: React.FC<GeneratedPasswordCardProps> = ({
           
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-slate-300 font-medium">Security Score</span>
-              <span className="text-cyan-300 font-semibold">{passwordData.strengthAssessment.score}/100</span>
+              <span className="text-muted-foreground">Score</span>
+              <span className="font-semibold text-primary">{passwordData.strengthAssessment.score}/100</span>
             </div>
-            <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
+            <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
               <div
-                className={`h-3 rounded-full transition-all duration-1000 ${getStrengthBarColor(passwordData.strengthAssessment.score)}`}
+                className={`h-2 rounded-full transition-all duration-1000 ${getStrengthBarColor(passwordData.strengthAssessment.score)}`}
                 style={{ width: `${passwordData.strengthAssessment.score}%` }}
               />
             </div>
@@ -174,11 +175,11 @@ export const GeneratedPasswordCard: React.FC<GeneratedPasswordCardProps> = ({
 
           {passwordData.strengthAssessment.feedback.length > 0 && (
             <div className="space-y-2">
-              <Label className="text-sm text-slate-200 font-medium">Security Recommendations</Label>
-              <ul className="text-sm text-slate-400 space-y-1">
-                {passwordData.strengthAssessment.feedback.map((item, feedbackIndex) => (
+              <span className="text-xs font-medium text-muted-foreground">Recommendations</span>
+              <ul className="text-xs text-muted-foreground space-y-1">
+                {passwordData.strengthAssessment.feedback.slice(0, 2).map((item, feedbackIndex) => (
                   <li key={feedbackIndex} className="flex items-start space-x-2">
-                    <span className="text-cyan-400 mt-1">•</span>
+                    <span className="text-primary mt-1">•</span>
                     <span>{item}</span>
                   </li>
                 ))}
@@ -188,10 +189,11 @@ export const GeneratedPasswordCard: React.FC<GeneratedPasswordCardProps> = ({
 
           <Button
             onClick={onSave}
-            className="w-full bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white font-semibold"
+            size="sm"
+            className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground"
           >
-            <Key className="mr-2 h-4 w-4" />
-            Save to Password Manager
+            <Key className="mr-2 h-3 w-3" />
+            Save Password
           </Button>
         </div>
       </CardContent>

@@ -5,15 +5,15 @@ import { Lock } from 'lucide-react';
 
 export const EmptyVaultCard: React.FC = () => {
   return (
-    <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm shadow-xl">
-      <CardContent className="text-center py-12">
+    <Card className="border-border bg-card shadow-md">
+      <CardContent className="text-center py-8">
         <div className="space-y-4">
-          <div className="relative mx-auto w-16 h-16">
-            <Lock className="h-16 w-16 text-slate-600 mx-auto" />
+          <div className="w-12 h-12 mx-auto rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+            <Lock className="h-6 w-6 text-primary" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-slate-300">Vault Ready</h3>
-            <p className="text-slate-400">Generate secure passwords to see AI security analysis</p>
+            <h3 className="text-sm font-semibold">Ready to Generate</h3>
+            <p className="text-xs text-muted-foreground">Configure settings and generate passwords to see analysis</p>
           </div>
         </div>
       </CardContent>

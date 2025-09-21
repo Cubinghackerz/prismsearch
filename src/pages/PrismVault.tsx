@@ -170,14 +170,31 @@ const PrismVault = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 relative overflow-hidden font-fira-code">
-      <ParticleBackground />
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-muted/5 to-background"></div>
       <Navigation />
+      
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <VaultHeader />
-        <div className="mt-8 space-y-8">
-          <div className="grid lg:grid-cols-2 gap-8">
-            <div className="space-y-6">
+        {/* Modern Header */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/20 mb-6">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+              <div className="w-6 h-6 rounded bg-primary-foreground/90"></div>
+            </div>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent mb-4">
+            Prism Vault
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Advanced password generation with enterprise-grade security analysis
+          </p>
+        </div>
+
+        <div className="space-y-8">
+          {/* Generator and Preview Section */}
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Password Generator - Takes 2/3 width */}
+            <div className="lg:col-span-2">
               <PasswordGenerator
                 passwordCount={passwordCount}
                 setPasswordCount={setPasswordCount}
@@ -197,48 +214,54 @@ const PrismVault = () => {
               />
             </div>
 
-            <div className="space-y-6">
-              {passwords.length === 0 && !isGenerating && animatingPasswords.length === 0 ? (
-                <EmptyVaultCard />
-              ) : (
-                <div className="space-y-4">
-                  {animatingPasswords.map((password, index) => (
-                    <AnimatingPasswordCard key={`anim-${index}`} password={password} />
-                  ))}
-                  {passwords.map((passwordData, index) => (
-                    <GeneratedPasswordCard
-                      key={`gen-${index}`}
-                      passwordData={passwordData}
-                      isVisible={showPasswords[index]}
-                      onToggleVisibility={() => {
-                        setShowPasswords(prev => {
-                          const newState = [...prev];
-                          newState[index] = !newState[index];
-                          return newState;
-                        });
-                      }}
-                      onSave={() => {
-                        setPrefilledPassword(passwordData.password);
-                        setIsPasswordManagerOpen(true);
-                      }}
-                      onEdit={(editedPassword) => {
-                        setPasswords(prev => prev.map((p, i) => 
-                          i === index 
-                            ? { 
-                                password: editedPassword,
-                                strengthAssessment: assessPasswordStrengthWithZxcvbn(editedPassword)
-                              }
-                            : p
-                        ));
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
+            {/* Generated Passwords Preview - Takes 1/3 width */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-8">
+                {passwords.length === 0 && !isGenerating && animatingPasswords.length === 0 ? (
+                  <EmptyVaultCard />
+                ) : (
+                  <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                    {animatingPasswords.map((password, index) => (
+                      <AnimatingPasswordCard key={`anim-${index}`} password={password} />
+                    ))}
+                    {passwords.map((passwordData, index) => (
+                      <GeneratedPasswordCard
+                        key={`gen-${index}`}
+                        passwordData={passwordData}
+                        isVisible={showPasswords[index]}
+                        onToggleVisibility={() => {
+                          setShowPasswords(prev => {
+                            const newState = [...prev];
+                            newState[index] = !newState[index];
+                            return newState;
+                          });
+                        }}
+                        onSave={() => {
+                          setPrefilledPassword(passwordData.password);
+                          setIsPasswordManagerOpen(true);
+                        }}
+                        onEdit={(editedPassword) => {
+                          setPasswords(prev => prev.map((p, i) => 
+                            i === index 
+                              ? { 
+                                  password: editedPassword,
+                                  strengthAssessment: assessPasswordStrengthWithZxcvbn(editedPassword)
+                                }
+                              : p
+                          ));
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          <StoredPasswordsList />
+          {/* Password Manager Section */}
+          <div className="border-t border-border pt-8">
+            <StoredPasswordsList />
+          </div>
         </div>
       </div>
 

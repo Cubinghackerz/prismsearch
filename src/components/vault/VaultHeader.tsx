@@ -22,28 +22,19 @@ export const VaultHeader: React.FC<VaultHeaderProps> = ({
       description: "All stored passwords and generated passwords have been removed."
     });
   };
-  return <>
-      {/* Navigation */}
-      <div className="max-w-6xl mx-auto mb-8">
-        <div className="flex items-center justify-between mb-4">
-          
-          
+  return (
+    <div className="text-center mb-12">
+      <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/20 mb-6">
+        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+          <Lock className="h-6 w-6 text-primary-foreground" />
         </div>
       </div>
-
-      {/* Main Header */}
-      <div className="text-center space-y-4">
-        <div className="flex items-center justify-center space-x-3">
-          <div className="relative">
-            <Lock className="h-12 w-12 text-cyan-400" />
-          </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">
-            Prism Vault
-          </h1>
-        </div>
-        <p className="text-xl text-slate-300 max-w-2xl mx-auto py-[10px] my-0">
-          Advanced password generation with military-grade encryption analysis
-        </p>
-      </div>
-    </>;
+      <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent mb-4">
+        Prism Vault
+      </h1>
+      <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+        Advanced password generation with enterprise-grade security analysis
+      </p>
+    </div>
+  );
 };

@@ -196,18 +196,18 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
 
   if (loading) {
     return (
-      <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
-        <CardHeader className="py-0 mx-0">
-          <div className="flex items-center justify-between py-[10px]">
-            <CardTitle className="flex items-center space-x-2 text-cyan-300">
-              <Database className="h-5 w-5" />
-              <span>Password Manager</span>
-              <Badge variant="outline" className="text-slate-400 border-slate-600">
-                Loading...
-              </Badge>
-            </CardTitle>
+    <Card className="border-border bg-card shadow-lg">
+      <CardHeader className="pb-4">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+            <Database className="h-5 w-5 text-primary" />
           </div>
-        </CardHeader>
+          <div>
+            <CardTitle className="text-xl font-bold">Password Manager</CardTitle>
+            <Badge variant="outline" className="text-xs">Loading passwords...</Badge>
+          </div>
+        </div>
+      </CardHeader>
         <CardContent>
           <VaultItemSkeleton count={3} variant="list" />
         </CardContent>
@@ -226,22 +226,36 @@ export const StoredPasswordsList: React.FC = React.memo(() => {
         onPasswordUpdate={updatePassword} 
       />
 
-      <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm shadow-xl">
-        <CardHeader className="py-0 mx-0">
-          <div className="flex items-center justify-between py-[10px]">
-            <CardTitle className="flex items-center space-x-2 text-cyan-300">
-              <Database className="h-5 w-5" />
-              <span>Password Manager</span>
-              <Badge variant="outline" className="text-slate-400 border-slate-600">
-                {passwords.length}/10
-              </Badge>
-            </CardTitle>
-            <div className="flex items-center space-x-2">
-              <Button onClick={() => MasterPasswordService.hasMasterPassword() ? handleMasterPasswordSettings() : setShowMasterPasswordSetup(true)} size="sm" variant="outline" className="border-slate-600 hover:bg-slate-700">
+      <Card className="border-border bg-card shadow-lg">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                <Database className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  Password Manager
+                </CardTitle>
+                <Badge variant="outline" className="text-xs">
+                  {passwords.length} of 10 passwords stored
+                </Badge>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Button 
+                onClick={() => MasterPasswordService.hasMasterPassword() ? handleMasterPasswordSettings() : setShowMasterPasswordSetup(true)} 
+                size="sm" 
+                variant="outline"
+              >
                 <Shield className="h-4 w-4 mr-2" />
-                {MasterPasswordService.hasMasterPassword() ? 'Master Password' : 'Set Master Password'}
+                {MasterPasswordService.hasMasterPassword() ? 'Security' : 'Setup Security'}
               </Button>
-              <Button onClick={handleAddNew} disabled={passwords.length >= 10} className="bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-700 hover:to-emerald-700">
+              <Button 
+                onClick={handleAddNew} 
+                disabled={passwords.length >= 10} 
+                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Password
               </Button>
