@@ -31,6 +31,16 @@ export interface CodeGenerationPlanPreview {
   notes: string[];
 }
 
+export type GeneratedPreviewMode = 'static' | 'dynamic' | 'mocked' | 'instructions';
+
+export interface CodeGenerationRuntime {
+  environment?: string;
+  setup?: string[];
+  start?: string[];
+  previewCommands?: string[];
+  notes?: string[];
+}
+
 export interface CodeGenerationPlan {
   summary: string;
   goals: string[];
@@ -50,8 +60,11 @@ export interface GeneratedApp {
   description: string;
   features: string[];
   previewHtml?: string;
+  previewMode?: GeneratedPreviewMode;
+  previewNotes?: string[];
   stack?: CodeGenerationStack;
   files?: GeneratedFile[];
+  runtime?: CodeGenerationRuntime;
 }
 
 export interface GenerateWebAppOptions {
@@ -177,6 +190,8 @@ const FALLBACK_APP: GeneratedApp = {
     `body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #0f172a; color: #e2e8f0; }`,
     "console.log('Preview ready');"
   ),
+  previewMode: 'static',
+  previewNotes: ['Fallback preview rendered from the base HTML, CSS, and JavaScript bundle.'],
   stack: {
     language: 'JavaScript',
     framework: 'Vanilla',
@@ -184,10 +199,20 @@ const FALLBACK_APP: GeneratedApp = {
     tooling: [],
     notes: 'Fallback stack using vanilla JavaScript for in-browser preview.'
   },
+  runtime: {
+    environment: 'Browser runtime',
+    setup: ['No additional setup required.'],
+    start: ['Open index.html in a modern browser.'],
+    notes: ['Fallback runtime details are provided because the AI response could not be parsed.'],
+  },
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null;
+};
+
+const isPreviewMode = (value: unknown): value is GeneratedPreviewMode => {
+  return value === 'static' || value === 'dynamic' || value === 'mocked' || value === 'instructions';
 };
 
 const buildPlanPrompt = (description: string): string => {
@@ -218,15 +243,15 @@ Return ONLY valid JSON with this exact structure:
     }
   ],
   "preview": {
-    "strategy": "How to render this in a single in-browser preview",
+    "strategy": "How Prism should present a live preview (e.g., static HTML, mocked APIs, embedded runtime)",
     "cdnDependencies": ["cdn url or package"],
-    "notes": ["preview caveat or requirement"]
+    "notes": ["preview caveat, runtime consideration, or fallback"]
   },
   "risks": ["optional risk"],
   "testing": ["optional testing note"]
 }
 
-The plan must select stacks that work without custom build tooling on the client. If a framework is chosen, rely on CDN or in-browser tooling so Prism's preview can run immediately.`;
+Choose the stack that best fits the request, including backend or full-stack frameworks when appropriate. When the stack requires a server runtime, clearly describe how the preview can still be demonstrated inside Prism (for example, mocked responses, captured HTML, or WebAssembly-powered execution).`;
 };
 
 const buildGenerationPrompt = (description: string, plan?: CodeGenerationPlan): string => {
@@ -236,7 +261,7 @@ const buildGenerationPrompt = (description: string, plan?: CodeGenerationPlan): 
 
   return `You are Prism's web application generator. ${planContext}
 
-Generate a complete project that runs directly in the browser. If the stack requires frameworks, TypeScript, or JSX, include browser-friendly builds via CDN or inline transpilation so the preview works.
+Generate a complete project. If the stack relies on server-side frameworks or native runtimes, include the necessary backend files and clearly describe how the live preview should behave (for example, mock the API responses or embed a pre-rendered experience). When using browser-oriented stacks, continue to rely on CDN or inline transpilation so the preview works without a build step.
 
 Return ONLY valid JSON with this structure:
 {
@@ -246,6 +271,8 @@ Return ONLY valid JSON with this structure:
   "description": "short summary of the delivered experience",
   "features": ["feature"],
   "previewHtml": "FULL standalone HTML document for live preview with all dependencies",
+  "previewMode": "static | dynamic | mocked | instructions",
+  "previewNotes": ["note about limitations or data mocking"],
   "stack": {
     "language": "language used",
     "framework": "framework or 'Vanilla'",
@@ -253,12 +280,19 @@ Return ONLY valid JSON with this structure:
     "tooling": ["optional tooling"],
     "notes": "stack notes"
   },
+  "runtime": {
+    "environment": "runtime version or tooling (e.g., Python 3.11, Node 20)",
+    "setup": ["commands to install dependencies"],
+    "start": ["commands to launch the project"],
+    "previewCommands": ["commands to reproduce the live preview"],
+    "notes": ["important runtime caveats"]
+  },
   "files": [
     {"path": "src/App.tsx", "language": "typescript", "content": "file contents", "description": "purpose"}
   ]
 }
 
-Ensure previewHtml is immediately runnable and loads every dependency declared in stack.libraries and preview.cdnDependencies (if provided). Include additional framework files in the files array so the user can continue development.`;
+Ensure previewHtml is immediately runnable and loads every dependency declared in stack.libraries and preview.cdnDependencies (if provided). For non-browser stacks, emulate the primary UI in previewHtml using mocked data or recorded output so the experience is still visible. Include additional framework files in the files array so the user can continue development.`;
 };
 
 const sanitizeJsonResponse = (responseText: string): string => {
@@ -405,6 +439,29 @@ const parseGeneratedApp = (responseText: string): GeneratedApp => {
     const css = typeof parsed.css === 'string' ? parsed.css : FALLBACK_APP.css;
     const javascript = typeof parsed.javascript === 'string' ? parsed.javascript : FALLBACK_APP.javascript;
 
+    const previewMode = isPreviewMode(parsed.previewMode) ? parsed.previewMode : undefined;
+    const previewNotes = Array.isArray(parsed.previewNotes)
+      ? parsed.previewNotes.map((item: unknown) => String(item))
+      : undefined;
+
+    const runtime = parsed.runtime && typeof parsed.runtime === 'object'
+      ? {
+          environment: typeof parsed.runtime.environment === 'string' ? parsed.runtime.environment : undefined,
+          setup: Array.isArray(parsed.runtime.setup)
+            ? parsed.runtime.setup.map((item: unknown) => String(item))
+            : undefined,
+          start: Array.isArray(parsed.runtime.start)
+            ? parsed.runtime.start.map((item: unknown) => String(item))
+            : undefined,
+          previewCommands: Array.isArray(parsed.runtime.previewCommands)
+            ? parsed.runtime.previewCommands.map((item: unknown) => String(item))
+            : undefined,
+          notes: Array.isArray(parsed.runtime.notes)
+            ? parsed.runtime.notes.map((item: unknown) => String(item))
+            : undefined,
+        }
+      : undefined;
+
     return {
       html,
       css,
@@ -414,8 +471,11 @@ const parseGeneratedApp = (responseText: string): GeneratedApp => {
       previewHtml: typeof parsed.previewHtml === 'string'
         ? parsed.previewHtml
         : FALLBACK_PREVIEW_HTML(html, css, javascript),
+      previewMode: previewMode ?? FALLBACK_APP.previewMode,
+      previewNotes: previewNotes ?? FALLBACK_APP.previewNotes,
       stack,
       files,
+      runtime: runtime ?? FALLBACK_APP.runtime,
     };
   } catch (error) {
     const sanitizedText = responseText.replace(/\n/g, '<br>');

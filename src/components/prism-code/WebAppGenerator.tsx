@@ -21,6 +21,7 @@ import {
   generateWebApp as runCodeGeneration,
 } from '@/services/codeGenerationService';
 import VSCodeWorkspace from './VSCodeWorkspace';
+import RuntimeInstructionsPanel from './RuntimeInstructionsPanel';
 
 interface ProjectHistoryItem {
   id: string;
@@ -455,11 +456,23 @@ Please modify or enhance the current application accordingly.`;
       ? `\n\nStack:\n- Language: ${generatedApp.stack.language}\n- Framework: ${generatedApp.stack.framework}\n- Libraries: ${generatedApp.stack.libraries?.join(', ') || 'None'}\n- Tooling: ${generatedApp.stack.tooling?.join(', ') || 'None'}`
       : '';
 
+    const runtimeSummary = generatedApp.runtime
+      ? `\n\nRuntime:\n- Environment: ${generatedApp.runtime.environment || 'Not specified'}\n- Setup:\n${(generatedApp.runtime.setup || ['No setup commands provided'])
+          .map((command) => `  - ${command}`)
+          .join('\n')}\n- Start:\n${(generatedApp.runtime.start || ['No start commands provided'])
+          .map((command) => `  - ${command}`)
+          .join('\n')}${generatedApp.runtime.previewCommands && generatedApp.runtime.previewCommands.length > 0
+          ? `\n- Preview Commands:\n${generatedApp.runtime.previewCommands.map((command) => `  - ${command}`).join('\n')}`
+          : ''}${generatedApp.runtime.notes && generatedApp.runtime.notes.length > 0
+          ? `\n- Notes:\n${generatedApp.runtime.notes.map((note) => `  - ${note}`).join('\n')}`
+          : ''}`
+      : '';
+
     fileMap.set(
       'README.txt',
       `Generated Web App\n\nDescription: ${generatedApp.description}\n\nFeatures:\n${generatedApp.features
         .map((feature) => `- ${feature}`)
-        .join('\n')}${stackSummary}`
+        .join('\n')}${stackSummary}${runtimeSummary}`
     );
 
     fileMap.forEach((content, name) => {
@@ -555,6 +568,9 @@ Please modify or enhance the current application accordingly.`;
               css={generatedApp.css}
               javascript={generatedApp.javascript}
               previewHtml={generatedApp.previewHtml}
+              previewMode={generatedApp.previewMode}
+              previewNotes={generatedApp.previewNotes}
+              stack={generatedApp.stack}
             />
           </div>
         </div>
@@ -650,16 +666,22 @@ Please modify or enhance the current application accordingly.`;
                   </Button>
                 </div>
               </div>
-          <div className="flex-1">
-            <WebAppPreview
-              html={generatedApp.html}
-              css={generatedApp.css}
-              javascript={generatedApp.javascript}
-              previewHtml={generatedApp.previewHtml}
-              showAlert={false}
-            />
-          </div>
-        </div>
+              <div className="flex-1">
+                <WebAppPreview
+                  html={generatedApp.html}
+                  css={generatedApp.css}
+                  javascript={generatedApp.javascript}
+                  previewHtml={generatedApp.previewHtml}
+                  previewMode={generatedApp.previewMode}
+                  previewNotes={generatedApp.previewNotes}
+                  stack={generatedApp.stack}
+                  showAlert={false}
+                />
+              </div>
+              <div className="mt-4">
+                <RuntimeInstructionsPanel runtime={generatedApp.runtime} />
+              </div>
+            </div>
           ) : (
             <Card className="h-full flex items-center justify-center">
               <CardContent className="text-center py-20">

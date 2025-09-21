@@ -8,6 +8,7 @@ import { GeneratedApp } from '@/services/codeGenerationService';
 import AdvancedCodeEditor from '@/components/prism-code/AdvancedCodeEditor';
 import WebAppPreview from '@/components/prism-code/WebAppPreview';
 import VSCodeWorkspace from '@/components/prism-code/VSCodeWorkspace';
+import RuntimeInstructionsPanel from '@/components/prism-code/RuntimeInstructionsPanel';
 import { useNavigate } from 'react-router-dom';
 import { Code2, ExternalLink, FileCode2, LayoutTemplate, Maximize2, Monitor, Sparkles } from 'lucide-react';
 
@@ -185,6 +186,9 @@ const CodeGenerationBubble = ({ result, prompt, usedModel, rawResponse }: CodeGe
                 css={appState.css}
                 javascript={appState.javascript}
                 previewHtml={appState.previewHtml}
+                previewMode={appState.previewMode}
+                previewNotes={appState.previewNotes}
+                stack={appState.stack}
               />
             </div>
           )}
@@ -241,6 +245,8 @@ const CodeGenerationBubble = ({ result, prompt, usedModel, rawResponse }: CodeGe
               </div>
             </div>
           ) : null}
+
+          <RuntimeInstructionsPanel runtime={appState.runtime} />
         </CardContent>
       </Card>
 
@@ -266,6 +272,9 @@ const CodeGenerationBubble = ({ result, prompt, usedModel, rawResponse }: CodeGe
               css={appState.css}
               javascript={appState.javascript}
               previewHtml={appState.previewHtml}
+              previewMode={appState.previewMode}
+              previewNotes={appState.previewNotes}
+              stack={appState.stack}
               standalone
             />
           </div>
