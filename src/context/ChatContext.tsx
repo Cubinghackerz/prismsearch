@@ -17,6 +17,12 @@ import {
   generateCodePlan,
   generateWebApp,
 } from '@/services/codeGenerationService';
+import { mathJaxService } from '@/services/mathJaxService';
+import {
+  DEFAULT_FINANCE_SYMBOLS,
+  StockQuote,
+  fetchStockQuotes,
+} from '@/services/financeService';
 
 export type ChatCommandKey =
   | 'summarize'
@@ -36,15 +42,31 @@ export type ChatCommandKey =
   | 'chess'
   | 'music'
   | 'review'
-  | 'script';
+  | 'script'
+  | 'finance';
 
 export type SupportedCommand = ChatCommandKey | 'code';
+
+export interface FinanceCommandResult {
+  quotes: StockQuote[];
+  fetchedAt: string;
+  symbols: string[];
+  source: string;
+  note?: string;
+  fallbackUsed?: boolean;
+}
+
+interface LocalCommandExecution {
+  content: string;
+  financeData?: FinanceCommandResult;
+}
 
 interface ChatCommandDefinition {
   key: ChatCommandKey;
   label: string;
   description: string;
   promptBuilder: (input: string) => string;
+  localHandler?: (input: string) => Promise<LocalCommandExecution>;
 }
 
 const createBetaPrompt = (commandLabel: string, guidance: string) =>
@@ -59,6 +81,15 @@ Response requirements:
 - Begin with "**${commandLabel} (beta)**" followed by a concise result title.
 - Use clear markdown formatting, keeping the answer actionable and easy to skim.
 - Mention any limitations, assumptions, or next steps when relevant.`;
+
+const extractTickerSymbols = (input: string): string[] => {
+  const matches = input.toUpperCase().match(/\b[A-Z]{1,5}(?:\.[A-Z]{1,2})?\b/g);
+  if (!matches) {
+    return [];
+  }
+
+  return Array.from(new Set(matches.map((symbol) => symbol.replace(/[^A-Z.]/g, '')))).filter(Boolean);
+};
 
 const CHAT_COMMAND_DEFINITIONS: Record<ChatCommandKey, ChatCommandDefinition> = {
   summarize: {
@@ -211,7 +242,7 @@ const CHAT_COMMAND_DEFINITIONS: Record<ChatCommandKey, ChatCommandDefinition> = 
     description: 'Offer constructive feedback on text, code, or media.',
     promptBuilder: createBetaPrompt(
       '/review',
-      'Provide a balanced critique, highlighting strengths, areas for improvement, and actionable recommendations. Structure the feedback in sections (e.g., Summary, Highlights, Opportunities).' 
+      'Provide a balanced critique, highlighting strengths, areas for improvement, and actionable recommendations. Structure the feedback in sections (e.g., Summary, Highlights, Opportunities).'
     ),
   },
   script: {
@@ -222,6 +253,56 @@ const CHAT_COMMAND_DEFINITIONS: Record<ChatCommandKey, ChatCommandDefinition> = 
       '/script',
       'Produce a clear, well-commented script in the language implied by the user. Explain how to run it, list any dependencies, and include safety considerations.'
     ),
+  },
+  finance: {
+    key: 'finance',
+    label: '/finance',
+    description: 'Check live stock quotes and intraday performance snapshots.',
+    promptBuilder: createBetaPrompt(
+      '/finance',
+      'Summarize the latest available market data for the requested ticker symbols. Highlight current price, absolute and percentage change, notable volume shifts, and relevant context such as recent highs or lows.'
+    ),
+    localHandler: async (input: string) => {
+      const tickers = extractTickerSymbols(input);
+      const fallbackUsed = tickers.length === 0;
+      const symbolsToQuery = fallbackUsed ? DEFAULT_FINANCE_SYMBOLS : tickers;
+      const quotes = await fetchStockQuotes(symbolsToQuery);
+
+      if (!quotes.length) {
+        return {
+          content:
+            'Unable to retrieve live market data right now. Please check the ticker symbols and try again shortly.',
+        };
+      }
+
+      const fetchedAt = new Date().toISOString();
+      const summaryLines = quotes
+        .map((quote) => {
+          const changeSymbol = quote.change >= 0 ? '+' : '';
+          return `• **${quote.symbol}** — $${quote.price.toFixed(2)} (${changeSymbol}${quote.change.toFixed(2)}, ${
+            changeSymbol + quote.changePercent.toFixed(2)
+          }%)`;
+        })
+        .join('\n');
+
+      const intro = fallbackUsed
+        ? 'Showing a quick market pulse for today\'s most-watched tickers:'
+        : `Here\'s the latest snapshot for ${symbolsToQuery.join(', ')}:`;
+
+      return {
+        content: `**/finance (beta)** Live market data\n\n${intro}\n\n${summaryLines}\n\n_Data refreshes every few seconds in Prism Finance. Market data provided for informational purposes only._`,
+        financeData: {
+          quotes,
+          fetchedAt,
+          symbols: symbolsToQuery,
+          source: 'Financial Modeling Prep (demo API)',
+          fallbackUsed,
+          note: fallbackUsed
+            ? 'Showing default market movers while no specific tickers were supplied.'
+            : 'Live data for your requested tickers. Refresh Prism Finance for full dashboards.',
+        },
+      };
+    },
   },
 };
 
@@ -286,6 +367,7 @@ export interface ChatMessage {
   rawResponse?: string;
   codePlan?: CodePlanState;
   command?: SupportedCommand;
+  financeData?: FinanceCommandResult;
 }
 
 export type ChatModel =
@@ -605,6 +687,52 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
     setIsTyping(true);
+
+    if (command === 'math') {
+      mathJaxService.initialize().catch((error) => {
+        console.warn('MathJax initialization warning:', error);
+      });
+    }
+
+    if (definition.localHandler) {
+      try {
+        const { content, financeData } = await definition.localHandler(trimmedInput);
+
+        const assistantMessage: ChatMessage = {
+          id: uuidv4(),
+          content,
+          isUser: false,
+          timestamp: new Date(),
+          type: 'text',
+          command,
+          financeData,
+        };
+
+        setMessages((prev) => [...prev, assistantMessage]);
+      } catch (error) {
+        console.error('Error executing local command handler:', error);
+        const errorMessage: ChatMessage = {
+          id: uuidv4(),
+          content: 'Sorry, there was an error processing that command. Please try again in a moment.',
+          isUser: false,
+          timestamp: new Date(),
+          type: 'text',
+          command,
+        };
+
+        setMessages((prev) => [...prev, errorMessage]);
+        toast({
+          title: 'Command failed',
+          description: error instanceof Error ? error.message : 'Unknown error',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
+        setIsTyping(false);
+      }
+
+      return;
+    }
 
     const timeoutPromise = new Promise<void>((_, reject) => {
       setTimeout(() => {

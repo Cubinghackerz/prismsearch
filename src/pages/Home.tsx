@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, Sparkles, ChevronRight, Star, ArrowRight, CheckCircle, FileText, ShieldAlert } from 'lucide-react';
+import { MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, Sparkles, ChevronRight, Star, ArrowRight, CheckCircle, FileText, ShieldAlert, TrendingUp } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 
@@ -60,6 +60,13 @@ const Home = () => {
     description: "Generate, edit, and deploy web applications with AI-powered development tools.",
     link: "/code",
     color: "from-cyan-500 to-blue-600",
+    isNew: true
+  }, {
+    icon: <TrendingUp className="h-6 w-6" />,
+    title: "Prism Finance",
+    description: "Track live stock performance with customizable watchlists and market movers.",
+    link: "/finance",
+    color: "from-green-500 to-emerald-600",
     isNew: true
   }, {
     icon: <FileText className="h-6 w-6" />,

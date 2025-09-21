@@ -5,12 +5,13 @@ import { format } from 'date-fns';
 import { ChatMessage, getCommandLabel } from '@/context/ChatContext';
 import TypingIndicator from '@/components/chat/TypingIndicator';
 import ChatMessageSkeleton from '@/components/skeletons/ChatMessageSkeleton';
-import ReactMarkdown from 'react-markdown';
 import MathRenderer from '@/components/math-assistant/MathRenderer';
 import { Paperclip, Download, Image, FileText, File } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CodeGenerationBubble from './CodeGenerationBubble';
 import CodePlanBubble from './CodePlanBubble';
+import FinanceCommandBubble from './FinanceCommandBubble';
+import TableCommandRenderer from './TableCommandRenderer';
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -149,6 +150,14 @@ const MessageList: React.FC<MessageListProps> = ({
             ) : message.type === 'code-plan' && message.codePlan ? (
               <div className="pr-6">
                 <CodePlanBubble messageId={message.id} planState={message.codePlan} />
+              </div>
+            ) : message.command === 'finance' && message.financeData ? (
+              <div className="pr-6">
+                <FinanceCommandBubble summary={message.content} result={message.financeData} />
+              </div>
+            ) : message.command === 'table' ? (
+              <div className="pr-6">
+                <TableCommandRenderer content={message.content} />
               </div>
             ) : (
               <div className="prose prose-neutral dark:prose-invert max-w-none pr-12">
