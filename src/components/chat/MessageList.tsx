@@ -2,7 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
-import { ChatMessage } from '@/context/ChatContext';
+import { ChatMessage, getCommandLabel } from '@/context/ChatContext';
 import TypingIndicator from '@/components/chat/TypingIndicator';
 import ChatMessageSkeleton from '@/components/skeletons/ChatMessageSkeleton';
 import ReactMarkdown from 'react-markdown';
@@ -91,11 +91,37 @@ const MessageList: React.FC<MessageListProps> = ({
         >
           <div className={`
             max-w-[85%] lg:max-w-[75%] p-4 rounded-2xl shadow-sm
-            ${message.isUser 
-              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white message user' 
+            ${message.isUser
+              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white message user'
               : 'bg-card/50 backdrop-blur-sm text-foreground border border-border/50 message bot'
             } relative
           `}>
+            {message.command && (
+              <div
+                className={`mb-3 flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-wide ${
+                  message.isUser ? 'text-white/80' : 'text-muted-foreground'
+                }`}
+              >
+                <span
+                  className={`px-2 py-0.5 rounded-full border ${
+                    message.isUser
+                      ? 'border-white/50 text-white'
+                      : 'border-border/60 text-foreground'
+                  }`}
+                >
+                  {getCommandLabel(message.command)}
+                </span>
+                <span
+                  className={`px-2 py-0.5 rounded-full border bg-amber-500/10 ${
+                    message.isUser
+                      ? 'border-white/60 text-white'
+                      : 'border-amber-500/40 text-amber-400'
+                  }`}
+                >
+                  Beta
+                </span>
+              </div>
+            )}
             {/* Show attachments for user messages */}
             {message.isUser && message.attachments && message.attachments.length > 0 && (
               <div className="mb-3 space-y-2">

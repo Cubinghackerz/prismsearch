@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useChat, ChatModel } from '@/context/ChatContext';
+import { useChat, ChatModel, CHAT_COMMAND_GUIDE } from '@/context/ChatContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -11,6 +11,13 @@ import { MessageSquare, Settings, Home, Info, Clock, Trash2, Eye } from 'lucide-
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const ChatInterface = () => {
   const {
@@ -38,6 +45,7 @@ const ChatInterface = () => {
   const [showThinking, setShowThinking] = useState(false);
   const [currentQuery, setCurrentQuery] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showCommandGuide, setShowCommandGuide] = useState(true);
 
   // Initialize chat on mount
   useEffect(() => {
@@ -313,6 +321,40 @@ const ChatInterface = () => {
           </>)}
       </div>
       
+      <Dialog open={showCommandGuide} onOpenChange={setShowCommandGuide}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5" />
+              Prism Chat commands (beta)
+            </DialogTitle>
+            <DialogDescription>
+              Explore the latest beta shortcuts. Double-check outputs before relying on them in production.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto space-y-3 pr-1">
+            {CHAT_COMMAND_GUIDE.map((command) => (
+              <div
+                key={command.key}
+                className="border border-border/40 rounded-lg p-4 bg-muted/30 backdrop-blur-sm"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-mono text-sm font-semibold text-foreground">
+                    {command.label}
+                  </span>
+                  <span className="text-[0.65rem] uppercase tracking-wide font-semibold text-amber-400 border border-amber-500/40 rounded-full px-2 py-0.5 bg-amber-500/10">
+                    Beta
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                  {command.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* AI Thinking Animation */}
       <AIThinkingAnimation
         isVisible={showThinking}

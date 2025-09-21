@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChatMessage } from '@/context/ChatContext';
 import { useDailyQueryLimit } from '@/hooks/useDailyQueryLimit';
 import { useToast } from '@/hooks/use-toast';
-import { useChat } from '@/context/ChatContext';
+import { useChat, isChatCommandKey, getCommandLabel } from '@/context/ChatContext';
 interface MessageInputProps {
   onSendMessage: (content: string, parentMessageId?: string | null) => void;
   isLoading: boolean;
@@ -29,7 +29,8 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     sendMessageWithFiles,
-    generateCodeFromPrompt
+    generateCodeFromPrompt,
+    executeCommand
   } = useChat();
   const {
     toast
@@ -127,7 +128,10 @@ const MessageInput: React.FC<MessageInputProps> = ({
     const trimmed = inputValue.trim();
     if (!trimmed || isLoading || isLimitReached) return;
 
-    if (trimmed.toLowerCase().startsWith('/code')) {
+    const commandMatch = trimmed.match(/^\/(\w+)(?:\s+|$)/i);
+    const commandKey = commandMatch?.[1]?.toLowerCase();
+
+    if (commandKey === 'code') {
       if (attachedFiles.length > 0) {
         toast({
           title: 'Attachments ignored',
@@ -147,8 +151,46 @@ const MessageInput: React.FC<MessageInputProps> = ({
         return;
       }
 
+      toast({
+        title: 'Beta command',
+        description: '/code is currently in beta. Preview output carefully.',
+      });
+
       await generateCodeFromPrompt(prompt);
       setInputValue('');
+      setAttachedFiles([]);
+      setReplyingTo(null);
+      return;
+    }
+
+    if (commandKey && isChatCommandKey(commandKey)) {
+      if (attachedFiles.length > 0) {
+        toast({
+          title: 'Attachments ignored',
+          description: 'File attachments are not supported with chat commands. They have been cleared.',
+          variant: 'destructive',
+        });
+        setAttachedFiles([]);
+      }
+
+      const commandInput = trimmed.replace(/^\/\w+\s*/i, '');
+      if (!commandInput) {
+        toast({
+          title: 'Missing details',
+          description: `Please provide details after ${getCommandLabel(commandKey)} to continue.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      toast({
+        title: 'Beta command',
+        description: `${getCommandLabel(commandKey)} is currently in beta. Results may vary.`,
+      });
+
+      await executeCommand(commandKey, commandInput);
+      setInputValue('');
+      setAttachedFiles([]);
       setReplyingTo(null);
       return;
     }

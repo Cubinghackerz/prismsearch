@@ -18,6 +18,237 @@ import {
   generateWebApp,
 } from '@/services/codeGenerationService';
 
+export type ChatCommandKey =
+  | 'summarize'
+  | 'explain'
+  | 'math'
+  | 'todo'
+  | 'translate'
+  | 'define'
+  | 'quote'
+  | 'weather'
+  | 'search'
+  | 'remind'
+  | 'calc'
+  | 'table'
+  | 'wiki'
+  | 'news'
+  | 'chess'
+  | 'music'
+  | 'review'
+  | 'script';
+
+export type SupportedCommand = ChatCommandKey | 'code';
+
+interface ChatCommandDefinition {
+  key: ChatCommandKey;
+  label: string;
+  description: string;
+  promptBuilder: (input: string) => string;
+}
+
+const createBetaPrompt = (commandLabel: string, guidance: string) =>
+  (input: string) => `You are responding to Prism Chat's ${commandLabel} command. This capability is currently in beta, so provide thoughtful, reliable, and well-structured results.
+
+${guidance}
+
+User input:
+${input}
+
+Response requirements:
+- Begin with "**${commandLabel} (beta)**" followed by a concise result title.
+- Use clear markdown formatting, keeping the answer actionable and easy to skim.
+- Mention any limitations, assumptions, or next steps when relevant.`;
+
+const CHAT_COMMAND_DEFINITIONS: Record<ChatCommandKey, ChatCommandDefinition> = {
+  summarize: {
+    key: 'summarize',
+    label: '/summarize',
+    description: 'Get a concise summary of text, notes, or a linked resource.',
+    promptBuilder: createBetaPrompt(
+      '/summarize',
+      'Summarize the provided material, capturing the key takeaways, critical details, and optional action items. When a URL is supplied, infer likely content from context and state if direct access is unavailable.'
+    ),
+  },
+  explain: {
+    key: 'explain',
+    label: '/explain',
+    description: 'Break down a concept, topic, or piece of code in approachable terms.',
+    promptBuilder: createBetaPrompt(
+      '/explain',
+      'Provide an easy-to-follow explanation that balances high-level intuition with important specifics. Include analogies, examples, or visualizations when they improve clarity.'
+    ),
+  },
+  math: {
+    key: 'math',
+    label: '/math',
+    description: 'Work through math problems step by step with clear reasoning.',
+    promptBuilder: createBetaPrompt(
+      '/math',
+      'Solve the problem methodically, showing each algebraic or numerical step. Highlight formulas used, note assumptions, and finish with the final answer.'
+    ),
+  },
+  todo: {
+    key: 'todo',
+    label: '/todo',
+    description: 'Create a quick to-do list or checklist from a short brief.',
+    promptBuilder: createBetaPrompt(
+      '/todo',
+      'Transform the request into an actionable checklist. Group related tasks, suggest owners or due dates when implied, and highlight any blockers.'
+    ),
+  },
+  translate: {
+    key: 'translate',
+    label: '/translate',
+    description: 'Translate sentences or words into a requested language instantly.',
+    promptBuilder: createBetaPrompt(
+      '/translate',
+      'Detect the desired target language from the prompt (e.g., "to Spanish") and provide the translation. Include the detected source language, pronunciation hints when helpful, and note any ambiguity.'
+    ),
+  },
+  define: {
+    key: 'define',
+    label: '/define',
+    description: 'Look up definitions for words, acronyms, or technical terms.',
+    promptBuilder: createBetaPrompt(
+      '/define',
+      'Provide the primary definition, pronunciation guidance, part of speech, and notable alternative meanings or related terms.'
+    ),
+  },
+  quote: {
+    key: 'quote',
+    label: '/quote',
+    description: 'Share an inspirational or themed quote on demand.',
+    promptBuilder: createBetaPrompt(
+      '/quote',
+      'Offer an inspirational quote that matches the requested tone or topic. Attribute the quote to the correct author and include a short reflection or takeaway.'
+    ),
+  },
+  weather: {
+    key: 'weather',
+    label: '/weather',
+    description: 'Provide current weather insights for a specified city.',
+    promptBuilder: createBetaPrompt(
+      '/weather',
+      'Provide a concise weather outlook for the specified location using the latest knowledge you have. Clearly state that conditions may have changed since your training data and recommend verifying with a live source.'
+    ),
+  },
+  search: {
+    key: 'search',
+    label: '/search',
+    description: 'Run a quick research sweep with sources and key findings.',
+    promptBuilder: createBetaPrompt(
+      '/search',
+      'Simulate a live web search by outlining likely up-to-date findings, citing plausible sources, and clearly labeling anything that may be outdated or estimated. Encourage the user to verify with live links.'
+    ),
+  },
+  remind: {
+    key: 'remind',
+    label: '/remind',
+    description: 'Draft reminder notes for tasks, meetings, or follow-ups.',
+    promptBuilder: createBetaPrompt(
+      '/remind',
+      'Turn the request into a reminder schedule. Specify the task, timing, channel (if implied), and any preparation steps. Clarify that reminders are not automatically scheduled.'
+    ),
+  },
+  calc: {
+    key: 'calc',
+    label: '/calc',
+    description: 'Perform quick calculations with accurate results.',
+    promptBuilder: createBetaPrompt(
+      '/calc',
+      'Compute the requested value precisely. Show the formula or reasoning used, and present the final answer clearly. If multiple calculations are requested, tabulate the results.'
+    ),
+  },
+  table: {
+    key: 'table',
+    label: '/table',
+    description: 'Format supplied data into a readable table.',
+    promptBuilder: createBetaPrompt(
+      '/table',
+      'Organize the provided information into a clean markdown table. Include headers, units, and a short caption explaining what the table represents.'
+    ),
+  },
+  wiki: {
+    key: 'wiki',
+    label: '/wiki',
+    description: 'Summarize the key points from a Wikipedia-style article.',
+    promptBuilder: createBetaPrompt(
+      '/wiki',
+      'Deliver a concise, neutral summary similar to a Wikipedia lead section. Cover essential facts, dates, and context. Mention if specific details may have changed since your last update.'
+    ),
+  },
+  news: {
+    key: 'news',
+    label: '/news',
+    description: 'Outline recent headlines or developments for a topic or region.',
+    promptBuilder: createBetaPrompt(
+      '/news',
+      'Summarize the latest known developments about the requested topic, referencing likely reputable outlets. Clearly state the recency limitations and encourage verification against live news feeds.'
+    ),
+  },
+  chess: {
+    key: 'chess',
+    label: '/chess',
+    description: 'Analyze a chess position or suggest strategic moves.',
+    promptBuilder: createBetaPrompt(
+      '/chess',
+      'If a FEN string or move history is provided, analyze the resulting position and suggest candidate moves with reasoning. Highlight tactical ideas, threats, and long-term plans.'
+    ),
+  },
+  music: {
+    key: 'music',
+    label: '/music',
+    description: 'Generate playlists, song ideas, or pull up lyrics.',
+    promptBuilder: createBetaPrompt(
+      '/music',
+      'Respond with a themed playlist, lyric excerpt, or musical suggestion based on the prompt. Include artist names, release years when known, and a short rationale for each pick.'
+    ),
+  },
+  review: {
+    key: 'review',
+    label: '/review',
+    description: 'Offer constructive feedback on text, code, or media.',
+    promptBuilder: createBetaPrompt(
+      '/review',
+      'Provide a balanced critique, highlighting strengths, areas for improvement, and actionable recommendations. Structure the feedback in sections (e.g., Summary, Highlights, Opportunities).' 
+    ),
+  },
+  script: {
+    key: 'script',
+    label: '/script',
+    description: 'Generate scripts or automation snippets for common tasks.',
+    promptBuilder: createBetaPrompt(
+      '/script',
+      'Produce a clear, well-commented script in the language implied by the user. Explain how to run it, list any dependencies, and include safety considerations.'
+    ),
+  },
+};
+
+export const getCommandLabel = (command: SupportedCommand): string => {
+  if (command === 'code') {
+    return '/code';
+  }
+
+  return CHAT_COMMAND_DEFINITIONS[command]?.label ?? `/${command}`;
+};
+
+export const CHAT_COMMAND_GUIDE: { key: SupportedCommand; label: string; description: string }[] = [
+  {
+    key: 'code',
+    label: '/code (beta)',
+    description: 'Generate multi-language web app projects with previews and planning.',
+  },
+  ...Object.values(CHAT_COMMAND_DEFINITIONS).map((command) => ({
+    key: command.key,
+    label: `${command.label} (beta)`,
+    description: command.description,
+  })),
+];
+
+export const isChatCommandKey = (value: string): value is ChatCommandKey =>
+  Object.prototype.hasOwnProperty.call(CHAT_COMMAND_DEFINITIONS, value);
+
 export interface SavedChat {
   id: string;
   title: string;
@@ -54,6 +285,7 @@ export interface ChatMessage {
   usedModel?: string;
   rawResponse?: string;
   codePlan?: CodePlanState;
+  command?: SupportedCommand;
 }
 
 export type ChatModel =
@@ -76,6 +308,7 @@ interface ChatContextType {
   sendMessage: (content: string, parentMessageId?: string) => Promise<void>;
   sendMessageWithFiles: (content: string, attachments: any[], parentMessageId?: string) => Promise<void>;
   generateCodeFromPrompt: (prompt: string) => Promise<void>;
+  executeCommand: (command: ChatCommandKey, input: string) => Promise<void>;
   approveCodePlan: (messageId: string) => Promise<void>;
   declineCodePlan: (messageId: string) => void;
   updateCodePlan: (messageId: string, updatedPlan: CodeGenerationPlan) => void;
@@ -311,6 +544,132 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const executeCommand = async (command: ChatCommandKey, input: string) => {
+    const trimmedInput = input.trim();
+    if (!trimmedInput) {
+      toast({
+        title: 'Missing details',
+        description: `Please add details after ${getCommandLabel(command)} to use the command.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (isLimitReached) {
+      toast({
+        title: "Daily limit reached",
+        description: "You've reached your daily query limit. Please try again tomorrow or sign up for more queries.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!incrementQueryCount()) {
+      toast({
+        title: "Daily limit reached",
+        description: "You've reached your daily query limit. Please try again tomorrow.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const definition = CHAT_COMMAND_DEFINITIONS[command];
+    if (!definition) {
+      toast({
+        title: 'Unsupported command',
+        description: 'That command is not available right now.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    let currentChatId = chatId;
+    if (!currentChatId) {
+      currentChatId = uuidv4();
+      setChatId(currentChatId);
+    }
+
+    const displayContent = `${definition.label} (beta) ${trimmedInput}`.trim();
+
+    const userMessage: ChatMessage = {
+      id: uuidv4(),
+      content: displayContent,
+      isUser: true,
+      timestamp: new Date(),
+      type: 'text',
+      command,
+    };
+
+    const historyWithCommand = [...messages, userMessage];
+
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+    setIsTyping(true);
+
+    const timeoutPromise = new Promise<void>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Command request timed out after 30 seconds'));
+      }, 30000);
+    });
+
+    try {
+      const responsePromise = supabase.functions.invoke('ai-search-assistant', {
+        body: {
+          query: definition.promptBuilder(trimmedInput),
+          chatId: currentChatId,
+          chatHistory: historyWithCommand,
+          model: selectedModel,
+          command,
+        }
+      });
+
+      const { data, error } = await Promise.race([
+        responsePromise,
+        timeoutPromise.then(() => {
+          throw new Error('Command request timed out after 30 seconds');
+        })
+      ]);
+
+      if (error) {
+        console.error('Supabase function error (command):', error);
+        throw error;
+      }
+
+      const responseText = data?.response || 'No response received';
+
+      const assistantMessage: ChatMessage = {
+        id: uuidv4(),
+        content: responseText,
+        isUser: false,
+        timestamp: new Date(),
+        type: 'text',
+        command,
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error('Error executing command:', error);
+      const errorMessage: ChatMessage = {
+        id: uuidv4(),
+        content: 'Sorry, there was an error processing that command. Please try again.',
+        isUser: false,
+        timestamp: new Date(),
+        type: 'text',
+        command,
+      };
+      setMessages(prev => [...prev, errorMessage]);
+
+      toast({
+        title: 'Command failed',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+      setIsTyping(false);
+    }
+  };
+
   const generateCodeFromPrompt = async (rawPrompt: string) => {
     const trimmedPrompt = rawPrompt.trim();
     if (!trimmedPrompt) {
@@ -341,12 +700,15 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setChatId(currentChatId);
     }
 
+    const displayPrompt = `/code (beta) ${trimmedPrompt}`.trim();
+
     const userMessage: ChatMessage = {
       id: uuidv4(),
-      content: trimmedPrompt,
+      content: displayPrompt,
       isUser: true,
       timestamp: new Date(),
       type: 'text',
+      command: 'code',
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -377,6 +739,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           rawResponse,
           lastUpdated: new Date().toISOString(),
         },
+        command: 'code',
       };
 
       setMessages(prev => [...prev, planMessage]);
@@ -393,6 +756,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isUser: false,
         timestamp: new Date(),
         type: 'text',
+        command: 'code',
       };
       setMessages(prev => [...prev, errorMessage]);
 
@@ -479,6 +843,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         codePrompt: planMessage.codePlan.prompt,
         usedModel,
         rawResponse,
+        command: 'code',
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -735,6 +1100,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       sendMessage,
       sendMessageWithFiles,
       generateCodeFromPrompt,
+      executeCommand,
       approveCodePlan,
       declineCodePlan,
       updateCodePlan,
