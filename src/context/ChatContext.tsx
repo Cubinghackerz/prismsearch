@@ -179,13 +179,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [messages, isTemporaryMode, chatId]);
 
   const sendMessageWithFiles = async (content: string, attachments: any[] = [], parentMessageId?: string) => {
-    // Handle /code command
-    if (content.trim().startsWith('/code')) {
-      const codePrompt = content.replace('/code', '').trim();
-      await handleCodeCommand(codePrompt, attachments, parentMessageId);
-      return;
-    }
-
     // Check query limit before processing
     if (isLimitReached) {
       toast({
@@ -282,55 +275,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
       setIsTyping(false);
     }
-  };
-
-  const handleCodeCommand = async (codePrompt: string, attachments: any[] = [], parentMessageId?: string) => {
-    if (!codePrompt.trim()) {
-      const errorMessage: ChatMessage = {
-        id: uuidv4(),
-        content: "Please provide a description for the code you want to generate. For example: `/code create a todo app with React`",
-        isUser: false,
-        timestamp: new Date(),
-        parentMessageId: parentMessageId,
-      };
-      setMessages(prev => [...prev, errorMessage]);
-      return;
-    }
-
-    // Open the coding workspace with the initial prompt
-    const assistantMessage: ChatMessage = {
-      id: uuidv4(),
-      content: `🚀 **Opening AI Coding Workspace**
-
-I'll help you build: *${codePrompt.trim() || 'a web application'}*
-
-**What I can do:**
-• Generate code in multiple frameworks (React, Vue, Svelte, Next.js, Django, Flask, etc.)
-• Create complete file structures with proper setup
-• Provide live preview with development server
-• Execute commands and manage dependencies
-• Show file diffs before applying changes
-
-**Opening the enhanced coding workspace now...**
-
-💡 **Pro tip:** I'll automatically detect the best framework and language for your project!`,
-      isUser: false,
-      timestamp: new Date(),
-      parentMessageId: parentMessageId,
-    };
-
-    setMessages(prev => [...prev, assistantMessage]);
-
-    // Trigger opening the coding workspace
-    setTimeout(() => {
-      // This will be handled by the chat interface to open the coding workspace
-      window.dispatchEvent(new CustomEvent('openCodingWorkspace', { 
-        detail: { prompt: codePrompt.trim() }
-      }));
-    }, 1000);
-    
-    setIsLoading(false);
-    setIsTyping(false);
   };
 
   const sendMessage = async (content: string, parentMessageId?: string) => {

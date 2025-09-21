@@ -15,97 +15,42 @@ serve(async (req) => {
     const { prompt, model = 'gemini' } = await req.json();
 
     if (!prompt) {
-      return new Response(
-        JSON.stringify({ error: 'Prompt is required' }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Check if any API keys are available before attempting generation
-    const hasGeminiKey = !!GEMINI_API_KEY;
-    const hasAnthropicKey = !!ANTHROPIC_API_KEY;
-    const hasOpenAIKey = !!OPENAI_API_KEY;
-    const hasGroqKey = !!GROQ_API_KEY;
-
-    if (!hasGeminiKey && !hasAnthropicKey && !hasOpenAIKey && !hasGroqKey) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Code generation service is temporarily unavailable. No AI models are configured.',
-          details: 'Please try again later or contact support.'
-        }),
-        { 
-          status: 503,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+      throw new Error('Prompt is required');
     }
 
     let response;
     
     switch (model) {
       case 'gemini':
-        if (!hasGeminiKey) {
-          throw new Error('Gemini API key not configured');
-        }
         response = await generateWithGemini(prompt);
         break;
       case 'gemini-cli':
-        if (!hasGeminiKey) {
-          throw new Error('Gemini API key not configured');
-        }
         response = await generateWithGeminiCLI(prompt);
         break;
       case 'qwen3-coder':
-        if (!hasGroqKey) {
-          throw new Error('Groq API key not configured for Qwen3 Coder');
-        }
         response = await generateWithQwen3Coder(prompt);
         break;
       case 'code-llama':
-        if (!hasGroqKey) {
-          throw new Error('Groq API key not configured for Code Llama');
-        }
         response = await generateWithCodeLlama(prompt);
         break;
       case 'deepseek-coder-v2':
-        if (!hasGroqKey) {
-          throw new Error('Groq API key not configured for DeepSeek-Coder-V2');
-        }
         response = await generateWithDeepSeekCoderV2(prompt);
         break;
       case 'claude-sonnet':
-        if (!hasAnthropicKey) {
-          throw new Error('Anthropic API key not configured');
-        }
         response = await generateWithClaude(prompt, 'claude-3-5-sonnet-20241022');
         break;
       case 'claude-haiku':
-        if (!hasAnthropicKey) {
-          throw new Error('Anthropic API key not configured');
-        }
         response = await generateWithClaude(prompt, 'claude-3-5-haiku-20241022');
         break;
       case 'gpt-4o':
-        if (!hasOpenAIKey) {
-          throw new Error('OpenAI API key not configured');
-        }
         response = await generateWithOpenAI(prompt, 'gpt-4o');
         break;
       case 'gpt-4o-mini':
-        if (!hasOpenAIKey) {
-          throw new Error('OpenAI API key not configured');
-        }
         response = await generateWithOpenAI(prompt, 'gpt-4o-mini');
         break;
       default:
         // Handle Groq models
         if (model.startsWith('groq-')) {
-          if (!hasGroqKey) {
-            throw new Error('Groq API key not configured');
-          }
           response = await generateWithGroq(prompt, model);
         } else {
           throw new Error(`Unsupported model: ${model}`);
@@ -125,32 +70,12 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error generating web app:', error);
     
-    // Provide more specific error messages
-    let errorMessage = 'Failed to generate web app';
-    let statusCode = 500;
-    
-    if (error.message?.includes('API key not configured')) {
-      errorMessage = 'The selected AI model is temporarily unavailable. Please try again later.';
-      statusCode = 503;
-    } else if (error.message?.includes('Failed to fetch') || error.message?.includes('fetch') || error.message?.includes('network')) {
-      errorMessage = 'Network connectivity issue. Please try again in a few moments.';
-      statusCode = 502;
-    } else if (error.message?.includes('Unsupported model')) {
-      errorMessage = error.message;
-      statusCode = 400;
-    } else if (error.message?.includes('timeout') || error.message?.includes('timed out')) {
-      errorMessage = 'Request timed out. Please try with a simpler prompt or try again later.';
-      statusCode = 504;
-    }
-    
     return new Response(
       JSON.stringify({ 
-        error: errorMessage,
-        details: error.message || 'Unknown error occurred',
-        retryable: statusCode >= 500 && statusCode < 600
+        error: error.message || 'Failed to generate web app'
       }),
       { 
-        status: statusCode,
+        status: 500,
         headers: { 
           ...corsHeaders, 
           'Content-Type': 'application/json' 
@@ -167,57 +92,40 @@ async function generateWithGemini(prompt: string) {
 
   const systemPrompt = createSystemPrompt();
   
-  try {
-    // Add timeout to fetch request
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-    
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: `${systemPrompt}\n\nUser Request: ${prompt}`
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 8192,
-        }
-      }),
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId);
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      contents: [{
+        parts: [{
+          text: `${systemPrompt}\n\nUser Request: ${prompt}`
+        }]
+      }],
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 8192,
+      }
+    })
+  });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Gemini API error:', response.status, errorText);
-      throw new Error(`Gemini API request failed: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  
-    if (!content) {
-      throw new Error('No content received from Gemini API');
-    }
-
-    return parseAIResponse(content);
-  } catch (fetchError) {
-    console.error('Network error calling Gemini API:', fetchError);
-    
-    if (fetchError.name === 'AbortError') {
-      throw new Error('Gemini API request timed out');
-    }
-    
-    throw new Error(`Failed to connect to Gemini API: ${fetchError.message}`);
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Gemini API error:', response.status, errorText);
+    throw new Error(`Gemini API request failed: ${response.status} - ${errorText}`);
   }
+
+  const data = await response.json();
+  const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  
+  if (!content) {
+    throw new Error('No content received from Gemini API');
+  }
+
+  return parseAIResponse(content);
 }
 
 async function generateWithGeminiCLI(prompt: string) {
