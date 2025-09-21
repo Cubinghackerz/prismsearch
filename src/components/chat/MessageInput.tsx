@@ -125,24 +125,19 @@ const MessageInput: React.FC<MessageInputProps> = ({
     e.preventDefault();
     if (!inputValue.trim() || isLoading || isLimitReached) return;
 
-    // Check for /code command
-    if (inputValue.trim().startsWith('/code')) {
-      const codePrompt = inputValue.replace('/code', '').trim();
-      if (!codePrompt) {
-        toast({
-          title: "Code Command Usage",
-          description: "Use: /code [description] to generate code. Example: /code create a todo app",
-          variant: "default"
-        });
-        setInputValue('');
-        return;
-      }
+    try {
+      await sendMessageWithFiles(inputValue, attachedFiles, replyingTo);
+      setInputValue('');
+      setAttachedFiles([]);
+      setReplyingTo(null);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Message Failed",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive"
+      });
     }
-
-    await sendMessageWithFiles(inputValue, attachedFiles, replyingTo);
-    setInputValue('');
-    setAttachedFiles([]);
-    setReplyingTo(null);
   };
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {

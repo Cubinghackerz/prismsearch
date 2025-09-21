@@ -285,6 +285,15 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleCodeCommand = async (codePrompt: string, attachments: any[] = [], parentMessageId?: string) => {
+    if (!codePrompt.trim()) {
+      toast({
+        title: "Code Command Usage",
+        description: "Use: /code [description] to generate code. Example: /code create a calculator app",
+        variant: "default"
+      });
+      return;
+    }
+
     // Initialize chat if needed
     let currentChatId = chatId;
     if (!currentChatId) {
@@ -305,17 +314,37 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     setIsTyping(true);
 
+    // Add timeout for edge function calls
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Code generation timed out after 30 seconds'));
+      }, 30000);
+    });
+
     try {
-      const { data, error } = await supabase.functions.invoke('generate-webapp', {
+      const responsePromise = supabase.functions.invoke('generate-webapp', {
         body: {
           prompt: codePrompt || 'Create a simple web application',
           model: 'gemini'
         }
       });
 
+      const { data, error } = await Promise.race([
+        responsePromise,
+        timeoutPromise
+      ]);
+
       if (error) {
         console.error('Code generation error:', error);
-        throw error;
+        throw new Error(`Code generation failed: ${error.message || 'Unknown error'}`);
+      }
+
+      if (!data) {
+        throw new Error('No data received from code generation service');
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
       }
 
       // Format the response as a code generation result
@@ -359,9 +388,30 @@ ${data.javascript.substring(0, 200)}${data.javascript.length > 200 ? '...' : ''}
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Error in code command:', error);
+      
+      let errorMessage = 'Sorry, there was an error generating code. Please try again.';
+      
+      // Provide more specific error messages
+      if (error.message?.includes('timed out')) {
+        errorMessage = 'Code generation timed out. Please try with a simpler prompt or try again later.';
+      } else if (error.message?.includes('not configured')) {
+        errorMessage = 'Code generation service is temporarily unavailable. Please try again later.';
+      } else if (error.message?.includes('Failed to fetch')) {
+        errorMessage = 'Connection error. Please check your internet connection and try again.';
+      }
+      
       const errorMessage: ChatMessage = {
         id: uuidv4(),
-        content: 'Sorry, there was an error generating code. Please try again or visit the [Code Generator](/code) directly.',
+        content: `❌ **Code Generation Failed**
+
+${errorMessage}
+
+**Alternative Options:**
+• Visit the [Code Generator](/code) for direct access
+• Try a simpler prompt (e.g., "/code simple calculator")
+• Check your internet connection
+
+💡 **Tip:** The Code Generator page has more advanced features and better error handling.`,
         isUser: false,
         timestamp: new Date(),
         parentMessageId: parentMessageId,

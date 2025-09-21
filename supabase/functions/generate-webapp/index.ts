@@ -15,7 +15,13 @@ serve(async (req) => {
     const { prompt, model = 'gemini' } = await req.json();
 
     if (!prompt) {
-      throw new Error('Prompt is required');
+      return new Response(
+        JSON.stringify({ error: 'Prompt is required' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     let response;
@@ -70,12 +76,28 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error generating web app:', error);
     
+    // Provide more specific error messages
+    let errorMessage = 'Failed to generate web app';
+    let statusCode = 500;
+    
+    if (error.message?.includes('API key not configured')) {
+      errorMessage = 'AI service not configured. Please contact support.';
+      statusCode = 503;
+    } else if (error.message?.includes('Failed to fetch')) {
+      errorMessage = 'Unable to connect to AI service. Please try again.';
+      statusCode = 502;
+    } else if (error.message?.includes('Unsupported model')) {
+      errorMessage = error.message;
+      statusCode = 400;
+    }
+    
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Failed to generate web app'
+        error: errorMessage,
+        details: error.message || 'Unknown error occurred'
       }),
       { 
-        status: 500,
+        status: statusCode,
         headers: { 
           ...corsHeaders, 
           'Content-Type': 'application/json' 
@@ -92,40 +114,45 @@ async function generateWithGemini(prompt: string) {
 
   const systemPrompt = createSystemPrompt();
   
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      contents: [{
-        parts: [{
-          text: `${systemPrompt}\n\nUser Request: ${prompt}`
-        }]
-      }],
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 8192,
-      }
-    })
-  });
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: `${systemPrompt}\n\nUser Request: ${prompt}`
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 8192,
+        }
+      })
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('Gemini API error:', response.status, errorText);
-    throw new Error(`Gemini API request failed: ${response.status} - ${errorText}`);
-  }
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Gemini API error:', response.status, errorText);
+      throw new Error(`Gemini API request failed: ${response.status} - ${errorText}`);
+    }
 
-  const data = await response.json();
-  const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const data = await response.json();
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
   
-  if (!content) {
-    throw new Error('No content received from Gemini API');
-  }
+    if (!content) {
+      throw new Error('No content received from Gemini API');
+    }
 
-  return parseAIResponse(content);
+    return parseAIResponse(content);
+  } catch (fetchError) {
+    console.error('Network error calling Gemini API:', fetchError);
+    throw new Error(`Failed to fetch from Gemini API: ${fetchError.message}`);
+  }
 }
 
 async function generateWithGeminiCLI(prompt: string) {
