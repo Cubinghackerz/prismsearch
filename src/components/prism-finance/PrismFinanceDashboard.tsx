@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import {
@@ -14,62 +14,76 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Activity, ArrowDownRight, ArrowUpRight, Loader2, Plus, RefreshCw, X } from 'lucide-react';
+import { formatCurrency, formatCompactNumber, formatPercent } from './utils';
+import StockSparkline from './StockSparkline';
+import StockTrendCard from './StockTrendCard';
 
-const formatCurrency = (value?: number) => {
-  if (typeof value !== 'number' || Number.isNaN(value)) {
-    return '—';
-  }
-
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: value >= 100 ? 2 : 4,
-    maximumFractionDigits: 4,
-  }).format(value);
-};
-
-const formatCompactNumber = (value?: number) => {
-  if (typeof value !== 'number' || Number.isNaN(value)) {
-    return '—';
-  }
-
-  return new Intl.NumberFormat('en-US', {
-    notation: 'compact',
-    maximumFractionDigits: 1,
-  }).format(value);
-};
-
-const WatchlistCard: React.FC<{ quote: StockQuote }> = ({ quote }) => {
+const WatchlistCard: React.FC<{
+  quote: StockQuote;
+  onSelect: (symbol: string) => void;
+  onRemove: (symbol: string) => void;
+  isSelected: boolean;
+}> = ({ quote, onSelect, onRemove, isSelected }) => {
   const isUp = quote.change >= 0;
   const TrendIcon = isUp ? ArrowUpRight : ArrowDownRight;
   const trendColor = isUp ? 'text-emerald-500' : 'text-rose-500';
 
+  const handleRemove = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    onRemove(quote.symbol);
+  };
+
   return (
-    <Card className="border-border/60 bg-card/70 backdrop-blur">
+    <Card
+      role="button"
+      tabIndex={0}
+      onClick={() => onSelect(quote.symbol)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onSelect(quote.symbol);
+        }
+      }}
+      className={`border-border/60 bg-card/70 backdrop-blur transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 ${
+        isSelected ? 'border-primary/60 shadow-lg shadow-primary/10' : 'hover:border-primary/40'
+      }`}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-2">
-          <div>
+          <div className="space-y-1">
             <CardTitle className="text-lg font-semibold tracking-tight text-foreground">{quote.symbol}</CardTitle>
             <CardDescription className="text-xs text-muted-foreground/90">{quote.name}</CardDescription>
+            <div className="text-xs text-muted-foreground">{quote.currency ?? 'USD'} • {formatPercent(quote.changePercent)}</div>
           </div>
-          <Badge variant="outline" className="text-[0.65rem] uppercase tracking-[0.3em]">Live</Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-[0.65rem] uppercase tracking-[0.3em]">
+              Live
+            </Badge>
+            <button
+              type="button"
+              onClick={handleRemove}
+              className="rounded-full border border-border/60 p-1 text-muted-foreground transition hover:bg-muted/60 hover:text-foreground"
+              aria-label={`Remove ${quote.symbol} from watchlist`}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <div>
+      <CardContent className="space-y-4">
+        <div className="flex flex-col gap-2">
           <div className="text-2xl font-semibold text-foreground">{formatCurrency(quote.price)}</div>
-          <div className={`mt-1 flex items-center gap-1 text-sm font-medium ${trendColor}`}>
+          <div className={`flex items-center gap-1 text-sm font-medium ${trendColor}`}>
             <TrendIcon className="h-4 w-4" />
             <span>
               {quote.change >= 0 ? '+' : ''}
               {quote.change.toFixed(2)}
             </span>
-            <span className="opacity-80">
-              ({quote.changePercent >= 0 ? '+' : ''}
-              {quote.changePercent.toFixed(2)}%)
-            </span>
+            <span className="opacity-80">({formatPercent(quote.changePercent)})</span>
           </div>
         </div>
+
+        <StockSparkline history={quote.history} isPositive={isUp} symbol={quote.symbol} />
 
         <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs text-muted-foreground/90">
           <div>
@@ -108,7 +122,7 @@ const MoversList: React.FC<{ title: string; response?: MarketMoversResponse; isL
         {title}
       </CardTitle>
       <CardDescription className="text-xs text-muted-foreground">
-        Auto-refreshes at least six times per day. Manual refresh pulls the latest web snapshot when available.
+        Polygon.io market movers refresh throughout the US trading day. Manual refresh checks for the newest snapshot.
       </CardDescription>
     </CardHeader>
     <CardContent className="space-y-2">
@@ -146,7 +160,7 @@ const MoversList: React.FC<{ title: string; response?: MarketMoversResponse; isL
       {!isLoading && response && (
         <p className="text-[0.65rem] text-muted-foreground/80">
           Source: {response.source}
-          {response.usedFallbackSource ? ' • Web snapshot fallback active' : ''}
+          {response.coverage ? ` • Coverage: ${response.coverage}` : ''}
         </p>
       )}
     </CardContent>
@@ -159,6 +173,7 @@ const PrismFinanceDashboard: React.FC = () => {
   const [addingSymbol, setAddingSymbol] = useState(false);
   const [symbolError, setSymbolError] = useState('');
   const [manualRefreshLoading, setManualRefreshLoading] = useState(false);
+  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
 
   const {
     data: watchlistResponse,
@@ -167,12 +182,27 @@ const PrismFinanceDashboard: React.FC = () => {
     refetch: refetchWatchlist,
   } = useQuery({
     queryKey: ['finance', 'watchlist', watchlist],
-    queryFn: () => fetchStockQuotes(watchlist),
+    queryFn: () => fetchStockQuotes(watchlist, { includeHistory: true, historyRange: '5D' }),
     enabled: watchlist.length > 0,
     refetchInterval: FINANCE_REFRESH_INTERVAL_MS,
   });
 
-  const watchlistQuotes = watchlistResponse?.quotes ?? [];
+  const watchlistQuotes = useMemo(() => watchlistResponse?.quotes ?? [], [watchlistResponse]);
+
+  useEffect(() => {
+    if (watchlistQuotes.length === 0) {
+      setSelectedSymbol(null);
+      return;
+    }
+
+    if (!selectedSymbol || !watchlistQuotes.some((quote) => quote.symbol === selectedSymbol)) {
+      setSelectedSymbol(watchlistQuotes[0].symbol);
+    }
+  }, [selectedSymbol, watchlistQuotes]);
+
+  const selectedQuote = selectedSymbol
+    ? watchlistQuotes.find((quote) => quote.symbol === selectedSymbol) ?? watchlistQuotes[0]
+    : watchlistQuotes[0];
 
   const { data: gainersResponse, isLoading: gainersLoading, refetch: refetchGainers } = useQuery({
     queryKey: ['finance', 'movers', 'gainers'],
@@ -210,6 +240,7 @@ const PrismFinanceDashboard: React.FC = () => {
 
   const handleRemoveSymbol = (symbol: string) => {
     setWatchlist((prev) => prev.filter((ticker) => ticker !== symbol));
+    setSelectedSymbol((current) => (current === symbol ? null : current));
   };
 
   const handleAddSymbol = async () => {
@@ -236,6 +267,7 @@ const PrismFinanceDashboard: React.FC = () => {
       }
 
       setWatchlist((prev) => [...prev, trimmed]);
+      setSelectedSymbol(trimmed);
       setNewSymbol('');
       refetchWatchlist();
     } catch (error) {
@@ -253,7 +285,7 @@ const PrismFinanceDashboard: React.FC = () => {
           <div>
             <h2 className="text-2xl font-semibold tracking-tight text-foreground">Live watchlist</h2>
             <p className="text-sm text-muted-foreground">
-              Refreshes automatically throughout the trading day (six scheduled updates). Use manual refresh for the newest web snapshot.
+              Live Polygon.io pricing for US equities refreshes at least six times per day. Trigger a manual refresh to request the newest snapshot immediately.
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -299,18 +331,42 @@ const PrismFinanceDashboard: React.FC = () => {
         {watchlistError && <p className="text-xs text-rose-500">Unable to load watchlist. Please try again later.</p>}
 
         <div className="flex flex-wrap gap-2">
-          {watchlist.map((symbol) => (
-            <Badge key={symbol} variant="outline" className="flex items-center gap-2 bg-muted/40 px-3 py-1">
-              <span className="tracking-[0.3em] text-xs font-semibold">{symbol}</span>
-              <button
-                type="button"
-                onClick={() => handleRemoveSymbol(symbol)}
-                className="rounded-full bg-muted/70 p-0.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+          {watchlist.map((symbol) => {
+            const isActive = selectedSymbol === symbol;
+            return (
+              <Badge
+                key={symbol}
+                variant="outline"
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelectedSymbol(symbol)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setSelectedSymbol(symbol);
+                  }
+                }}
+                className={`flex items-center gap-2 px-3 py-1 transition ${
+                  isActive
+                    ? 'border-primary/60 bg-primary/10 text-primary-foreground'
+                    : 'bg-muted/40 hover:border-primary/40'
+                }`}
               >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
+                <span className="tracking-[0.3em] text-xs font-semibold">{symbol}</span>
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleRemoveSymbol(symbol);
+                  }}
+                  className="rounded-full bg-muted/70 p-0.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                  aria-label={`Remove ${symbol} from watchlist`}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            );
+          })}
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -322,19 +378,29 @@ const PrismFinanceDashboard: React.FC = () => {
           )}
 
           {!isWatchlistLoading && watchlistQuotes.length > 0 &&
-            watchlistQuotes.map((quote) => <WatchlistCard key={`${quote.symbol}-${quote.updatedAt}`} quote={quote} />)}
+            watchlistQuotes.map((quote) => (
+              <WatchlistCard
+                key={`${quote.symbol}-${quote.updatedAt}`}
+                quote={quote}
+                onSelect={setSelectedSymbol}
+                onRemove={handleRemoveSymbol}
+                isSelected={selectedQuote?.symbol === quote.symbol}
+              />
+            ))}
 
-          {!isWatchlistLoading && watchlistQuotes.length === 0 && (
-            <div className="col-span-full rounded-2xl border border-dashed border-border/60 bg-muted/20 p-6 text-sm text-muted-foreground">
-              Add a ticker above to start tracking live market data.
-            </div>
-          )}
+        {!isWatchlistLoading && watchlistQuotes.length === 0 && (
+          <div className="col-span-full rounded-2xl border border-dashed border-border/60 bg-muted/20 p-6 text-sm text-muted-foreground">
+            Add a ticker above to start tracking live market data.
+          </div>
+        )}
         </div>
+
+        {selectedQuote && <StockTrendCard symbol={selectedQuote.symbol} companyName={selectedQuote.name} />}
 
         {watchlistResponse && (
           <p className="text-[0.7rem] text-muted-foreground">
             Source: {watchlistResponse.source}
-            {watchlistResponse.usedFallbackSource ? ' • Web scraping fallback active due to API limits.' : ''}
+            {watchlistResponse.coverage ? ` • Coverage: ${watchlistResponse.coverage}` : ''}
           </p>
         )}
       </div>
@@ -344,6 +410,9 @@ const PrismFinanceDashboard: React.FC = () => {
         <MoversList title="Top losers" response={losersResponse} isLoading={losersLoading} />
         <MoversList title="Most active" response={activesResponse} isLoading={activesLoading} />
       </div>
+      <p className="text-center text-xs text-muted-foreground lg:text-left">
+        Market data provided by Polygon.io. Coverage limited to US-listed equities; timestamps reflect Eastern Time trading sessions.
+      </p>
     </section>
   );
 };

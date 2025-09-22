@@ -1,5 +1,11 @@
 import { format } from 'date-fns';
 
+export interface PricePoint {
+  time: string;
+  close: number;
+  volume?: number;
+}
+
 export interface StockQuote {
   symbol: string;
   name: string;
@@ -16,6 +22,7 @@ export interface StockQuote {
   yearLow?: number;
   currency?: string;
   updatedAt: string;
+  history?: PricePoint[];
 }
 
 export interface StockQuoteResponse {
@@ -23,6 +30,7 @@ export interface StockQuoteResponse {
   source: string;
   fetchedAt: string;
   usedFallbackSource: boolean;
+  coverage?: string;
 }
 
 export interface MarketMoversResponse {
@@ -30,164 +38,30 @@ export interface MarketMoversResponse {
   source: string;
   fetchedAt: string;
   usedFallbackSource: boolean;
+  coverage?: string;
 }
 
-const API_BASE_URL = 'https://financialmodelingprep.com/api/v3';
-const API_KEY = import.meta.env.VITE_FINANCE_API_KEY || 'demo';
+export type HistoricalRange = '1D' | '5D' | '1M' | '3M' | '1Y';
 
-const YAHOO_QUOTE_URL = 'https://query1.finance.yahoo.com/v7/finance/quote';
-const YAHOO_SCREENER_URL = 'https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved';
+export interface HistoricalSeries {
+  symbol: string;
+  range: HistoricalRange;
+  points: PricePoint[];
+  source: string;
+  fetchedAt: string;
+  coverage?: string;
+}
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://fgpdfkvabwemivzjeitx.supabase.co';
+const PRISM_FINANCE_URL = `${SUPABASE_URL}/functions/v1/prism-finance`;
+const POLYGON_CLIENT_KEY = import.meta.env.VITE_POLYGON_IO_API_KEY;
 
 const SIX_TIMES_DAILY_INTERVAL_MS = 1000 * 60 * 60 * 4; // 4 hours
+const ONE_HOUR_MS = 1000 * 60 * 60;
 
 export const FINANCE_REFRESH_INTERVAL_MS = SIX_TIMES_DAILY_INTERVAL_MS;
 
 export const DEFAULT_FINANCE_SYMBOLS = ['AAPL', 'MSFT', 'GOOGL', 'NVDA', 'META'];
-
-const parseChangePercent = (value: unknown): number => {
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value;
-  }
-
-  if (typeof value === 'string') {
-    const numeric = parseFloat(value.replace(/[+%]/g, ''));
-    return Number.isFinite(numeric) ? numeric : 0;
-  }
-
-  return 0;
-};
-
-type QuoteRecord = Record<string, unknown>;
-
-const getFirstValue = (record: QuoteRecord, keys: string[]): unknown => {
-  for (const key of keys) {
-    if (key in record) {
-      const value = record[key];
-      if (value !== undefined && value !== null && value !== '') {
-        return value;
-      }
-    }
-  }
-
-  return undefined;
-};
-
-const toNumber = (value: unknown): number | undefined => {
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value;
-  }
-
-  if (typeof value === 'string') {
-    const numeric = Number(value.replace(/[^0-9+\-.]/g, ''));
-    if (Number.isFinite(numeric)) {
-      return numeric;
-    }
-  }
-
-  return undefined;
-};
-
-const readNumber = (record: QuoteRecord, keys: string[]): number | undefined => {
-  for (const key of keys) {
-    const candidate = toNumber(record[key]);
-    if (candidate !== undefined) {
-      return candidate;
-    }
-  }
-
-  return undefined;
-};
-
-const readString = (record: QuoteRecord, keys: string[], fallback: string): string => {
-  for (const key of keys) {
-    const value = record[key];
-    if (typeof value === 'string' && value.trim().length > 0) {
-      return value.trim();
-    }
-  }
-
-  return fallback;
-};
-
-const resolveTimestamp = (record: QuoteRecord): number => {
-  const rawValue = getFirstValue(record, [
-    'timestamp',
-    'lastUpdated',
-    'lastUpdate',
-    'updated',
-    'regularMarketTime',
-  ]);
-
-  if (typeof rawValue === 'number' && Number.isFinite(rawValue)) {
-    return rawValue > 1e12 ? rawValue : rawValue * 1000;
-  }
-
-  if (typeof rawValue === 'string') {
-    const numeric = Number(rawValue);
-    if (Number.isFinite(numeric)) {
-      return numeric > 1e12 ? numeric : numeric * 1000;
-    }
-  }
-
-  return Date.now();
-};
-
-const normalizeQuote = (quote: QuoteRecord): StockQuote => {
-  const timestamp = resolveTimestamp(quote);
-
-  return {
-    symbol: readString(quote, ['symbol', 'ticker'], 'N/A'),
-    name: readString(
-      quote,
-      ['name', 'companyName', 'symbol', 'shortName', 'longName', 'displayName'],
-      'Unknown'
-    ),
-    price: readNumber(quote, ['price', 'currentPrice', 'c', 'regularMarketPrice']) ?? 0,
-    change: readNumber(quote, ['change', 'd', 'dayChange', 'regularMarketChange']) ?? 0,
-    changePercent:
-      parseChangePercent(
-        getFirstValue(quote, ['changesPercentage', 'dp', 'dayChangePerc', 'regularMarketChangePercent'])
-      ) ?? 0,
-    marketCap: readNumber(quote, ['marketCap', 'marketCapitalization']),
-    volume: readNumber(quote, ['volume', 'avgVolume', 'volAvg', 'regularMarketVolume']),
-    open: readNumber(quote, ['open', 'regularMarketOpen']),
-    previousClose: readNumber(quote, ['previousClose', 'pc', 'regularMarketPreviousClose']),
-    dayHigh: readNumber(quote, ['dayHigh', 'h', 'regularMarketDayHigh']),
-    dayLow: readNumber(quote, ['dayLow', 'l', 'regularMarketDayLow']),
-    yearHigh: readNumber(quote, ['yearHigh', 'yearHigh52Weeks', 'fiftyTwoWeekHigh']),
-    yearLow: readNumber(quote, ['yearLow', 'yearLow52Weeks', 'fiftyTwoWeekLow']),
-    currency: readString(quote, ['currency', 'currencyCode'], 'USD'),
-    updatedAt: format(timestamp, "yyyy-MM-dd'T'HH:mm:ssXXX"),
-  };
-};
-
-const createUrl = (path: string, params: Record<string, string | number | undefined> = {}) => {
-  const url = new URL(`${API_BASE_URL}/${path}`);
-  const urlParams = new URLSearchParams({ apikey: API_KEY });
-
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
-      urlParams.set(key, String(value));
-    }
-  });
-
-  url.search = urlParams.toString();
-  return url.toString();
-};
-
-const toCacheKey = (symbols: string[]): string =>
-  symbols
-    .map((symbol) => symbol.trim().toUpperCase())
-    .filter(Boolean)
-    .sort()
-    .join(',');
-
-const isCacheValid = (timestamp: number, forceRefresh?: boolean) => {
-  if (forceRefresh) {
-    return false;
-  }
-  return Date.now() - timestamp < SIX_TIMES_DAILY_INTERVAL_MS;
-};
 
 interface CacheEntry<T> {
   timestamp: number;
@@ -196,84 +70,107 @@ interface CacheEntry<T> {
 
 const quoteCache = new Map<string, CacheEntry<StockQuoteResponse>>();
 const moversCache = new Map<string, CacheEntry<MarketMoversResponse>>();
+const historyCache = new Map<string, CacheEntry<HistoricalSeries>>();
 
-const fetchFromFmp = async (symbols: string[]): Promise<StockQuote[]> => {
-  if (!symbols.length) {
-    return [];
+const toCacheKey = (symbols: string[], options: { includeHistory?: boolean; historyRange?: HistoricalRange }) => {
+  const base = symbols
+    .map((symbol) => symbol.trim().toUpperCase())
+    .filter(Boolean)
+    .sort()
+    .join(',');
+
+  if (!options.includeHistory) {
+    return base;
   }
 
-  const endpoint = createUrl(`quote/${symbols.join(',')}`);
-  const response = await fetch(endpoint);
-
-  if (!response.ok) {
-    throw new Error(`Unable to fetch stock data (${response.status})`);
-  }
-
-  const payload = await response.json();
-  if (!Array.isArray(payload)) {
-    return [];
-  }
-
-  return payload.map(normalizeQuote).filter((quote) => Number.isFinite(quote.price));
+  return `${base}|history:${options.historyRange ?? '5D'}`;
 };
 
-const fetchMoversFromFmp = async (type: 'gainers' | 'losers' | 'actives'): Promise<StockQuote[]> => {
-  const endpoint = createUrl(`stock_market/${type}`);
-  const response = await fetch(endpoint);
-
-  if (!response.ok) {
-    throw new Error(`Unable to fetch market ${type}`);
+const isCacheValid = (timestamp: number, ttl: number, forceRefresh?: boolean) => {
+  if (forceRefresh) {
+    return false;
   }
 
-  const payload = await response.json();
-  if (!Array.isArray(payload)) {
-    return [];
-  }
-
-  return payload.slice(0, 8).map(normalizeQuote);
+  return Date.now() - timestamp < ttl;
 };
 
-const fetchFromYahoo = async (symbols: string[]): Promise<StockQuote[]> => {
-  if (!symbols.length) {
-    return [];
-  }
-
-  const endpoint = `${YAHOO_QUOTE_URL}?symbols=${encodeURIComponent(symbols.join(','))}`;
-  const response = await fetch(endpoint);
-
-  if (!response.ok) {
-    throw new Error(`Unable to fetch Yahoo Finance data (${response.status})`);
-  }
-
-  const payload = await response.json();
-  const results: QuoteRecord[] = payload?.quoteResponse?.result ?? [];
-
-  return results.map(normalizeQuote).filter((quote) => Number.isFinite(quote.price));
+const buildFunctionUrl = (params: Record<string, string | number | undefined>) => {
+  const url = new URL(PRISM_FINANCE_URL);
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      url.searchParams.set(key, String(value));
+    }
+  });
+  return url.toString();
 };
 
-const YAHOO_SCREENER_IDS: Record<'gainers' | 'losers' | 'actives', string> = {
-  gainers: 'day_gainers',
-  losers: 'day_losers',
-  actives: 'most_actives',
-};
-
-const fetchMoversFromYahoo = async (type: 'gainers' | 'losers' | 'actives'): Promise<StockQuote[]> => {
-  const endpoint = `${YAHOO_SCREENER_URL}?scrIds=${YAHOO_SCREENER_IDS[type]}&count=25`;
-  const response = await fetch(endpoint);
-
-  if (!response.ok) {
-    throw new Error(`Unable to fetch Yahoo Finance ${type}`);
+const coerceNumber = (value: unknown): number | undefined => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
   }
 
-  const payload = await response.json();
-  const results: QuoteRecord[] = payload?.finance?.result?.[0]?.quotes ?? [];
+  if (typeof value === 'string' && value.trim().length > 0) {
+    const numeric = Number(value);
+    if (Number.isFinite(numeric)) {
+      return numeric;
+    }
+  }
 
-  return results.slice(0, 8).map(normalizeQuote).filter((quote) => Number.isFinite(quote.price));
+  return undefined;
+};
+
+const normalizeHistory = (history: unknown): PricePoint[] | undefined => {
+  if (!Array.isArray(history)) {
+    return undefined;
+  }
+
+  return history
+    .map((item) => {
+      const time = typeof item?.time === 'string' ? item.time : typeof item?.t === 'number' ? new Date(item.t).toISOString() : null;
+      const close = coerceNumber(item?.close ?? item?.c);
+      const volume = coerceNumber(item?.volume ?? item?.v);
+
+      if (!time || close === undefined) {
+        return null;
+      }
+
+      return {
+        time,
+        close,
+        volume,
+      } satisfies PricePoint;
+    })
+    .filter((point): point is PricePoint => point !== null);
+};
+
+const normalizeQuote = (quote: Record<string, unknown>): StockQuote => {
+  const price = coerceNumber(quote.price) ?? 0;
+  const change = coerceNumber(quote.change) ?? 0;
+  const changePercent = coerceNumber(quote.changePercent) ?? 0;
+
+  return {
+    symbol: typeof quote.symbol === 'string' ? quote.symbol : 'N/A',
+    name: typeof quote.name === 'string' ? quote.name : typeof quote.symbol === 'string' ? quote.symbol : 'Unknown',
+    price,
+    change,
+    changePercent,
+    marketCap: coerceNumber(quote.marketCap),
+    volume: coerceNumber(quote.volume),
+    open: coerceNumber(quote.open),
+    previousClose: coerceNumber(quote.previousClose),
+    dayHigh: coerceNumber(quote.dayHigh),
+    dayLow: coerceNumber(quote.dayLow),
+    yearHigh: coerceNumber(quote.yearHigh),
+    yearLow: coerceNumber(quote.yearLow),
+    currency: typeof quote.currency === 'string' ? quote.currency : 'USD',
+    updatedAt: typeof quote.updatedAt === 'string' ? quote.updatedAt : format(new Date(), "yyyy-MM-dd'T'HH:mm:ssXXX"),
+    history: normalizeHistory(quote.history),
+  };
 };
 
 export const fetchStockQuotes = async (
   symbols: string[],
-  options: { forceRefresh?: boolean } = {}
+  options: { forceRefresh?: boolean; includeHistory?: boolean; historyRange?: HistoricalRange } = {},
 ): Promise<StockQuoteResponse> => {
   const uniqueSymbols = Array.from(new Set(symbols.map((symbol) => symbol.trim().toUpperCase()))).filter(Boolean);
 
@@ -281,133 +178,143 @@ export const fetchStockQuotes = async (
     const now = format(new Date(), "yyyy-MM-dd'T'HH:mm:ssXXX");
     return {
       quotes: [],
-      source: 'No symbols provided',
+      source: 'Polygon.io US equities snapshot',
       fetchedAt: now,
       usedFallbackSource: false,
+      coverage: 'US equities only',
     };
   }
 
-  const cacheKey = toCacheKey(uniqueSymbols);
+  const cacheKey = toCacheKey(uniqueSymbols, options);
   const cached = quoteCache.get(cacheKey);
-  if (cached && isCacheValid(cached.timestamp, options.forceRefresh)) {
+
+  if (cached && isCacheValid(cached.timestamp, SIX_TIMES_DAILY_INTERVAL_MS, options.forceRefresh)) {
     return cached.payload;
   }
 
-  let quotes: StockQuote[] = [];
-  let sourceLabel = 'Financial Modeling Prep API';
-  let usedFallbackSource = false;
-  let lastError: unknown = null;
+  const url = buildFunctionUrl({
+    resource: 'quotes',
+    symbols: uniqueSymbols.join(','),
+    includeHistory: options.includeHistory ? 'true' : undefined,
+    range: options.includeHistory ? options.historyRange ?? '5D' : undefined,
+  });
 
-  try {
-    quotes = await fetchFromFmp(uniqueSymbols);
-  } catch (error) {
-    lastError = error;
-    console.warn('Primary finance API failed:', error);
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Unable to fetch Polygon finance data (${response.status})`);
   }
 
-  if (!quotes.length) {
-    try {
-      quotes = await fetchFromYahoo(uniqueSymbols);
-      sourceLabel = 'Yahoo Finance snapshot via Prism Web Agent';
-      usedFallbackSource = true;
-    } catch (fallbackError) {
-      lastError = fallbackError;
-      console.error('Fallback finance fetch failed:', fallbackError);
-    }
-  }
+  const payload = await response.json();
+  const quotes = Array.isArray(payload?.quotes) ? payload.quotes.map((quote: Record<string, unknown>) => normalizeQuote(quote)) : [];
 
-  if (!quotes.length && lastError) {
-    sourceLabel = 'Live market data temporarily unavailable';
-  }
-
-  const payload: StockQuoteResponse = {
+  const result: StockQuoteResponse = {
     quotes,
-    source: sourceLabel,
-    fetchedAt: format(new Date(), "yyyy-MM-dd'T'HH:mm:ssXXX"),
-    usedFallbackSource,
+    source: typeof payload?.source === 'string' ? payload.source : 'Polygon.io US equities snapshot',
+    fetchedAt: typeof payload?.fetchedAt === 'string' ? payload.fetchedAt : format(new Date(), "yyyy-MM-dd'T'HH:mm:ssXXX"),
+    usedFallbackSource: Boolean(payload?.usedFallbackSource),
+    coverage: typeof payload?.coverage === 'string' ? payload.coverage : 'US equities only',
   };
 
-  quoteCache.set(cacheKey, { timestamp: Date.now(), payload });
-  return payload;
+  quoteCache.set(cacheKey, { timestamp: Date.now(), payload: result });
+  return result;
 };
 
 export const fetchMarketMovers = async (
   type: 'gainers' | 'losers' | 'actives',
-  options: { forceRefresh?: boolean } = {}
+  options: { forceRefresh?: boolean } = {},
 ): Promise<MarketMoversResponse> => {
   const cacheKey = `movers:${type}`;
   const cached = moversCache.get(cacheKey);
-  if (cached && isCacheValid(cached.timestamp, options.forceRefresh)) {
+
+  if (cached && isCacheValid(cached.timestamp, SIX_TIMES_DAILY_INTERVAL_MS, options.forceRefresh)) {
     return cached.payload;
   }
 
-  let quotes: StockQuote[] = [];
-  let sourceLabel = 'Financial Modeling Prep API';
-  let usedFallbackSource = false;
-  let lastError: unknown = null;
+  const url = buildFunctionUrl({ resource: 'movers', type });
+  const response = await fetch(url);
 
-  try {
-    quotes = await fetchMoversFromFmp(type);
-  } catch (error) {
-    lastError = error;
-    console.warn(`Primary finance movers fetch failed (${type}):`, error);
+  if (!response.ok) {
+    throw new Error(`Unable to fetch Polygon movers (${response.status})`);
   }
 
-  if (!quotes.length) {
-    try {
-      quotes = await fetchMoversFromYahoo(type);
-      sourceLabel = 'Yahoo Finance screener via Prism Web Agent';
-      usedFallbackSource = true;
-    } catch (fallbackError) {
-      lastError = fallbackError;
-      console.error(`Fallback movers fetch failed (${type}):`, fallbackError);
-    }
-  }
+  const payload = await response.json();
+  const quotes = Array.isArray(payload?.quotes) ? payload.quotes.map((quote: Record<string, unknown>) => normalizeQuote(quote)) : [];
 
-  if (!quotes.length && lastError) {
-    sourceLabel = 'Market movers temporarily unavailable';
-  }
-
-  const payload: MarketMoversResponse = {
+  const result: MarketMoversResponse = {
     quotes,
-    source: sourceLabel,
-    fetchedAt: format(new Date(), "yyyy-MM-dd'T'HH:mm:ssXXX"),
-    usedFallbackSource,
+    source: typeof payload?.source === 'string' ? payload.source : 'Polygon.io market movers',
+    fetchedAt: typeof payload?.fetchedAt === 'string' ? payload.fetchedAt : format(new Date(), "yyyy-MM-dd'T'HH:mm:ssXXX"),
+    usedFallbackSource: Boolean(payload?.usedFallbackSource),
+    coverage: typeof payload?.coverage === 'string' ? payload.coverage : 'US equities only',
   };
 
-  moversCache.set(cacheKey, { timestamp: Date.now(), payload });
-  return payload;
+  moversCache.set(cacheKey, { timestamp: Date.now(), payload: result });
+  return result;
 };
 
-export interface SymbolSearchResult {
-  symbol: string;
-  name: string;
-  exchange: string;
-  currency: string;
-}
+export const fetchHistoricalSeries = async (
+  symbol: string,
+  range: HistoricalRange,
+  options: { forceRefresh?: boolean } = {},
+): Promise<HistoricalSeries> => {
+  const normalizedSymbol = symbol.trim().toUpperCase();
+  const cacheKey = `${normalizedSymbol}|${range}`;
+  const cacheTtl = range === '1D' ? ONE_HOUR_MS : SIX_TIMES_DAILY_INTERVAL_MS;
+  const cached = historyCache.get(cacheKey);
 
-export const searchSymbols = async (query: string): Promise<SymbolSearchResult[]> => {
+  if (cached && isCacheValid(cached.timestamp, cacheTtl, options.forceRefresh)) {
+    return cached.payload;
+  }
+
+  const url = buildFunctionUrl({ resource: 'history', symbol: normalizedSymbol, range });
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Unable to fetch history for ${normalizedSymbol}`);
+  }
+
+  const payload = await response.json();
+  const series: HistoricalSeries = {
+    symbol: typeof payload?.symbol === 'string' ? payload.symbol : normalizedSymbol,
+    range: (payload?.range as HistoricalRange) ?? range,
+    points: normalizeHistory(payload?.points) ?? [],
+    source: typeof payload?.source === 'string' ? payload.source : 'Polygon.io aggregates',
+    fetchedAt: typeof payload?.fetchedAt === 'string' ? payload.fetchedAt : format(new Date(), "yyyy-MM-dd'T'HH:mm:ssXXX"),
+    coverage: typeof payload?.coverage === 'string' ? payload.coverage : 'US equities only',
+  };
+
+  historyCache.set(cacheKey, { timestamp: Date.now(), payload: series });
+  return series;
+};
+
+export const searchSymbols = async (query: string) => {
   const trimmed = query.trim();
   if (!trimmed) {
     return [];
   }
 
-  const endpoint = createUrl('search', { query: trimmed, limit: 10, exchange: 'NASDAQ' });
-  const response = await fetch(endpoint);
+  if (!POLYGON_CLIENT_KEY) {
+    console.warn('Polygon search API key not configured; skipping symbol search.');
+    return [];
+  }
+
+  const response = await fetch(
+    `https://api.polygon.io/v3/reference/tickers?search=${encodeURIComponent(trimmed)}&market=stocks&active=true&limit=10&apiKey=${
+      POLYGON_CLIENT_KEY
+    }`,
+  );
 
   if (!response.ok) {
     throw new Error('Unable to search symbols');
   }
 
   const payload = await response.json();
-  if (!Array.isArray(payload)) {
-    return [];
-  }
+  const results = Array.isArray(payload?.results) ? payload.results : [];
 
-  return payload.map((item) => ({
-    symbol: item.symbol ?? item.ticker ?? 'N/A',
-    name: item.name ?? 'Unknown Company',
-    exchange: item.stockExchange ?? item.exchangeShortName ?? 'Unknown Exchange',
-    currency: item.currency ?? 'USD',
+  return results.map((item: Record<string, unknown>) => ({
+    symbol: typeof item.ticker === 'string' ? item.ticker : 'N/A',
+    name: typeof item.name === 'string' ? item.name : 'Unknown Company',
+    exchange: typeof item.primary_exchange === 'string' ? item.primary_exchange : 'US',
+    currency: typeof item.currency_name === 'string' ? item.currency_name : 'USD',
   }));
 };

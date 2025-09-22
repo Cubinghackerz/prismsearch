@@ -8,9 +8,9 @@ import { ArrowUpRight, LineChart } from 'lucide-react';
 
 const PrismFinance: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10 text-foreground">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10 text-foreground flex flex-col">
       <Navigation />
-      <main className="pt-28 pb-24">
+      <main className="flex-1 pt-28 pb-24">
         <div className="container mx-auto px-4 space-y-12">
           <header className="space-y-6 text-center md:text-left">
             <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
@@ -20,8 +20,7 @@ const PrismFinance: React.FC = () => {
                   Prism Finance
                 </h1>
                 <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
-                  Stream live quotes, track market movers, and manage your watchlist without leaving Prism. Prism Finance pulls
-                  fresh data every few seconds so you can stay ahead of every swing.
+                  Stream live Polygon.io market data, explore interactive trends, and manage a custom watchlist without leaving Prism. Prism Finance refreshes quotes automatically so you can stay ahead of every swing in the US markets.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <Badge variant="outline" className="border-primary/50 text-primary">
@@ -32,6 +31,9 @@ const PrismFinance: React.FC = () => {
                   </Badge>
                   <Badge variant="outline" className="border-primary/50 text-primary">
                     Custom watchlists
+                  </Badge>
+                  <Badge variant="outline" className="border-primary/50 text-primary">
+                    Interactive charts
                   </Badge>
                 </div>
               </div>
@@ -46,9 +48,12 @@ const PrismFinance: React.FC = () => {
                 <ArrowUpRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
               </Button>
             </div>
-            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground md:justify-start">
+            <div className="flex flex-col items-center gap-1 text-xs text-muted-foreground md:flex-row md:gap-3 md:justify-start">
               <LineChart className="h-4 w-4 text-primary" />
-              Data updates continuously from Financial Modeling Prep (demo API).
+              <span className="text-center md:text-left">
+                Live Polygon.io US equity coverage • Scheduled refresh cycle every four hours with on-demand updates.
+              </span>
+              <Badge variant="outline" className="border-primary/40 bg-primary/10 text-primary">US equities only</Badge>
             </div>
           </header>
 
