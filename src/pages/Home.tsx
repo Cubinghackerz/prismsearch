@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, Sparkles, ChevronRight, Star, ArrowRight, CheckCircle, FileText, ShieldAlert, TrendingUp } from 'lucide-react';
+import { MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, Sparkles, ChevronRight, Star, ArrowRight, CheckCircle, FileText, ShieldAlert, TrendingUp, NotebookPen } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 
@@ -53,6 +53,13 @@ const Home = () => {
     description: "Visualize mathematical functions with advanced plotting and analysis capabilities.",
     link: "/graphing",
     color: "from-indigo-500 to-purple-600",
+    isNew: true
+  }, {
+    icon: <NotebookPen className="h-6 w-6" />,
+    title: "Research Preview",
+    description: "Compile sources, insights, and follow-ups in a guided research notebook experience.",
+    link: "/research",
+    color: "from-blue-500 to-indigo-600",
     isNew: true
   }, {
     icon: <Code2 className="h-6 w-6" />,
