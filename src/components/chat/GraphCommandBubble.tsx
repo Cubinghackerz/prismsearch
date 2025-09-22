@@ -48,6 +48,20 @@ const GraphCommandBubble: React.FC<GraphCommandBubbleProps> = ({ summary, result
     });
   }, [result.series]);
 
+  const planeStyles = useMemo(
+    () => ({
+      backgroundColor: 'rgba(15, 23, 42, 0.9)',
+      backgroundImage:
+        'linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px)',
+      backgroundSize: '24px 24px',
+      borderRadius: '0.75rem',
+    }),
+    []
+  );
+
+  const axisColor = '#ffffff';
+  const gridColor = 'rgba(255, 255, 255, 0.24)';
+
   const handleExportSVG = () => {
     const container = chartContainerRef.current;
     if (!container) return;
@@ -171,26 +185,47 @@ const GraphCommandBubble: React.FC<GraphCommandBubbleProps> = ({ summary, result
         <div
           ref={chartContainerRef}
           className={`transition-all ${isExpanded ? 'h-[480px]' : 'h-[320px]'} px-4 py-4`}
+          style={planeStyles}
         >
           {chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 10, left: 10, right: 10, bottom: 10 }}>
-                <CartesianGrid strokeDasharray="4 4" stroke="var(--border)" opacity={0.6} />
+                <CartesianGrid strokeDasharray="0" stroke={gridColor} opacity={0.7} />
                 <XAxis
                   dataKey="x"
                   type="number"
                   domain={[result.xMin, result.xMax]}
                   tickFormatter={(value) => Number(value).toFixed(2)}
-                  stroke="var(--muted-foreground)"
+                  stroke={axisColor}
+                  tick={{ fill: axisColor }}
+                  tickLine={{ stroke: axisColor }}
+                  axisLine={{ stroke: axisColor }}
                 />
                 <YAxis
                   tickFormatter={(value) => Number(value).toFixed(2)}
-                  stroke="var(--muted-foreground)"
+                  stroke={axisColor}
+                  tick={{ fill: axisColor }}
+                  tickLine={{ stroke: axisColor }}
+                  axisLine={{ stroke: axisColor }}
                 />
-                <Tooltip formatter={tooltipFormatter} labelFormatter={(value) => `x = ${Number(value).toFixed(4)}`} />
-                <Legend formatter={legendFormatter} />
-                <ReferenceLine x={0} stroke="var(--muted-foreground)" strokeDasharray="4 4" />
-                <ReferenceLine y={0} stroke="var(--muted-foreground)" strokeDasharray="4 4" />
+                <Tooltip
+                  formatter={tooltipFormatter}
+                  labelFormatter={(value) => `x = ${Number(value).toFixed(4)}`}
+                  contentStyle={{
+                    backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                    border: '1px solid rgba(255, 255, 255, 0.24)',
+                    color: axisColor,
+                  }}
+                  itemStyle={{ color: axisColor }}
+                  cursor={{ stroke: 'rgba(255, 255, 255, 0.35)' }}
+                />
+                <Legend
+                  formatter={legendFormatter}
+                  wrapperStyle={{ color: axisColor }}
+                  iconType="plainline"
+                />
+                <ReferenceLine x={0} stroke={axisColor} strokeWidth={1.5} />
+                <ReferenceLine y={0} stroke={axisColor} strokeWidth={1.5} />
                 {result.series.map((series, index) => (
                   <Line
                     key={series.id}
