@@ -12,6 +12,7 @@ import CodeGenerationBubble from './CodeGenerationBubble';
 import CodePlanBubble from './CodePlanBubble';
 import FinanceCommandBubble from './FinanceCommandBubble';
 import TableCommandRenderer from './TableCommandRenderer';
+import GraphCommandBubble from './GraphCommandBubble';
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -174,6 +175,10 @@ const MessageList: React.FC<MessageListProps> = ({
             ) : message.command === 'finance' && message.financeData ? (
               <div className="pr-6">
                 <FinanceCommandBubble summary={message.content} result={message.financeData} />
+              </div>
+            ) : message.command === 'graph' && message.graphData ? (
+              <div className="pr-6">
+                <GraphCommandBubble summary={message.content} result={message.graphData} />
               </div>
             ) : message.command === 'table' ? (
               <div className="pr-6">

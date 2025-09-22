@@ -22,6 +22,7 @@ import {
   DEFAULT_FINANCE_SYMBOLS,
   fetchStockQuotes,
 } from '@/services/financeService';
+import { computeGraphCommand, GraphCommandResult } from '@/services/graphingService';
 
 export type ChatCommandKey =
   | 'summarize'
@@ -42,7 +43,8 @@ export type ChatCommandKey =
   | 'music'
   | 'review'
   | 'script'
-  | 'finance';
+  | 'finance'
+  | 'graph';
 
 export type SupportedCommand = ChatCommandKey | 'code';
 
@@ -58,6 +60,7 @@ export interface FinanceCommandResult {
 interface LocalCommandExecution {
   content: string;
   financeData?: FinanceCommandResult;
+  graphData?: GraphCommandResult;
 }
 
 interface ChatCommandDefinition {
@@ -312,6 +315,31 @@ const CHAT_COMMAND_DEFINITIONS: Record<ChatCommandKey, ChatCommandDefinition> = 
       };
     },
   },
+  graph: {
+    key: 'graph',
+    label: '/graph',
+    description: 'Plot equations on an interactive graph and export the results.',
+    promptBuilder: createBetaPrompt(
+      '/graph',
+      'Help the user interpret the plotted equations, noting key features like intercepts, extrema, or intersections when visible.'
+    ),
+    localHandler: async (input: string) => {
+      const { result, summaryLines } = computeGraphCommand(input);
+
+      const sampleCount = result.series[0]?.points.length ?? 0;
+      const intro = `Plotted ${result.series.length} ${result.series.length === 1 ? 'equation' : 'equations'} from x = ${
+        result.xMin.toFixed(2)
+      } to x = ${result.xMax.toFixed(2)} with ${sampleCount} samples.`;
+
+      const body = summaryLines.join('\n');
+      const notes = result.notes.length > 0 ? `\n\n_Notes:_\n${result.notes.map((note) => `- ${note}`).join('\n')}` : '';
+
+      return {
+        content: `**/graph (beta)** Interactive plots ready\n\n${intro}\n${body ? `\n${body}` : ''}\n\n_Explore the graph below to hover for coordinates, toggle series, and export the visualization as SVG or CSV._${notes}`,
+        graphData: result,
+      };
+    },
+  },
 };
 
 export const getCommandLabel = (command: SupportedCommand): string => {
@@ -376,6 +404,7 @@ export interface ChatMessage {
   codePlan?: CodePlanState;
   command?: SupportedCommand;
   financeData?: FinanceCommandResult;
+  graphData?: GraphCommandResult;
 }
 
 export type ChatModel =
@@ -696,7 +725,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     setIsTyping(true);
 
-    if (command === 'math') {
+    if (command === 'math' || command === 'calc' || command === 'graph') {
       mathJaxService.initialize().catch((error) => {
         console.warn('MathJax initialization warning:', error);
       });
@@ -704,7 +733,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (definition.localHandler) {
       try {
-        const { content, financeData } = await definition.localHandler(trimmedInput);
+        const { content, financeData, graphData } = await definition.localHandler(trimmedInput);
 
         const assistantMessage: ChatMessage = {
           id: uuidv4(),
@@ -714,6 +743,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           type: 'text',
           command,
           financeData,
+          graphData,
         };
 
         setMessages((prev) => [...prev, assistantMessage]);
