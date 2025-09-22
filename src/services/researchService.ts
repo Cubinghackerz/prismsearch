@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
 
 export type ResearchMode = 'quick' | 'comprehensive' | 'quantum';
 
@@ -60,13 +61,11 @@ interface CacheEntry {
   payload: ResearchNotebook;
 }
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://fgpdfkvabwemivzjeitx.supabase.co';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const DEEP_SEARCH_URL = `${SUPABASE_URL}/functions/v1/deep-search-engine`;
-
 const DEFAULT_MODE: ResearchMode = 'comprehensive';
 const DEFAULT_MAX_SOURCES = 8;
 const CACHE_TTL_MS = 1000 * 60 * 10; // 10 minutes
+
+const MODEL_ID = 'gemini-2.5-pro';
 
 const researchCache = new Map<string, CacheEntry>();
 
@@ -242,6 +241,325 @@ const buildFollowUps = (insights: ResearchInsight[], query: string): ResearchFol
   return [...baseFollowUps, ...supplemental].slice(0, 3);
 };
 
+interface NotebookModelResponse {
+  overview?: string;
+  summary?: string;
+  insights?: unknown[];
+  keyInsights?: unknown[];
+  sections?: unknown;
+  keyTakeaways?: unknown;
+  timeline?: unknown[];
+  keyMoments?: unknown[];
+  sources?: unknown[];
+  references?: unknown[];
+  followUps?: unknown[];
+  nextSteps?: unknown[];
+  metadata?: Partial<ResearchNotebook['metadata']> & { context?: string };
+  generatedAt?: string;
+}
+
+const extractJsonObject = (text: string): NotebookModelResponse | null => {
+  if (!text) {
+    return null;
+  }
+
+  const trimmed = text.trim();
+
+  const tryParse = (value: string) => {
+    try {
+      return JSON.parse(value) as NotebookModelResponse;
+    } catch {
+      return null;
+    }
+  };
+
+  const direct = tryParse(trimmed);
+  if (direct) {
+    return direct;
+  }
+
+  const match = trimmed.match(/\{[\s\S]*\}/);
+  if (match) {
+    return tryParse(match[0]);
+  }
+
+  return null;
+};
+
+const ensureIsoString = (value: unknown, fallback: Date): string => {
+  if (typeof value === 'string') {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toISOString();
+    }
+  }
+
+  return fallback.toISOString();
+};
+
+const parseModelSources = (rawSources: unknown[] | undefined): ResearchSource[] => {
+  if (!rawSources || rawSources.length === 0) {
+    return [];
+  }
+
+  const baseTime = Date.now();
+  const step = 1000 * 60 * 45;
+
+  const typedSources = rawSources
+    .map((entry, index) => {
+      if (typeof entry !== 'object' || entry === null) {
+        return null;
+      }
+
+      const record = entry as Partial<ResearchSource> &
+        Partial<{ publishedAt: string; type: ResearchSource['type']; url: string; snippet: string; title: string; id: string }> &
+        Record<string, unknown>;
+
+      const fallbackDate = new Date(baseTime - (rawSources.length - index - 1) * step);
+      const url = typeof record.url === 'string' ? record.url : String(record['link'] ?? record['sourceUrl'] ?? '');
+
+      if (!url) {
+        return null;
+      }
+
+      const id = typeof record.id === 'string' && record.id.trim().length > 0 ? record.id.trim() : `source-${index}`;
+      const titleCandidate = record.title ?? record['name'] ?? record['headline'];
+      const snippetCandidate = record.snippet ?? record['summary'] ?? record['notes'];
+
+      const title = typeof titleCandidate === 'string' && titleCandidate.trim().length > 0
+        ? titleCandidate.trim()
+        : 'Untitled source';
+
+      const snippet = typeof snippetCandidate === 'string' && snippetCandidate.trim().length > 0
+        ? snippetCandidate.trim()
+        : 'No summary available for this source.';
+
+      const publishedAt = ensureIsoString(record.publishedAt, fallbackDate);
+
+      const typeCandidate = record.type ?? record['category'];
+      const allowedTypes: ResearchSource['type'][] = ['Reference', 'News', 'Education', 'Government', 'Web'];
+      const type =
+        typeof typeCandidate === 'string' && allowedTypes.includes(typeCandidate as ResearchSource['type'])
+          ? (typeCandidate as ResearchSource['type'])
+          : inferSourceType(url);
+
+      return {
+        id,
+        title,
+        url,
+        snippet,
+        publishedAt,
+        type,
+      } satisfies ResearchSource;
+    })
+    .filter((value): value is ResearchSource => Boolean(value));
+
+  return typedSources;
+};
+
+const parseModelInsights = (rawInsights: unknown[] | undefined, sources: ResearchSource[], query: string): ResearchInsight[] => {
+  if (!rawInsights || rawInsights.length === 0) {
+    return [];
+  }
+
+  const sourceIds = new Set(sources.map((source) => source.id));
+
+  return rawInsights
+    .map((entry, index) => {
+      if (typeof entry !== 'object' || entry === null) {
+        return null;
+      }
+
+      const record = entry as Partial<ResearchInsight> & Record<string, unknown>;
+      const headingCandidate = record.heading ?? record['title'] ?? record['keyPoint'];
+      const summaryCandidate = record.summary ?? record['explanation'] ?? record['analysis'];
+      const supportsCandidate = record.supportingSources ?? record['sources'] ?? record['citations'];
+
+      const heading =
+        typeof headingCandidate === 'string' && headingCandidate.trim().length > 0
+          ? headingCandidate.trim()
+          : extractHeading(typeof summaryCandidate === 'string' ? summaryCandidate : query, index);
+
+      const summary =
+        typeof summaryCandidate === 'string' && summaryCandidate.trim().length > 0
+          ? summaryCandidate.trim()
+          : `Insight ${index + 1} explores an important aspect of ${query}.`;
+
+      const supportingSources = Array.isArray(supportsCandidate)
+        ? supportsCandidate
+            .map((value) => (typeof value === 'string' ? value.trim() : null))
+            .filter((value): value is string => Boolean(value && sourceIds.has(value)))
+        : [];
+
+      return {
+        id: typeof record.id === 'string' && record.id.trim().length > 0 ? record.id : `insight-${index}`,
+        heading,
+        summary,
+        supportingSources,
+      } satisfies ResearchInsight;
+    })
+    .filter((value): value is ResearchInsight => Boolean(value));
+};
+
+const parseModelTimeline = (
+  rawTimeline: unknown[] | undefined,
+  sources: ResearchSource[],
+  query: string,
+): ResearchTimelineEvent[] => {
+  if (!rawTimeline || rawTimeline.length === 0) {
+    return [];
+  }
+
+  const sourceIds = new Set(sources.map((source) => source.id));
+
+  return rawTimeline
+    .map((entry, index) => {
+      if (typeof entry !== 'object' || entry === null) {
+        return null;
+      }
+
+      const record = entry as Partial<ResearchTimelineEvent> & Record<string, unknown>;
+      const fallbackDate = new Date(Date.now() - (rawTimeline.length - index - 1) * 1000 * 60 * 60);
+
+      const titleCandidate = record.title ?? record['heading'] ?? record['label'];
+      const descriptionCandidate = record.description ?? record['details'] ?? record['summary'];
+      const sourceCandidate = record.sourceId ?? record['source'] ?? record['sourceReference'];
+
+      const sourceId =
+        typeof sourceCandidate === 'string' && sourceCandidate.trim().length > 0 && sourceIds.has(sourceCandidate.trim())
+          ? sourceCandidate.trim()
+          : sources[index]?.id ?? 'source-fallback';
+
+      const timestamp = ensureIsoString(record.timestamp, fallbackDate);
+
+      const title =
+        typeof titleCandidate === 'string' && titleCandidate.trim().length > 0
+          ? titleCandidate.trim()
+          : `Key development ${index + 1}`;
+
+      const description =
+        typeof descriptionCandidate === 'string' && descriptionCandidate.trim().length > 0
+          ? descriptionCandidate.trim()
+          : `Notable update related to ${query}.`;
+
+      return {
+        id: typeof record.id === 'string' && record.id.trim().length > 0 ? record.id : `event-${index}`,
+        title,
+        timestamp,
+        description,
+        sourceId,
+      } satisfies ResearchTimelineEvent;
+    })
+    .filter((value): value is ResearchTimelineEvent => Boolean(value));
+};
+
+const parseModelFollowUps = (
+  rawFollowUps: unknown[] | undefined,
+  sources: ResearchSource[],
+  query: string,
+): ResearchFollowUp[] => {
+  if (!rawFollowUps || rawFollowUps.length === 0) {
+    return [];
+  }
+
+  const sourceIds = new Set(sources.map((source) => source.id));
+
+  return rawFollowUps
+    .map((entry, index) => {
+      if (typeof entry !== 'object' || entry === null) {
+        return null;
+      }
+
+      const record = entry as Partial<ResearchFollowUp> & Record<string, unknown>;
+
+      const questionCandidate = record.question ?? record['prompt'] ?? record['task'];
+      const rationaleCandidate = record.rationale ?? record['reason'] ?? record['motivation'];
+      const relatedCandidate = record.relatedSources ?? record['sources'] ?? record['citations'];
+
+      const question =
+        typeof questionCandidate === 'string' && questionCandidate.trim().length > 0
+          ? questionCandidate.trim()
+          : `Investigate further angles on ${query}.`;
+
+      const rationale =
+        typeof rationaleCandidate === 'string' && rationaleCandidate.trim().length > 0
+          ? rationaleCandidate.trim()
+          : 'Explore this follow-up to deepen your understanding.';
+
+      const relatedSources = Array.isArray(relatedCandidate)
+        ? relatedCandidate
+            .map((value) => (typeof value === 'string' ? value.trim() : null))
+            .filter((value): value is string => Boolean(value && sourceIds.has(value)))
+        : [];
+
+      return {
+        id: typeof record.id === 'string' && record.id.trim().length > 0 ? record.id : `follow-${index}`,
+        question,
+        rationale,
+        relatedSources,
+      } satisfies ResearchFollowUp;
+    })
+    .filter((value): value is ResearchFollowUp => Boolean(value));
+};
+
+const buildNotebookPrompt = (
+  query: string,
+  mode: ResearchMode,
+  maxSources: number,
+  fastMode: boolean,
+): string => {
+  return `You are Prism Research Notebook using Gemini 2.5 Pro. For the topic "${query}", compile a structured research dossier.
+
+Return ONLY valid JSON (no markdown) with the following schema:
+{
+  "overview": "Concise synthesis (2-3 paragraphs) summarizing the most important findings.",
+  "insights": [
+    {
+      "id": "insight-1",
+      "heading": "Short descriptive title",
+      "summary": "3-5 sentence explanation with evidence",
+      "supportingSources": ["source-1", "source-3"]
+    }
+  ],
+  "timeline": [
+    {
+      "id": "event-1",
+      "title": "Event title",
+      "timestamp": "ISO 8601 date",
+      "description": "1-2 sentence description",
+      "sourceId": "source-1"
+    }
+  ],
+  "sources": [
+    {
+      "id": "source-1",
+      "title": "Source title",
+      "url": "https://...",
+      "snippet": "Short excerpt or summary",
+      "publishedAt": "ISO 8601 date",
+      "type": "Reference" | "News" | "Education" | "Government" | "Web"
+    }
+  ],
+  "followUps": [
+    {
+      "id": "follow-1",
+      "question": "Follow-up research question",
+      "rationale": "Why this matters",
+      "relatedSources": ["source-2"]
+    }
+  ],
+  "metadata": {
+    "searchMode": "${mode}",
+    "fastMode": ${fastMode},
+    "totalSources": number,
+    "context": "Explain the overall framing and whether primary information was limited"
+  },
+  "generatedAt": "ISO 8601 timestamp"
+}
+
+Provide at least ${Math.min(maxSources, 6)} detailed sources with credible URLs. Reuse source IDs consistently across insights, timeline, and follow-ups. Format every string cleanly for presentation.`;
+};
+
 export const fetchResearchNotebook = async (
   query: string,
   options: ResearchNotebookOptions = {},
@@ -262,41 +580,79 @@ export const fetchResearchNotebook = async (
   const maxSources = options.maxSources ?? DEFAULT_MAX_SOURCES;
   const fastMode = Boolean(options.fastMode);
 
-  const response = await fetch(DEEP_SEARCH_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(SUPABASE_ANON_KEY
-        ? {
-            apikey: SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          }
-        : {}),
+  const prompt = buildNotebookPrompt(trimmedQuery, mode, maxSources, fastMode);
+  const chatId = `research-notebook-${trimmedQuery.replace(/[^a-z0-9]+/gi, '-').slice(0, 48)}`.toLowerCase();
+
+  const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
+    body: {
+      query: prompt,
+      model: MODEL_ID,
+      chatId,
+      chatHistory: [],
     },
-    body: JSON.stringify({
-      query: trimmedQuery,
-      searchMode: mode,
-      maxSources,
-      fastMode,
-    }),
   });
 
-  if (!response.ok) {
-    throw new Error('Unable to reach the research service. Please try again.');
+  if (error) {
+    throw new Error(error.message || 'Unable to reach the research service. Please try again.');
   }
 
-  const payload = await response.json();
-  const summary = typeof payload?.summary === 'string' ? payload.summary.trim() : '';
-  const sources = Array.isArray(payload?.sources) ? normalizeSources(payload.sources) : [];
-  const sections = splitSummary(summary || `No structured summary was returned for "${trimmedQuery}". Try running the notebook again.`);
-  const insights = buildInsights(sections, sources);
-  const timeline = buildTimeline(sources);
-  const followUps = buildFollowUps(insights, trimmedQuery);
-  const generatedAt = format(new Date(), "yyyy-MM-dd'T'HH:mm:ssXXX");
+  const responseText = typeof data?.response === 'string' ? data.response.trim() : '';
+  const parsed = extractJsonObject(responseText);
+  const metadata = parsed?.metadata;
+
+  const rawSources = (parsed?.sources as unknown[]) ?? (parsed?.references as unknown[]) ?? [];
+  let sources = parseModelSources(rawSources);
+  if (!sources.length && Array.isArray(rawSources)) {
+    sources = normalizeSources(rawSources);
+  }
+
+  const overviewText = (parsed?.overview ?? parsed?.summary ?? '') as string;
+  const overview = overviewText && typeof overviewText === 'string' ? overviewText.trim() : '';
+
+  const sectionCandidates = Array.isArray(parsed?.sections)
+    ? (parsed?.sections as unknown[])
+        .map((value) => (typeof value === 'string' ? value.trim() : ''))
+        .filter((value) => value.length > 0)
+    : Array.isArray(parsed?.keyTakeaways)
+    ? (parsed?.keyTakeaways as unknown[])
+        .map((value) => (typeof value === 'string' ? value.trim() : ''))
+        .filter((value) => value.length > 0)
+    : overview
+    ? splitSummary(overview)
+    : [];
+
+  let insights = parseModelInsights((parsed?.insights as unknown[]) ?? (parsed?.keyInsights as unknown[]), sources, trimmedQuery);
+  if (!insights.length && sectionCandidates.length > 0) {
+    insights = buildInsights(sectionCandidates, sources);
+  }
+
+  let timeline = parseModelTimeline((parsed?.timeline as unknown[]) ?? (parsed?.keyMoments as unknown[]), sources, trimmedQuery);
+  if (!timeline.length) {
+    timeline = buildTimeline(sources);
+  }
+
+  let followUps = parseModelFollowUps((parsed?.followUps as unknown[]) ?? (parsed?.nextSteps as unknown[]), sources, trimmedQuery);
+  if (!followUps.length) {
+    followUps = buildFollowUps(insights, trimmedQuery);
+  }
+
+  const generatedAt = ensureIsoString(parsed?.generatedAt, new Date());
+
+  const contextNote = typeof metadata?.context === 'string' ? metadata.context.trim() : '';
+  const mergedOverview = overview
+    ? contextNote
+      ? `${overview}\n\nContext: ${contextNote}`
+      : overview
+    : 'Gemini 2.5 Pro could not generate a full overview for this topic. Try running the notebook again or refining the prompt.';
+
+  const totalSources =
+    typeof metadata?.totalSources === 'number' && !Number.isNaN(metadata.totalSources)
+      ? metadata.totalSources
+      : sources.length;
 
   const notebook: ResearchNotebook = {
     query: trimmedQuery,
-    overview: summary || 'The research service returned minimal information for this topic. You may want to refresh or broaden the query.',
+    overview: mergedOverview,
     insights,
     timeline,
     sources,
@@ -305,7 +661,7 @@ export const fetchResearchNotebook = async (
     metadata: {
       searchMode: mode,
       fastMode,
-      totalSources: sources.length,
+      totalSources,
     },
   };
 
