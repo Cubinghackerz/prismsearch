@@ -23,6 +23,10 @@ import {
   fetchStockQuotes,
 } from '@/services/financeService';
 import { computeGraphCommand, GraphCommandResult } from '@/services/graphingService';
+import {
+  buildWorkflowPlan,
+} from '@/services/workflowService';
+import type { WorkflowExecutionPlan } from '@/services/workflowService';
 
 export type ChatCommandKey =
   | 'summarize'
@@ -44,7 +48,8 @@ export type ChatCommandKey =
   | 'review'
   | 'script'
   | 'finance'
-  | 'graph';
+  | 'graph'
+  | 'workflow';
 
 export type SupportedCommand = ChatCommandKey | 'code';
 
@@ -61,6 +66,7 @@ interface LocalCommandExecution {
   content: string;
   financeData?: FinanceCommandResult;
   graphData?: GraphCommandResult;
+  workflowData?: WorkflowExecutionPlan;
 }
 
 interface ChatCommandDefinition {
@@ -340,6 +346,31 @@ const CHAT_COMMAND_DEFINITIONS: Record<ChatCommandKey, ChatCommandDefinition> = 
       };
     },
   },
+  workflow: {
+    key: 'workflow',
+    label: '/workflow',
+    description: 'Bundle multiple commands into reusable automations and schedules.',
+    promptBuilder: createBetaPrompt(
+      '/workflow',
+      'Outline the proposed automation, highlighting the goal, cadence, and each command-driven step. Suggest any assumptions or integrations needed to run it successfully.'
+    ),
+    localHandler: async (input: string) => {
+      const plan = buildWorkflowPlan(input);
+      const warningBlock =
+        plan.warnings.length > 0
+          ? `\n\n⚠️ _Setup notes:_\n${plan.warnings.map((warning) => `- ${warning}`).join('\n')}`
+          : '';
+      const recommendationBlock =
+        plan.recommendations.length > 0
+          ? `\n\n_Next steps:_\n${plan.recommendations.map((tip) => `- ${tip}`).join('\n')}`
+          : '';
+
+      return {
+        content: `**/workflow (beta)** Automation blueprint ready\n\n${plan.summary}${warningBlock}${recommendationBlock}\n\nUse the controls below to save or launch this workflow.`,
+        workflowData: plan,
+      };
+    },
+  },
 };
 
 export const getCommandLabel = (command: SupportedCommand): string => {
@@ -396,7 +427,7 @@ export interface ChatMessage {
   timestamp: Date;
   parentMessageId?: string;
   attachments?: any[];
-  type?: 'text' | 'code' | 'code-plan';
+  type?: 'text' | 'code' | 'code-plan' | 'workflow';
   codeResult?: GeneratedApp;
   codePrompt?: string;
   usedModel?: string;
@@ -405,6 +436,7 @@ export interface ChatMessage {
   command?: SupportedCommand;
   financeData?: FinanceCommandResult;
   graphData?: GraphCommandResult;
+  workflowData?: WorkflowExecutionPlan;
 }
 
 export type ChatModel =
@@ -733,17 +765,18 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (definition.localHandler) {
       try {
-        const { content, financeData, graphData } = await definition.localHandler(trimmedInput);
+        const { content, financeData, graphData, workflowData } = await definition.localHandler(trimmedInput);
 
         const assistantMessage: ChatMessage = {
           id: uuidv4(),
           content,
           isUser: false,
           timestamp: new Date(),
-          type: 'text',
+          type: workflowData ? 'workflow' : 'text',
           command,
           financeData,
           graphData,
+          workflowData,
         };
 
         setMessages((prev) => [...prev, assistantMessage]);

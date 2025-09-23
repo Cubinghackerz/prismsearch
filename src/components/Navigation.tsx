@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Menu, MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, MoreHorizontal, Search, RefreshCw, ShieldCheck, TrendingUp, NotebookPen } from 'lucide-react';
+import { Menu, MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, MoreHorizontal, Search, RefreshCw, ShieldCheck, TrendingUp, NotebookPen, Workflow } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import AuthButtons from '@/components/AuthButtons';
 
@@ -19,7 +19,7 @@ const Navigation = () => {
     { name: 'Deep Search', href: '/deep-search', icon: Search },
     { name: 'Vault', href: '/vault', icon: Shield },
     { name: 'Math', href: '/math', icon: Calculator },
-    { name: 'Finance', href: '/finance', icon: TrendingUp },
+    { name: 'Workflow Studio', href: '/workflow', icon: Workflow },
   ];
 
   const moreNavItems = [
@@ -30,6 +30,7 @@ const Navigation = () => {
     { name: 'Research Preview', href: '/research', icon: NotebookPen },
     { name: 'File Converter', href: '/conversions', icon: RefreshCw },
     { name: 'Threat Detector', href: '/detector', icon: ShieldCheck },
+    { name: 'Finance', href: '/finance', icon: TrendingUp },
   ];
 
   const allNavItems = [...primaryNavItems, ...moreNavItems];

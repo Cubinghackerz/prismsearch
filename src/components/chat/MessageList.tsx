@@ -13,6 +13,7 @@ import CodePlanBubble from './CodePlanBubble';
 import FinanceCommandBubble from './FinanceCommandBubble';
 import TableCommandRenderer from './TableCommandRenderer';
 import GraphCommandBubble from './GraphCommandBubble';
+import WorkflowCommandBubble from './WorkflowCommandBubble';
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -179,6 +180,10 @@ const MessageList: React.FC<MessageListProps> = ({
             ) : message.command === 'graph' && message.graphData ? (
               <div className="pr-6">
                 <GraphCommandBubble summary={message.content} result={message.graphData} />
+              </div>
+            ) : message.command === 'workflow' && message.workflowData ? (
+              <div className="pr-6">
+                <WorkflowCommandBubble plan={message.workflowData} />
               </div>
             ) : message.command === 'table' ? (
               <div className="pr-6">

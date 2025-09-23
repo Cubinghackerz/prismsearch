@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, Sparkles, ChevronRight, Star, ArrowRight, CheckCircle, FileText, ShieldAlert, TrendingUp, NotebookPen } from 'lucide-react';
+import { MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, Sparkles, ChevronRight, Star, ArrowRight, CheckCircle, FileText, ShieldAlert, TrendingUp, NotebookPen, Workflow } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 
@@ -60,6 +60,13 @@ const Home = () => {
     description: "Compile sources, insights, and follow-ups in a guided research notebook experience.",
     link: "/research",
     color: "from-blue-500 to-indigo-600",
+    isNew: true
+  }, {
+    icon: <Workflow className="h-6 w-6" />,
+    title: "Prism Workflow Studio",
+    description: "String Prism commands together into automations you can run, reuse, and schedule.",
+    link: "/workflow",
+    color: "from-fuchsia-500 to-rose-600",
     isNew: true
   }, {
     icon: <Code2 className="h-6 w-6" />,
