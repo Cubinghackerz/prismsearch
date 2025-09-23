@@ -356,17 +356,13 @@ const CHAT_COMMAND_DEFINITIONS: Record<ChatCommandKey, ChatCommandDefinition> = 
     ),
     localHandler: async (input: string) => {
       const plan = buildWorkflowPlan(input);
-      const warningBlock =
-        plan.warnings.length > 0
-          ? `\n\n⚠️ _Setup notes:_\n${plan.warnings.map((warning) => `- ${warning}`).join('\n')}`
-          : '';
-      const recommendationBlock =
-        plan.recommendations.length > 0
-          ? `\n\n_Next steps:_\n${plan.recommendations.map((tip) => `- ${tip}`).join('\n')}`
-          : '';
+      const stepList = plan.steps
+        .map((step, index) => `- Step ${index + 1}: ${getCommandLabel(step.command)} ${step.input ? `– ${step.input}` : ''}`)
+        .join('\n');
+      const notesBlock = plan.notes.length > 0 ? `\n\n${plan.notes.map((note) => `- ${note}`).join('\n')}` : '';
 
       return {
-        content: `**/workflow (beta)** Automation blueprint ready\n\n${plan.summary}${warningBlock}${recommendationBlock}\n\nUse the controls below to save or launch this workflow.`,
+        content: `**/workflow (beta)** Workflow builder ready\n\n${plan.summary}${notesBlock}${stepList ? `\n\n${stepList}` : ''}\n\nUse the panel below to adjust steps and run them in chat.`,
         workflowData: plan,
       };
     },
@@ -459,7 +455,7 @@ interface ChatContextType {
   sendMessage: (content: string, parentMessageId?: string) => Promise<void>;
   sendMessageWithFiles: (content: string, attachments: any[], parentMessageId?: string) => Promise<void>;
   generateCodeFromPrompt: (prompt: string) => Promise<void>;
-  executeCommand: (command: ChatCommandKey, input: string) => Promise<void>;
+  executeCommand: (command: ChatCommandKey, input: string) => Promise<ChatMessage | null>;
   approveCodePlan: (messageId: string) => Promise<void>;
   declineCodePlan: (messageId: string) => void;
   updateCodePlan: (messageId: string, updatedPlan: CodeGenerationPlan) => void;
@@ -695,7 +691,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const executeCommand = async (command: ChatCommandKey, input: string) => {
+  const executeCommand = async (command: ChatCommandKey, input: string): Promise<ChatMessage | null> => {
     const trimmedInput = input.trim();
     if (!trimmedInput) {
       toast({
@@ -703,7 +699,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: `Please add details after ${getCommandLabel(command)} to use the command.`,
         variant: 'destructive',
       });
-      return;
+      return null;
     }
 
     if (isLimitReached) {
@@ -712,7 +708,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: "You've reached your daily query limit. Please try again tomorrow or sign up for more queries.",
         variant: "destructive"
       });
-      return;
+      return null;
     }
 
     if (!incrementQueryCount()) {
@@ -721,7 +717,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: "You've reached your daily query limit. Please try again tomorrow.",
         variant: "destructive"
       });
-      return;
+      return null;
     }
 
     const definition = CHAT_COMMAND_DEFINITIONS[command];
@@ -731,7 +727,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: 'That command is not available right now.',
         variant: 'destructive',
       });
-      return;
+      return null;
     }
 
     let currentChatId = chatId;
@@ -780,6 +776,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
 
         setMessages((prev) => [...prev, assistantMessage]);
+        return assistantMessage;
       } catch (error) {
         console.error('Error executing local command handler:', error);
         const errorMessage: ChatMessage = {
@@ -797,12 +794,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           description: error instanceof Error ? error.message : 'Unknown error',
           variant: 'destructive',
         });
+        return null;
       } finally {
         setIsLoading(false);
         setIsTyping(false);
       }
 
-      return;
+      return null;
     }
 
     const timeoutPromise = new Promise<void>((_, reject) => {
@@ -846,6 +844,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+      return assistantMessage;
     } catch (error) {
       console.error('Error executing command:', error);
       const errorMessage: ChatMessage = {
@@ -863,10 +862,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: error instanceof Error ? error.message : 'Unknown error',
         variant: 'destructive',
       });
+      return null;
     } finally {
       setIsLoading(false);
       setIsTyping(false);
     }
+    return null;
   };
 
   const generateCodeFromPrompt = async (rawPrompt: string) => {

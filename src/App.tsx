@@ -30,7 +30,6 @@ import PrismPhysics from "./pages/PrismPhysics";
 import PrismChemistry from "./pages/PrismChemistry";
 import PrismFinance from "./pages/PrismFinance";
 import PrismResearch from "./pages/PrismResearch";
-import PrismWorkflow from "./pages/PrismWorkflow";
 
 // Create QueryClient with optimized settings for better performance
 const queryClient = new QueryClient({
@@ -69,7 +68,6 @@ const AppContent: React.FC = () => {
         <Route path="/chemistry" element={<PrismChemistry />} />
         <Route path="/finance" element={<PrismFinance />} />
         <Route path="/research" element={<PrismResearch />} />
-        <Route path="/workflow" element={<PrismWorkflow />} />
         <Route path="/auth" element={<ClerkAuth />} />
         <Route path="/secure-redirect" element={<SecureRedirect />} />
         <Route path="*" element={<NotFound />} />

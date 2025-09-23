@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, Sparkles, ChevronRight, Star, ArrowRight, CheckCircle, FileText, ShieldAlert, TrendingUp, NotebookPen, Workflow } from 'lucide-react';
+import { MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, Sparkles, ChevronRight, Star, ArrowRight, CheckCircle, FileText, ShieldAlert, TrendingUp, NotebookPen } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 
@@ -60,13 +60,6 @@ const Home = () => {
     description: "Compile sources, insights, and follow-ups in a guided research notebook experience.",
     link: "/research",
     color: "from-blue-500 to-indigo-600",
-    isNew: true
-  }, {
-    icon: <Workflow className="h-6 w-6" />,
-    title: "Prism Workflow Studio",
-    description: "String Prism commands together into automations you can run, reuse, and schedule.",
-    link: "/workflow",
-    color: "from-fuchsia-500 to-rose-600",
     isNew: true
   }, {
     icon: <Code2 className="h-6 w-6" />,
@@ -287,8 +280,8 @@ const Home = () => {
               <div className="max-w-4xl mx-auto space-y-10">
                 <div className="space-y-6">
                   <h2 className="text-4xl lg:text-5xl font-bold text-white leading-tight">
-                    Ready to Transform Your 
-                    <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent"> Workflow?</span>
+                    Ready to Transform Your
+                    <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent"> Productivity?</span>
                   </h2>
                   <p className="text-xl text-white/80 leading-relaxed max-w-2xl mx-auto">
                     Join thousands of users who have already discovered the power of AI-driven productivity
