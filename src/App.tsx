@@ -9,7 +9,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import AuthPromptDialog from "@/components/AuthPromptDialog";
 import useAuthPrompt from "@/hooks/useAuthPrompt";
 import PrismAssistant from "@/components/PrismAssistant";
-import Prism2AnnouncementDialog from "@/components/Prism2AnnouncementDialog";
+import PrismAgentEarlyAccessDialog from "@/components/PrismAgentEarlyAccessDialog";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Chat from "./pages/Chat";
@@ -30,6 +30,8 @@ import PrismPhysics from "./pages/PrismPhysics";
 import PrismChemistry from "./pages/PrismChemistry";
 import PrismFinance from "./pages/PrismFinance";
 import PrismResearch from "./pages/PrismResearch";
+import PrismAgent from "./pages/PrismAgent";
+import { PrismAgentProvider } from "@/context/PrismAgentContext";
 
 // Create QueryClient with optimized settings for better performance
 const queryClient = new QueryClient({
@@ -67,13 +69,14 @@ const AppContent: React.FC = () => {
         <Route path="/physics" element={<PrismPhysics />} />
         <Route path="/chemistry" element={<PrismChemistry />} />
         <Route path="/finance" element={<PrismFinance />} />
+        <Route path="/agent" element={<PrismAgent />} />
         <Route path="/research" element={<PrismResearch />} />
         <Route path="/auth" element={<ClerkAuth />} />
         <Route path="/secure-redirect" element={<SecureRedirect />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <AuthPromptDialog isOpen={showPrompt} onClose={closePrompt} />
-      <Prism2AnnouncementDialog />
+      <PrismAgentEarlyAccessDialog />
       <PrismAssistant />
       <SpeedInsights />
     </div>
@@ -85,7 +88,9 @@ const App: React.FC = () => (
     <ThemeProvider>
       <TooltipProvider>
         <BrowserRouter>
-          <AppContent />
+          <PrismAgentProvider>
+            <AppContent />
+          </PrismAgentProvider>
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>

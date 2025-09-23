@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, Sparkles, ChevronRight, Star, ArrowRight, CheckCircle, FileText, ShieldAlert, TrendingUp, NotebookPen } from 'lucide-react';
+import { MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, Sparkles, ChevronRight, Star, ArrowRight, CheckCircle, FileText, ShieldAlert, TrendingUp, NotebookPen, Bot } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 
@@ -68,6 +68,14 @@ const Home = () => {
     link: "/code",
     color: "from-cyan-500 to-blue-600",
     isNew: true
+  }, {
+    icon: <Bot className="h-6 w-6" />,
+    title: "Prism Agent",
+    description: "Exclusive Gemini 2.5 coding agent with project history, rollbacks, and VS Code hand-offs.",
+    link: "/agent",
+    color: "from-fuchsia-500 to-blue-600",
+    isNew: true,
+    exclusive: true
   }, {
     icon: <TrendingUp className="h-6 w-6" />,
     title: "Prism Finance",
@@ -249,6 +257,11 @@ const Home = () => {
                     <CardTitle className="text-white text-xl font-semibold mb-3">
                       {feature.title}
                     </CardTitle>
+                    {feature.exclusive && (
+                      <Badge variant="outline" className="text-[11px] uppercase tracking-wide text-primary border-primary/40">
+                        Exclusive Access
+                      </Badge>
+                    )}
                   </CardHeader>
                   
                   <CardContent className="relative">
