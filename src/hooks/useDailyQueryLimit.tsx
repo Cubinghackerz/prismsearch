@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useUser } from '@clerk/clerk-react';
-import { useToast } from '@/hooks/use-toast';
 
 export type UsageCategory =
   | 'chatPrompts'
@@ -8,7 +7,7 @@ export type UsageCategory =
   | 'codeGenerations'
   | 'researchWords';
 
-type UsageSnapshot = Record<UsageCategory, number>;
+export type UsageSnapshot = Record<UsageCategory, number>;
 
 const DEFAULT_USAGE: UsageSnapshot = {
   chatPrompts: 0,
@@ -45,9 +44,9 @@ const createUnlimitedNoticeKey = (userKey: string, dateKey: string) =>
 
 export const useDailyQueryLimit = () => {
   const { user, isLoaded } = useUser();
-  const { toast } = useToast();
   const [usage, setUsage] = useState<UsageSnapshot>(DEFAULT_USAGE);
   const [updateTrigger, setUpdateTrigger] = useState(0);
+  const [showUnlimitedDialog, setShowUnlimitedDialog] = useState(false);
   const userId = user?.id;
 
   const userKey = useMemo(() => {
@@ -194,22 +193,31 @@ export const useDailyQueryLimit = () => {
   }, []);
 
   useEffect(() => {
-    if (!isLoaded || !isUnlimitedUser || typeof window === 'undefined') {
+    if (!isLoaded || typeof window === 'undefined') {
+      setShowUnlimitedDialog(false);
+      return;
+    }
+
+    if (!isUnlimitedUser) {
+      setShowUnlimitedDialog(false);
       return;
     }
 
     const noticeKey = createUnlimitedNoticeKey(userKey, todayKey);
     const hasSeenNotice = localStorage.getItem(noticeKey);
-    if (hasSeenNotice) {
+
+    setShowUnlimitedDialog(!hasSeenNotice);
+  }, [isLoaded, isUnlimitedUser, todayKey, userKey]);
+
+  const acknowledgeUnlimitedAccess = useCallback(() => {
+    if (typeof window === 'undefined') {
       return;
     }
 
-    toast({
-      title: 'Unlimited access unlocked',
-      description: 'You know have Unlimited uses and do not have daily limits unlinke other user—Signed, Nirneet.',
-    });
+    const noticeKey = createUnlimitedNoticeKey(userKey, todayKey);
     localStorage.setItem(noticeKey, 'true');
-  }, [isLoaded, isUnlimitedUser, toast, todayKey, userKey]);
+    setShowUnlimitedDialog(false);
+  }, [todayKey, userKey]);
 
   return {
     usage,
@@ -220,5 +228,7 @@ export const useDailyQueryLimit = () => {
     consume,
     getRemaining,
     updateTrigger,
+    showUnlimitedDialog,
+    acknowledgeUnlimitedAccess,
   };
 };

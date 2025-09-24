@@ -33,7 +33,10 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const {
     sendMessageWithFiles,
     generateCodeFromPrompt,
-    executeCommand
+    executeCommand,
+    limits,
+    usage,
+    isUnlimitedUser,
   } = useChat();
   const {
     toast
@@ -310,6 +313,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
     if (!replyingTo) return null;
     return messages.find(m => m.id === replyingTo);
   };
+  const isLimitReached = !isUnlimitedUser && usage.chatPrompts >= limits.chatPrompts;
   const isInputDisabled = isLoading || isLimitReached;
   return <div className={`${isWelcomeMode ? '' : 'border-t border-border/30 bg-card/20 backdrop-blur-sm'}`}>
       <form onSubmit={handleSubmit} className={isWelcomeMode ? "" : "p-6"}>

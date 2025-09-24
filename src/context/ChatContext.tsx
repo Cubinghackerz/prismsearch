@@ -8,7 +8,7 @@ import React, {
 } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
-import { useDailyQueryLimit } from '@/hooks/useDailyQueryLimit';
+import { useDailyQueryLimit, UsageSnapshot, UsageCategory } from '@/hooks/useDailyQueryLimit';
 import { useToast } from '@/hooks/use-toast';
 import {
   CodeGenerationPlan,
@@ -473,6 +473,14 @@ interface ChatContextType {
   isTemporaryMode: boolean;
   toggleTemporaryMode: () => void;
   saveCurrentChat: () => void;
+  usage: UsageSnapshot;
+  limits: Record<UsageCategory, number>;
+  isUnlimitedUser: boolean;
+  isUsageLoaded: boolean;
+  getRemaining: (category: UsageCategory) => number;
+  dailyLimitUpdateToken: number;
+  showUnlimitedAccessDialog: boolean;
+  acknowledgeUnlimitedAccess: () => void;
 }
 
 export const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -493,7 +501,17 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [chatId, setChatId] = useState<string | null>(null);
   const [savedChats, setSavedChats] = useState<SavedChat[]>([]);
   const [isTemporaryMode, setIsTemporaryMode] = useState<boolean>(false);
-  const { consume, limits } = useDailyQueryLimit();
+  const {
+    usage,
+    limits,
+    isUnlimitedUser,
+    isLoaded: isUsageLoaded,
+    consume,
+    getRemaining,
+    updateTrigger,
+    showUnlimitedDialog,
+    acknowledgeUnlimitedAccess,
+  } = useDailyQueryLimit();
   const { toast } = useToast();
 
   // Load saved chats on mount
@@ -1277,7 +1295,15 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       clearAllChats,
       isTemporaryMode,
       toggleTemporaryMode,
-      saveCurrentChat
+      saveCurrentChat,
+      usage,
+      limits,
+      isUnlimitedUser,
+      isUsageLoaded,
+      getRemaining,
+      dailyLimitUpdateToken: updateTrigger,
+      showUnlimitedAccessDialog: showUnlimitedDialog,
+      acknowledgeUnlimitedAccess,
     }}>
       {children}
     </ChatContext.Provider>
