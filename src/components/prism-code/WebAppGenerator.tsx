@@ -76,10 +76,6 @@ const WebAppGenerator = () => {
     map.set('styles.css', { path: 'styles.css', language: 'css', content: generatedApp.css });
     map.set('script.js', { path: 'script.js', language: 'javascript', content: generatedApp.javascript });
 
-    if (generatedApp.previewHtml) {
-      map.set('preview.html', { path: 'preview.html', language: 'html', content: generatedApp.previewHtml });
-    }
-
     (generatedApp.files || []).forEach((file) => {
       if (!file.path) return;
       map.set(file.path, {
@@ -441,10 +437,6 @@ Please modify or enhance the current application accordingly.`;
     fileMap.set('index.html', generatedApp.html);
     fileMap.set('styles.css', generatedApp.css);
     fileMap.set('script.js', generatedApp.javascript);
-
-    if (generatedApp.previewHtml) {
-      fileMap.set('preview.html', generatedApp.previewHtml);
-    }
 
     (generatedApp.files || []).forEach((file) => {
       if (!file.path) return;
@@ -855,8 +847,6 @@ Please modify or enhance the current application accordingly.`;
               handleFileChange('css', content);
             } else if (path === 'script.js') {
               handleFileChange('javascript', content);
-            } else if (path === 'preview.html') {
-              handleFileChange('previewHtml', content);
             } else {
               handleFileChange(`file:${path}`, content);
             }

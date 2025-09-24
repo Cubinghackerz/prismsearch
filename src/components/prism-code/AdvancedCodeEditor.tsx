@@ -81,11 +81,11 @@ const AdvancedCodeEditor: React.FC<AdvancedCodeEditorProps> = ({
     if (generatedApp.previewHtml) {
       additional.push({
         key: 'previewHtml',
-        label: 'Preview HTML',
+        label: 'Live preview source',
         content: generatedApp.previewHtml,
         icon: FileText,
         language: 'html',
-        filename: 'preview.html',
+        filename: 'live-preview.html',
         identifier: 'previewHtml',
       });
     }

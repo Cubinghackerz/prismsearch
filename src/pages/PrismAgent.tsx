@@ -18,6 +18,7 @@ import {
 } from '@/context/PrismAgentContext';
 import PrismAgentPlanCard from '@/components/prism-agent/PrismAgentPlanCard';
 import PrismAgentVersionHistory from '@/components/prism-agent/PrismAgentVersionHistory';
+import PrismAgentTerminal from '@/components/prism-agent/PrismAgentTerminal';
 import CodeGenerationBubble from '@/components/chat/CodeGenerationBubble';
 import {
   DEFAULT_CODE_GENERATION_FALLBACK_ORDER,
@@ -95,6 +96,14 @@ const PrismAgent = () => {
     () => projects.find((project) => project.id === activeProjectId),
     [projects, activeProjectId]
   );
+
+  const activeVersion = useMemo(() => {
+    if (!activeProject?.activeVersionId) {
+      return undefined;
+    }
+
+    return activeProject.versions.find((version) => version.id === activeProject.activeVersionId);
+  }, [activeProject]);
 
   const hasAccess = useMemo(() => {
     if (!user) {
@@ -328,7 +337,14 @@ const PrismAgent = () => {
       {isBooting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0">
-            <LetterGlitch glitchColors={['#050505', '#0f172a', '#1e293b', '#6366f1']} glitchSpeed={70} smooth />
+            <LetterGlitch
+              glitchColors={["#111111", "#1a1a1a", "#2a2a2a", "#3a3a3a"]}
+              glitchSpeed={80}
+              centerVignette={false}
+              outerVignette
+              smooth
+            />
+            <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-black/80" />
           </div>
           <div className="relative z-10 text-center space-y-4">
             <div className="text-sm uppercase tracking-[0.3em] text-primary/60">Prism Agent</div>
@@ -514,6 +530,7 @@ const PrismAgent = () => {
           </div>
 
           <div className="space-y-4">
+            <PrismAgentTerminal activeVersion={activeVersion} />
             <PrismAgentVersionHistory
               versions={activeProject?.versions || []}
               activeVersionId={activeProject?.activeVersionId}

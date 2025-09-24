@@ -42,10 +42,6 @@ const CodeGenerationBubble = ({ result, prompt, usedModel, rawResponse }: CodeGe
     map.set('styles.css', { path: 'styles.css', language: 'css', content: appState.css });
     map.set('script.js', { path: 'script.js', language: 'javascript', content: appState.javascript });
 
-    if (appState.previewHtml) {
-      map.set('preview.html', { path: 'preview.html', language: 'html', content: appState.previewHtml });
-    }
-
     (appState.files || []).forEach((file) => {
       if (file.path) {
         map.set(file.path, {
@@ -292,8 +288,6 @@ const CodeGenerationBubble = ({ result, prompt, usedModel, rawResponse }: CodeGe
             handleFileChange('css', content);
           } else if (path === 'script.js') {
             handleFileChange('javascript', content);
-          } else if (path === 'preview.html') {
-            handleFileChange('previewHtml', content);
           } else {
             handleFileChange(`file:${path}`, content);
           }
