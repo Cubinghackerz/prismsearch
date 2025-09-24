@@ -19,6 +19,8 @@ import {
 import PrismAgentPlanCard from '@/components/prism-agent/PrismAgentPlanCard';
 import PrismAgentVersionHistory from '@/components/prism-agent/PrismAgentVersionHistory';
 import PrismAgentTerminal from '@/components/prism-agent/PrismAgentTerminal';
+import PrismAgentLivePreview from '@/components/prism-agent/PrismAgentLivePreview';
+import { PrismAgentRuntimeProvider } from '@/context/PrismAgentRuntimeContext';
 import CodeGenerationBubble from '@/components/chat/CodeGenerationBubble';
 import {
   DEFAULT_CODE_GENERATION_FALLBACK_ORDER,
@@ -530,7 +532,12 @@ const PrismAgent = () => {
           </div>
 
           <div className="space-y-4">
-            <PrismAgentTerminal activeVersion={activeVersion} />
+            <PrismAgentRuntimeProvider app={activeVersion?.app}>
+              <div className="space-y-4">
+                <PrismAgentLivePreview activeVersion={activeVersion} />
+                <PrismAgentTerminal activeVersion={activeVersion} />
+              </div>
+            </PrismAgentRuntimeProvider>
             <PrismAgentVersionHistory
               versions={activeProject?.versions || []}
               activeVersionId={activeProject?.activeVersionId}
