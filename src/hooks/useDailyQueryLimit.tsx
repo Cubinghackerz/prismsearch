@@ -1,102 +1,224 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useUser } from '@clerk/clerk-react';
+import { useToast } from '@/hooks/use-toast';
 
-interface DailyQueryData {
+export type UsageCategory =
+  | 'chatPrompts'
+  | 'chatCommands'
+  | 'codeGenerations'
+  | 'researchWords';
+
+type UsageSnapshot = Record<UsageCategory, number>;
+
+const DEFAULT_USAGE: UsageSnapshot = {
+  chatPrompts: 0,
+  chatCommands: 0,
+  codeGenerations: 0,
+  researchWords: 0,
+};
+
+const DAILY_LIMITS: Record<UsageCategory, number> = {
+  chatPrompts: 20,
+  chatCommands: 10,
+  codeGenerations: 5,
+  researchWords: 1000,
+};
+
+const UNLIMITED_USER_IDS = new Set([
+  'user_30z8cmTlPMcTfCEvoXUTf9FuBhh',
+  'user_30dXgGX4sh2BzDZRix5yNEjdehx',
+  'user_30VC241Fkl0KuubR0hqkyQNaq6r',
+]);
+
+interface StoredUsageData {
   date: string;
-  count: number;
+  usage: UsageSnapshot;
 }
 
+const getTodayIdentifier = () => new Date().toDateString();
+
+const createStorageKey = (userKey: string, dateKey: string) =>
+  `prism_usage_${userKey}_${dateKey}`;
+
+const createUnlimitedNoticeKey = (userKey: string, dateKey: string) =>
+  `prism_unlimited_notice_${userKey}_${dateKey}`;
+
 export const useDailyQueryLimit = () => {
-  const { isSignedIn, isLoaded } = useUser();
-  const [queriesUsed, setQueriesUsed] = useState(0);
-  const [isLimitReached, setIsLimitReached] = useState(false);
+  const { user, isLoaded } = useUser();
+  const { toast } = useToast();
+  const [usage, setUsage] = useState<UsageSnapshot>(DEFAULT_USAGE);
   const [updateTrigger, setUpdateTrigger] = useState(0);
+  const userId = user?.id;
 
-  // Get limits based on user status
-  const maxQueries = isSignedIn ? 100 : 30;
-  const queriesLeft = Math.max(0, maxQueries - queriesUsed);
-
-  const getTodayKey = () => {
-    const today = new Date();
-    return `prism_queries_${today.toDateString()}`;
-  };
-
-  const loadTodaysQueries = useCallback(() => {
-    if (!isLoaded) return;
-
-    const todayKey = getTodayKey();
-    const stored = localStorage.getItem(todayKey);
-    
-    if (stored) {
-      try {
-        const data: DailyQueryData = JSON.parse(stored);
-        setQueriesUsed(data.count);
-        setIsLimitReached(data.count >= maxQueries);
-      } catch {
-        setQueriesUsed(0);
-        setIsLimitReached(false);
-      }
-    } else {
-      setQueriesUsed(0);
-      setIsLimitReached(false);
+  const userKey = useMemo(() => {
+    if (!isLoaded) {
+      return 'guest';
     }
-  }, [isLoaded, maxQueries]);
+    return userId ?? 'guest';
+  }, [isLoaded, userId]);
 
-  const incrementQueryCount = useCallback(() => {
-    if (!isLoaded) return false;
+  const todayKey = getTodayIdentifier();
 
-    const todayKey = getTodayKey();
-    const newCount = queriesUsed + 1;
-    
-    if (newCount > maxQueries) {
-      setIsLimitReached(true);
+  const isUnlimitedUser = useMemo(() => {
+    if (!isLoaded) {
       return false;
     }
+    return userId ? UNLIMITED_USER_IDS.has(userId) : false;
+  }, [isLoaded, userId]);
 
-    const data: DailyQueryData = {
-      date: new Date().toDateString(),
-      count: newCount
-    };
+  const storageKey = useMemo(
+    () => createStorageKey(userKey, todayKey),
+    [userKey, todayKey],
+  );
 
-    localStorage.setItem(todayKey, JSON.stringify(data));
-    setQueriesUsed(newCount);
-    setIsLimitReached(newCount >= maxQueries);
-    setUpdateTrigger(prev => prev + 1); // Force re-render
+  const loadUsage = useCallback(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
 
-    return true;
-  }, [isLoaded, queriesUsed, maxQueries]);
+    const stored = localStorage.getItem(storageKey);
+    if (!stored) {
+      setUsage(DEFAULT_USAGE);
+      return;
+    }
+
+    try {
+      const parsed: StoredUsageData = JSON.parse(stored);
+      if (parsed.date !== todayKey) {
+        setUsage(DEFAULT_USAGE);
+        return;
+      }
+      setUsage({ ...DEFAULT_USAGE, ...parsed.usage });
+    } catch {
+      setUsage(DEFAULT_USAGE);
+    }
+  }, [storageKey, todayKey]);
+
+  const persistUsage = useCallback(
+    (next: UsageSnapshot) => {
+      if (typeof window === 'undefined') {
+        return;
+      }
+
+      const payload: StoredUsageData = {
+        date: todayKey,
+        usage: next,
+      };
+
+      localStorage.setItem(storageKey, JSON.stringify(payload));
+    },
+    [storageKey, todayKey],
+  );
+
+  const canUse = useCallback(
+    (category: UsageCategory, amount = 1) => {
+      if (isUnlimitedUser) {
+        return true;
+      }
+      const limit = DAILY_LIMITS[category];
+      const current = usage[category] ?? 0;
+      return current + amount <= limit;
+    },
+    [isUnlimitedUser, usage],
+  );
+
+  const consume = useCallback(
+    (category: UsageCategory, amount = 1) => {
+      if (isUnlimitedUser) {
+        return true;
+      }
+
+      const limit = DAILY_LIMITS[category];
+      const current = usage[category] ?? 0;
+      if (current + amount > limit) {
+        return false;
+      }
+
+      const next: UsageSnapshot = {
+        ...usage,
+        [category]: current + amount,
+      };
+
+      setUsage(next);
+      persistUsage(next);
+      setUpdateTrigger((value) => value + 1);
+      return true;
+    },
+    [isUnlimitedUser, persistUsage, usage],
+  );
+
+  const getRemaining = useCallback(
+    (category: UsageCategory) => {
+      if (isUnlimitedUser) {
+        return Infinity;
+      }
+      const limit = DAILY_LIMITS[category];
+      const current = usage[category] ?? 0;
+      return Math.max(0, limit - current);
+    },
+    [isUnlimitedUser, usage],
+  );
 
   useEffect(() => {
-    loadTodaysQueries();
-  }, [loadTodaysQueries]);
+    if (!isLoaded) {
+      return;
+    }
+    loadUsage();
+  }, [isLoaded, loadUsage]);
 
-  // Clean up old query data (keep only last 7 days)
   useEffect(() => {
-    const cleanupOldData = () => {
-      const keys = Object.keys(localStorage);
-      const queryKeys = keys.filter(key => key.startsWith('prism_queries_'));
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    if (typeof window === 'undefined') {
+      return;
+    }
 
-      queryKeys.forEach(key => {
-        const dateStr = key.replace('prism_queries_', '');
-        const date = new Date(dateStr);
-        if (date < sevenDaysAgo) {
+    const keys = Object.keys(localStorage);
+    keys
+      .filter((key) => key.startsWith('prism_usage_'))
+      .forEach((key) => {
+        const suffix = key.replace('prism_usage_', '');
+        const lastUnderscore = suffix.lastIndexOf('_');
+        if (lastUnderscore === -1) {
+          return;
+        }
+        const datePart = suffix.slice(lastUnderscore + 1);
+        const parsedDate = new Date(datePart);
+        if (Number.isNaN(parsedDate.getTime())) {
+          return;
+        }
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        if (parsedDate < sevenDaysAgo) {
           localStorage.removeItem(key);
         }
       });
-    };
-
-    cleanupOldData();
   }, []);
 
+  useEffect(() => {
+    if (!isLoaded || !isUnlimitedUser || typeof window === 'undefined') {
+      return;
+    }
+
+    const noticeKey = createUnlimitedNoticeKey(userKey, todayKey);
+    const hasSeenNotice = localStorage.getItem(noticeKey);
+    if (hasSeenNotice) {
+      return;
+    }
+
+    toast({
+      title: 'Unlimited access unlocked',
+      description: 'You know have Unlimited uses and do not have daily limits unlinke other user—Signed, Nirneet.',
+    });
+    localStorage.setItem(noticeKey, 'true');
+  }, [isLoaded, isUnlimitedUser, toast, todayKey, userKey]);
+
   return {
-    queriesUsed,
-    queriesLeft,
-    maxQueries,
-    isLimitReached,
-    incrementQueryCount,
+    usage,
+    limits: DAILY_LIMITS,
+    isUnlimitedUser,
     isLoaded,
-    updateTrigger // Include this to force re-renders
+    canUse,
+    consume,
+    getRemaining,
+    updateTrigger,
   };
 };

@@ -32,6 +32,7 @@ import { Bot, FolderPlus, Pencil, Plus, Sparkles, Trash, Wand2 } from 'lucide-re
 
 const EXCLUSIVE_USER_IDS = new Set([
   'user_30z8cmTlPMcTfCEvoXUTf9FuBhh',
+  'user_30dXgGX4sh2BzDZRix5yNEjdehx',
   'user_30VC241Fkl0KuubR0hqkyQNaq6r',
 ]);
 
@@ -366,11 +367,19 @@ const PrismAgent = () => {
                 <Bot className="h-7 w-7 text-primary" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-                  Prism Agent
-                </h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+                    Prism Agent
+                  </h1>
+                  <Badge variant="outline" className="border-primary/50 text-primary uppercase tracking-[0.2em] text-[0.65rem]">
+                    Beta
+                  </Badge>
+                </div>
                 <p className="text-sm text-muted-foreground">
                   Gemini 2.5 Pro powered coding agent with project history, version control, and VS Code workspace hand-offs.
+                </p>
+                <p className="text-xs text-muted-foreground/80 mt-1">
+                  Prism Agent is in beta—capabilities, limits, and stability will continue to evolve as we gather feedback.
                 </p>
               </div>
             </div>

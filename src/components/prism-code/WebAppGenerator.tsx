@@ -88,7 +88,7 @@ const WebAppGenerator = () => {
     return Array.from(map.values());
   }, [generatedApp]);
   const { toast } = useToast();
-  const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
+  const { consume, limits } = useDailyQueryLimit();
 
   const MODEL_FALLBACK_ORDER: AIModel[] =
     DEFAULT_CODE_GENERATION_FALLBACK_ORDER as AIModel[];
@@ -198,20 +198,11 @@ const WebAppGenerator = () => {
       return;
     }
 
-    if (isLimitReached) {
+    if (!consume('codeGenerations')) {
       toast({
-        title: "Daily Limit Reached",
-        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!incrementQueryCount()) {
-      toast({
-        title: "Daily Limit Reached",
-        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
-        variant: "destructive"
+        title: 'Daily Limit Reached',
+        description: `You've reached your daily limit of ${limits.codeGenerations} Prism Code generations. Try again tomorrow!`,
+        variant: 'destructive',
       });
       return;
     }
@@ -335,20 +326,11 @@ Please create a complete, functional web application that follows this plan exac
       return;
     }
 
-    if (isLimitReached) {
+    if (!consume('codeGenerations')) {
       toast({
-        title: "Daily Limit Reached",
-        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!incrementQueryCount()) {
-      toast({
-        title: "Daily Limit Reached",
-        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
-        variant: "destructive"
+        title: 'Daily Limit Reached',
+        description: `You've reached your daily limit of ${limits.codeGenerations} Prism Code generations. Try again tomorrow!`,
+        variant: 'destructive',
       });
       return;
     }

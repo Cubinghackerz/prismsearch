@@ -4,7 +4,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatMessage } from '@/context/ChatContext';
-import { useDailyQueryLimit } from '@/hooks/useDailyQueryLimit';
 import { useToast } from '@/hooks/use-toast';
 import { useChat, isChatCommandKey, getCommandLabel, CHAT_COMMAND_GUIDE, SupportedCommand } from '@/context/ChatContext';
 interface MessageInputProps {
@@ -39,9 +38,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const {
     toast
   } = useToast();
-  const {
-    isLimitReached
-  } = useDailyQueryLimit();
 
   useEffect(() => {
     const trimmed = inputValue;
@@ -185,7 +181,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = inputValue.trim();
-    if (!trimmed || isLoading || isLimitReached) return;
+    if (!trimmed || isLoading) return;
 
     const commandMatch = trimmed.match(/^\/(\w+)(?:\s+|$)/i);
     const commandKey = commandMatch?.[1]?.toLowerCase();

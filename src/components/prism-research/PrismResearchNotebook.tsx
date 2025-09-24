@@ -37,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/components/ui/use-toast';
+import { useDailyQueryLimit } from '@/hooks/useDailyQueryLimit';
 import ResearchTimeline from './ResearchTimeline';
 import ResearchInsights from './ResearchInsights';
 import ResearchSourcesPanel from './ResearchSourcesPanel';
@@ -65,6 +66,44 @@ const formatTimestampForDisplay = (value: string): string => {
     return value;
   }
   return parsed.toUTCString();
+};
+
+const countWords = (value: string | undefined | null): number => {
+  if (!value) {
+    return 0;
+  }
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return 0;
+  }
+  return trimmed.split(/\s+/).length;
+};
+
+const countNotebookWords = (notebook: ResearchNotebook): number => {
+  let total = 0;
+  total += countWords(notebook.overview);
+
+  notebook.insights.forEach((insight) => {
+    total += countWords(insight.heading);
+    total += countWords(insight.summary);
+  });
+
+  notebook.timeline.forEach((event) => {
+    total += countWords(event.title);
+    total += countWords(event.description);
+  });
+
+  notebook.sources.forEach((source) => {
+    total += countWords(source.title);
+    total += countWords(source.snippet);
+  });
+
+  notebook.followUps.forEach((followUp) => {
+    total += countWords(followUp.question);
+    total += countWords(followUp.rationale);
+  });
+
+  return total;
 };
 
 const notebookToMarkdown = (notebook: ResearchNotebook): string => {
@@ -169,6 +208,8 @@ const triggerDownload = (filename: string, content: string, mimeType: string) =>
 
 const PrismResearchNotebook: React.FC = () => {
   const { toast } = useToast();
+  const { consume, getRemaining, limits, isUnlimitedUser } = useDailyQueryLimit();
+  const researchWordLimit = limits.researchWords;
   const [query, setQuery] = useState(DEFAULT_QUERY);
   const [mode, setMode] = useState<ResearchMode>('comprehensive');
   const [fastMode, setFastMode] = useState(false);
@@ -228,6 +269,17 @@ const PrismResearchNotebook: React.FC = () => {
         return;
       }
 
+      const remainingWords = getRemaining('researchWords');
+      if (!isUnlimitedUser && remainingWords <= 0) {
+        toast({
+          title: 'Daily limit reached',
+          description: `You've reached your daily limit of ${researchWordLimit} Research Preview words. Try again tomorrow.`,
+          variant: 'destructive',
+        });
+        setError('Daily Research Preview word limit reached. Try again tomorrow.');
+        return;
+      }
+
       setLoading(true);
       setError(null);
       try {
@@ -237,6 +289,18 @@ const PrismResearchNotebook: React.FC = () => {
           maxSources: 10,
           forceRefresh: options?.forceRefresh,
         });
+
+        const generatedWordCount = countNotebookWords(result);
+        if (!consume('researchWords', generatedWordCount)) {
+          toast({
+            title: 'Daily limit reached',
+            description: `This run would exceed the ${researchWordLimit}-word Research Preview limit for today. Try again tomorrow.`,
+            variant: 'destructive',
+          });
+          setError('Daily Research Preview word limit reached. Try again tomorrow.');
+          return;
+        }
+
         setNotebook(result);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Something went wrong while running the notebook.');
@@ -244,7 +308,7 @@ const PrismResearchNotebook: React.FC = () => {
         setLoading(false);
       }
     },
-    [fastMode, mode, query],
+    [consume, fastMode, getRemaining, isUnlimitedUser, mode, query, researchWordLimit, toast],
   );
 
   const initialized = useRef(false);

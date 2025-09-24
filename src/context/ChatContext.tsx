@@ -493,7 +493,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [chatId, setChatId] = useState<string | null>(null);
   const [savedChats, setSavedChats] = useState<SavedChat[]>([]);
   const [isTemporaryMode, setIsTemporaryMode] = useState<boolean>(false);
-  const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
+  const { consume, limits } = useDailyQueryLimit();
   const { toast } = useToast();
 
   // Load saved chats on mount
@@ -590,22 +590,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [messages, isTemporaryMode, chatId]);
 
   const sendMessageWithFiles = async (content: string, attachments: any[] = [], parentMessageId?: string) => {
-    // Check query limit before processing
-    if (isLimitReached) {
+    if (!consume('chatPrompts')) {
       toast({
-        title: "Daily limit reached",
-        description: "You've reached your daily query limit. Please try again tomorrow or sign up for more queries.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Increment query count
-    if (!incrementQueryCount()) {
-      toast({
-        title: "Daily limit reached",
-        description: "You've reached your daily query limit. Please try again tomorrow.",
-        variant: "destructive"
+        title: 'Daily limit reached',
+        description: `You've reached your daily limit of ${limits.chatPrompts} Prism Chat prompts. Try again tomorrow.`,
+        variant: 'destructive',
       });
       return;
     }
@@ -702,20 +691,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return null;
     }
 
-    if (isLimitReached) {
+    if (!consume('chatCommands')) {
       toast({
-        title: "Daily limit reached",
-        description: "You've reached your daily query limit. Please try again tomorrow or sign up for more queries.",
-        variant: "destructive"
-      });
-      return null;
-    }
-
-    if (!incrementQueryCount()) {
-      toast({
-        title: "Daily limit reached",
-        description: "You've reached your daily query limit. Please try again tomorrow.",
-        variant: "destructive"
+        title: 'Daily limit reached',
+        description: `You've reached your daily limit of ${limits.chatCommands} Prism Chat commands. Try again tomorrow.`,
+        variant: 'destructive',
       });
       return null;
     }
@@ -876,20 +856,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    if (isLimitReached) {
+    if (!consume('chatCommands')) {
       toast({
-        title: "Daily limit reached",
-        description: "You've reached your daily query limit. Please try again tomorrow or sign up for more queries.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!incrementQueryCount()) {
-      toast({
-        title: "Daily limit reached",
-        description: "You've reached your daily query limit. Please try again tomorrow.",
-        variant: "destructive"
+        title: 'Daily limit reached',
+        description: `You've reached your daily limit of ${limits.chatCommands} Prism Chat commands. Try again tomorrow.`,
+        variant: 'destructive',
       });
       return;
     }
@@ -1198,23 +1169,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const runDeepResearch = async (topic: string) => {
     if (isLoading) return;
-    
-    // Check query limit before processing
-    if (isLimitReached) {
-      toast({
-        title: "Daily limit reached",
-        description: "You've reached your daily query limit. Please try again tomorrow or sign up for more queries.",
-        variant: "destructive"
-      });
-      return;
-    }
 
-    // Increment query count
-    if (!incrementQueryCount()) {
+    if (!consume('chatPrompts')) {
       toast({
-        title: "Daily limit reached",
-        description: "You've reached your daily query limit. Please try again tomorrow.",
-        variant: "destructive"
+        title: 'Daily limit reached',
+        description: `You've reached your daily limit of ${limits.chatPrompts} Prism Chat prompts. Try again tomorrow.`,
+        variant: 'destructive',
       });
       return;
     }
