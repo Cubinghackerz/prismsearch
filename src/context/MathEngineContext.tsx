@@ -10,58 +10,58 @@ import { v4 as uuidv4 } from 'uuid';
 import CryptoJS from 'crypto-js';
 import JSZip from 'jszip';
 import {
-  prismAgentDB,
-  type PrismAgentFramework,
-  type PrismAgentFileRecord,
-  type PrismAgentProjectRecord,
-  type PrismAgentSnapshotRecord,
-} from './PrismAgentDatabase';
+  mathEngineDB,
+  type MathEngineFramework,
+  type MathEngineFileRecord,
+  type MathEngineProjectRecord,
+  type MathEngineSnapshotRecord,
+} from './MathEngineDatabase';
 import {
-  PRISM_AGENT_TEMPLATES,
-  type PrismAgentTemplateDefinition,
-  type PrismAgentTemplateId,
+  MATH_ENGINE_TEMPLATES,
+  type MathEngineTemplateDefinition,
+  type MathEngineTemplateId,
   getTemplateById,
-} from '@/components/prism-agent/prismAgentTemplates';
+} from '@/components/math-engine/mathEngineTemplates';
 
-export interface PrismAgentFile {
+export interface MathEngineFile {
   path: string;
   content: string;
   hash: string;
   updatedAt: string;
 }
 
-export interface PrismAgentSnapshot {
+export interface MathEngineSnapshot {
   id: string;
   projectId: string;
   order: number;
   createdAt: string;
   label?: string;
-  files: PrismAgentFile[];
+  files: MathEngineFile[];
 }
 
-export interface PrismAgentProject {
+export interface MathEngineProject {
   id: string;
   name: string;
-  framework: PrismAgentFramework;
+  framework: MathEngineFramework;
   createdAt: string;
   updatedAt: string;
   settings?: Record<string, unknown>;
-  files: PrismAgentFile[];
-  snapshots: PrismAgentSnapshot[];
+  files: MathEngineFile[];
+  snapshots: MathEngineSnapshot[];
   snapshotIndex: number;
   entryFile: string;
 }
 
-interface PrismAgentContextValue {
-  projects: PrismAgentProject[];
+interface MathEngineContextValue {
+  projects: MathEngineProject[];
   isLoading: boolean;
   activeProjectId: string | null;
   selectProject: (projectId: string) => void;
   createProject: (
-    templateId: PrismAgentTemplateId,
+    templateId: MathEngineTemplateId,
     name?: string
-  ) => Promise<PrismAgentProject | null>;
-  duplicateProject: (projectId: string) => Promise<PrismAgentProject | null>;
+  ) => Promise<MathEngineProject | null>;
+  duplicateProject: (projectId: string) => Promise<MathEngineProject | null>;
   renameProject: (projectId: string, name: string) => Promise<void>;
   deleteProject: (projectId: string) => Promise<void>;
   createFile: (projectId: string, path: string, content?: string) => Promise<void>;
@@ -80,24 +80,24 @@ interface PrismAgentContextValue {
   undo: (projectId: string) => Promise<boolean>;
   redo: (projectId: string) => Promise<boolean>;
   exportProject: (projectId: string) => Promise<Blob | null>;
-  importProject: (file: File) => Promise<PrismAgentProject | null>;
+  importProject: (file: File) => Promise<MathEngineProject | null>;
   maxProjects: number;
-  templates: PrismAgentTemplateDefinition[];
+  templates: MathEngineTemplateDefinition[];
 }
 
-const ACTIVE_PROJECT_STORAGE_KEY = 'prism_agent_active_project';
+const ACTIVE_PROJECT_STORAGE_KEY = 'math_engine_active_project';
 const MAX_PROJECTS = 10;
 
-const PrismAgentContext = createContext<PrismAgentContextValue | undefined>(undefined);
+const MathEngineContext = createContext<MathEngineContextValue | undefined>(undefined);
 
 const mapProjectRecord = async (
-  record: PrismAgentProjectRecord
-): Promise<PrismAgentProject> => {
-  const files = await prismAgentDB.files
+  record: MathEngineProjectRecord
+): Promise<MathEngineProject> => {
+  const files = await mathEngineDB.files
     .where('projectId')
     .equals(record.id)
     .toArray();
-  const snapshotsRecords = await prismAgentDB.snapshots
+  const snapshotsRecords = await mathEngineDB.snapshots
     .where('projectId')
     .equals(record.id)
     .sortBy('order');
@@ -125,15 +125,15 @@ const mapProjectRecord = async (
       order: snapshot.order,
       createdAt: snapshot.createdAt,
       label: snapshot.label,
-      files: JSON.parse(snapshot.files) as PrismAgentFile[],
+      files: JSON.parse(snapshot.files) as MathEngineFile[],
     })),
     snapshotIndex: record.snapshotIndex ?? 0,
   };
 };
 
 const inferEntryFile = (
-  framework: PrismAgentFramework,
-  files: PrismAgentFileRecord[]
+  framework: MathEngineFramework,
+  files: MathEngineFileRecord[]
 ): string => {
   if (framework === 'react') {
     if (files.some((file) => file.path === 'src/App.tsx')) {
@@ -170,15 +170,15 @@ const readFileEntriesFromZip = async (file: File) => {
 
 const detectFrameworkFromFiles = (
   files: { path: string; content: string }[]
-): PrismAgentFramework => {
+): MathEngineFramework => {
   if (files.some((file) => /react/i.test(file.content) || file.path.endsWith('.tsx'))) {
     return 'react';
   }
   return 'vanilla';
 };
 
-export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const [projects, setProjects] = useState<PrismAgentProject[]>([]);
+export const MathEngineProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
+  const [projects, setProjects] = useState<MathEngineProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(() => {
     if (typeof window === 'undefined') {
@@ -188,13 +188,13 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
     try {
       return localStorage.getItem(ACTIVE_PROJECT_STORAGE_KEY);
     } catch (error) {
-      console.warn('Failed to read active Prism Agent project', error);
+      console.warn('Failed to read active Math Engine project', error);
       return null;
     }
   });
 
   const refreshProjects = useCallback(async () => {
-    const projectRecords = await prismAgentDB.projects.orderBy('updatedAt').reverse().toArray();
+    const projectRecords = await mathEngineDB.projects.orderBy('updatedAt').reverse().toArray();
     const mapped = await Promise.all(projectRecords.map(mapProjectRecord));
     setProjects(mapped);
     setIsLoading(false);
@@ -228,7 +228,7 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
         localStorage.removeItem(ACTIVE_PROJECT_STORAGE_KEY);
       }
     } catch (error) {
-      console.warn('Failed to persist active Prism Agent project', error);
+      console.warn('Failed to persist active Math Engine project', error);
     }
   }, [activeProjectId]);
 
@@ -237,20 +237,20 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
       projectId: string,
       label?: string
     ) => {
-      const projectRecord = await prismAgentDB.projects.get(projectId);
+      const projectRecord = await mathEngineDB.projects.get(projectId);
       if (!projectRecord) {
         return;
       }
 
       const currentIndex = projectRecord.snapshotIndex ?? 0;
-      await prismAgentDB.snapshots
+      await mathEngineDB.snapshots
         .where('projectId')
         .equals(projectId)
         .and((snapshot) => snapshot.order > currentIndex)
         .delete();
 
-      const files = await prismAgentDB.files.where('projectId').equals(projectId).toArray();
-      const snapshot: PrismAgentSnapshotRecord = {
+      const files = await mathEngineDB.files.where('projectId').equals(projectId).toArray();
+      const snapshot: MathEngineSnapshotRecord = {
         id: uuidv4(),
         projectId,
         order: currentIndex + 1,
@@ -266,9 +266,9 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
         ),
       };
 
-      await prismAgentDB.transaction('rw', prismAgentDB.snapshots, prismAgentDB.projects, async () => {
-        await prismAgentDB.snapshots.add(snapshot);
-        await prismAgentDB.projects.update(projectId, {
+      await mathEngineDB.transaction('rw', mathEngineDB.snapshots, mathEngineDB.projects, async () => {
+        await mathEngineDB.snapshots.add(snapshot);
+        await mathEngineDB.projects.update(projectId, {
           snapshotIndex: snapshot.order,
           updatedAt: snapshot.createdAt,
         });
@@ -277,7 +277,7 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
     []
   );
 
-  const createProject = useCallback<PrismAgentContextValue['createProject']>(
+  const createProject = useCallback<MathEngineContextValue['createProject']>(
     async (templateId, name) => {
       const template = getTemplateById(templateId);
       if (!template) {
@@ -285,14 +285,14 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
         return null;
       }
 
-      const projectCount = await prismAgentDB.projects.count();
+      const projectCount = await mathEngineDB.projects.count();
       if (projectCount >= MAX_PROJECTS) {
         return null;
       }
 
       const id = uuidv4();
       const createdAt = new Date().toISOString();
-      const projectRecord: PrismAgentProjectRecord = {
+      const projectRecord: MathEngineProjectRecord = {
         id,
         name: name?.trim() || `${template.name} Project`,
         framework: template.framework,
@@ -302,7 +302,7 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
         snapshotIndex: 0,
       };
 
-      const files: PrismAgentFileRecord[] = Object.entries(template.files).map(
+      const files: MathEngineFileRecord[] = Object.entries(template.files).map(
         ([path, content]) => ({
           projectId: id,
           path,
@@ -312,7 +312,7 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
         })
       );
 
-      const initialSnapshot: PrismAgentSnapshotRecord = {
+      const initialSnapshot: MathEngineSnapshotRecord = {
         id: uuidv4(),
         projectId: id,
         order: 0,
@@ -328,21 +328,21 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
         ),
       };
 
-      await prismAgentDB.transaction(
+      await mathEngineDB.transaction(
         'rw',
-        prismAgentDB.projects,
-        prismAgentDB.files,
-        prismAgentDB.snapshots,
+        mathEngineDB.projects,
+        mathEngineDB.files,
+        mathEngineDB.snapshots,
         async () => {
-          await prismAgentDB.projects.add(projectRecord);
-          await prismAgentDB.files.bulkAdd(files);
-          await prismAgentDB.snapshots.add(initialSnapshot);
+          await mathEngineDB.projects.add(projectRecord);
+          await mathEngineDB.files.bulkAdd(files);
+          await mathEngineDB.snapshots.add(initialSnapshot);
         }
       );
 
       await refreshProjects();
       setActiveProjectId(id);
-      const stored = await prismAgentDB.projects.get(id);
+      const stored = await mathEngineDB.projects.get(id);
       if (!stored) {
         return null;
       }
@@ -351,21 +351,21 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
     [refreshProjects]
   );
 
-  const duplicateProject = useCallback<PrismAgentContextValue['duplicateProject']>(
+  const duplicateProject = useCallback<MathEngineContextValue['duplicateProject']>(
     async (projectId) => {
       const project = projects.find((candidate) => candidate.id === projectId);
       if (!project) {
         return null;
       }
 
-      const projectCount = await prismAgentDB.projects.count();
+      const projectCount = await mathEngineDB.projects.count();
       if (projectCount >= MAX_PROJECTS) {
         return null;
       }
 
       const id = uuidv4();
       const createdAt = new Date().toISOString();
-      const projectRecord: PrismAgentProjectRecord = {
+      const projectRecord: MathEngineProjectRecord = {
         id,
         name: `${project.name} Copy`,
         framework: project.framework,
@@ -375,7 +375,7 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
         snapshotIndex: 0,
       };
 
-      const files: PrismAgentFileRecord[] = project.files.map((file) => ({
+      const files: MathEngineFileRecord[] = project.files.map((file) => ({
         projectId: id,
         path: file.path,
         content: file.content,
@@ -383,7 +383,7 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
         updatedAt: createdAt,
       }));
 
-      const snapshot: PrismAgentSnapshotRecord = {
+      const snapshot: MathEngineSnapshotRecord = {
         id: uuidv4(),
         projectId: id,
         order: 0,
@@ -399,21 +399,21 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
         ),
       };
 
-      await prismAgentDB.transaction(
+      await mathEngineDB.transaction(
         'rw',
-        prismAgentDB.projects,
-        prismAgentDB.files,
-        prismAgentDB.snapshots,
+        mathEngineDB.projects,
+        mathEngineDB.files,
+        mathEngineDB.snapshots,
         async () => {
-          await prismAgentDB.projects.add(projectRecord);
-          await prismAgentDB.files.bulkAdd(files);
-          await prismAgentDB.snapshots.add(snapshot);
+          await mathEngineDB.projects.add(projectRecord);
+          await mathEngineDB.files.bulkAdd(files);
+          await mathEngineDB.snapshots.add(snapshot);
         }
       );
 
       await refreshProjects();
       setActiveProjectId(id);
-      const stored = await prismAgentDB.projects.get(id);
+      const stored = await mathEngineDB.projects.get(id);
       if (!stored) {
         return null;
       }
@@ -422,14 +422,14 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
     [projects, refreshProjects]
   );
 
-  const renameProject = useCallback<PrismAgentContextValue['renameProject']>(
+  const renameProject = useCallback<MathEngineContextValue['renameProject']>(
     async (projectId, name) => {
       const trimmed = name.trim();
       if (!trimmed) {
         return;
       }
 
-      await prismAgentDB.projects.update(projectId, {
+      await mathEngineDB.projects.update(projectId, {
         name: trimmed,
         updatedAt: new Date().toISOString(),
       });
@@ -438,17 +438,17 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
     [refreshProjects]
   );
 
-  const deleteProject = useCallback<PrismAgentContextValue['deleteProject']>(
+  const deleteProject = useCallback<MathEngineContextValue['deleteProject']>(
     async (projectId) => {
-      await prismAgentDB.transaction(
+      await mathEngineDB.transaction(
         'rw',
-        prismAgentDB.projects,
-        prismAgentDB.files,
-        prismAgentDB.snapshots,
+        mathEngineDB.projects,
+        mathEngineDB.files,
+        mathEngineDB.snapshots,
         async () => {
-          await prismAgentDB.projects.delete(projectId);
-          await prismAgentDB.files.where('projectId').equals(projectId).delete();
-          await prismAgentDB.snapshots.where('projectId').equals(projectId).delete();
+          await mathEngineDB.projects.delete(projectId);
+          await mathEngineDB.files.where('projectId').equals(projectId).delete();
+          await mathEngineDB.snapshots.where('projectId').equals(projectId).delete();
         }
       );
       await refreshProjects();
@@ -456,22 +456,22 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
     [refreshProjects]
   );
 
-  const createFile = useCallback<PrismAgentContextValue['createFile']>(
+  const createFile = useCallback<MathEngineContextValue['createFile']>(
     async (projectId, path, content = '') => {
-      const existing = await prismAgentDB.files.get([projectId, path]);
+      const existing = await mathEngineDB.files.get([projectId, path]);
       if (existing) {
         throw new Error('File already exists');
       }
 
       const now = new Date().toISOString();
-      await prismAgentDB.files.add({
+      await mathEngineDB.files.add({
         projectId,
         path,
         content,
         hash: hashContent(content),
         updatedAt: now,
       });
-      await prismAgentDB.projects.update(projectId, {
+      await mathEngineDB.projects.update(projectId, {
         updatedAt: now,
       });
       await persistSnapshot(projectId, `Created ${path}`);
@@ -480,17 +480,17 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
     [persistSnapshot, refreshProjects]
   );
 
-  const updateFile = useCallback<PrismAgentContextValue['updateFile']>(
+  const updateFile = useCallback<MathEngineContextValue['updateFile']>(
     async (projectId, path, content, options) => {
       const now = new Date().toISOString();
-      await prismAgentDB.files.put({
+      await mathEngineDB.files.put({
         projectId,
         path,
         content,
         hash: hashContent(content),
         updatedAt: now,
       });
-      await prismAgentDB.projects.update(projectId, { updatedAt: now });
+      await mathEngineDB.projects.update(projectId, { updatedAt: now });
 
       if (!options?.skipSnapshot) {
         await persistSnapshot(projectId, options?.snapshotLabel ?? `Updated ${path}`);
@@ -501,10 +501,10 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
     [persistSnapshot, refreshProjects]
   );
 
-  const deleteFile = useCallback<PrismAgentContextValue['deleteFile']>(
+  const deleteFile = useCallback<MathEngineContextValue['deleteFile']>(
     async (projectId, path) => {
-      await prismAgentDB.files.delete([projectId, path]);
-      await prismAgentDB.projects.update(projectId, {
+      await mathEngineDB.files.delete([projectId, path]);
+      await mathEngineDB.projects.update(projectId, {
         updatedAt: new Date().toISOString(),
       });
       await persistSnapshot(projectId, `Deleted ${path}`);
@@ -513,26 +513,26 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
     [persistSnapshot, refreshProjects]
   );
 
-  const renameFile = useCallback<PrismAgentContextValue['renameFile']>(
+  const renameFile = useCallback<MathEngineContextValue['renameFile']>(
     async (projectId, currentPath, nextPath) => {
       if (currentPath === nextPath) {
         return;
       }
 
-      const existing = await prismAgentDB.files.get([projectId, nextPath]);
+      const existing = await mathEngineDB.files.get([projectId, nextPath]);
       if (existing) {
         throw new Error('Target file already exists');
       }
 
-      const file = await prismAgentDB.files.get([projectId, currentPath]);
+      const file = await mathEngineDB.files.get([projectId, currentPath]);
       if (!file) {
         return;
       }
 
       const now = new Date().toISOString();
-      await prismAgentDB.transaction('rw', prismAgentDB.files, async () => {
-        await prismAgentDB.files.delete([projectId, currentPath]);
-        await prismAgentDB.files.add({
+      await mathEngineDB.transaction('rw', mathEngineDB.files, async () => {
+        await mathEngineDB.files.delete([projectId, currentPath]);
+        await mathEngineDB.files.add({
           projectId,
           path: nextPath,
           content: file.content,
@@ -541,22 +541,22 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
         });
       });
 
-      await prismAgentDB.projects.update(projectId, { updatedAt: now });
+      await mathEngineDB.projects.update(projectId, { updatedAt: now });
       await persistSnapshot(projectId, `Renamed ${currentPath}`);
       await refreshProjects();
     },
     [persistSnapshot, refreshProjects]
   );
 
-  const undo = useCallback<PrismAgentContextValue['undo']>(
+  const undo = useCallback<MathEngineContextValue['undo']>(
     async (projectId) => {
-      const project = await prismAgentDB.projects.get(projectId);
+      const project = await mathEngineDB.projects.get(projectId);
       if (!project || project.snapshotIndex <= 0) {
         return false;
       }
 
       const targetIndex = project.snapshotIndex - 1;
-      const snapshot = await prismAgentDB.snapshots
+      const snapshot = await mathEngineDB.snapshots
         .where('projectId')
         .equals(projectId)
         .and((candidate) => candidate.order === targetIndex)
@@ -566,16 +566,16 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
         return false;
       }
 
-      const files = JSON.parse(snapshot.files) as PrismAgentFile[];
+      const files = JSON.parse(snapshot.files) as MathEngineFile[];
       const now = new Date().toISOString();
 
-      await prismAgentDB.transaction(
+      await mathEngineDB.transaction(
         'rw',
-        prismAgentDB.files,
-        prismAgentDB.projects,
+        mathEngineDB.files,
+        mathEngineDB.projects,
         async () => {
-          await prismAgentDB.files.where('projectId').equals(projectId).delete();
-          await prismAgentDB.files.bulkAdd(
+          await mathEngineDB.files.where('projectId').equals(projectId).delete();
+          await mathEngineDB.files.bulkAdd(
             files.map((file) => ({
               projectId,
               path: file.path,
@@ -584,7 +584,7 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
               updatedAt: now,
             }))
           );
-          await prismAgentDB.projects.update(projectId, {
+          await mathEngineDB.projects.update(projectId, {
             snapshotIndex: targetIndex,
             updatedAt: now,
           });
@@ -597,15 +597,15 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
     [refreshProjects]
   );
 
-  const redo = useCallback<PrismAgentContextValue['redo']>(
+  const redo = useCallback<MathEngineContextValue['redo']>(
     async (projectId) => {
-      const project = await prismAgentDB.projects.get(projectId);
+      const project = await mathEngineDB.projects.get(projectId);
       if (!project) {
         return false;
       }
 
       const nextIndex = project.snapshotIndex + 1;
-      const snapshot = await prismAgentDB.snapshots
+      const snapshot = await mathEngineDB.snapshots
         .where('projectId')
         .equals(projectId)
         .and((candidate) => candidate.order === nextIndex)
@@ -615,16 +615,16 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
         return false;
       }
 
-      const files = JSON.parse(snapshot.files) as PrismAgentFile[];
+      const files = JSON.parse(snapshot.files) as MathEngineFile[];
       const now = new Date().toISOString();
 
-      await prismAgentDB.transaction(
+      await mathEngineDB.transaction(
         'rw',
-        prismAgentDB.files,
-        prismAgentDB.projects,
+        mathEngineDB.files,
+        mathEngineDB.projects,
         async () => {
-          await prismAgentDB.files.where('projectId').equals(projectId).delete();
-          await prismAgentDB.files.bulkAdd(
+          await mathEngineDB.files.where('projectId').equals(projectId).delete();
+          await mathEngineDB.files.bulkAdd(
             files.map((file) => ({
               projectId,
               path: file.path,
@@ -633,7 +633,7 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
               updatedAt: now,
             }))
           );
-          await prismAgentDB.projects.update(projectId, {
+          await mathEngineDB.projects.update(projectId, {
             snapshotIndex: nextIndex,
             updatedAt: now,
           });
@@ -646,7 +646,7 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
     [refreshProjects]
   );
 
-  const exportProject = useCallback<PrismAgentContextValue['exportProject']>(
+  const exportProject = useCallback<MathEngineContextValue['exportProject']>(
     async (projectId) => {
       const project = projects.find((candidate) => candidate.id === projectId);
       if (!project) {
@@ -664,14 +664,14 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
     [projects]
   );
 
-  const importProject = useCallback<PrismAgentContextValue['importProject']>(
+  const importProject = useCallback<MathEngineContextValue['importProject']>(
     async (file) => {
       const entries = await readFileEntriesFromZip(file);
       if (!entries.length) {
         return null;
       }
 
-      const projectCount = await prismAgentDB.projects.count();
+      const projectCount = await mathEngineDB.projects.count();
       if (projectCount >= MAX_PROJECTS) {
         return null;
       }
@@ -680,7 +680,7 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
       const id = uuidv4();
       const createdAt = new Date().toISOString();
 
-      const projectRecord: PrismAgentProjectRecord = {
+      const projectRecord: MathEngineProjectRecord = {
         id,
         name: file.name.replace(/\.zip$/i, '') || 'Imported Project',
         framework,
@@ -690,7 +690,7 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
         snapshotIndex: 0,
       };
 
-      const files: PrismAgentFileRecord[] = entries.map((entry) => ({
+      const files: MathEngineFileRecord[] = entries.map((entry) => ({
         projectId: id,
         path: entry.path,
         content: entry.content,
@@ -698,7 +698,7 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
         updatedAt: createdAt,
       }));
 
-      const snapshot: PrismAgentSnapshotRecord = {
+      const snapshot: MathEngineSnapshotRecord = {
         id: uuidv4(),
         projectId: id,
         order: 0,
@@ -714,21 +714,21 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
         ),
       };
 
-      await prismAgentDB.transaction(
+      await mathEngineDB.transaction(
         'rw',
-        prismAgentDB.projects,
-        prismAgentDB.files,
-        prismAgentDB.snapshots,
+        mathEngineDB.projects,
+        mathEngineDB.files,
+        mathEngineDB.snapshots,
         async () => {
-          await prismAgentDB.projects.add(projectRecord);
-          await prismAgentDB.files.bulkAdd(files);
-          await prismAgentDB.snapshots.add(snapshot);
+          await mathEngineDB.projects.add(projectRecord);
+          await mathEngineDB.files.bulkAdd(files);
+          await mathEngineDB.snapshots.add(snapshot);
         }
       );
 
       await refreshProjects();
       setActiveProjectId(id);
-      const stored = await prismAgentDB.projects.get(id);
+      const stored = await mathEngineDB.projects.get(id);
       if (!stored) {
         return null;
       }
@@ -741,7 +741,7 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
     setActiveProjectId(projectId);
   }, []);
 
-  const value = useMemo<PrismAgentContextValue>(
+  const value = useMemo<MathEngineContextValue>(
     () => ({
       projects,
       isLoading,
@@ -760,7 +760,7 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
       exportProject,
       importProject,
       maxProjects: MAX_PROJECTS,
-      templates: PRISM_AGENT_TEMPLATES,
+      templates: MATH_ENGINE_TEMPLATES,
     }),
     [
       projects,
@@ -782,13 +782,13 @@ export const PrismAgentProvider: React.FC<React.PropsWithChildren> = ({ children
     ]
   );
 
-  return <PrismAgentContext.Provider value={value}>{children}</PrismAgentContext.Provider>;
+  return <MathEngineContext.Provider value={value}>{children}</MathEngineContext.Provider>;
 };
 
-export const usePrismAgent = () => {
-  const context = useContext(PrismAgentContext);
+export const useMathEngine = () => {
+  const context = useContext(MathEngineContext);
   if (!context) {
-    throw new Error('usePrismAgent must be used within a PrismAgentProvider');
+    throw new Error('useMathEngine must be used within a MathEngineProvider');
   }
   return context;
 };

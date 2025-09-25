@@ -70,9 +70,9 @@ const Home = () => {
     isNew: true
   }, {
     icon: <Bot className="h-6 w-6" />,
-    title: "Prism Agent",
-    description: "Exclusive Gemini 2.5 coding agent with project history, rollbacks, and VS Code hand-offs.",
-    link: "/agent",
+    title: "Math Engine",
+    description: "Exclusive Gemini 2.5 Pro CAS with graphing, step-by-step reasoning, and local file workspaces.",
+    link: "/math-engine",
     color: "from-fuchsia-500 to-blue-600",
     isNew: true,
     exclusive: true

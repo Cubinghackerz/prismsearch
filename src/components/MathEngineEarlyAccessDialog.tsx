@@ -8,10 +8,11 @@ import { Sparkles, Rocket } from 'lucide-react';
 
 const EXCLUSIVE_USER_IDS = new Set([
   'user_30z8cmTlPMcTfCEvoXUTf9FuBhh',
+  'user_30dXgGX4sh2BzDZRix5yNEjdehx',
   'user_30VC241Fkl0KuubR0hqkyQNaq6r',
 ]);
 
-const PrismAgentEarlyAccessDialog = () => {
+const MathEngineEarlyAccessDialog = () => {
   const { user } = useUser();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -25,7 +26,7 @@ const PrismAgentEarlyAccessDialog = () => {
       return;
     }
 
-    const storageKey = `prism-agent-early-access-${user.id}`;
+    const storageKey = `math-engine-early-access-${user.id}`;
     const hasSeen = typeof window !== 'undefined' ? localStorage.getItem(storageKey) : 'true';
 
     if (hasSeen) {
@@ -42,7 +43,7 @@ const PrismAgentEarlyAccessDialog = () => {
 
   const handleNavigate = () => {
     setIsOpen(false);
-    navigate('/agent');
+    navigate('/math-engine');
   };
 
   if (!user || !EXCLUSIVE_USER_IDS.has(user.id)) {
@@ -62,15 +63,15 @@ const PrismAgentEarlyAccessDialog = () => {
             </div>
           </div>
           <DialogTitle className="text-2xl font-bold text-foreground">
-            You have unlocked early access to the Prism Agent
+            You have unlocked early access to the Math Engine
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
-            Signed Nirneet — thanks for pushing the boundaries with us. Dive into the new Gemini-powered coding agent with project history and rollbacks.
+            Signed Nirneet — enjoy unlimited access to our Gemini 2.5 Pro math workspace with CAS tooling, graphing, and step-by-step reasoning.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3">
           <Button onClick={handleNavigate} className="w-full">
-            <Rocket className="mr-2 h-4 w-4" /> Launch Prism Agent
+            <Rocket className="mr-2 h-4 w-4" /> Launch Math Engine
           </Button>
           <Button variant="ghost" onClick={() => setIsOpen(false)} className="w-full">
             Maybe later
@@ -81,4 +82,4 @@ const PrismAgentEarlyAccessDialog = () => {
   );
 };
 
-export default PrismAgentEarlyAccessDialog;
+export default MathEngineEarlyAccessDialog;

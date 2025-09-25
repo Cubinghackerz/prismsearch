@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 
 const EXCLUSIVE_USER_IDS = new Set([
   'user_30z8cmTlPMcTfCEvoXUTf9FuBhh',
+  'user_30dXgGX4sh2BzDZRix5yNEjdehx',
   'user_30VC241Fkl0KuubR0hqkyQNaq6r',
 ]);
 
@@ -49,7 +50,7 @@ const Navigation = () => {
     { name: 'File Converter', href: '/conversions', icon: RefreshCw },
     { name: 'Threat Detector', href: '/detector', icon: ShieldCheck },
     { name: 'Finance', href: '/finance', icon: TrendingUp },
-    { name: 'Prism Agent', href: '/agent', icon: Bot, exclusive: true, requiresAccess: true },
+    { name: 'Math Engine', href: '/math-engine', icon: Bot, exclusive: true, requiresAccess: true },
   ];
 
   const allNavItems = [...primaryNavItems, ...moreNavItems];
@@ -62,7 +63,7 @@ const Navigation = () => {
       event.preventDefault();
       toast({
         title: 'Exclusive feature',
-        description: 'Prism Agent is currently limited to early access members.',
+        description: 'Math Engine is currently limited to early access members.',
       });
       return;
     }

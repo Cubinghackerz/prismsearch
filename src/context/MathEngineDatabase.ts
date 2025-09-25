@@ -1,18 +1,18 @@
 import Dexie, { Table } from 'dexie';
 
-export type PrismAgentFramework = 'react' | 'vanilla';
+export type MathEngineFramework = 'react' | 'vanilla';
 
-export interface PrismAgentProjectRecord {
+export interface MathEngineProjectRecord {
   id: string;
   name: string;
-  framework: PrismAgentFramework;
+  framework: MathEngineFramework;
   createdAt: string;
   updatedAt: string;
   settings?: Record<string, unknown>;
   snapshotIndex: number;
 }
 
-export interface PrismAgentFileRecord {
+export interface MathEngineFileRecord {
   projectId: string;
   path: string;
   content: string;
@@ -20,7 +20,7 @@ export interface PrismAgentFileRecord {
   updatedAt: string;
 }
 
-export interface PrismAgentSnapshotRecord {
+export interface MathEngineSnapshotRecord {
   id: string;
   projectId: string;
   order: number;
@@ -29,13 +29,13 @@ export interface PrismAgentSnapshotRecord {
   files: string;
 }
 
-export class PrismAgentDexie extends Dexie {
-  projects!: Table<PrismAgentProjectRecord>;
-  files!: Table<PrismAgentFileRecord>;
-  snapshots!: Table<PrismAgentSnapshotRecord>;
+export class MathEngineDexie extends Dexie {
+  projects!: Table<MathEngineProjectRecord>;
+  files!: Table<MathEngineFileRecord>;
+  snapshots!: Table<MathEngineSnapshotRecord>;
 
   constructor() {
-    super('PrismAgent');
+    super('MathEngine');
 
     this.version(1).stores({
       projects: 'id, updatedAt',
@@ -45,4 +45,4 @@ export class PrismAgentDexie extends Dexie {
   }
 }
 
-export const prismAgentDB = new PrismAgentDexie();
+export const mathEngineDB = new MathEngineDexie();

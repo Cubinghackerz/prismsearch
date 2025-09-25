@@ -49,8 +49,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { type PrismAgentTemplateId } from './prismAgentTemplates';
-import { usePrismAgent } from '@/context/PrismAgentContext';
+import { type MathEngineTemplateId } from './mathEngineTemplates';
+import { useMathEngine } from '@/context/MathEngineContext';
 import { useToast } from '@/hooks/use-toast';
 
 const AUTOSAVE_DELAY = 750;
@@ -65,7 +65,7 @@ const formatTimestamp = (iso: string) => {
 
 const ensureLeadingSlash = (path: string) => (path.startsWith('/') ? path : `/${path}`);
 
-const PrismAgentWorkspace: React.FC = () => {
+const MathEngineWorkspace: React.FC = () => {
   const {
     projects,
     activeProjectId,
@@ -85,11 +85,11 @@ const PrismAgentWorkspace: React.FC = () => {
     importProject,
     maxProjects,
     templates,
-  } = usePrismAgent();
+  } = useMathEngine();
   const { toast } = useToast();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<PrismAgentTemplateId>('react-vite');
+  const [selectedTemplate, setSelectedTemplate] = useState<MathEngineTemplateId>('react-vite');
   const [newProjectName, setNewProjectName] = useState('');
   const [activeFilePath, setActiveFilePath] = useState<string | null>(null);
   const [editorValue, setEditorValue] = useState('');
@@ -449,7 +449,7 @@ const PrismAgentWorkspace: React.FC = () => {
       if (!imported) {
         toast({
           title: 'Import failed',
-          description: 'Ensure the archive is a valid Prism Agent export.',
+          description: 'Ensure the archive is a valid Math Engine export.',
           variant: 'destructive',
         });
         return;
@@ -485,7 +485,7 @@ const PrismAgentWorkspace: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex h-full flex-1 items-center justify-center text-muted-foreground">
-        Loading Prism Agent workspace...
+        Loading Math Engine workspace...
       </div>
     );
   }
@@ -536,7 +536,7 @@ const PrismAgentWorkspace: React.FC = () => {
                   </label>
                   <Input
                     id="project-name"
-                    placeholder="My Prism Agent project"
+                    placeholder="My Math Engine project"
                     value={newProjectName}
                     onChange={(event) => setNewProjectName(event.target.value)}
                   />
@@ -808,4 +808,4 @@ const CardPane: React.FC<CardPaneProps> = ({ title, subtitle, children }) => (
   </div>
 );
 
-export default PrismAgentWorkspace;
+export default MathEngineWorkspace;

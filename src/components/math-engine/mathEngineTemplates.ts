@@ -1,18 +1,18 @@
-import type { PrismAgentFramework } from '@/context/PrismAgentDatabase';
+import type { MathEngineFramework } from '@/context/MathEngineDatabase';
 
-export type PrismAgentTemplateId = 'react-vite' | 'vanilla-vite';
+export type MathEngineTemplateId = 'react-vite' | 'vanilla-vite';
 
-export interface PrismAgentTemplateDefinition {
-  id: PrismAgentTemplateId;
+export interface MathEngineTemplateDefinition {
+  id: MathEngineTemplateId;
   name: string;
   description: string;
-  framework: PrismAgentFramework;
+  framework: MathEngineFramework;
   files: Record<string, string>;
   entryFile: string;
 }
 
 const reactPackageJson = `{
-  "name": "prism-agent-react-app",
+  "name": "math-engine-react-app",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -80,7 +80,7 @@ const reactIndexHtml = `<!doctype html>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Prism Agent React App</title>
+    <title>Math Engine React App</title>
   </head>
   <body>
     <div id="root"></div>
@@ -116,10 +116,10 @@ function App() {
           <img src={viteLogo} className="logo" alt="Vite logo" />
         </a>
         <a href="https://prism.tools" target="_blank" rel="noreferrer">
-          <img src={prismLogo} className="logo prism" alt="Prism logo" />
+          <img src={prismLogo} className="logo prism" alt="Math Engine logo" />
         </a>
       </div>
-      <h1>Prism Agent React/Vite</h1>
+      <h1>Math Engine React/Vite</h1>
       <div className="card">
         <button onClick={() => setCount((count) => count + 1)}>
           count is {count}
@@ -127,7 +127,7 @@ function App() {
         <p>Edit <code>src/App.tsx</code> and save to test HMR</p>
       </div>
       <p className="read-the-docs">
-        Click the Vite logo to learn more about Vite and the Prism logo for product docs.
+        Click the Vite logo to learn more about Vite and the Math Engine logo for product docs.
       </p>
     </div>
   );
@@ -227,7 +227,7 @@ const reactPrismLogo = `<svg width="512" height="512" viewBox="0 0 512 512" fill
 `;
 
 const vanillaPackageJson = `{
-  "name": "prism-agent-vanilla-app",
+  "name": "math-engine-vanilla-app",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -253,7 +253,7 @@ const vanillaIndexHtml = `<!doctype html>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Prism Agent Vanilla App</title>
+    <title>Math Engine Vanilla App</title>
   </head>
   <body>
     <div id="app"></div>
@@ -266,7 +266,7 @@ const vanillaMain = `import './style.css';
 import { render } from './render';
 
 document.querySelector('#app').innerHTML = render({
-  title: 'Prism Agent Vanilla/Vite',
+  title: 'Math Engine Vanilla/Vite',
   message: 'Edit src/main.js to start building.',
 });
 `;
@@ -333,7 +333,7 @@ button:hover {
 }
 `;
 
-export const PRISM_AGENT_TEMPLATES: PrismAgentTemplateDefinition[] = [
+export const MATH_ENGINE_TEMPLATES: MathEngineTemplateDefinition[] = [
   {
     id: 'react-vite',
     name: 'React + Vite',
@@ -371,5 +371,5 @@ export const PRISM_AGENT_TEMPLATES: PrismAgentTemplateDefinition[] = [
   },
 ];
 
-export const getTemplateById = (id: PrismAgentTemplateId) =>
-  PRISM_AGENT_TEMPLATES.find((template) => template.id === id);
+export const getTemplateById = (id: MathEngineTemplateId) =>
+  MATH_ENGINE_TEMPLATES.find((template) => template.id === id);
