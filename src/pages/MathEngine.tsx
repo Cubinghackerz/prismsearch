@@ -3,10 +3,10 @@ import Navigation from '@/components/Navigation';
 import { useUser } from '@clerk/clerk-react';
 import { Navigate } from 'react-router-dom';
 import LetterGlitch from '@/components/LetterGlitch';
-import MathEngineWorkspace from '@/components/math-engine/MathEngineWorkspace';
+import MathEngineChat from '@/components/math-engine/MathEngineChat';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, UploadCloud, Wand2, Zap } from 'lucide-react';
+import { ExternalLink, Orbit, Sparkles, Wand2, Zap } from 'lucide-react';
 
 const EXCLUSIVE_USER_IDS = new Set([
   'user_30z8cmTlPMcTfCEvoXUTf9FuBhh',
@@ -15,79 +15,33 @@ const EXCLUSIVE_USER_IDS = new Set([
 ]);
 
 const STATUS_TEXT = [
-  'Calibrating symbolic core',
-  'Syncing Gemini 2.5 Pro reasoning',
+  'Synchronising symbolic solvers',
+  'Connecting Gemini 2.5 reasoning',
   'Loading graphing pipelines',
-  'Preparing file workspace',
+  'Preparing equation keyboard',
   'Launching Math Engine environment',
 ];
 
-const CAPABILITY_SECTIONS = [
+const FEATURE_CALLOUTS = [
   {
-    title: 'Core Computation',
-    description:
-      'Algebra, calculus, linear algebra, number theory, probability, and statistics—powered by a full CAS so you can expand, factorise, solve, differentiate, integrate, evaluate limits, build series, compute determinants, and run hypothesis tests without leaving the browser.',
-    bullets: [
-      'Solve linear, quadratic, and higher-degree systems with symbolic or numeric answers.',
-      'Run matrix operations, eigenvalue decompositions, and vector-space routines instantly.',
-      'Factorise polynomials, simplify expressions, and compute limits or Taylor expansions.',
-      'Tackle number theory, combinatorics, and regression with dedicated toolkits.',
-    ],
+    title: 'Command-ready chat',
+    description: 'Run /factorise, /expand, /graph2D, /graph3D, or freeform prompts inside a local-first chat built for maths.',
+    icon: <Wand2 className="h-5 w-5 text-primary" />,
   },
   {
-    title: 'Graphing & Visualisation',
-    description:
-      'Plot 2D and 3D functions, inequalities, parametric/polar curves, and vector fields. Attach sliders to parameters, overlay multiple plots, and annotate tangents, intercepts, and asymptotes for deeper insight.',
-    bullets: [
-      'Dynamic sliders update graphs in real time as you explore parameter changes.',
-      'Shade inequality regions and compare multiple plots within the same viewport.',
-      'Render polar, parametric, and vector field visualisations with exportable images.',
-      'Highlight key features like asymptotes, tangent lines, and intercepts on demand.',
-    ],
+    title: 'Fast & Thinking modes',
+    description: 'Choose Fast for quick answers or Thinking for slower, cross-checked reasoning powered by Gemini 2.5 Pro.',
+    icon: <Zap className="h-5 w-5 text-primary" />,
   },
   {
-    title: 'Step-by-Step Reasoning',
-    description:
-      'Every solution includes narrated reasoning from Gemini 2.5 Pro so learners understand the “why” behind each transformation, with optional alternative methods such as completing the square or using the quadratic formula.',
-    bullets: [
-      'See intermediate steps for factoring, differentiation, and integration.',
-      'Request multiple approaches to the same problem to compare strategies.',
-      'Ask follow-up questions in natural language and receive plain-language answers.',
-      'Export worked solutions as PDF or LaTeX study guides.',
-    ],
+    title: 'Equation keyboard',
+    description: 'Insert algebra, calculus, statistics, and graphing symbols instantly with the adaptive on-screen keyboard.',
+    icon: <Orbit className="h-5 w-5 text-primary" />,
   },
   {
-    title: 'Advanced CAS Features',
-    description:
-      'Switch between exact symbolic answers (π, √2) and numeric approximations, define custom functions for reuse, solve systems of equations and inequalities, and apply substitutions or pattern matching inside the same workspace.',
-    bullets: [
-      'Dual symbolic/numeric mode lets you toggle precision per calculation.',
-      'Equation and inequality solvers handle single equations and full systems.',
-      'Custom definitions keep reusable functions at your fingertips.',
-      'Pattern matching and substitution utilities streamline repeated workflows.',
-    ],
-  },
-  {
-    title: 'Usability & Integration',
-    description:
-      'Math Engine accepts natural language, LaTeX, or raw math syntax. Upload datasets, notebooks, or supporting documents directly into the local project, and share results as LaTeX snippets, graph exports, or downloadable workspaces.',
-    bullets: [
-      'Local-first storage keeps projects, files, and uploads on your device.',
-      'File uploads feed directly into computations and graphing sessions.',
-      'Export entire sessions as ZIP archives, PDFs, or LaTeX bundles.',
-      'Explain-like-a-tutor responses clarify each step when you ask “Why?”.',
-    ],
-  },
-  {
-    title: 'Why it stands out',
-    description:
-      'Math Engine blends a symbolic CAS, numeric computation, and Gemini 2.5 Pro reasoning inside one exclusive workspace. No context switching between tools—compute, visualise, explain, and export in a single flow.',
-    bullets: [
-      'Exclusive access delivers dedicated capacity for deep math sessions.',
-      'Interactive visualisation and reasoning tools live side-by-side.',
-      'Natural language prompts like “Graph sin(x)/x and highlight asymptotes” just work.',
-      'Built-in exporting makes it effortless to share findings or continue elsewhere.',
-    ],
+    title: 'Mode-aware guidance',
+    description: 'Gemini adapts explanations based on your command, surfacing verification steps when Thinking mode is active.',
+    icon: <Sparkles className="h-5 w-5 text-primary" />,
   },
 ];
 
@@ -152,7 +106,7 @@ const MathEngine: React.FC = () => {
             <LetterGlitch text="Math Engine" className="text-5xl font-semibold" />
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Math Engine blends a symbolic computer algebra system with Gemini 2.5 Pro to keep your work local-first while giving you real-time reasoning support.
+                Math Engine is a Gemini 2.5 powered CAS workspace for algebra, calculus, graphing, and number theory—all in a chat built for maths.
               </p>
               <Badge variant="outline" className="px-3 py-1 text-xs uppercase">
                 {STATUS_TEXT[statusIndex]}
@@ -174,21 +128,21 @@ const MathEngine: React.FC = () => {
                     </Badge>
                   </div>
                   <p className="max-w-3xl text-sm text-muted-foreground">
-                    Math Engine combines a symbolic computer algebra system, numeric solvers, and Gemini 2.5&nbsp;Pro so exclusive members can compute, visualise, and explain mathematics end-to-end. Upload files, define reusable functions, and keep every project fully local while enjoying AI-assisted reasoning.
+                    Solve, factorise, expand, and visualise mathematics with Gemini 2.5 Pro. Select a command, pick a mode, and keep every conversation stored locally on your device.
                   </p>
                   <div className="grid gap-4 text-sm md:grid-cols-3">
-                    <div className="flex items-center gap-2 rounded-lg border border-border/70 bg-muted/30 px-3 py-2">
-                      <Wand2 className="h-4 w-4 text-primary" />
-                      <span>Default model: Gemini 2.5 Pro</span>
-                    </div>
-                    <div className="flex items-center gap-2 rounded-lg border border-border/70 bg-muted/30 px-3 py-2">
-                      <UploadCloud className="h-4 w-4 text-primary" />
-                      <span>Local file uploads &amp; dataset imports</span>
-                    </div>
-                    <div className="flex items-center gap-2 rounded-lg border border-border/70 bg-muted/30 px-3 py-2">
-                      <Zap className="h-4 w-4 text-primary" />
-                      <span>Live graphing &amp; interactive previews</span>
-                    </div>
+                    {FEATURE_CALLOUTS.map((feature) => (
+                      <div
+                        key={feature.title}
+                        className="flex items-start gap-3 rounded-lg border border-border/70 bg-muted/30 px-3 py-3"
+                      >
+                        <div className="rounded-full bg-primary/10 p-2">{feature.icon}</div>
+                        <div className="space-y-1">
+                          <div className="text-sm font-semibold text-foreground">{feature.title}</div>
+                          <p className="text-xs text-muted-foreground">{feature.description}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                   <p className="text-xs font-medium uppercase tracking-wide text-primary">
                     Available by exclusive access invitation only.
@@ -207,33 +161,18 @@ const MathEngine: React.FC = () => {
               </div>
             </section>
 
-            <section className="space-y-6">
-              <div className="grid gap-6 md:grid-cols-2">
-                {CAPABILITY_SECTIONS.map((section) => (
-                  <div key={section.title} className="rounded-xl border border-border/70 bg-background p-6 shadow-sm">
-                    <h2 className="text-lg font-semibold">{section.title}</h2>
-                    <p className="mt-2 text-sm text-muted-foreground">{section.description}</p>
-                    <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                      {section.bullets.map((bullet) => (
-                        <li key={bullet} className="flex items-start gap-2">
-                          <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" aria-hidden />
-                          <span>{bullet}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+            <section className="flex flex-1 flex-col rounded-2xl border border-dashed border-primary/50 bg-primary/5 p-6">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-primary">Math Engine chat</p>
+                  <p className="text-xs text-muted-foreground">
+                    Commands, history, and outputs are stored privately in your browser. Switch between Fast and Thinking modes at any time.
+                  </p>
+                </div>
               </div>
-            </section>
-
-            <section className="space-y-4">
-              <div className="rounded-xl border border-dashed border-primary/40 bg-primary/5 p-6 text-sm text-primary">
-                <p className="font-medium uppercase tracking-wide">Workspace preview</p>
-                <p className="mt-2 text-muted-foreground">
-                  Launch the Math Engine workspace below to upload notebooks, sync files, and collaborate with Gemini 2.5&nbsp;Pro on complex problems. Projects, snapshots, and uploads stay on your device for privacy.
-                </p>
+              <div className="flex-1">
+                <MathEngineChat />
               </div>
-              <MathEngineWorkspace />
             </section>
           </div>
         )}

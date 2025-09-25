@@ -6,215 +6,137 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import CryptoJS from 'crypto-js';
-import JSZip from 'jszip';
-import {
-  mathEngineDB,
-  type MathEngineFramework,
-  type MathEngineFileRecord,
-  type MathEngineProjectRecord,
-  type MathEngineSnapshotRecord,
-} from './MathEngineDatabase';
-import {
-  MATH_ENGINE_TEMPLATES,
-  type MathEngineTemplateDefinition,
-  type MathEngineTemplateId,
-  getTemplateById,
-} from '@/components/math-engine/mathEngineTemplates';
+import { useUser } from '@clerk/clerk-react';
+import nerdamer from 'nerdamer';
+import 'nerdamer/Calculus.js';
+import 'nerdamer/Algebra.js';
+import 'nerdamer/Solve.js';
+import { computeGraphCommand, GraphCommandResult } from '@/services/graphingService';
+import { computeSurfaceGraph, Graph3DResult } from '@/services/graphing3dService';
 
-export interface MathEngineFile {
-  path: string;
+const STORAGE_PREFIX = 'prism-math-engine-chat';
+
+type MathEngineMode = 'fast' | 'thinking';
+
+type MathEngineCommand = 'freeform' | 'factorise' | 'expand' | 'graph2D' | 'graph3D';
+
+type MathEngineResult =
+  | { kind: 'text' }
+  | { kind: 'graph2d'; summary: string; payload: GraphCommandResult }
+  | { kind: 'graph3d'; summary: string; payload: Graph3DResult };
+
+export interface MathEngineMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  command: MathEngineCommand;
   content: string;
-  hash: string;
-  updatedAt: string;
+  mode: MathEngineMode;
+  createdAt: string;
+  result?: MathEngineResult;
 }
 
-export interface MathEngineSnapshot {
-  id: string;
-  projectId: string;
-  order: number;
-  createdAt: string;
-  label?: string;
-  files: MathEngineFile[];
-}
-
-export interface MathEngineProject {
-  id: string;
-  name: string;
-  framework: MathEngineFramework;
-  createdAt: string;
-  updatedAt: string;
-  settings?: Record<string, unknown>;
-  files: MathEngineFile[];
-  snapshots: MathEngineSnapshot[];
-  snapshotIndex: number;
-  entryFile: string;
+interface ExecuteCommandPayload {
+  command: MathEngineCommand;
+  prompt: string;
 }
 
 interface MathEngineContextValue {
-  projects: MathEngineProject[];
-  isLoading: boolean;
-  activeProjectId: string | null;
-  selectProject: (projectId: string) => void;
-  createProject: (
-    templateId: MathEngineTemplateId,
-    name?: string
-  ) => Promise<MathEngineProject | null>;
-  duplicateProject: (projectId: string) => Promise<MathEngineProject | null>;
-  renameProject: (projectId: string, name: string) => Promise<void>;
-  deleteProject: (projectId: string) => Promise<void>;
-  createFile: (projectId: string, path: string, content?: string) => Promise<void>;
-  updateFile: (
-    projectId: string,
-    path: string,
-    content: string,
-    options?: { snapshotLabel?: string; skipSnapshot?: boolean }
-  ) => Promise<void>;
-  deleteFile: (projectId: string, path: string) => Promise<void>;
-  renameFile: (
-    projectId: string,
-    currentPath: string,
-    nextPath: string
-  ) => Promise<void>;
-  undo: (projectId: string) => Promise<boolean>;
-  redo: (projectId: string) => Promise<boolean>;
-  exportProject: (projectId: string) => Promise<Blob | null>;
-  importProject: (file: File) => Promise<MathEngineProject | null>;
-  maxProjects: number;
-  templates: MathEngineTemplateDefinition[];
+  messages: MathEngineMessage[];
+  mode: MathEngineMode;
+  setMode: (mode: MathEngineMode) => void;
+  executeCommand: (payload: ExecuteCommandPayload) => Promise<void>;
+  resetConversation: () => void;
+  hasHistory: boolean;
+  isProcessing: boolean;
 }
-
-const ACTIVE_PROJECT_STORAGE_KEY = 'math_engine_active_project';
-const MAX_PROJECTS = 10;
 
 const MathEngineContext = createContext<MathEngineContextValue | undefined>(undefined);
 
-const mapProjectRecord = async (
-  record: MathEngineProjectRecord
-): Promise<MathEngineProject> => {
-  const files = await mathEngineDB.files
-    .where('projectId')
-    .equals(record.id)
-    .toArray();
-  const snapshotsRecords = await mathEngineDB.snapshots
-    .where('projectId')
-    .equals(record.id)
-    .sortBy('order');
+const createId = () =>
+  typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `math-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
-  return {
-    id: record.id,
-    name: record.name,
-    framework: record.framework,
-    createdAt: record.createdAt,
-    updatedAt: record.updatedAt,
-    settings: record.settings,
-    entryFile:
-      typeof record.settings?.entryFile === 'string'
-        ? (record.settings.entryFile as string)
-        : inferEntryFile(record.framework, files),
-    files: files.map((file) => ({
-      path: file.path,
-      content: file.content,
-      hash: file.hash,
-      updatedAt: file.updatedAt,
-    })),
-    snapshots: snapshotsRecords.map((snapshot) => ({
-      id: snapshot.id,
-      projectId: snapshot.projectId,
-      order: snapshot.order,
-      createdAt: snapshot.createdAt,
-      label: snapshot.label,
-      files: JSON.parse(snapshot.files) as MathEngineFile[],
-    })),
-    snapshotIndex: record.snapshotIndex ?? 0,
-  };
+const DEFAULT_INTRO_MESSAGE: MathEngineMessage = {
+  id: createId(),
+  role: 'assistant',
+  command: 'freeform',
+  mode: 'fast',
+  createdAt: new Date().toISOString(),
+  content:
+    'Hello! I am the Math Engine. Pick a command such as `/factorise`, `/expand`, `/graph2D`, or `/graph3D`, choose a mode, and type your expression. I will keep this conversation stored locally on your device.',
 };
 
-const inferEntryFile = (
-  framework: MathEngineFramework,
-  files: MathEngineFileRecord[]
-): string => {
-  if (framework === 'react') {
-    if (files.some((file) => file.path === 'src/App.tsx')) {
-      return 'src/App.tsx';
-    }
-    if (files.some((file) => file.path === 'src/App.jsx')) {
-      return 'src/App.jsx';
-    }
+const sanitizeForSymbolic = (input: string): string =>
+  input
+    .replace(/×/g, '*')
+    .replace(/÷/g, '/')
+    .replace(/π/g, 'pi')
+    .replace(/φ/g, 'phi')
+    .replace(/γ/g, 'EulerGamma')
+    .replace(/√/g, 'sqrt')
+    .replace(/∞/g, 'Infinity');
+
+const expressionToTeX = (expression: string): string => {
+  try {
+    const node = nerdamer(expression);
+    return node.toTeX();
+  } catch (error) {
+    return expression;
   }
-
-  const htmlEntry = files.find((file) => file.path === 'index.html');
-  if (htmlEntry) {
-    return htmlEntry.path;
-  }
-
-  return files[0]?.path ?? 'index.html';
 };
 
-const hashContent = (content: string) => CryptoJS.SHA1(content).toString();
+const wrapMath = (latex: string) => `$$${latex}$$`;
 
-const readFileEntriesFromZip = async (file: File) => {
-  const zip = await JSZip.loadAsync(file);
-  const entries = await Promise.all(
-    Object.values(zip.files)
-      .filter((entry) => !entry.dir)
-      .map(async (entry) => ({
-        path: entry.name,
-        content: await entry.async('string'),
-      }))
-  );
-
-  return entries;
-};
-
-const detectFrameworkFromFiles = (
-  files: { path: string; content: string }[]
-): MathEngineFramework => {
-  if (files.some((file) => /react/i.test(file.content) || file.path.endsWith('.tsx'))) {
-    return 'react';
-  }
-  return 'vanilla';
-};
-
-export const MathEngineProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const [projects, setProjects] = useState<MathEngineProject[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeProjectId, setActiveProjectId] = useState<string | null>(() => {
+const usePersistentState = (storageKey: string) => {
+  const [messages, setMessages] = useState<MathEngineMessage[]>(() => {
     if (typeof window === 'undefined') {
-      return null;
+      return [DEFAULT_INTRO_MESSAGE];
     }
 
     try {
-      return localStorage.getItem(ACTIVE_PROJECT_STORAGE_KEY);
+      const stored = window.localStorage.getItem(storageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored) as MathEngineMessage[];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
     } catch (error) {
-      console.warn('Failed to read active Math Engine project', error);
-      return null;
+      console.warn('Failed to parse Math Engine history:', error);
     }
+
+    return [DEFAULT_INTRO_MESSAGE];
   });
 
-  const refreshProjects = useCallback(async () => {
-    const projectRecords = await mathEngineDB.projects.orderBy('updatedAt').reverse().toArray();
-    const mapped = await Promise.all(projectRecords.map(mapProjectRecord));
-    setProjects(mapped);
-    setIsLoading(false);
-
-    if (!mapped.length) {
-      setActiveProjectId(null);
+  useEffect(() => {
+    if (typeof window === 'undefined') {
       return;
     }
 
-    setActiveProjectId((current) => {
-      if (current && mapped.some((project) => project.id === current)) {
-        return current;
-      }
-      return mapped[0]?.id ?? null;
-    });
-  }, []);
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(messages));
+    } catch (error) {
+      console.warn('Failed to persist Math Engine history:', error);
+    }
+  }, [messages, storageKey]);
 
-  useEffect(() => {
-    refreshProjects();
-  }, [refreshProjects]);
+  return { messages, setMessages };
+};
+
+export const MathEngineProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useUser();
+  const [mode, setMode] = useState<MathEngineMode>('fast');
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const storageKey = useMemo(() => {
+    if (user?.id) {
+      return `${STORAGE_PREFIX}-${user.id}`;
+    }
+    return `${STORAGE_PREFIX}-guest`;
+  }, [user?.id]);
+
+  const { messages, setMessages } = usePersistentState(storageKey);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -222,570 +144,201 @@ export const MathEngineProvider: React.FC<React.PropsWithChildren> = ({ children
     }
 
     try {
-      if (activeProjectId) {
-        localStorage.setItem(ACTIVE_PROJECT_STORAGE_KEY, activeProjectId);
-      } else {
-        localStorage.removeItem(ACTIVE_PROJECT_STORAGE_KEY);
+      const stored = window.localStorage.getItem(storageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored) as MathEngineMessage[];
+        if (Array.isArray(parsed) && parsed.length) {
+          setMessages(parsed);
+          return;
+        }
       }
     } catch (error) {
-      console.warn('Failed to persist active Math Engine project', error);
+      console.warn('Failed to reload Math Engine history:', error);
     }
-  }, [activeProjectId]);
 
-  const persistSnapshot = useCallback(
-    async (
-      projectId: string,
-      label?: string
-    ) => {
-      const projectRecord = await mathEngineDB.projects.get(projectId);
-      if (!projectRecord) {
+    setMessages([DEFAULT_INTRO_MESSAGE]);
+  }, [storageKey]);
+
+  const appendMessage = useCallback((message: MathEngineMessage) => {
+    setMessages((current) => [...current, message]);
+  }, [setMessages]);
+
+  const executeCommand = useCallback<MathEngineContextValue['executeCommand']>(
+    async ({ command, prompt }) => {
+      const trimmedPrompt = prompt.trim();
+      if (!trimmedPrompt) {
         return;
       }
 
-      const currentIndex = projectRecord.snapshotIndex ?? 0;
-      await mathEngineDB.snapshots
-        .where('projectId')
-        .equals(projectId)
-        .and((snapshot) => snapshot.order > currentIndex)
-        .delete();
-
-      const files = await mathEngineDB.files.where('projectId').equals(projectId).toArray();
-      const snapshot: MathEngineSnapshotRecord = {
-        id: uuidv4(),
-        projectId,
-        order: currentIndex + 1,
-        createdAt: new Date().toISOString(),
-        label,
-        files: JSON.stringify(
-          files.map((file) => ({
-            path: file.path,
-            content: file.content,
-            hash: file.hash,
-            updatedAt: file.updatedAt,
-          }))
-        ),
+      const timestamp = new Date().toISOString();
+      const userMessage: MathEngineMessage = {
+        id: createId(),
+        role: 'user',
+        command,
+        content: trimmedPrompt,
+        mode,
+        createdAt: timestamp,
       };
 
-      await mathEngineDB.transaction('rw', mathEngineDB.snapshots, mathEngineDB.projects, async () => {
-        await mathEngineDB.snapshots.add(snapshot);
-        await mathEngineDB.projects.update(projectId, {
-          snapshotIndex: snapshot.order,
-          updatedAt: snapshot.createdAt,
-        });
-      });
-    },
-    []
-  );
+      appendMessage(userMessage);
+      setIsProcessing(true);
 
-  const createProject = useCallback<MathEngineContextValue['createProject']>(
-    async (templateId, name) => {
-      const template = getTemplateById(templateId);
-      if (!template) {
-        console.warn('Unknown template requested', templateId);
-        return null;
-      }
-
-      const projectCount = await mathEngineDB.projects.count();
-      if (projectCount >= MAX_PROJECTS) {
-        return null;
-      }
-
-      const id = uuidv4();
-      const createdAt = new Date().toISOString();
-      const projectRecord: MathEngineProjectRecord = {
-        id,
-        name: name?.trim() || `${template.name} Project`,
-        framework: template.framework,
-        createdAt,
-        updatedAt: createdAt,
-        settings: { entryFile: template.entryFile },
-        snapshotIndex: 0,
-      };
-
-      const files: MathEngineFileRecord[] = Object.entries(template.files).map(
-        ([path, content]) => ({
-          projectId: id,
-          path,
-          content,
-          hash: hashContent(content),
-          updatedAt: createdAt,
-        })
-      );
-
-      const initialSnapshot: MathEngineSnapshotRecord = {
-        id: uuidv4(),
-        projectId: id,
-        order: 0,
-        createdAt,
-        label: 'Initial template',
-        files: JSON.stringify(
-          files.map((file) => ({
-            path: file.path,
-            content: file.content,
-            hash: file.hash,
-            updatedAt: file.updatedAt,
-          }))
-        ),
-      };
-
-      await mathEngineDB.transaction(
-        'rw',
-        mathEngineDB.projects,
-        mathEngineDB.files,
-        mathEngineDB.snapshots,
-        async () => {
-          await mathEngineDB.projects.add(projectRecord);
-          await mathEngineDB.files.bulkAdd(files);
-          await mathEngineDB.snapshots.add(initialSnapshot);
+      const runWithDelay = async (task: () => Promise<MathEngineMessage>): Promise<void> => {
+        if (mode === 'thinking') {
+          await new Promise((resolve) => setTimeout(resolve, 600));
         }
-      );
 
-      await refreshProjects();
-      setActiveProjectId(id);
-      const stored = await mathEngineDB.projects.get(id);
-      if (!stored) {
-        return null;
-      }
-      return mapProjectRecord(stored);
-    },
-    [refreshProjects]
-  );
-
-  const duplicateProject = useCallback<MathEngineContextValue['duplicateProject']>(
-    async (projectId) => {
-      const project = projects.find((candidate) => candidate.id === projectId);
-      if (!project) {
-        return null;
-      }
-
-      const projectCount = await mathEngineDB.projects.count();
-      if (projectCount >= MAX_PROJECTS) {
-        return null;
-      }
-
-      const id = uuidv4();
-      const createdAt = new Date().toISOString();
-      const projectRecord: MathEngineProjectRecord = {
-        id,
-        name: `${project.name} Copy`,
-        framework: project.framework,
-        createdAt,
-        updatedAt: createdAt,
-        settings: { entryFile: project.entryFile },
-        snapshotIndex: 0,
+        try {
+          const assistantMessage = await task();
+          appendMessage(assistantMessage);
+        } catch (error) {
+          const assistantMessage: MathEngineMessage = {
+            id: createId(),
+            role: 'assistant',
+            command,
+            mode,
+            createdAt: new Date().toISOString(),
+            content:
+              error instanceof Error
+                ? `I ran into a problem: ${error.message}. Please adjust the expression and try again.`
+                : 'I ran into an unexpected issue. Please try again.',
+          };
+          appendMessage(assistantMessage);
+        } finally {
+          setIsProcessing(false);
+        }
       };
 
-      const files: MathEngineFileRecord[] = project.files.map((file) => ({
-        projectId: id,
-        path: file.path,
-        content: file.content,
-        hash: hashContent(file.content),
-        updatedAt: createdAt,
-      }));
+      const task = async (): Promise<MathEngineMessage> => {
+        const createdAt = new Date().toISOString();
 
-      const snapshot: MathEngineSnapshotRecord = {
-        id: uuidv4(),
-        projectId: id,
-        order: 0,
-        createdAt,
-        label: 'Duplicated project',
-        files: JSON.stringify(
-          files.map((file) => ({
-            path: file.path,
-            content: file.content,
-            hash: file.hash,
-            updatedAt: file.updatedAt,
-          }))
-        ),
-      };
+        if (command === 'graph2D') {
+          const computation = computeGraphCommand(trimmedPrompt);
+          const summary = computation.summaryLines.join('\n\n');
 
-      await mathEngineDB.transaction(
-        'rw',
-        mathEngineDB.projects,
-        mathEngineDB.files,
-        mathEngineDB.snapshots,
-        async () => {
-          await mathEngineDB.projects.add(projectRecord);
-          await mathEngineDB.files.bulkAdd(files);
-          await mathEngineDB.snapshots.add(snapshot);
+          return {
+            id: createId(),
+            role: 'assistant',
+            command,
+            mode,
+            createdAt,
+            content: summary,
+            result: { kind: 'graph2d', summary, payload: computation.result },
+          };
         }
-      );
 
-      await refreshProjects();
-      setActiveProjectId(id);
-      const stored = await mathEngineDB.projects.get(id);
-      if (!stored) {
-        return null;
-      }
-      return mapProjectRecord(stored);
-    },
-    [projects, refreshProjects]
-  );
+        if (command === 'graph3D') {
+          const computation = computeSurfaceGraph(trimmedPrompt);
+          const summary = computation.summaryLines.join('\n\n');
 
-  const renameProject = useCallback<MathEngineContextValue['renameProject']>(
-    async (projectId, name) => {
-      const trimmed = name.trim();
-      if (!trimmed) {
-        return;
-      }
-
-      await mathEngineDB.projects.update(projectId, {
-        name: trimmed,
-        updatedAt: new Date().toISOString(),
-      });
-      await refreshProjects();
-    },
-    [refreshProjects]
-  );
-
-  const deleteProject = useCallback<MathEngineContextValue['deleteProject']>(
-    async (projectId) => {
-      await mathEngineDB.transaction(
-        'rw',
-        mathEngineDB.projects,
-        mathEngineDB.files,
-        mathEngineDB.snapshots,
-        async () => {
-          await mathEngineDB.projects.delete(projectId);
-          await mathEngineDB.files.where('projectId').equals(projectId).delete();
-          await mathEngineDB.snapshots.where('projectId').equals(projectId).delete();
+          return {
+            id: createId(),
+            role: 'assistant',
+            command,
+            mode,
+            createdAt,
+            content: summary,
+            result: { kind: 'graph3d', summary, payload: computation.result },
+          };
         }
-      );
-      await refreshProjects();
-    },
-    [refreshProjects]
-  );
 
-  const createFile = useCallback<MathEngineContextValue['createFile']>(
-    async (projectId, path, content = '') => {
-      const existing = await mathEngineDB.files.get([projectId, path]);
-      if (existing) {
-        throw new Error('File already exists');
-      }
+        const sanitized = sanitizeForSymbolic(trimmedPrompt);
 
-      const now = new Date().toISOString();
-      await mathEngineDB.files.add({
-        projectId,
-        path,
-        content,
-        hash: hashContent(content),
-        updatedAt: now,
-      });
-      await mathEngineDB.projects.update(projectId, {
-        updatedAt: now,
-      });
-      await persistSnapshot(projectId, `Created ${path}`);
-      await refreshProjects();
-    },
-    [persistSnapshot, refreshProjects]
-  );
+        if (command === 'factorise') {
+          const factored = nerdamer(`factor(${sanitized})`);
+          const latex = factored.toTeX();
+          const expanded = nerdamer(`expand(${factored.toString()})`).toTeX();
 
-  const updateFile = useCallback<MathEngineContextValue['updateFile']>(
-    async (projectId, path, content, options) => {
-      const now = new Date().toISOString();
-      await mathEngineDB.files.put({
-        projectId,
-        path,
-        content,
-        hash: hashContent(content),
-        updatedAt: now,
-      });
-      await mathEngineDB.projects.update(projectId, { updatedAt: now });
+          const notes = mode === 'thinking'
+            ? '\n\n**Verification**\n\n' + wrapMath(expanded)
+            : '';
 
-      if (!options?.skipSnapshot) {
-        await persistSnapshot(projectId, options?.snapshotLabel ?? `Updated ${path}`);
-      }
+          return {
+            id: createId(),
+            role: 'assistant',
+            command,
+            mode,
+            createdAt,
+            content: `**Original**\n\n${wrapMath(expressionToTeX(sanitized))}\n\n**Factored form**\n\n${wrapMath(latex)}${notes}`,
+          };
+        }
 
-      await refreshProjects();
-    },
-    [persistSnapshot, refreshProjects]
-  );
+        if (command === 'expand') {
+          const expanded = nerdamer(`expand(${sanitized})`);
+          const latex = expanded.toTeX();
+          const factored = nerdamer(`factor(${expanded.toString()})`).toTeX();
 
-  const deleteFile = useCallback<MathEngineContextValue['deleteFile']>(
-    async (projectId, path) => {
-      await mathEngineDB.files.delete([projectId, path]);
-      await mathEngineDB.projects.update(projectId, {
-        updatedAt: new Date().toISOString(),
-      });
-      await persistSnapshot(projectId, `Deleted ${path}`);
-      await refreshProjects();
-    },
-    [persistSnapshot, refreshProjects]
-  );
+          const notes = mode === 'thinking'
+            ? '\n\n**Back-substitution**\n\n' + wrapMath(factored)
+            : '';
 
-  const renameFile = useCallback<MathEngineContextValue['renameFile']>(
-    async (projectId, currentPath, nextPath) => {
-      if (currentPath === nextPath) {
-        return;
-      }
+          return {
+            id: createId(),
+            role: 'assistant',
+            command,
+            mode,
+            createdAt,
+            content: `**Expanded expression**\n\n${wrapMath(latex)}${notes}`,
+          };
+        }
 
-      const existing = await mathEngineDB.files.get([projectId, nextPath]);
-      if (existing) {
-        throw new Error('Target file already exists');
-      }
+        const evaluated = nerdamer(sanitized);
+        const latex = evaluated.toTeX();
+        const numeric = (() => {
+          try {
+            return evaluated.evaluate().text();
+          } catch (error) {
+            return null;
+          }
+        })();
 
-      const file = await mathEngineDB.files.get([projectId, currentPath]);
-      if (!file) {
-        return;
-      }
+        const explanationLines = [
+          `**Result**\n\n${wrapMath(latex)}`,
+        ];
 
-      const now = new Date().toISOString();
-      await mathEngineDB.transaction('rw', mathEngineDB.files, async () => {
-        await mathEngineDB.files.delete([projectId, currentPath]);
-        await mathEngineDB.files.add({
-          projectId,
-          path: nextPath,
-          content: file.content,
-          hash: hashContent(file.content),
-          updatedAt: now,
-        });
-      });
+        if (numeric && numeric !== evaluated.toString()) {
+          explanationLines.push(`Numeric approximation: ${numeric}`);
+        }
 
-      await mathEngineDB.projects.update(projectId, { updatedAt: now });
-      await persistSnapshot(projectId, `Renamed ${currentPath}`);
-      await refreshProjects();
-    },
-    [persistSnapshot, refreshProjects]
-  );
-
-  const undo = useCallback<MathEngineContextValue['undo']>(
-    async (projectId) => {
-      const project = await mathEngineDB.projects.get(projectId);
-      if (!project || project.snapshotIndex <= 0) {
-        return false;
-      }
-
-      const targetIndex = project.snapshotIndex - 1;
-      const snapshot = await mathEngineDB.snapshots
-        .where('projectId')
-        .equals(projectId)
-        .and((candidate) => candidate.order === targetIndex)
-        .first();
-
-      if (!snapshot) {
-        return false;
-      }
-
-      const files = JSON.parse(snapshot.files) as MathEngineFile[];
-      const now = new Date().toISOString();
-
-      await mathEngineDB.transaction(
-        'rw',
-        mathEngineDB.files,
-        mathEngineDB.projects,
-        async () => {
-          await mathEngineDB.files.where('projectId').equals(projectId).delete();
-          await mathEngineDB.files.bulkAdd(
-            files.map((file) => ({
-              projectId,
-              path: file.path,
-              content: file.content,
-              hash: file.hash ?? hashContent(file.content),
-              updatedAt: now,
-            }))
+        if (mode === 'thinking') {
+          explanationLines.push(
+            'Thinking mode double-checks symbolic and numeric forms. Adjust the command if you need factoring, expansion, or graphing specifically.'
           );
-          await mathEngineDB.projects.update(projectId, {
-            snapshotIndex: targetIndex,
-            updatedAt: now,
-          });
         }
-      );
 
-      await refreshProjects();
-      return true;
-    },
-    [refreshProjects]
-  );
-
-  const redo = useCallback<MathEngineContextValue['redo']>(
-    async (projectId) => {
-      const project = await mathEngineDB.projects.get(projectId);
-      if (!project) {
-        return false;
-      }
-
-      const nextIndex = project.snapshotIndex + 1;
-      const snapshot = await mathEngineDB.snapshots
-        .where('projectId')
-        .equals(projectId)
-        .and((candidate) => candidate.order === nextIndex)
-        .first();
-
-      if (!snapshot) {
-        return false;
-      }
-
-      const files = JSON.parse(snapshot.files) as MathEngineFile[];
-      const now = new Date().toISOString();
-
-      await mathEngineDB.transaction(
-        'rw',
-        mathEngineDB.files,
-        mathEngineDB.projects,
-        async () => {
-          await mathEngineDB.files.where('projectId').equals(projectId).delete();
-          await mathEngineDB.files.bulkAdd(
-            files.map((file) => ({
-              projectId,
-              path: file.path,
-              content: file.content,
-              hash: file.hash ?? hashContent(file.content),
-              updatedAt: now,
-            }))
-          );
-          await mathEngineDB.projects.update(projectId, {
-            snapshotIndex: nextIndex,
-            updatedAt: now,
-          });
-        }
-      );
-
-      await refreshProjects();
-      return true;
-    },
-    [refreshProjects]
-  );
-
-  const exportProject = useCallback<MathEngineContextValue['exportProject']>(
-    async (projectId) => {
-      const project = projects.find((candidate) => candidate.id === projectId);
-      if (!project) {
-        return null;
-      }
-
-      const zip = new JSZip();
-      project.files.forEach((file) => {
-        zip.file(file.path, file.content);
-      });
-
-      const blob = await zip.generateAsync({ type: 'blob' });
-      return blob;
-    },
-    [projects]
-  );
-
-  const importProject = useCallback<MathEngineContextValue['importProject']>(
-    async (file) => {
-      const entries = await readFileEntriesFromZip(file);
-      if (!entries.length) {
-        return null;
-      }
-
-      const projectCount = await mathEngineDB.projects.count();
-      if (projectCount >= MAX_PROJECTS) {
-        return null;
-      }
-
-      const framework = detectFrameworkFromFiles(entries);
-      const id = uuidv4();
-      const createdAt = new Date().toISOString();
-
-      const projectRecord: MathEngineProjectRecord = {
-        id,
-        name: file.name.replace(/\.zip$/i, '') || 'Imported Project',
-        framework,
-        createdAt,
-        updatedAt: createdAt,
-        settings: {},
-        snapshotIndex: 0,
+        return {
+          id: createId(),
+          role: 'assistant',
+          command,
+          mode,
+          createdAt,
+          content: explanationLines.join('\n\n'),
+        };
       };
 
-      const files: MathEngineFileRecord[] = entries.map((entry) => ({
-        projectId: id,
-        path: entry.path,
-        content: entry.content,
-        hash: hashContent(entry.content),
-        updatedAt: createdAt,
-      }));
-
-      const snapshot: MathEngineSnapshotRecord = {
-        id: uuidv4(),
-        projectId: id,
-        order: 0,
-        createdAt,
-        label: 'Imported archive',
-        files: JSON.stringify(
-          files.map((fileRecord) => ({
-            path: fileRecord.path,
-            content: fileRecord.content,
-            hash: fileRecord.hash,
-            updatedAt: fileRecord.updatedAt,
-          }))
-        ),
-      };
-
-      await mathEngineDB.transaction(
-        'rw',
-        mathEngineDB.projects,
-        mathEngineDB.files,
-        mathEngineDB.snapshots,
-        async () => {
-          await mathEngineDB.projects.add(projectRecord);
-          await mathEngineDB.files.bulkAdd(files);
-          await mathEngineDB.snapshots.add(snapshot);
-        }
-      );
-
-      await refreshProjects();
-      setActiveProjectId(id);
-      const stored = await mathEngineDB.projects.get(id);
-      if (!stored) {
-        return null;
-      }
-      return mapProjectRecord(stored);
+      await runWithDelay(task);
     },
-    [refreshProjects]
+    [appendMessage, mode]
   );
 
-  const selectProject = useCallback((projectId: string) => {
-    setActiveProjectId(projectId);
-  }, []);
+  const resetConversation = useCallback(() => {
+    setMessages([DEFAULT_INTRO_MESSAGE]);
+  }, [setMessages]);
 
-  const value = useMemo<MathEngineContextValue>(
-    () => ({
-      projects,
-      isLoading,
-      activeProjectId,
-      selectProject,
-      createProject,
-      duplicateProject,
-      renameProject,
-      deleteProject,
-      createFile,
-      updateFile,
-      deleteFile,
-      renameFile,
-      undo,
-      redo,
-      exportProject,
-      importProject,
-      maxProjects: MAX_PROJECTS,
-      templates: MATH_ENGINE_TEMPLATES,
-    }),
-    [
-      projects,
-      isLoading,
-      activeProjectId,
-      selectProject,
-      createProject,
-      duplicateProject,
-      renameProject,
-      deleteProject,
-      createFile,
-      updateFile,
-      deleteFile,
-      renameFile,
-      undo,
-      redo,
-      exportProject,
-      importProject,
-    ]
-  );
+  const value = useMemo<MathEngineContextValue>(() => ({
+    messages,
+    mode,
+    setMode,
+    executeCommand,
+    resetConversation,
+    hasHistory: messages.length > 1,
+    isProcessing,
+  }), [messages, mode, executeCommand, resetConversation, isProcessing]);
 
   return <MathEngineContext.Provider value={value}>{children}</MathEngineContext.Provider>;
 };
 
-export const useMathEngine = () => {
+export const useMathEngine = (): MathEngineContextValue => {
   const context = useContext(MathEngineContext);
   if (!context) {
     throw new Error('useMathEngine must be used within a MathEngineProvider');
