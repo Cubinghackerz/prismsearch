@@ -2,13 +2,18 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
-import { ChatMessage } from '@/context/ChatContext';
+import { ChatMessage, getCommandLabel } from '@/context/ChatContext';
 import TypingIndicator from '@/components/chat/TypingIndicator';
 import ChatMessageSkeleton from '@/components/skeletons/ChatMessageSkeleton';
-import ReactMarkdown from 'react-markdown';
 import MathRenderer from '@/components/math-assistant/MathRenderer';
 import { Paperclip, Download, Image, FileText, File } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import CodeGenerationBubble from './CodeGenerationBubble';
+import CodePlanBubble from './CodePlanBubble';
+import FinanceCommandBubble from './FinanceCommandBubble';
+import TableCommandRenderer from './TableCommandRenderer';
+import GraphCommandBubble from './GraphCommandBubble';
+import WorkflowCommandBubble from './WorkflowCommandBubble';
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -58,10 +63,30 @@ const FileAttachment: React.FC<{ file: any }> = ({ file }) => {
     </div>
   );
 };
-const MessageList: React.FC<MessageListProps> = ({ 
-  messages, 
-  onReply, 
-  typingIndicator 
+const containsMathMarkup = (value: string): boolean => {
+  if (!value) {
+    return false;
+  }
+
+  return /\$[^$]+\$|\\\(|\\\)|\\\[|\\\]|\\begin\{|\\end\{|∑|∫|√|∞|≈|≅|≥|≤/.test(value);
+};
+
+const shouldShowMathFormatter = (message: ChatMessage): boolean => {
+  if (message.isUser) {
+    return false;
+  }
+
+  if (message.command === 'math' || message.command === 'calc') {
+    return true;
+  }
+
+  return containsMathMarkup(message.content);
+};
+
+const MessageList: React.FC<MessageListProps> = ({
+  messages,
+  onReply,
+  typingIndicator
 }) => {
 
   return (
@@ -89,11 +114,37 @@ const MessageList: React.FC<MessageListProps> = ({
         >
           <div className={`
             max-w-[85%] lg:max-w-[75%] p-4 rounded-2xl shadow-sm
-            ${message.isUser 
-              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white message user' 
+            ${message.isUser
+              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white message user'
               : 'bg-card/50 backdrop-blur-sm text-foreground border border-border/50 message bot'
             } relative
           `}>
+            {message.command && (
+              <div
+                className={`mb-3 flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-wide ${
+                  message.isUser ? 'text-white/80' : 'text-muted-foreground'
+                }`}
+              >
+                <span
+                  className={`px-2 py-0.5 rounded-full border ${
+                    message.isUser
+                      ? 'border-white/50 text-white'
+                      : 'border-border/60 text-foreground'
+                  }`}
+                >
+                  {getCommandLabel(message.command)}
+                </span>
+                <span
+                  className={`px-2 py-0.5 rounded-full border bg-amber-500/10 ${
+                    message.isUser
+                      ? 'border-white/60 text-white'
+                      : 'border-amber-500/40 text-amber-400'
+                  }`}
+                >
+                  Beta
+                </span>
+              </div>
+            )}
             {/* Show attachments for user messages */}
             {message.isUser && message.attachments && message.attachments.length > 0 && (
               <div className="mb-3 space-y-2">
@@ -109,11 +160,41 @@ const MessageList: React.FC<MessageListProps> = ({
 
             {message.isUser ? (
               <div className="whitespace-pre-wrap pr-12">{message.content}</div>
+            ) : message.type === 'code' && message.codeResult ? (
+              <div className="pr-6">
+                <CodeGenerationBubble
+                  result={message.codeResult}
+                  prompt={message.codePrompt || message.content}
+                  usedModel={message.usedModel}
+                  rawResponse={message.rawResponse}
+                />
+              </div>
+            ) : message.type === 'code-plan' && message.codePlan ? (
+              <div className="pr-6">
+                <CodePlanBubble messageId={message.id} planState={message.codePlan} />
+              </div>
+            ) : message.command === 'finance' && message.financeData ? (
+              <div className="pr-6">
+                <FinanceCommandBubble summary={message.content} result={message.financeData} />
+              </div>
+            ) : message.command === 'graph' && message.graphData ? (
+              <div className="pr-6">
+                <GraphCommandBubble summary={message.content} result={message.graphData} />
+              </div>
+            ) : message.command === 'workflow' && message.workflowData ? (
+              <div className="pr-6">
+                <WorkflowCommandBubble plan={message.workflowData} />
+              </div>
+            ) : message.command === 'table' ? (
+              <div className="pr-6">
+                <TableCommandRenderer content={message.content} />
+              </div>
             ) : (
               <div className="prose prose-neutral dark:prose-invert max-w-none pr-12">
-                <MathRenderer 
+                <MathRenderer
                   content={message.content}
                   className="text-foreground leading-relaxed"
+                  enableManualFormat={shouldShowMathFormatter(message)}
                 />
               </div>
             )}

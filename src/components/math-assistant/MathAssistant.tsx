@@ -12,6 +12,7 @@ import EquationKeyboard from './EquationKeyboard';
 import MathRenderer from './MathRenderer';
 import ScientificCalculator from '../calculator/ScientificCalculator';
 import FileUpload from '../chat/FileUpload';
+import { useDailyQueryLimit } from '@/hooks/useDailyQueryLimit';
 
 interface MathResult {
   id: string;
@@ -27,6 +28,15 @@ const MathAssistant = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<any[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { canUse, consume, getRemaining, limits, isUnlimitedUser, isLoaded } = useDailyQueryLimit();
+
+  const remainingUses = isUnlimitedUser ? Infinity : getRemaining('mathTool');
+  const hasRemainingUses = isUnlimitedUser || remainingUses > 0;
+  const remainingLabel = isUnlimitedUser
+    ? 'Unlimited Math Assistant sessions today'
+    : isLoaded
+      ? `${remainingUses} of ${limits.mathTool} solves left today`
+      : 'Checking remaining uses...';
 
   const insertAtCursor = (text: string) => {
     if (textareaRef.current) {
@@ -48,6 +58,13 @@ const MathAssistant = () => {
   const solveMath = async () => {
     if (!input.trim()) {
       toast.error('Please enter a mathematical problem');
+      return;
+    }
+
+    if (!canUse('mathTool')) {
+      toast.error('Daily limit reached', {
+        description: `You have used all ${limits.mathTool} Math Assistant runs for today.`,
+      });
       return;
     }
 
@@ -82,6 +99,7 @@ const MathAssistant = () => {
       setResults(prev => [newResult, ...prev]);
       setInput('');
       setAttachedFiles([]);
+      consume('mathTool');
       toast.success('Problem solved successfully!');
     } catch (error) {
       console.error('Error solving math:', error);
@@ -172,11 +190,16 @@ Examples:
                 
                 <div className="flex justify-between items-center">
                   <div className="text-sm text-prism-text-muted">
-                    Use Ctrl+Enter to solve quickly
+                    <div>Use Ctrl+Enter to solve quickly</div>
+                    <div className="text-xs text-prism-text-muted/70">{remainingLabel}</div>
                   </div>
-                  <Button 
-                    onClick={solveMath} 
-                    disabled={isLoading || (!input.trim() && attachedFiles.length === 0)}
+                  <Button
+                    onClick={solveMath}
+                    disabled={
+                      isLoading ||
+                      (!input.trim() && attachedFiles.length === 0) ||
+                      (!hasRemainingUses && !isUnlimitedUser)
+                    }
                     className="bg-prism-primary hover:bg-prism-primary/90"
                   >
                     {isLoading ? (

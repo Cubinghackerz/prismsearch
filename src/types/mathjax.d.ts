@@ -3,6 +3,7 @@ declare global {
   interface Window {
     MathJax?: {
       typesetPromise?: (elements?: Element[]) => Promise<void>;
+      typesetClear?: (elements?: Element[]) => void;
       tex?: {
         inlineMath?: string[][];
         displayMath?: string[][];
