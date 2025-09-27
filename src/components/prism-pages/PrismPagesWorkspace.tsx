@@ -33,7 +33,6 @@ import {
   Sigma,
   Atom,
   Zap,
-  Wand2,
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -75,6 +74,44 @@ const QUICK_INSERTS: Record<PrismPagesMode, { label: string; value: string }[]> 
   ],
 };
 
+const TEMPLATE_PRESETS: { id: string; title: string; description: string; mode: PrismPagesMode; accent: string }[] = [
+  {
+    id: 'blank-standard',
+    title: 'Blank document',
+    description: 'Start from an empty canvas with rich text controls.',
+    mode: 'standard',
+    accent: 'from-indigo-500 via-sky-500 to-cyan-400',
+  },
+  {
+    id: 'sigma-proof',
+    title: 'Math workspace',
+    description: 'Sigma mode with equation shortcuts and notation presets.',
+    mode: 'sigma',
+    accent: 'from-purple-500 via-indigo-500 to-blue-500',
+  },
+  {
+    id: 'vector-lab',
+    title: 'Physics lab notes',
+    description: 'Vector mode with units, vectors, and diagram callouts.',
+    mode: 'vector',
+    accent: 'from-emerald-500 via-teal-500 to-sky-500',
+  },
+  {
+    id: 'atomis-journal',
+    title: 'Chemistry journal',
+    description: 'Atomis mode with reaction templates and molecular forms.',
+    mode: 'atomis',
+    accent: 'from-fuchsia-500 via-rose-500 to-orange-400',
+  },
+  {
+    id: 'report-template',
+    title: 'Project report',
+    description: 'Structured sections for executive summaries and briefs.',
+    mode: 'standard',
+    accent: 'from-slate-500 via-slate-400 to-zinc-300',
+  },
+];
+
 const turndown = new TurndownService({ headingStyle: 'atx' });
 
 turndown.addRule('checklist', {
@@ -94,6 +131,14 @@ const htmlToPlainText = (html: string) => {
   const div = document.createElement('div');
   div.innerHTML = html;
   return div.textContent || '';
+};
+
+const getDocumentPreview = (html: string, limit = 90) => {
+  const text = htmlToPlainText(html).trim();
+  if (!text) {
+    return 'Empty document';
+  }
+  return text.length > limit ? `${text.slice(0, limit)}…` : text;
 };
 
 const markdownToHtml = (markdown: string) => {
@@ -164,7 +209,7 @@ const PrismPagesWorkspace: React.FC = () => {
   } = usePrismPages();
 
   const editorRef = useRef<HTMLDivElement | null>(null);
-  const [editorTheme, setEditorTheme] = useState<'light' | 'dark'>('light');
+  const [editorTheme, setEditorTheme] = useState<'light' | 'dark'>('dark');
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
   const [aiInstructions, setAiInstructions] = useState('');
   const [pendingRevision, setPendingRevision] = useState<PrismPagesRevisionProposal | null>(null);
@@ -172,10 +217,19 @@ const PrismPagesWorkspace: React.FC = () => {
   const [isVersionSheetOpen, setIsVersionSheetOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [contentDraft, setContentDraft] = useState('');
+  const internalUpdateRef = useRef(false);
 
   const currentDocument = useMemo(
     () => documents.find((doc) => doc.id === selectedDocumentId) || null,
     [documents, selectedDocumentId]
+  );
+
+  const recentDocuments = useMemo(
+    () =>
+      [...documents]
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+        .slice(0, 8),
+    [documents]
   );
 
   useEffect(() => {
@@ -199,6 +253,19 @@ const PrismPagesWorkspace: React.FC = () => {
     return () => window.clearTimeout(debounce);
   }, [contentDraft, currentDocument, updateDocumentContent]);
 
+  useEffect(() => {
+    if (!editorRef.current) {
+      return;
+    }
+    if (internalUpdateRef.current) {
+      internalUpdateRef.current = false;
+      return;
+    }
+    if (editorRef.current.innerHTML !== contentDraft) {
+      editorRef.current.innerHTML = contentDraft;
+    }
+  }, [contentDraft]);
+
   const runCommand = (command: string, value?: string) => {
     if (!editorRef.current) {
       return;
@@ -206,6 +273,7 @@ const PrismPagesWorkspace: React.FC = () => {
     editorRef.current.focus();
     document.execCommand(command, false, value);
     const updated = editorRef.current.innerHTML;
+    internalUpdateRef.current = true;
     setContentDraft(updated);
   };
 
@@ -216,6 +284,7 @@ const PrismPagesWorkspace: React.FC = () => {
     editorRef.current.focus();
     document.execCommand('insertHTML', false, snippet);
     const updated = editorRef.current.innerHTML;
+    internalUpdateRef.current = true;
     setContentDraft(updated);
   };
 
@@ -244,6 +313,11 @@ const PrismPagesWorkspace: React.FC = () => {
     if (revision) {
       setPendingRevision(revision);
     }
+  };
+
+  const handleEditorInput = (event: React.FormEvent<HTMLDivElement>) => {
+    internalUpdateRef.current = true;
+    setContentDraft(event.currentTarget.innerHTML);
   };
 
   const downloadFile = (blob: Blob, filename: string) => {
@@ -421,56 +495,62 @@ const PrismPagesWorkspace: React.FC = () => {
   };
 
   const renderSidebar = () => (
-    <div className="flex h-full flex-col gap-4 border-r border-border/60 bg-muted/30 p-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Your pages</h2>
-          <p className="text-xs text-muted-foreground">{documents.length}/{maxDocuments} stored locally</p>
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size="sm" variant="outline" className="gap-2">
-              <FilePlus className="h-4 w-4" /> New
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            {MODE_OPTIONS.map((option) => (
-              <DropdownMenuItem key={option.value} onClick={() => handleCreate(option.value)}>
-                <div className="flex items-center gap-2">
-                  {option.icon}
-                  <div>
-                    <p className="text-sm font-medium">{option.label}</p>
-                    <p className="text-xs text-muted-foreground">{option.description}</p>
-                  </div>
-                </div>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+    <div className="hidden h-full w-72 flex-col gap-5 border-r border-slate-800/70 bg-slate-950/70 p-5 lg:flex">
+      <div className="space-y-1">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Library</h2>
+        <p className="text-[11px] text-slate-500">{documents.length}/{maxDocuments} documents stored on this device</p>
       </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full justify-center gap-2 rounded-xl border-slate-700/80 bg-slate-900/60 text-slate-200 hover:border-indigo-400/60 hover:bg-indigo-500/10"
+          >
+            <FilePlus className="h-4 w-4" /> New document
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-60 border-slate-800 bg-slate-900 text-slate-100">
+          {MODE_OPTIONS.map((option) => (
+            <DropdownMenuItem
+              key={option.value}
+              className="focus:bg-indigo-500/10 focus:text-indigo-200"
+              onClick={() => handleCreate(option.value)}
+            >
+              <div className="flex items-center gap-2">
+                {option.icon}
+                <div>
+                  <p className="text-sm font-medium">{option.label}</p>
+                  <p className="text-xs text-slate-400">{option.description}</p>
+                </div>
+              </div>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
       <ScrollArea className="flex-1">
         <div className="flex flex-col gap-2">
           {documents.map((doc) => (
             <button
               key={doc.id}
               onClick={() => selectDocument(doc.id)}
-              className={`rounded-lg border px-3 py-2 text-left transition hover:border-primary/60 hover:bg-primary/5 ${
-                doc.id === currentDocument?.id ? 'border-primary bg-primary/10 text-primary-foreground' : 'border-border'
+              className={`group rounded-xl border px-3 py-2 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50 ${
+                doc.id === currentDocument?.id
+                  ? 'border-indigo-400/60 bg-indigo-500/10 text-indigo-100'
+                  : 'border-slate-800/70 bg-slate-900/40 text-slate-200 hover:border-indigo-400/40 hover:bg-indigo-500/5'
               }`}
             >
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">{doc.title}</p>
-                <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
+              <div className="flex items-center justify-between gap-2">
+                <p className="truncate text-sm font-medium">{doc.title}</p>
+                <Badge variant="outline" className="border-transparent bg-slate-800/70 text-[10px] uppercase tracking-wide text-slate-300">
                   {MODE_OPTIONS.find((option) => option.value === doc.mode)?.label ?? 'Mode'}
                 </Badge>
               </div>
-              <p className="text-xs text-muted-foreground">
-                {format(new Date(doc.updatedAt), 'MMM d, HH:mm')}
-              </p>
+              <p className="mt-1 text-xs text-slate-400">{format(new Date(doc.updatedAt), 'MMM d • HH:mm')}</p>
             </button>
           ))}
           {documents.length === 0 && (
-            <div className="rounded-lg border border-dashed border-muted-foreground/40 bg-background/40 p-4 text-center text-xs text-muted-foreground">
+            <div className="rounded-xl border border-dashed border-slate-700/70 bg-slate-900/40 p-4 text-center text-xs text-slate-400">
               Create your first Prism Page to start writing with Gemini assistance.
             </div>
           )}
@@ -480,79 +560,100 @@ const PrismPagesWorkspace: React.FC = () => {
   );
 
   const renderToolbar = () => (
-    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border/70 bg-muted/40 px-3 py-2 text-sm">
+    <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-800/70 bg-slate-900/70 px-4 py-3 text-sm text-slate-200 shadow-[0_10px_40px_-30px_rgba(14,116,144,0.8)]">
       <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" onClick={() => runCommand('bold')}>
+        <Button variant="ghost" size="icon" className="text-slate-200 hover:bg-indigo-500/10" onClick={() => runCommand('bold')}>
           <Bold className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={() => runCommand('italic')}>
+        <Button variant="ghost" size="icon" className="text-slate-200 hover:bg-indigo-500/10" onClick={() => runCommand('italic')}>
           <Italic className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={() => runCommand('underline')}>
+        <Button variant="ghost" size="icon" className="text-slate-200 hover:bg-indigo-500/10" onClick={() => runCommand('underline')}>
           <Underline className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={() => runCommand('hiliteColor', '#fde047')}>
+        <Button variant="ghost" size="icon" className="text-slate-200 hover:bg-indigo-500/10" onClick={() => runCommand('hiliteColor', '#facc15')}>
           <Highlighter className="h-4 w-4" />
         </Button>
       </div>
-      <div className="flex items-center gap-1 border-l border-border/50 pl-2">
-        <Button variant="ghost" size="icon" onClick={() => runCommand('insertUnorderedList')}>
+      <div className="flex items-center gap-1 border-l border-slate-800/70 pl-3">
+        <Button variant="ghost" size="icon" className="text-slate-200 hover:bg-indigo-500/10" onClick={() => runCommand('insertUnorderedList')}>
           <List className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={() => runCommand('insertOrderedList')}>
+        <Button variant="ghost" size="icon" className="text-slate-200 hover:bg-indigo-500/10" onClick={() => runCommand('insertOrderedList')}>
           <ListOrdered className="h-4 w-4" />
         </Button>
       </div>
-      <div className="flex items-center gap-1 border-l border-border/50 pl-2">
-        <Button variant="ghost" size="icon" onClick={() => runCommand('justifyLeft')}>
+      <div className="flex items-center gap-1 border-l border-slate-800/70 pl-3">
+        <Button variant="ghost" size="icon" className="text-slate-200 hover:bg-indigo-500/10" onClick={() => runCommand('justifyLeft')}>
           <AlignLeft className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={() => runCommand('justifyCenter')}>
+        <Button variant="ghost" size="icon" className="text-slate-200 hover:bg-indigo-500/10" onClick={() => runCommand('justifyCenter')}>
           <AlignCenter className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={() => runCommand('justifyRight')}>
+        <Button variant="ghost" size="icon" className="text-slate-200 hover:bg-indigo-500/10" onClick={() => runCommand('justifyRight')}>
           <AlignRight className="h-4 w-4" />
         </Button>
       </div>
-      <div className="flex items-center gap-2 border-l border-border/50 pl-2">
+      <div className="flex flex-1 flex-wrap items-center gap-2 border-l border-slate-800/70 pl-3">
         {currentDocument && QUICK_INSERTS[currentDocument.mode].map((item) => (
-          <Button key={item.label} variant="outline" size="sm" onClick={() => insertSnippet(item.value)}>
+          <Button
+            key={item.label}
+            variant="outline"
+            size="sm"
+            className="border-slate-700/70 bg-slate-900/50 text-xs text-slate-200 hover:border-indigo-400/60 hover:bg-indigo-500/10"
+            onClick={() => insertSnippet(item.value)}
+          >
             {item.label}
           </Button>
         ))}
       </div>
-      <div className="ml-auto flex items-center gap-2">
-        <Button variant="ghost" size="icon" onClick={() => setEditorTheme((theme) => (theme === 'light' ? 'dark' : 'light'))}>
-          {editorTheme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+      <div className="ml-auto flex flex-wrap items-center gap-2 border-l border-slate-800/70 pl-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-slate-200 hover:bg-indigo-500/10"
+          onClick={() => setEditorTheme(editorTheme === 'dark' ? 'light' : 'dark')}
+          aria-label="Toggle editor theme"
+        >
+          {editorTheme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </Button>
-        <Button variant="outline" size="sm" onClick={() => recordVersion(currentDocument!.id, 'Manual snapshot')}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="border-slate-700/70 bg-slate-900/40 text-slate-200 hover:border-indigo-400/60 hover:bg-indigo-500/10"
+          onClick={() => recordVersion(currentDocument!.id, 'Manual snapshot')}
+        >
           Save snapshot
         </Button>
         <Sheet open={isVersionSheetOpen} onOpenChange={setIsVersionSheetOpen}>
           <SheetTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 border-slate-700/70 bg-slate-900/40 text-slate-200 hover:border-indigo-400/60 hover:bg-indigo-500/10"
+            >
               <History className="h-4 w-4" /> Versions
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-[360px]">
+          <SheetContent side="right" className="w-[360px] border-l border-slate-800 bg-slate-950 text-slate-100">
             <SheetHeader>
               <SheetTitle>Version history</SheetTitle>
-              <SheetDescription>Restore previous revisions or review AI-applied changes.</SheetDescription>
+              <SheetDescription className="text-slate-400">Restore previous revisions or review AI-applied changes.</SheetDescription>
             </SheetHeader>
             <ScrollArea className="mt-4 h-full pr-3">
               <div className="space-y-3">
                 {currentDocument?.versions.map((version) => (
-                  <div key={version.id} className="rounded-lg border border-border/60 p-3">
+                  <div key={version.id} className="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-medium">{format(new Date(version.createdAt), 'MMM d, HH:mm')}</p>
+                      <p className="text-sm font-medium text-slate-100">{format(new Date(version.createdAt), 'MMM d, HH:mm')}</p>
                       {version.aiGenerated && (
-                        <Badge variant="outline" className="text-[10px] uppercase text-primary">
+                        <Badge variant="outline" className="border-indigo-400/60 bg-indigo-500/10 text-[10px] uppercase text-indigo-200">
                           AI
                         </Badge>
                       )}
                     </div>
                     {version.summary && (
-                      <p className="mt-2 text-xs text-muted-foreground">{version.summary}</p>
+                      <p className="mt-2 text-xs text-slate-400">{version.summary}</p>
                     )}
                     <div className="mt-3 flex items-center gap-2">
                       <Button size="sm" onClick={() => restoreVersion(currentDocument.id, version.id)}>
@@ -561,6 +662,7 @@ const PrismPagesWorkspace: React.FC = () => {
                       <Button
                         size="sm"
                         variant="ghost"
+                        className="text-slate-200 hover:bg-indigo-500/10"
                         onClick={() => navigator.clipboard.writeText(htmlToPlainText(version.content))}
                       >
                         Copy text
@@ -569,7 +671,7 @@ const PrismPagesWorkspace: React.FC = () => {
                   </div>
                 ))}
                 {!currentDocument?.versions.length && (
-                  <p className="text-sm text-muted-foreground">No saved versions yet.</p>
+                  <p className="text-sm text-slate-500">No saved versions yet.</p>
                 )}
               </div>
             </ScrollArea>
@@ -582,61 +684,133 @@ const PrismPagesWorkspace: React.FC = () => {
   const renderWorkspace = () => {
     if (!currentDocument) {
       return (
-        <div className="flex flex-1 flex-col items-center justify-center text-center text-muted-foreground">
-          <Wand2 className="mb-4 h-10 w-10 text-primary" />
-          <h3 className="text-lg font-semibold">Create a Prism Page to begin</h3>
-          <p className="mt-2 max-w-sm text-sm">
-            Prism Pages stores everything locally and lets Gemini 2.5 Pro help you iterate with tracked revisions.
+        <div className="flex flex-1 flex-col gap-8">
+          <div className="rounded-3xl border border-slate-800/70 bg-slate-900/70 p-6 shadow-[0_40px_120px_-60px_rgba(15,23,42,0.8)]">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-100">Start a new document</h3>
+                <p className="text-sm text-slate-400">Select a blank page or choose a template to start faster.</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-slate-700/70 bg-slate-900/40 text-slate-200 hover:border-indigo-400/60 hover:bg-indigo-500/10"
+                onClick={() => handleCreate('standard')}
+              >
+                <FilePlus className="h-4 w-4" /> Blank page
+              </Button>
+            </div>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              {TEMPLATE_PRESETS.map((template) => (
+                <button
+                  key={template.id}
+                  onClick={() => handleCreate(template.mode)}
+                  className="group relative flex flex-col rounded-2xl border border-slate-800/70 bg-slate-900/60 p-4 text-left transition hover:border-indigo-400/60 hover:bg-indigo-500/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/40"
+                >
+                  <div className="relative h-32 overflow-hidden rounded-xl bg-slate-950/70 shadow-inner">
+                    <div className={"absolute inset-0 bg-gradient-to-br " + template.accent + " opacity-60 transition group-hover:opacity-80"} />
+                    <div className="relative z-10 flex h-full flex-col justify-between p-3 text-[11px] uppercase tracking-widest text-white/75">
+                      <span className="rounded-md bg-black/40 px-2 py-1 text-[10px] font-semibold">{template.title}</span>
+                      <span className="text-[10px] font-medium">Gemini ready</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 space-y-1">
+                    <p className="text-sm font-semibold text-slate-100">{template.title}</p>
+                    <p className="text-xs text-slate-400">{template.description}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-3xl border border-slate-800/70 bg-slate-900/70 p-6 shadow-[0_40px_120px_-60px_rgba(15,23,42,0.8)]">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-100">Recent documents</h3>
+                <p className="text-sm text-slate-400">Your last edits are cached locally for instant resume.</p>
+              </div>
+              <Badge variant="outline" className="border-indigo-400/40 bg-indigo-500/10 text-indigo-200">Stored locally</Badge>
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {recentDocuments.map((doc) => (
+                <button
+                  key={doc.id}
+                  onClick={() => selectDocument(doc.id)}
+                  className="group flex flex-col gap-2 rounded-2xl border border-slate-800/70 bg-slate-900/50 p-4 text-left transition hover:border-indigo-400/50 hover:bg-indigo-500/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/40"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="truncate text-sm font-semibold text-slate-100">{doc.title}</p>
+                    <Badge variant="outline" className="border-transparent bg-slate-800/70 text-[10px] uppercase tracking-wide text-slate-300">
+                      {MODE_OPTIONS.find((option) => option.value === doc.mode)?.label ?? 'Mode'}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-slate-400">{format(new Date(doc.updatedAt), 'MMM d • HH:mm')}</p>
+                  <p className="text-xs text-slate-500">{getDocumentPreview(doc.content)}</p>
+                </button>
+              ))}
+              {!recentDocuments.length && (
+                <div className="col-span-full rounded-xl border border-dashed border-slate-700/70 bg-slate-900/40 p-6 text-center text-sm text-slate-400">
+                  Create a document to see it listed here.
+                </div>
+              )}
+            </div>
+          </div>
+          <p className="text-xs text-slate-500">
+            Store up to {maxDocuments} documents locally. Export older work or duplicate templates anytime.
           </p>
         </div>
       );
     }
 
     return (
-      <div className="flex h-full flex-col gap-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <Input
-            value={currentDocument.title}
-            onChange={(event) => renameDocument(currentDocument.id, event.target.value)}
-            className="max-w-sm border-none bg-transparent px-0 text-2xl font-semibold"
-          />
-          <Badge variant="secondary" className="bg-primary/15 text-primary">
-            Beta
-          </Badge>
-          <Badge variant="outline" className="border-primary/40 text-primary">
-            Exclusive Access
-          </Badge>
-        </div>
-        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <span className="font-medium">Mode</span>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  {MODE_OPTIONS.find((option) => option.value === currentDocument.mode)?.icon}
-                  {MODE_OPTIONS.find((option) => option.value === currentDocument.mode)?.label}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64">
-                {MODE_OPTIONS.map((option) => (
-                  <DropdownMenuItem key={option.value} onClick={() => updateDocumentMode(currentDocument.id, option.value)}>
-                    <div className="flex items-center gap-2">
-                      {option.icon}
-                      <div>
-                        <p className="text-sm font-medium">{option.label}</p>
-                        <p className="text-xs text-muted-foreground">{option.description}</p>
-                      </div>
-                    </div>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+      <div className="flex h-full flex-col gap-6">
+        <div className="rounded-3xl border border-slate-800/70 bg-slate-900/70 p-5 shadow-[0_40px_120px_-60px_rgba(15,23,42,0.8)]">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="space-y-2">
+              <Input
+                value={currentDocument.title}
+                onChange={(event) => renameDocument(currentDocument.id, event.target.value)}
+                className="max-w-xl border-none bg-transparent px-0 text-3xl font-semibold text-slate-100 focus-visible:ring-0 focus-visible:ring-offset-0"
+              />
+              <p className="text-sm text-slate-400">Gemini 2.5 Pro assists revisions while every change stays on your device.</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="secondary" className="bg-indigo-500/20 text-indigo-200">Beta</Badge>
+              <Badge variant="outline" className="border-indigo-400/40 bg-indigo-500/10 text-indigo-200">Exclusive access</Badge>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="gap-2" onClick={() => setIsAiDialogOpen(true)}>
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-slate-300">
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-slate-200">Mode</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2 border-slate-700/70 bg-slate-900/40 text-slate-200 hover:border-indigo-400/60 hover:bg-indigo-500/10">
+                    {MODE_OPTIONS.find((option) => option.value === currentDocument.mode)?.icon}
+                    {MODE_OPTIONS.find((option) => option.value === currentDocument.mode)?.label}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-64 border-slate-800 bg-slate-900 text-slate-100">
+                  {MODE_OPTIONS.map((option) => (
+                    <DropdownMenuItem
+                      key={option.value}
+                      className="focus:bg-indigo-500/10 focus:text-indigo-200"
+                      onClick={() => updateDocumentMode(currentDocument.id, option.value)}
+                    >
+                      <div className="flex items-center gap-2">
+                        {option.icon}
+                        <div>
+                          <p className="text-sm font-medium">{option.label}</p>
+                          <p className="text-xs text-slate-400">{option.description}</p>
+                        </div>
+                      </div>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <Button variant="ghost" size="sm" className="gap-2 text-slate-200 hover:bg-indigo-500/10" onClick={() => setIsAiDialogOpen(true)}>
               <Sparkles className="h-4 w-4" /> Ask Prism AI
             </Button>
-            <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-medium">
+            <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-200 hover:text-indigo-200">
               <Upload className="h-4 w-4" />
               Import
               <input
@@ -649,7 +823,7 @@ const PrismPagesWorkspace: React.FC = () => {
             </label>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
+                <Button variant="outline" size="sm" className="gap-2 border-slate-700/70 bg-slate-900/40 text-slate-200 hover:border-indigo-400/60 hover:bg-indigo-500/10">
                   <Download className="h-4 w-4" /> Export
                 </Button>
               </DropdownMenuTrigger>
@@ -662,7 +836,7 @@ const PrismPagesWorkspace: React.FC = () => {
                 <DropdownMenuItem onClick={() => handleExport('md')}>Export as .md</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button variant="ghost" size="sm" className="gap-2 text-destructive" onClick={() => handleDelete(currentDocument.id)}>
+            <Button variant="ghost" size="sm" className="gap-2 text-destructive hover:text-red-400" onClick={() => handleDelete(currentDocument.id)}>
               <Trash className="h-4 w-4" /> Delete
             </Button>
           </div>
@@ -670,22 +844,26 @@ const PrismPagesWorkspace: React.FC = () => {
         {renderToolbar()}
         <div
           ref={editorRef}
-          className={`flex-1 overflow-auto rounded-xl border border-border bg-background/80 p-6 text-base leading-7 shadow-inner transition ${
+          className={`flex-1 overflow-auto rounded-3xl border border-slate-800 bg-slate-950/80 p-10 text-base leading-7 shadow-[inset_0_1px_0_rgba(148,163,184,0.08)] transition ${
             editorTheme === 'dark'
-              ? 'bg-slate-950 text-slate-100 [&_p]:text-slate-100'
-              : 'bg-background text-foreground'
+              ? 'text-slate-100 [&_*]:selection:bg-indigo-500/30'
+              : 'bg-white text-slate-900'
           }`}
           contentEditable
           suppressContentEditableWarning
-          onInput={(event) => setContentDraft((event.target as HTMLDivElement).innerHTML)}
-          dangerouslySetInnerHTML={{ __html: contentDraft }}
+          spellCheck
+          autoCorrect="on"
+          autoCapitalize="sentences"
+          data-gramm="false"
+          onInput={handleEditorInput}
+          aria-label="Prism Pages editor"
         />
       </div>
     );
-  };
+  }
 
   return (
-    <div className="flex h-full min-h-[600px] rounded-2xl border border-border/80 bg-background shadow-xl">
+    <div className="flex h-full min-h-[600px] rounded-2xl border border-slate-800/70 bg-slate-950/60 shadow-[0_40px_120px_-60px_rgba(15,23,42,0.8)]">
       {renderSidebar()}
       <div className="flex flex-1 flex-col gap-4 p-6">
         {isLoading ? (
