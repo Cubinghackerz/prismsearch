@@ -33,6 +33,8 @@ import {
   Sigma,
   Atom,
   Zap,
+  Minus,
+  Plus,
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -133,8 +135,8 @@ const htmlToPlainText = (html: string) => {
   return div.textContent || '';
 };
 
-const getDocumentPreview = (html: string, limit = 90) => {
-  const text = htmlToPlainText(html).trim();
+const getDocumentPreview = (html: string | undefined, limit = 90) => {
+  const text = htmlToPlainText(html ?? '').trim();
   if (!text) {
     return 'Empty document';
   }
@@ -200,6 +202,8 @@ const PrismPagesWorkspace: React.FC = () => {
     updateDocumentContent,
     updateDocumentMode,
     deleteDocument,
+    addDocumentPage,
+    removeDocumentPage,
     recordVersion,
     restoreVersion,
     requestAiRevision,
@@ -217,6 +221,7 @@ const PrismPagesWorkspace: React.FC = () => {
   const [isVersionSheetOpen, setIsVersionSheetOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [contentDraft, setContentDraft] = useState('');
+  const [activePageIndex, setActivePageIndex] = useState(0);
   const internalUpdateRef = useRef(false);
 
   const currentDocument = useMemo(
@@ -233,25 +238,41 @@ const PrismPagesWorkspace: React.FC = () => {
   );
 
   useEffect(() => {
-    if (currentDocument) {
-      setContentDraft(currentDocument.content);
-    } else {
+    if (!currentDocument) {
+      setActivePageIndex(0);
       setContentDraft('');
+      return;
     }
-  }, [currentDocument?.id, currentDocument?.content]);
+    setActivePageIndex((previous) => {
+      if (previous < currentDocument.pages.length) {
+        return previous;
+      }
+      return Math.max(0, currentDocument.pages.length - 1);
+    });
+  }, [currentDocument?.id, currentDocument?.pages?.length]);
+
+  useEffect(() => {
+    if (!currentDocument) {
+      setContentDraft('');
+      return;
+    }
+    const nextContent = currentDocument.pages[activePageIndex] ?? currentDocument.pages[0] ?? '<p></p>';
+    setContentDraft((previous) => (previous === nextContent ? previous : nextContent));
+  }, [currentDocument?.id, currentDocument?.pages, activePageIndex]);
 
   useEffect(() => {
     if (!currentDocument) {
       return;
     }
+    const previousContent = currentDocument.pages[activePageIndex] ?? '';
     const debounce = window.setTimeout(() => {
-      if (contentDraft !== currentDocument.content) {
-        updateDocumentContent(currentDocument.id, contentDraft);
+      if (contentDraft !== previousContent) {
+        updateDocumentContent(currentDocument.id, contentDraft, activePageIndex);
       }
     }, 500);
 
     return () => window.clearTimeout(debounce);
-  }, [contentDraft, currentDocument, updateDocumentContent]);
+  }, [contentDraft, currentDocument, activePageIndex, updateDocumentContent]);
 
   useEffect(() => {
     if (!editorRef.current) {
@@ -484,6 +505,7 @@ const PrismPagesWorkspace: React.FC = () => {
       }
       setContentDraft(html);
       updateDocumentContent(currentDocument.id, html);
+      setActivePageIndex(0);
       toast.success(`Imported ${file.name}`);
     } catch (error) {
       console.error('Failed to import document', error);
@@ -492,6 +514,53 @@ const PrismPagesWorkspace: React.FC = () => {
       setIsImporting(false);
       event.target.value = '';
     }
+  };
+
+  const handleSelectPage = (index: number) => {
+    if (!currentDocument) {
+      return;
+    }
+    const safeIndex = Math.max(0, Math.min(index, currentDocument.pages.length - 1));
+    setActivePageIndex(safeIndex);
+    requestAnimationFrame(() => {
+      editorRef.current?.focus();
+    });
+  };
+
+  const handleAddPage = () => {
+    if (!currentDocument) {
+      return;
+    }
+    addDocumentPage(currentDocument.id, activePageIndex);
+    setActivePageIndex((previous) => Math.min(previous + 1, currentDocument.pages.length));
+    toast.success('Added a new page');
+    requestAnimationFrame(() => {
+      editorRef.current?.focus();
+    });
+  };
+
+  const handleRemovePage = () => {
+    if (!currentDocument) {
+      return;
+    }
+    if (currentDocument.pages.length <= 1) {
+      toast('Cannot remove page', {
+        description: 'Documents must contain at least one page.',
+      });
+      return;
+    }
+    const nextLength = Math.max(1, currentDocument.pages.length - 1);
+    removeDocumentPage(currentDocument.id, activePageIndex);
+    setActivePageIndex((previous) => {
+      if (previous >= nextLength) {
+        return Math.max(0, nextLength - 1);
+      }
+      return previous;
+    });
+    toast.success('Removed page');
+    requestAnimationFrame(() => {
+      editorRef.current?.focus();
+    });
   };
 
   const renderSidebar = () => (
@@ -546,7 +615,11 @@ const PrismPagesWorkspace: React.FC = () => {
                   {MODE_OPTIONS.find((option) => option.value === doc.mode)?.label ?? 'Mode'}
                 </Badge>
               </div>
-              <p className="mt-1 text-xs text-slate-400">{format(new Date(doc.updatedAt), 'MMM d • HH:mm')}</p>
+              <p className="mt-1 text-xs text-slate-400">
+                {format(new Date(doc.updatedAt), 'MMM d • HH:mm')}
+                <span className="px-1">•</span>
+                {doc.pages.length} {doc.pages.length === 1 ? 'page' : 'pages'}
+              </p>
             </button>
           ))}
           {documents.length === 0 && (
@@ -558,6 +631,55 @@ const PrismPagesWorkspace: React.FC = () => {
       </ScrollArea>
     </div>
   );
+
+  const renderPageControls = () => {
+    if (!currentDocument) {
+      return null;
+    }
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-800/70 bg-slate-900/70 px-4 py-3 text-sm text-slate-200 shadow-[0_10px_40px_-30px_rgba(14,116,144,0.8)]">
+        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
+          {currentDocument.pages.map((_, index) => (
+            <Button
+              key={`prism-page-${index}`}
+              variant={index === activePageIndex ? 'default' : 'ghost'}
+              size="sm"
+              className={
+                index === activePageIndex
+                  ? 'bg-indigo-500 text-white hover:bg-indigo-500/90'
+                  : 'text-slate-200 hover:bg-indigo-500/10'
+              }
+              onClick={() => handleSelectPage(index)}
+            >
+              Page {index + 1}
+            </Button>
+          ))}
+        </div>
+        <div className="flex flex-shrink-0 items-center gap-3">
+          <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+            Page {activePageIndex + 1} of {currentDocument.pages.length}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 border-slate-700/70 bg-slate-900/40 text-slate-200 hover:border-indigo-400/60 hover:bg-indigo-500/10"
+            onClick={handleAddPage}
+          >
+            <Plus className="h-4 w-4" /> Add page
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2 text-slate-200 hover:bg-indigo-500/10 disabled:opacity-40"
+            onClick={handleRemovePage}
+            disabled={currentDocument.pages.length <= 1}
+          >
+            <Minus className="h-4 w-4" /> Remove page
+          </Button>
+        </div>
+      </div>
+    );
+  };
 
   const renderToolbar = () => (
     <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-800/70 bg-slate-900/70 px-4 py-3 text-sm text-slate-200 shadow-[0_10px_40px_-30px_rgba(14,116,144,0.8)]">
@@ -743,8 +865,12 @@ const PrismPagesWorkspace: React.FC = () => {
                       {MODE_OPTIONS.find((option) => option.value === doc.mode)?.label ?? 'Mode'}
                     </Badge>
                   </div>
-                  <p className="text-xs text-slate-400">{format(new Date(doc.updatedAt), 'MMM d • HH:mm')}</p>
-                  <p className="text-xs text-slate-500">{getDocumentPreview(doc.content)}</p>
+                  <p className="text-xs text-slate-400">
+                    {format(new Date(doc.updatedAt), 'MMM d • HH:mm')}
+                    <span className="px-1">•</span>
+                    {doc.pages.length} {doc.pages.length === 1 ? 'page' : 'pages'}
+                  </p>
+                  <p className="text-xs text-slate-500">{getDocumentPreview(doc.pages?.[0] ?? doc.content)}</p>
                 </button>
               ))}
               {!recentDocuments.length && (
@@ -762,7 +888,7 @@ const PrismPagesWorkspace: React.FC = () => {
     }
 
     return (
-      <div className="flex h-full flex-col gap-6">
+      <div className="flex h-full min-h-0 flex-col gap-6">
         <div className="rounded-3xl border border-slate-800/70 bg-slate-900/70 p-5 shadow-[0_40px_120px_-60px_rgba(15,23,42,0.8)]">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="space-y-2">
@@ -841,13 +967,14 @@ const PrismPagesWorkspace: React.FC = () => {
             </Button>
           </div>
         </div>
+        {renderPageControls()}
         {renderToolbar()}
         <div
           ref={editorRef}
-          className={`flex-1 overflow-auto rounded-3xl border border-slate-800 bg-slate-950/80 p-10 text-base leading-7 shadow-[inset_0_1px_0_rgba(148,163,184,0.08)] transition ${
+          className={`flex-1 min-h-0 overflow-auto rounded-3xl border border-slate-800 bg-slate-950/80 p-10 text-base leading-7 shadow-[inset_0_1px_0_rgba(148,163,184,0.08)] transition [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:ml-1 [&_li]:my-1 [&_blockquote]:border-l-2 [&_blockquote]:pl-4 ${
             editorTheme === 'dark'
               ? 'text-slate-100 [&_*]:selection:bg-indigo-500/30'
-              : 'bg-white text-slate-900'
+              : 'bg-white text-slate-900 [&_*]:selection:bg-indigo-500/20'
           }`}
           contentEditable
           suppressContentEditableWarning
@@ -863,9 +990,9 @@ const PrismPagesWorkspace: React.FC = () => {
   }
 
   return (
-    <div className="flex h-full min-h-[600px] rounded-2xl border border-slate-800/70 bg-slate-950/60 shadow-[0_40px_120px_-60px_rgba(15,23,42,0.8)]">
+    <div className="flex h-full w-full overflow-hidden rounded-[inherit] bg-slate-950/60">
       {renderSidebar()}
-      <div className="flex flex-1 flex-col gap-4 p-6">
+      <div className="flex flex-1 min-h-0 flex-col gap-4 p-6">
         {isLoading ? (
           <div className="flex flex-1 items-center justify-center text-muted-foreground">
             Loading your pages...

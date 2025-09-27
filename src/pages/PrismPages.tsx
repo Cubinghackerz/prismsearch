@@ -5,8 +5,6 @@ import { Navigate } from 'react-router-dom';
 import LetterGlitch from '@/components/LetterGlitch';
 import PrismPagesWorkspace from '@/components/prism-pages/PrismPagesWorkspace';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ExternalLink, History, RefreshCw, Sparkles, Workflow } from 'lucide-react';
 
 const EXCLUSIVE_USER_IDS = new Set([
   'user_30z8cmTlPMcTfCEvoXUTf9FuBhh',
@@ -20,48 +18,6 @@ const STATUS_TEXT = [
   'Syncing Gemini 2.5 collaboration tools',
   'Preparing mode-aware toolbars',
   'Loading Prism Pages environment',
-];
-
-const FEATURE_CALLOUTS = [
-  {
-    title: 'AI co-author',
-    description: 'Ask Gemini 2.5 Pro to suggest edits, then review and apply updates with a single click.',
-    icon: <Sparkles className="h-5 w-5 text-primary" />,
-  },
-  {
-    title: 'Version control',
-    description: 'Capture manual snapshots and roll back instantly with a local-first history.',
-    icon: <History className="h-5 w-5 text-primary" />,
-  },
-  {
-    title: 'Multi-format export',
-    description: 'Import or export .docx, .pdf, .odt, .rtf, .txt, and .md files entirely in your browser.',
-    icon: <RefreshCw className="h-5 w-5 text-primary" />,
-  },
-  {
-    title: 'Mode-aware tooling',
-    description: 'Switch between Standard, Sigma, Vector, and Atomis modes for tailored toolbars.',
-    icon: <Workflow className="h-5 w-5 text-primary" />,
-  },
-];
-
-const MODE_DETAILS = [
-  {
-    name: 'Standard',
-    description: 'A clean slate for structured writing, reports, and everyday documents with clarity-focused formatting.',
-  },
-  {
-    name: 'Sigma',
-    description: 'Surface quick inserts for integrals, summations, and proofs to keep mathematical notation precise.',
-  },
-  {
-    name: 'Vector',
-    description: 'Built for physics — drop in vector notation, units, and diagram annotations without breaking flow.',
-  },
-  {
-    name: 'Atomis',
-    description: 'Compose chemical formulas, balance reactions, and capture lab notes with dedicated helpers.',
-  },
 ];
 
 const PrismPages: React.FC = () => {
@@ -144,77 +100,28 @@ const PrismPages: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="relative flex-1 overflow-y-auto">
+          <div className="relative flex flex-1 overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-950/95 to-slate-900" />
-            <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col gap-10 px-6 py-12">
-              <section className="rounded-3xl border border-slate-800/80 bg-slate-900/60 p-8 shadow-[0_40px_120px_-60px_rgba(15,23,42,0.8)] backdrop-blur">
-                <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-                  <div className="space-y-6">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <h1 className="text-3xl font-semibold text-white md:text-4xl">Prism Pages</h1>
-                      <Badge variant="secondary" className="bg-indigo-500/20 text-indigo-200">
-                        Beta
-                      </Badge>
-                      <Badge variant="outline" className="border-indigo-400/50 bg-indigo-500/10 text-indigo-200">
-                        Exclusive Access
-                      </Badge>
-                    </div>
-                    <p className="max-w-3xl text-base text-slate-300">
-                      Draft, revise, and publish documents with Gemini 2.5 Pro as your co-author. Prism Pages keeps everything stored locally, lets you request AI revisions, and tracks every version for quick rollbacks.
-                    </p>
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                      {FEATURE_CALLOUTS.map((feature) => (
-                        <div
-                          key={feature.title}
-                          className="flex items-start gap-3 rounded-2xl border border-slate-800/80 bg-slate-900/70 p-4 shadow-inner"
-                        >
-                          <div className="rounded-full bg-indigo-500/10 p-2 text-indigo-300">{feature.icon}</div>
-                          <div className="space-y-1">
-                            <div className="text-sm font-semibold text-slate-100">{feature.title}</div>
-                            <p className="text-xs text-slate-400">{feature.description}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="grid gap-4 rounded-2xl border border-dashed border-indigo-500/30 bg-indigo-500/5 p-4 text-sm md:grid-cols-2">
-                      {MODE_DETAILS.map((mode) => (
-                        <div key={mode.name} className="space-y-1">
-                          <p className="font-semibold text-indigo-200">{mode.name}</p>
-                          <p className="text-xs text-indigo-100/70">{mode.description}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-indigo-300">
-                      Available by exclusive access invitation only.
-                    </p>
+            <div className="relative z-10 flex flex-1 flex-col p-4 pb-6 md:p-6">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-300">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.25em] text-indigo-300">
+                    <span>Prism Pages</span>
+                    <Badge variant="secondary" className="bg-indigo-500/20 text-indigo-200">
+                      Beta
+                    </Badge>
+                    <Badge variant="outline" className="border-indigo-400/40 bg-indigo-500/10 text-indigo-200">
+                      Exclusive Access
+                    </Badge>
                   </div>
-                  <Button variant="outline" size="sm" asChild className="border-indigo-500/40 text-indigo-200 hover:bg-indigo-500/10">
-                    <a
-                      href="https://prism.tools/prism-pages"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center gap-2"
-                    >
-                      Learn more <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </Button>
+                  <p className="max-w-2xl text-xs text-slate-400">
+                    Draft, revise, and publish documents entirely in your browser with Gemini 2.5 Pro assisting every page.
+                  </p>
                 </div>
-              </section>
-
-              <section className="flex flex-1 flex-col gap-6 rounded-3xl border border-slate-800/80 bg-slate-900/70 p-8 shadow-[0_40px_120px_-60px_rgba(15,23,42,0.8)]">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="space-y-1">
-                    <p className="text-sm font-semibold uppercase tracking-wide text-indigo-200">Workspace</p>
-                    <p className="text-xs text-slate-400">
-                      Build up to ten local documents, invite Gemini to revise them, and roll back to any saved snapshot without leaving the browser.
-                    </p>
-                  </div>
-                  <Badge variant="outline" className="border-indigo-500/40 bg-indigo-500/10 text-indigo-200">
-                    Stored locally
-                  </Badge>
-                </div>
+              </div>
+              <div className="flex flex-1 overflow-hidden rounded-3xl border border-slate-800/70 bg-slate-950/70 shadow-[0_40px_120px_-60px_rgba(15,23,42,0.8)]">
                 <PrismPagesWorkspace />
-              </section>
+              </div>
             </div>
           </div>
         )}

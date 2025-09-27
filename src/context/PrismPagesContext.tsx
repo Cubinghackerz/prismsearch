@@ -21,6 +21,7 @@ export interface PrismPagesVersion {
   mode: PrismPagesMode;
   summary?: string;
   aiGenerated?: boolean;
+  pages?: string[];
 }
 
 export interface PrismPagesDocument {
@@ -31,6 +32,7 @@ export interface PrismPagesDocument {
   updatedAt: string;
   mode: PrismPagesMode;
   versions: PrismPagesVersion[];
+  pages: string[];
 }
 
 export interface PrismPagesRevisionProposal {
@@ -48,9 +50,11 @@ interface PrismPagesContextValue {
   selectDocument: (id: string | null) => void;
   createDocument: (mode?: PrismPagesMode) => PrismPagesDocument | null;
   renameDocument: (id: string, title: string) => void;
-  updateDocumentContent: (id: string, content: string) => void;
+  updateDocumentContent: (id: string, content: string, pageIndex?: number) => void;
   updateDocumentMode: (id: string, mode: PrismPagesMode) => void;
   deleteDocument: (id: string) => void;
+  addDocumentPage: (id: string, insertIndex?: number) => void;
+  removeDocumentPage: (id: string, pageIndex: number) => void;
   recordVersion: (id: string, summary?: string, aiGenerated?: boolean) => void;
   restoreVersion: (id: string, versionId: string) => void;
   requestAiRevision: (
@@ -63,13 +67,34 @@ interface PrismPagesContextValue {
 
 const PrismPagesContext = createContext<PrismPagesContextValue | undefined>(undefined);
 
+export const PRISM_PAGES_PAGE_BREAK = '<!--prism-page-break-->';
+
 const EXCLUSIVE_USER_IDS = new Set([
   'user_30z8cmTlPMcTfCEvoXUTf9FuBhh',
   'user_30dXgGX4sh2BzDZRix5yNEjdehx',
   'user_30VC241Fkl0KuubR0hqkyQNaq6r',
 ]);
 
-const STORAGE_VERSION = 1;
+const STORAGE_VERSION = 2;
+
+const sanitizePage = (value: string) => {
+  const trimmed = value?.trim();
+  return trimmed && trimmed.length > 0 ? value : '<p></p>';
+};
+
+const ensurePages = (content: string, pages?: string[]) => {
+  if (Array.isArray(pages) && pages.length > 0) {
+    return pages.map(sanitizePage);
+  }
+  if (typeof content === 'string' && content.includes(PRISM_PAGES_PAGE_BREAK)) {
+    return content
+      .split(PRISM_PAGES_PAGE_BREAK)
+      .map((segment) => sanitizePage(segment));
+  }
+  return [sanitizePage(content)];
+};
+
+const joinPages = (pages: string[]) => pages.map(sanitizePage).join(PRISM_PAGES_PAGE_BREAK);
 
 interface StoredState {
   version: number;
@@ -140,10 +165,28 @@ export const PrismPagesProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         return;
       }
       const parsed: StoredState = JSON.parse(raw);
-      if (parsed.version !== STORAGE_VERSION) {
-        throw new Error('Outdated storage version');
+      const storedVersion = parsed.version ?? 1;
+      const migratedDocuments = (parsed.documents || []).map((document) => {
+        const pages = ensurePages(document.content, (document as any).pages);
+        const versions = (document.versions || []).map((version) => {
+          const versionPages = ensurePages(version.content, (version as any).pages);
+          return {
+            ...version,
+            pages: versionPages,
+            content: joinPages(versionPages),
+          };
+        });
+        return {
+          ...document,
+          pages,
+          content: joinPages(pages),
+          versions,
+        };
+      });
+      if (storedVersion !== STORAGE_VERSION) {
+        console.info('Prism Pages storage migrated to v2');
       }
-      setDocuments(parsed.documents || []);
+      setDocuments(migratedDocuments);
       setSelectedDocumentId(parsed.selectedDocumentId || null);
     } catch (error) {
       console.warn('Failed to load Prism Pages state', error);
@@ -199,14 +242,16 @@ export const PrismPagesProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       }
 
       const now = new Date().toISOString();
+      const initialPages = ['<p></p>'];
       const newDocument: PrismPagesDocument = {
         id: uuidv4(),
         title: 'Untitled page',
-        content: '<p></p>',
+        content: joinPages(initialPages),
         createdAt: now,
         updatedAt: now,
         mode,
         versions: [],
+        pages: initialPages,
       };
 
       setDocuments((prev) => [newDocument, ...prev]);
@@ -230,17 +275,86 @@ export const PrismPagesProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     );
   }, []);
 
-  const updateDocumentContent = useCallback((id: string, content: string) => {
+  const updateDocumentContent = useCallback((id: string, content: string, pageIndex?: number) => {
     setDocuments((prev) =>
-      prev.map((doc) =>
-        doc.id === id
-          ? {
-              ...doc,
-              content,
-              updatedAt: new Date().toISOString(),
-            }
-          : doc
-      )
+      prev.map((doc) => {
+        if (doc.id !== id) {
+          return doc;
+        }
+        if (typeof pageIndex === 'number') {
+          const pages = ensurePages(doc.content, doc.pages);
+          const targetIndex = Math.max(0, Math.min(pageIndex, pages.length - 1));
+          pages[targetIndex] = sanitizePage(content);
+          return {
+            ...doc,
+            pages,
+            content: joinPages(pages),
+            updatedAt: new Date().toISOString(),
+          };
+        }
+        const replacedPages = ensurePages(content);
+        return {
+          ...doc,
+          pages: replacedPages,
+          content: joinPages(replacedPages),
+          updatedAt: new Date().toISOString(),
+        };
+      })
+    );
+  }, []);
+
+  const addDocumentPage = useCallback((id: string, insertIndex?: number) => {
+    setDocuments((prev) =>
+      prev.map((doc) => {
+        if (doc.id !== id) {
+          return doc;
+        }
+        const pages = ensurePages(doc.content, doc.pages);
+        const nextPages = [...pages];
+        const index =
+          typeof insertIndex === 'number'
+            ? Math.max(0, Math.min(insertIndex + 1, nextPages.length))
+            : nextPages.length;
+        nextPages.splice(index, 0, '<p></p>');
+        return {
+          ...doc,
+          pages: nextPages,
+          content: joinPages(nextPages),
+          updatedAt: new Date().toISOString(),
+        };
+      })
+    );
+  }, []);
+
+  const removeDocumentPage = useCallback((id: string, pageIndex: number) => {
+    setDocuments((prev) =>
+      prev.map((doc) => {
+        if (doc.id !== id) {
+          return doc;
+        }
+        const pages = ensurePages(doc.content, doc.pages);
+        if (pageIndex < 0 || pageIndex >= pages.length) {
+          return doc;
+        }
+        if (pages.length === 1) {
+          const placeholder = '<p></p>';
+          return {
+            ...doc,
+            pages: [placeholder],
+            content: placeholder,
+            updatedAt: new Date().toISOString(),
+          };
+        }
+        const nextPages = [...pages];
+        nextPages.splice(pageIndex, 1);
+        const sanitized = nextPages.length ? nextPages : ['<p></p>'];
+        return {
+          ...doc,
+          pages: sanitized,
+          content: joinPages(sanitized),
+          updatedAt: new Date().toISOString(),
+        };
+      })
     );
   }, []);
 
@@ -270,14 +384,16 @@ export const PrismPagesProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           if (doc.id !== id) {
             return doc;
           }
+          const pageSnapshot = ensurePages(doc.content, doc.pages);
           const version: PrismPagesVersion = {
             id: uuidv4(),
             title: doc.title,
-            content: doc.content,
+            content: joinPages(pageSnapshot),
             createdAt: new Date().toISOString(),
             mode: doc.mode,
             summary,
             aiGenerated,
+            pages: pageSnapshot,
           };
           const versions = [version, ...doc.versions].slice(0, 50);
           return {
@@ -301,10 +417,12 @@ export const PrismPagesProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           toast.error('Version not found');
           return doc;
         }
+        const restoredPages = ensurePages(version.content, version.pages);
         return {
           ...doc,
           title: version.title,
-          content: version.content,
+          content: joinPages(restoredPages),
+          pages: restoredPages,
           mode: version.mode,
           updatedAt: new Date().toISOString(),
         };
@@ -378,19 +496,22 @@ export const PrismPagesProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           if (doc.id !== id) {
             return doc;
           }
+          const updatedPages = ensurePages(revision.updatedContent);
           const version: PrismPagesVersion = {
             id: uuidv4(),
             title: doc.title,
-            content: revision.updatedContent,
+            content: joinPages(updatedPages),
             createdAt: new Date().toISOString(),
             mode: revision.mode,
             summary: revision.summary,
             aiGenerated: true,
+            pages: updatedPages,
           };
           const versions = [version, ...doc.versions].slice(0, 50);
           return {
             ...doc,
-            content: revision.updatedContent,
+            content: joinPages(updatedPages),
+            pages: updatedPages,
             updatedAt: new Date().toISOString(),
             versions,
           };
@@ -411,6 +532,8 @@ export const PrismPagesProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       updateDocumentContent,
       updateDocumentMode,
       deleteDocument,
+      addDocumentPage,
+      removeDocumentPage,
       recordVersion,
       restoreVersion,
       requestAiRevision,
@@ -428,6 +551,8 @@ export const PrismPagesProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       updateDocumentContent,
       updateDocumentMode,
       deleteDocument,
+      addDocumentPage,
+      removeDocumentPage,
       recordVersion,
       restoreVersion,
       requestAiRevision,
