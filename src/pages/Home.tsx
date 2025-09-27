@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, Sparkles, ChevronRight, Star, ArrowRight, CheckCircle, FileText, ShieldAlert, TrendingUp, NotebookPen, Bot } from 'lucide-react';
+import { MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, Sparkles, ChevronRight, Star, ArrowRight, CheckCircle, FileText, ShieldAlert, TrendingUp, NotebookPen } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 
@@ -69,10 +69,10 @@ const Home = () => {
     color: "from-cyan-500 to-blue-600",
     isNew: true
   }, {
-    icon: <Bot className="h-6 w-6" />,
-    title: "Math Engine",
-    description: "Exclusive Gemini 2.5 Pro CAS with graphing, step-by-step reasoning, and local file workspaces.",
-    link: "/math-engine",
+    icon: <FileText className="h-6 w-6" />,
+    title: "Prism Pages",
+    description: "Exclusive Gemini 2.5 Pro writing studio with AI revisions, local version history, and multi-format export.",
+    link: "/prism-pages",
     color: "from-fuchsia-500 to-blue-600",
     isNew: true,
     exclusive: true

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Rocket } from 'lucide-react';
+import { Sparkles, FileText } from 'lucide-react';
 
 const EXCLUSIVE_USER_IDS = new Set([
   'user_30z8cmTlPMcTfCEvoXUTf9FuBhh',
@@ -12,7 +12,7 @@ const EXCLUSIVE_USER_IDS = new Set([
   'user_30VC241Fkl0KuubR0hqkyQNaq6r',
 ]);
 
-const MathEngineEarlyAccessDialog = () => {
+const PrismPagesEarlyAccessDialog = () => {
   const { user } = useUser();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -26,7 +26,7 @@ const MathEngineEarlyAccessDialog = () => {
       return;
     }
 
-    const storageKey = `math-engine-early-access-${user.id}`;
+    const storageKey = `prism-pages-early-access-${user.id}`;
     const hasSeen = typeof window !== 'undefined' ? localStorage.getItem(storageKey) : 'true';
 
     if (hasSeen) {
@@ -43,7 +43,7 @@ const MathEngineEarlyAccessDialog = () => {
 
   const handleNavigate = () => {
     setIsOpen(false);
-    navigate('/math-engine');
+    navigate('/prism-pages');
   };
 
   if (!user || !EXCLUSIVE_USER_IDS.has(user.id)) {
@@ -63,15 +63,15 @@ const MathEngineEarlyAccessDialog = () => {
             </div>
           </div>
           <DialogTitle className="text-2xl font-bold text-foreground">
-            You have unlocked early access to the Math Engine
+            You have unlocked early access to Prism Pages
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
-            Signed Nirneet — enjoy unlimited access to our Gemini 2.5 Pro math workspace with CAS tooling, graphing, and step-by-step reasoning.
+            Signed Nirneet — enjoy unlimited access to our AI-assisted document studio with live version history and multi-format export.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3">
           <Button onClick={handleNavigate} className="w-full">
-            <Rocket className="mr-2 h-4 w-4" /> Launch Math Engine
+            <FileText className="mr-2 h-4 w-4" /> Open Prism Pages
           </Button>
           <Button variant="ghost" onClick={() => setIsOpen(false)} className="w-full">
             Maybe later
@@ -82,4 +82,4 @@ const MathEngineEarlyAccessDialog = () => {
   );
 };
 
-export default MathEngineEarlyAccessDialog;
+export default PrismPagesEarlyAccessDialog;

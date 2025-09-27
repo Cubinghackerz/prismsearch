@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Menu, MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, MoreHorizontal, Search, RefreshCw, ShieldCheck, TrendingUp, NotebookPen, Bot } from 'lucide-react';
+import { Menu, MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, MoreHorizontal, Search, RefreshCw, ShieldCheck, TrendingUp, NotebookPen, FileText } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import AuthButtons from '@/components/AuthButtons';
 import { useUser } from '@clerk/clerk-react';
@@ -50,7 +50,7 @@ const Navigation = () => {
     { name: 'File Converter', href: '/conversions', icon: RefreshCw },
     { name: 'Threat Detector', href: '/detector', icon: ShieldCheck },
     { name: 'Finance', href: '/finance', icon: TrendingUp },
-    { name: 'Math Engine', href: '/math-engine', icon: Bot, exclusive: true, requiresAccess: true },
+    { name: 'Prism Pages', href: '/prism-pages', icon: FileText, exclusive: true, requiresAccess: true },
   ];
 
   const allNavItems = [...primaryNavItems, ...moreNavItems];
@@ -63,7 +63,7 @@ const Navigation = () => {
       event.preventDefault();
       toast({
         title: 'Exclusive feature',
-        description: 'Math Engine is currently limited to early access members.',
+        description: 'Prism Pages is currently limited to early access members.',
       });
       return;
     }
