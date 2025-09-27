@@ -3,7 +3,16 @@ import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 
-export type AIModel = 'gemini' | 'groq-llama4-maverick' | 'groq-llama4-scout' | 'groq-llama31-8b-instant' | 'gemini-cli' | 'qwen3-coder' | 'code-llama' | 'deepseek-coder-v2';
+export type AIModel =
+  | 'gemini'
+  | 'gemini-2.5-pro'
+  | 'groq-llama4-maverick'
+  | 'groq-llama4-scout'
+  | 'groq-llama31-8b-instant'
+  | 'gemini-cli'
+  | 'qwen3-coder'
+  | 'code-llama'
+  | 'deepseek-coder-v2';
 
 interface ModelSelectorProps {
   selectedModel: AIModel;
@@ -12,7 +21,8 @@ interface ModelSelectorProps {
 }
 
 const MODEL_OPTIONS = [
-  { value: 'gemini' as AIModel, label: 'Gemini 2.5 Flash', description: 'Google\'s latest model - excellent for coding' },
+  { value: 'gemini-2.5-pro' as AIModel, label: 'Gemini 2.5 Pro', description: 'Full-access coding model with VS Code workspace support' },
+  { value: 'gemini' as AIModel, label: 'Gemini 2.5 Flash', description: 'Fast generation with balanced creativity and speed' },
   { value: 'gemini-cli' as AIModel, label: 'Gemini Pro (CLI)', description: 'Google\'s advanced model for code generation' },
   { value: 'qwen3-coder' as AIModel, label: 'Qwen3 Coder 480B', description: 'Open source coding specialist model' },
   { value: 'code-llama' as AIModel, label: 'Code Llama', description: 'Meta\'s specialized code generation model' },

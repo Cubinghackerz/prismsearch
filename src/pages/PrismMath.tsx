@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import { Badge } from '@/components/ui/badge';
 import { Calculator } from 'lucide-react';
 import MathAssistant from '@/components/math-assistant/MathAssistant';
+import ToolLimitDisplay from '@/components/usage/ToolLimitDisplay';
 
 const PrismMath = () => {
   return (
@@ -27,6 +28,14 @@ const PrismMath = () => {
           </p>
         </div>
         
+        <div className="mx-auto mb-8 max-w-4xl">
+          <ToolLimitDisplay
+            category="mathTool"
+            label="Math Assistant daily usage"
+            description="Each solve counts toward your Math Assistant daily quota."
+          />
+        </div>
+
         <MathAssistant />
       </main>
       

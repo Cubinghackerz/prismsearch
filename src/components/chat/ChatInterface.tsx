@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useChat, ChatModel } from '@/context/ChatContext';
+import { useChat, ChatModel, CHAT_COMMAND_GUIDE } from '@/context/ChatContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -7,10 +7,17 @@ import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import ModelSelector from './ModelSelector';
 import AIThinkingAnimation from './AIThinkingAnimation';
-import { MessageSquare, Settings, Home, Info, Clock, Trash2, Eye } from 'lucide-react';
+import { MessageSquare, Settings, Home, Info, Clock, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
 
 const ChatInterface = () => {
   const {
@@ -27,7 +34,12 @@ const ChatInterface = () => {
     deleteChat,
     clearAllChats,
     isTemporaryMode,
-    toggleTemporaryMode
+    toggleTemporaryMode,
+    usage,
+    limits,
+    isUnlimitedUser,
+    showUnlimitedAccessDialog,
+    acknowledgeUnlimitedAccess,
   } = useChat();
   const {
     toast
@@ -38,6 +50,14 @@ const ChatInterface = () => {
   const [showThinking, setShowThinking] = useState(false);
   const [currentQuery, setCurrentQuery] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showCommandGuide, setShowCommandGuide] = useState(true);
+
+  const promptLimit = limits.chatPrompts ?? 0;
+  const commandLimit = limits.chatCommands ?? 0;
+  const promptUsage = usage.chatPrompts ?? 0;
+  const commandUsage = usage.chatCommands ?? 0;
+  const promptPercent = !promptLimit ? 0 : Math.min(100, (promptUsage / promptLimit) * 100);
+  const commandPercent = !commandLimit ? 0 : Math.min(100, (commandUsage / commandLimit) * 100);
 
   // Initialize chat on mount
   useEffect(() => {
@@ -240,6 +260,50 @@ const ChatInterface = () => {
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
+        <div className="p-4 border-b border-border/20 bg-card/30 backdrop-blur-sm">
+          <div className="flex items-center justify-between text-[0.65rem] uppercase tracking-[0.3em] text-muted-foreground">
+            <span>Daily usage</span>
+            {isUnlimitedUser ? (
+              <span className="text-emerald-400 font-semibold tracking-[0.25em]">Unlimited</span>
+            ) : (
+              <span className="text-muted-foreground/80 tracking-[0.2em]">
+                Resets daily
+              </span>
+            )}
+          </div>
+          {isUnlimitedUser ? (
+            <div className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+              Enjoy unrestricted access to Prism Chat today.
+            </div>
+          ) : (
+            <div className="mt-3 space-y-3">
+              <div>
+                <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Prompts used</span>
+                  <span>
+                    {Math.min(promptUsage, promptLimit)} / {promptLimit}
+                  </span>
+                </div>
+                <Progress value={promptPercent} />
+              </div>
+              <div>
+                <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Commands used</span>
+                  <span>
+                    {Math.min(commandUsage, commandLimit)} / {commandLimit}
+                  </span>
+                </div>
+                <Progress value={commandPercent} />
+              </div>
+              {(promptLimit > 0 && promptUsage >= promptLimit) || (commandLimit > 0 && commandUsage >= commandLimit) ? (
+                <p className="text-xs text-amber-400">
+                  You&apos;ve reached today&apos;s limit. New prompts and commands will be available tomorrow.
+                </p>
+              ) : null}
+            </div>
+          )}
+        </div>
+
         {showWelcomeScreen ? (/* Welcome Screen */
       <motion.div className="flex-1 flex items-center justify-center p-8" initial={{
         opacity: 0,
@@ -256,7 +320,7 @@ const ChatInterface = () => {
                 <div className="flex items-center space-x-2">
                   <img src="/lovable-uploads/3baec192-88ed-42ea-80e5-61f5cfa40481.png" alt="Prism Logo" className="h-6 w-6" />
                   <span className="text-lg font-semibold text-foreground">
-                    Prism {selectedModel === 'gemini' ? '2.5' : '4'} 
+                    Prism {selectedModel.startsWith('gemini') ? '2.5' : '4'}
                   </span>
                 </div>
                 
@@ -313,6 +377,65 @@ const ChatInterface = () => {
           </>)}
       </div>
       
+      <Dialog open={showCommandGuide} onOpenChange={setShowCommandGuide}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5" />
+              Prism Chat commands (beta)
+            </DialogTitle>
+            <DialogDescription>
+              Explore the latest beta shortcuts. Double-check outputs before relying on them in production.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto space-y-3 pr-1">
+            {CHAT_COMMAND_GUIDE.map((command) => (
+              <div
+                key={command.key}
+                className="border border-border/40 rounded-lg p-4 bg-muted/30 backdrop-blur-sm"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-mono text-sm font-semibold text-foreground">
+                    {command.label}
+                  </span>
+                  <span className="text-[0.65rem] uppercase tracking-wide font-semibold text-amber-400 border border-amber-500/40 rounded-full px-2 py-0.5 bg-amber-500/10">
+                    Beta
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                  {command.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={showUnlimitedAccessDialog}
+        onOpenChange={(open) => {
+          if (!open) {
+            acknowledgeUnlimitedAccess();
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md text-center">
+          <DialogHeader>
+            <DialogTitle>Unlimited access unlocked</DialogTitle>
+            <DialogDescription>
+              <span className="block text-sm text-foreground">
+                I have given you all unlimited access/uses of prism tools, daily limits do not apply for you—Signed, Nirneet.
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 flex justify-center">
+            <Button onClick={acknowledgeUnlimitedAccess} className="px-6">
+              Thanks!
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* AI Thinking Animation */}
       <AIThinkingAnimation
         isVisible={showThinking}

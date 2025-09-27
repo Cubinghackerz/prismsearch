@@ -208,7 +208,7 @@ const Index = () => {
               <Sparkles className="h-8 w-8 text-white" />
             </div>
           </div>
-          <h2 className="text-3xl font-bold mb-4 font-fira-code">Ready to Transform Your Workflow?</h2>
+          <h2 className="text-3xl font-bold mb-4 font-fira-code">Ready to Transform Your Productivity?</h2>
           <p className="text-muted-foreground mb-8 max-w-2xl mx-auto text-lg">
             Experience the power of AI-driven productivity tools. Start your journey with Prism today.
           </p>

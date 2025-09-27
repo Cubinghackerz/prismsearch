@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import { Badge } from '@/components/ui/badge';
 import { Atom } from 'lucide-react';
 import PhysicsAssistant from '@/components/physics-assistant/PhysicsAssistant';
+import ToolLimitDisplay from '@/components/usage/ToolLimitDisplay';
 
 const PrismPhysics = () => {
   return (
@@ -27,6 +28,14 @@ const PrismPhysics = () => {
           </p>
         </div>
         
+        <div className="mx-auto mb-8 max-w-4xl">
+          <ToolLimitDisplay
+            category="physicsTool"
+            label="Physics Assistant daily usage"
+            description="Track how many Physics Assistant runs you have remaining today."
+          />
+        </div>
+
         <PhysicsAssistant />
       </main>
       

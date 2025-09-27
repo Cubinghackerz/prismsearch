@@ -1,12 +1,11 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain, Rocket } from "lucide-react";
+import { Globe, Wand2, Eye, Download, Sparkles, Maximize, FileText, Plus, AlertTriangle, Package, Brain, Rocket, Code2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useDailyQueryLimit } from "@/hooks/useDailyQueryLimit";
 import WebAppPreview from "./WebAppPreview";
 import ModelSelector, { AIModel } from "./ModelSelector";
@@ -16,14 +15,13 @@ import ProjectHistory from "./ProjectHistory";
 import DevelopmentPlanDialog from "./DevelopmentPlanDialog";
 import { v4 as uuidv4 } from 'uuid';
 import DeploymentDialog from "./DeploymentDialog";
-
-interface GeneratedApp {
-  html: string;
-  css: string;
-  javascript: string;
-  description: string;
-  features: string[];
-}
+import {
+  DEFAULT_CODE_GENERATION_FALLBACK_ORDER,
+  GeneratedApp,
+  generateWebApp as runCodeGeneration,
+} from '@/services/codeGenerationService';
+import VSCodeWorkspace from './VSCodeWorkspace';
+import RuntimeInstructionsPanel from './RuntimeInstructionsPanel';
 
 interface ProjectHistoryItem {
   id: string;
@@ -61,7 +59,7 @@ const WebAppGenerator = () => {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedApp, setGeneratedApp] = useState<GeneratedApp | null>(null);
-  const [selectedModel, setSelectedModel] = useState<AIModel>('gemini');
+  const [selectedModel, setSelectedModel] = useState<AIModel>('gemini-2.5-pro');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeRightTab, setActiveRightTab] = useState('generator');
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
@@ -69,10 +67,31 @@ const WebAppGenerator = () => {
   const [isThinking, setIsThinking] = useState(false);
   const [developmentPlan, setDevelopmentPlan] = useState<DevelopmentPlan | null>(null);
   const [showPlanDialog, setShowPlanDialog] = useState(false);
-  const { toast } = useToast();
-  const { incrementQueryCount, isLimitReached } = useDailyQueryLimit();
+  const [isVSCodeOpen, setIsVSCodeOpen] = useState(false);
+  const workspaceFiles = useMemo(() => {
+    if (!generatedApp) return [] as { path: string; language: string; content: string }[];
 
-  const MODEL_FALLBACK_ORDER: AIModel[] = ['gemini', 'groq-llama4-maverick', 'groq-llama4-scout', 'groq-llama31-8b-instant'];
+    const map = new Map<string, { path: string; language: string; content: string }>();
+    map.set('index.html', { path: 'index.html', language: 'html', content: generatedApp.html });
+    map.set('styles.css', { path: 'styles.css', language: 'css', content: generatedApp.css });
+    map.set('script.js', { path: 'script.js', language: 'javascript', content: generatedApp.javascript });
+
+    (generatedApp.files || []).forEach((file) => {
+      if (!file.path) return;
+      map.set(file.path, {
+        path: file.path,
+        language: file.language || 'plaintext',
+        content: file.content,
+      });
+    });
+
+    return Array.from(map.values());
+  }, [generatedApp]);
+  const { toast } = useToast();
+  const { consume, limits } = useDailyQueryLimit();
+
+  const MODEL_FALLBACK_ORDER: AIModel[] =
+    DEFAULT_CODE_GENERATION_FALLBACK_ORDER as AIModel[];
 
   const saveProject = (projectPrompt: string, app: GeneratedApp, model: string) => {
     const projectId = currentProjectId || uuidv4();
@@ -179,20 +198,11 @@ const WebAppGenerator = () => {
       return;
     }
 
-    if (isLimitReached) {
+    if (!consume('codeGenerations')) {
       toast({
-        title: "Daily Limit Reached",
-        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!incrementQueryCount()) {
-      toast({
-        title: "Daily Limit Reached",
-        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
-        variant: "destructive"
+        title: 'Daily Limit Reached',
+        description: `You've reached your daily limit of ${limits.codeGenerations} Prism Code generations. Try again tomorrow!`,
+        variant: 'destructive',
       });
       return;
     }
@@ -306,7 +316,7 @@ Please create a complete, functional web application that follows this plan exac
     });
   };
 
-  const generateWebApp = async (modelToUse: AIModel = selectedModel, isRetry: boolean = false) => {
+  const generateWebApp = async (modelToUse: AIModel = selectedModel) => {
     if (!prompt.trim()) {
       toast({
         title: "Missing Prompt",
@@ -316,20 +326,11 @@ Please create a complete, functional web application that follows this plan exac
       return;
     }
 
-    if (isLimitReached) {
+    if (!consume('codeGenerations')) {
       toast({
-        title: "Daily Limit Reached",
-        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!incrementQueryCount()) {
-      toast({
-        title: "Daily Limit Reached",
-        description: "You've reached your daily limit of 10 web app generations. Try again tomorrow!",
-        variant: "destructive"
+        title: 'Daily Limit Reached',
+        description: `You've reached your daily limit of ${limits.codeGenerations} Prism Code generations. Try again tomorrow!`,
+        variant: 'destructive',
       });
       return;
     }
@@ -339,122 +340,48 @@ Please create a complete, functional web application that follows this plan exac
     try {
       let contextPrompt = prompt;
       if (conversationHistory.length > 0) {
-        contextPrompt = `Based on the previous web application, ${prompt}. 
+        contextPrompt = `Based on the previous web application, ${prompt}.
 
 Previous conversation context:
-${conversationHistory.slice(-3).map((item, index) => 
-  `Request ${index + 1}: ${item.prompt}
+${conversationHistory
+  .slice(-3)
+  .map((item, index) =>
+    `Request ${index + 1}: ${item.prompt}
   Result: ${item.response.description}`
-).join('\n\n')}
+  )
+  .join('\n\n')}
 
 Please modify or enhance the current application accordingly.`;
       }
 
-      const { data, error } = await supabase.functions.invoke('ai-search-assistant', {
-        body: { 
-          query: `Generate a complete web application based on this description: ${contextPrompt}. 
-
-Please return ONLY a valid JSON object with this exact structure:
-{
-  "html": "complete HTML content",
-  "css": "complete CSS styles", 
-  "javascript": "complete JavaScript code",
-  "description": "brief description of the app",
-  "features": ["feature 1", "feature 2", "feature 3"]
-}
-
-Make it responsive, modern, and fully functional. Do not include any markdown formatting or code blocks. Just the raw JSON.`,
-          model: modelToUse,
-          chatId: currentProjectId || 'webapp-generation',
-          chatHistory: []
-        }
+      const { app, usedModel } = await runCodeGeneration({
+        prompt: contextPrompt,
+        model: modelToUse,
+        chatId: currentProjectId || 'webapp-generation',
+        fallbackModels: MODEL_FALLBACK_ORDER,
       });
 
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      let parsedApp;
-      try {
-        const responseText = data.response || '';
-        const cleanResponse = responseText.replace(/```json\n?|```\n?/g, '').trim();
-        parsedApp = JSON.parse(cleanResponse);
-      } catch (parseError) {
-        const responseText = data.response || 'No response received';
-        parsedApp = {
-          html: `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generated Web App</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <div class="container">
-        <h1>Generated Web Application</h1>
-        <div class="content">
-            ${responseText.replace(/\n/g, '<br>')}
-        </div>
-    </div>
-    <script src="script.js"></script>
-</body>
-</html>`,
-          css: `body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 20px;
-    background-color: #f5f5f5;
-}
-.container {
-    max-width: 800px;
-    margin: 0 auto;
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-.content {
-    margin-top: 20px;
-    line-height: 1.6;
-}`,
-          javascript: `console.log('Web app generated successfully');`,
-          description: 'AI-generated web application',
-          features: ['Responsive design', 'Modern styling', 'Basic functionality']
-        };
-      }
-
-      setGeneratedApp(parsedApp);
+      setGeneratedApp(app);
       setActiveRightTab('editor');
-      
-      setConversationHistory(prev => [...prev, { prompt, response: parsedApp }]);
-      
-      saveProject(prompt, parsedApp, modelToUse);
-      
+
+      setConversationHistory(prev => [...prev, { prompt, response: app }]);
+
+      saveProject(prompt, app, usedModel);
+
       setPrompt("");
-      
+
       toast({
         title: "Web App Generated!",
-        description: `Your web application has been created successfully using ${modelToUse}.`,
+        description: usedModel !== modelToUse
+          ? `Generation completed using fallback model ${usedModel}.`
+          : `Your web application has been created successfully using ${usedModel}.`,
       });
     } catch (error) {
       console.error(`Error generating web app with ${modelToUse}:`, error);
-      
-      const currentIndex = MODEL_FALLBACK_ORDER.indexOf(modelToUse);
-      const nextModel = MODEL_FALLBACK_ORDER[currentIndex + 1];
-      
-      if (nextModel && !isRetry) {
-        toast({
-          title: "Trying Alternative Model",
-          description: `${modelToUse} failed. Attempting with ${nextModel}...`,
-        });
-        await generateWebApp(nextModel, true);
-        return;
-      }
-      
+
       toast({
         title: "Generation Failed",
-        description: `Failed to generate web app with all available models: ${error.message}`,
+        description: `Failed to generate web app: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive"
       });
     } finally {
@@ -469,6 +396,7 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
     setPrompt("");
     setDevelopmentPlan(null);
     setActiveRightTab('generator');
+    setIsVSCodeOpen(false);
     toast({
       title: "New Project Started",
       description: "You can now create a fresh web application.",
@@ -481,24 +409,52 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
     setConversationHistory([{ prompt: project.prompt, response: project.generatedApp }]);
     setPrompt("");
     setActiveRightTab('editor');
+    setIsVSCodeOpen(false);
   };
 
   const downloadApp = () => {
     if (!generatedApp) return;
 
-    const files = [
-      { name: 'index.html', content: generatedApp.html },
-      { name: 'styles.css', content: generatedApp.css },
-      { name: 'script.js', content: generatedApp.javascript },
-      { name: 'README.txt', content: `Generated Web App\n\nDescription: ${generatedApp.description}\n\nFeatures:\n${generatedApp.features.map(f => `- ${f}`).join('\n')}` }
-    ];
+    const fileMap = new Map<string, string>();
+    fileMap.set('index.html', generatedApp.html);
+    fileMap.set('styles.css', generatedApp.css);
+    fileMap.set('script.js', generatedApp.javascript);
 
-    files.forEach(file => {
-      const blob = new Blob([file.content], { type: 'text/plain' });
+    (generatedApp.files || []).forEach((file) => {
+      if (!file.path) return;
+      const cleanPath = file.path.startsWith('/') ? file.path.slice(1) : file.path;
+      fileMap.set(cleanPath, file.content);
+    });
+
+    const stackSummary = generatedApp.stack
+      ? `\n\nStack:\n- Language: ${generatedApp.stack.language}\n- Framework: ${generatedApp.stack.framework}\n- Libraries: ${generatedApp.stack.libraries?.join(', ') || 'None'}\n- Tooling: ${generatedApp.stack.tooling?.join(', ') || 'None'}`
+      : '';
+
+    const runtimeSummary = generatedApp.runtime
+      ? `\n\nRuntime:\n- Environment: ${generatedApp.runtime.environment || 'Not specified'}\n- Setup:\n${(generatedApp.runtime.setup || ['No setup commands provided'])
+          .map((command) => `  - ${command}`)
+          .join('\n')}\n- Start:\n${(generatedApp.runtime.start || ['No start commands provided'])
+          .map((command) => `  - ${command}`)
+          .join('\n')}${generatedApp.runtime.previewCommands && generatedApp.runtime.previewCommands.length > 0
+          ? `\n- Preview Commands:\n${generatedApp.runtime.previewCommands.map((command) => `  - ${command}`).join('\n')}`
+          : ''}${generatedApp.runtime.notes && generatedApp.runtime.notes.length > 0
+          ? `\n- Notes:\n${generatedApp.runtime.notes.map((note) => `  - ${note}`).join('\n')}`
+          : ''}`
+      : '';
+
+    fileMap.set(
+      'README.txt',
+      `Generated Web App\n\nDescription: ${generatedApp.description}\n\nFeatures:\n${generatedApp.features
+        .map((feature) => `- ${feature}`)
+        .join('\n')}${stackSummary}${runtimeSummary}`
+    );
+
+    fileMap.forEach((content, name) => {
+      const blob = new Blob([content], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = file.name;
+      link.download = name;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -514,15 +470,54 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
   const handleFileChange = (fileType: string, content: string) => {
     if (!generatedApp) return;
 
-    setGeneratedApp(prev => ({
-      ...prev!,
-      [fileType]: content
-    }));
+    let updatedApp: GeneratedApp | null = null;
+
+    setGeneratedApp(prev => {
+      if (!prev) return prev;
+
+      let nextApp: GeneratedApp;
+
+      if (fileType === 'html' || fileType === 'css' || fileType === 'javascript') {
+        nextApp = {
+          ...prev,
+          [fileType]: content,
+        };
+      } else if (fileType === 'previewHtml') {
+        nextApp = {
+          ...prev,
+          previewHtml: content,
+        };
+      } else if (fileType.startsWith('file:')) {
+        const path = fileType.replace(/^file:/, '');
+        const existingFiles = prev.files || [];
+        const existingIndex = existingFiles.findIndex((file) => file.path === path);
+        const sourceFile = existingFiles[existingIndex] || generatedApp.files?.find((file) => file.path === path);
+        const updatedFile = {
+          path,
+          language: sourceFile?.language || 'plaintext',
+          description: sourceFile?.description,
+          content,
+        };
+        const files = existingIndex >= 0
+          ? existingFiles.map((file, index) => (index === existingIndex ? updatedFile : file))
+          : [...existingFiles, updatedFile];
+
+        nextApp = {
+          ...prev,
+          files,
+        };
+      } else {
+        nextApp = prev;
+      }
+
+      updatedApp = nextApp;
+      return nextApp;
+    });
 
     // Auto-save changes
     if (currentProjectId) {
-      const updatedApp = { ...generatedApp, [fileType]: content };
-      saveProject(conversationHistory[0]?.prompt || 'Modified project', updatedApp, selectedModel);
+      const appToSave = updatedApp || { ...generatedApp, [fileType]: content };
+      saveProject(conversationHistory[0]?.prompt || 'Modified project', appToSave, selectedModel);
     }
   };
 
@@ -546,6 +541,10 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
               html={generatedApp.html}
               css={generatedApp.css}
               javascript={generatedApp.javascript}
+              previewHtml={generatedApp.previewHtml}
+              previewMode={generatedApp.previewMode}
+              previewNotes={generatedApp.previewNotes}
+              stack={generatedApp.stack}
             />
           </div>
         </div>
@@ -646,7 +645,15 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
                   html={generatedApp.html}
                   css={generatedApp.css}
                   javascript={generatedApp.javascript}
+                  previewHtml={generatedApp.previewHtml}
+                  previewMode={generatedApp.previewMode}
+                  previewNotes={generatedApp.previewNotes}
+                  stack={generatedApp.stack}
+                  showAlert={false}
                 />
+              </div>
+              <div className="mt-4">
+                <RuntimeInstructionsPanel runtime={generatedApp.runtime} />
               </div>
             </div>
           ) : (
@@ -773,10 +780,27 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
 
             <TabsContent value="editor" className="flex-1 mt-4">
               {generatedApp ? (
-                <AdvancedCodeEditor 
-                  generatedApp={generatedApp} 
-                  onFileChange={handleFileChange}
-                />
+                <div className="flex flex-col h-full space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-semibold text-prism-text">Source Files</h3>
+                      <p className="text-xs text-prism-text-muted">Edit directly or jump into the full VS Code workspace.</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                      onClick={() => setIsVSCodeOpen(true)}
+                    >
+                      <Code2 className="w-4 h-4" />
+                      Open in VS Code
+                    </Button>
+                  </div>
+                  <AdvancedCodeEditor
+                    generatedApp={generatedApp}
+                    onFileChange={handleFileChange}
+                  />
+                </div>
               ) : (
                 <Card className="h-full flex items-center justify-center">
                   <CardContent className="text-center py-20">
@@ -793,6 +817,24 @@ Make it responsive, modern, and fully functional. Do not include any markdown fo
           </Tabs>
         </div>
       </div>
+      {generatedApp && (
+        <VSCodeWorkspace
+          open={isVSCodeOpen}
+          onOpenChange={setIsVSCodeOpen}
+          files={workspaceFiles}
+          onFileChange={(path, content) => {
+            if (path === 'index.html') {
+              handleFileChange('html', content);
+            } else if (path === 'styles.css') {
+              handleFileChange('css', content);
+            } else if (path === 'script.js') {
+              handleFileChange('javascript', content);
+            } else {
+              handleFileChange(`file:${path}`, content);
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

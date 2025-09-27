@@ -12,6 +12,7 @@ import ChemistryKeyboard from './ChemistryKeyboard';
 import MathRenderer from '../math-assistant/MathRenderer';
 import ScientificCalculator from '../calculator/ScientificCalculator';
 import FileUpload from '../chat/FileUpload';
+import { useDailyQueryLimit } from '@/hooks/useDailyQueryLimit';
 
 interface ChemistryResult {
   id: string;
@@ -27,6 +28,15 @@ const ChemistryAssistant = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<any[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { canUse, consume, getRemaining, limits, isUnlimitedUser, isLoaded } = useDailyQueryLimit();
+
+  const remainingUses = isUnlimitedUser ? Infinity : getRemaining('chemistryTool');
+  const hasRemainingUses = isUnlimitedUser || remainingUses > 0;
+  const remainingLabel = isUnlimitedUser
+    ? 'Unlimited Chemistry Assistant sessions today'
+    : isLoaded
+      ? `${remainingUses} of ${limits.chemistryTool} solves left today`
+      : 'Checking remaining uses...';
 
   const insertAtCursor = (text: string) => {
     if (textareaRef.current) {
@@ -48,6 +58,13 @@ const ChemistryAssistant = () => {
   const solveChemistry = async () => {
     if (!input.trim()) {
       toast.error('Please enter a chemistry problem');
+      return;
+    }
+
+    if (!canUse('chemistryTool')) {
+      toast.error('Daily limit reached', {
+        description: `You have used all ${limits.chemistryTool} Chemistry Assistant runs for today.`,
+      });
       return;
     }
 
@@ -82,6 +99,7 @@ const ChemistryAssistant = () => {
       setResults(prev => [newResult, ...prev]);
       setInput('');
       setAttachedFiles([]);
+      consume('chemistryTool');
       toast.success('Chemistry problem solved!');
     } catch (error) {
       console.error('Error solving chemistry:', error);
@@ -172,11 +190,16 @@ Examples:
                 
                 <div className="flex justify-between items-center">
                   <div className="text-sm text-prism-text-muted">
-                    Use Ctrl+Enter to solve quickly
+                    <div>Use Ctrl+Enter to solve quickly</div>
+                    <div className="text-xs text-prism-text-muted/70">{remainingLabel}</div>
                   </div>
-                  <Button 
-                    onClick={solveChemistry} 
-                    disabled={isLoading || (!input.trim() && attachedFiles.length === 0)}
+                  <Button
+                    onClick={solveChemistry}
+                    disabled={
+                      isLoading ||
+                      (!input.trim() && attachedFiles.length === 0) ||
+                      (!hasRemainingUses && !isUnlimitedUser)
+                    }
                     className="bg-prism-primary hover:bg-prism-primary/90"
                   >
                     {isLoading ? (

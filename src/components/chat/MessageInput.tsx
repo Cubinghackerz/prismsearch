@@ -4,9 +4,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatMessage } from '@/context/ChatContext';
-import { useDailyQueryLimit } from '@/hooks/useDailyQueryLimit';
 import { useToast } from '@/hooks/use-toast';
-import { useChat } from '@/context/ChatContext';
+import { useChat, isChatCommandKey, getCommandLabel, CHAT_COMMAND_GUIDE, SupportedCommand } from '@/context/ChatContext';
 interface MessageInputProps {
   onSendMessage: (content: string, parentMessageId?: string | null) => void;
   isLoading: boolean;
@@ -25,17 +24,78 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<any[]>([]);
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [filteredCommands, setFilteredCommands] = useState(CHAT_COMMAND_GUIDE);
+  const [highlightedCommandIndex, setHighlightedCommandIndex] = useState(0);
+  const [commandQuery, setCommandQuery] = useState('');
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
-    sendMessageWithFiles
+    sendMessageWithFiles,
+    generateCodeFromPrompt,
+    executeCommand,
+    limits,
+    usage,
+    isUnlimitedUser,
   } = useChat();
   const {
     toast
   } = useToast();
-  const {
-    isLimitReached
-  } = useDailyQueryLimit();
+
+  useEffect(() => {
+    const trimmed = inputValue;
+    if (!trimmed.startsWith('/')) {
+      if (showCommandPalette) {
+        setShowCommandPalette(false);
+      }
+      if (commandQuery) {
+        setCommandQuery('');
+      }
+      return;
+    }
+
+    const spaceIndex = inputValue.indexOf(' ');
+    if (spaceIndex > 0) {
+      if (showCommandPalette) {
+        setShowCommandPalette(false);
+      }
+      if (commandQuery) {
+        setCommandQuery('');
+      }
+      return;
+    }
+
+    const [rawQuery] = trimmed.slice(1).split(/\s+/);
+    const normalizedQuery = rawQuery?.toLowerCase() ?? '';
+
+    const results = CHAT_COMMAND_GUIDE.filter((command) => {
+      const label = command.label.toLowerCase();
+      const key = command.key.toLowerCase();
+      return !normalizedQuery || label.includes(normalizedQuery) || key.includes(normalizedQuery);
+    });
+
+    setFilteredCommands(results.length > 0 ? results : CHAT_COMMAND_GUIDE);
+    setShowCommandPalette(true);
+
+    if (normalizedQuery !== commandQuery) {
+      setHighlightedCommandIndex(0);
+      setCommandQuery(normalizedQuery);
+    }
+  }, [inputValue, showCommandPalette, commandQuery]);
+
+  const applyCommandShortcut = (commandKey: SupportedCommand) => {
+    const suffix = inputValue.replace(/^\/[^\s]*\s?/, '').trimStart();
+    const trailing = suffix.length > 0 ? ` ${suffix}` : ' ';
+
+    setInputValue(`/${commandKey}${trailing}`);
+    setShowCommandPalette(false);
+    setHighlightedCommandIndex(0);
+    setCommandQuery('');
+
+    requestAnimationFrame(() => {
+      textAreaRef.current?.focus();
+    });
+  };
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files) return;
@@ -123,13 +183,127 @@ const MessageInput: React.FC<MessageInputProps> = ({
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputValue.trim() || isLoading || isLimitReached) return;
-    await sendMessageWithFiles(inputValue, attachedFiles, replyingTo);
+    const trimmed = inputValue.trim();
+    if (!trimmed || isLoading) return;
+
+    const commandMatch = trimmed.match(/^\/(\w+)(?:\s+|$)/i);
+    const commandKey = commandMatch?.[1]?.toLowerCase();
+
+    if (commandKey === 'code') {
+      if (attachedFiles.length > 0) {
+        toast({
+          title: 'Attachments ignored',
+          description: 'File attachments are not supported with /code. They have been cleared.',
+          variant: 'destructive',
+        });
+        setAttachedFiles([]);
+      }
+
+      const prompt = trimmed.replace(/^\/code\s*/i, '');
+      if (!prompt) {
+        toast({
+          title: 'Missing details',
+          description: 'Please provide a description after /code to generate an app.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      toast({
+        title: 'Beta command',
+        description: '/code is currently in beta. Preview output carefully.',
+      });
+
+      await generateCodeFromPrompt(prompt);
+      setInputValue('');
+      setAttachedFiles([]);
+      setReplyingTo(null);
+      return;
+    }
+
+    if (commandKey && isChatCommandKey(commandKey)) {
+      if (attachedFiles.length > 0) {
+        toast({
+          title: 'Attachments ignored',
+          description: 'File attachments are not supported with chat commands. They have been cleared.',
+          variant: 'destructive',
+        });
+        setAttachedFiles([]);
+      }
+
+      const commandInput = trimmed.replace(/^\/\w+\s*/i, '');
+      if (!commandInput) {
+        toast({
+          title: 'Missing details',
+          description: `Please provide details after ${getCommandLabel(commandKey)} to continue.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      toast({
+        title: 'Beta command',
+        description: `${getCommandLabel(commandKey)} is currently in beta. Results may vary.`,
+      });
+
+      await executeCommand(commandKey, commandInput);
+      setInputValue('');
+      setAttachedFiles([]);
+      setReplyingTo(null);
+      return;
+    }
+
+    await sendMessageWithFiles(trimmed, attachedFiles, replyingTo);
     setInputValue('');
     setAttachedFiles([]);
     setReplyingTo(null);
   };
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (showCommandPalette && filteredCommands.length > 0) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        setHighlightedCommandIndex((prev) => {
+          const nextIndex = e.key === 'ArrowDown' ? prev + 1 : prev - 1;
+          if (nextIndex < 0) {
+            return filteredCommands.length - 1;
+          }
+          if (nextIndex >= filteredCommands.length) {
+            return 0;
+          }
+          return nextIndex;
+        });
+        return;
+      }
+
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const selected = filteredCommands[highlightedCommandIndex] ?? filteredCommands[0];
+        if (selected) {
+          applyCommandShortcut(selected.key);
+        }
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowCommandPalette(false);
+        return;
+      }
+
+      if (e.key === 'Enter' && !e.shiftKey) {
+        const trimmed = inputValue.trim();
+        const isCommandOnly = trimmed === '/' || /^\/[^\s]*$/.test(trimmed);
+        if (isCommandOnly) {
+          e.preventDefault();
+          const selected = filteredCommands[highlightedCommandIndex] ?? filteredCommands[0];
+          if (selected) {
+            applyCommandShortcut(selected.key);
+          }
+          return;
+        }
+      }
+    }
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
@@ -139,6 +313,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
     if (!replyingTo) return null;
     return messages.find(m => m.id === replyingTo);
   };
+  const isLimitReached = !isUnlimitedUser && usage.chatPrompts >= limits.chatPrompts;
   const isInputDisabled = isLoading || isLimitReached;
   return <div className={`${isWelcomeMode ? '' : 'border-t border-border/30 bg-card/20 backdrop-blur-sm'}`}>
       <form onSubmit={handleSubmit} className={isWelcomeMode ? "" : "p-6"}>
@@ -175,8 +350,8 @@ const MessageInput: React.FC<MessageInputProps> = ({
           <div className="relative flex-1">
             {/* ChatGPT-style input container */}
             <div className={`
-              relative flex items-center bg-muted/30 backdrop-blur-sm rounded-3xl border border-border/30 
-              transition-all duration-300 
+              relative flex items-center bg-muted/30 backdrop-blur-sm rounded-3xl border border-border/30
+              transition-all duration-300
               ${isFocused ? 'border-primary/50 shadow-lg shadow-primary/10' : 'hover:border-border/50'}
               ${isLimitReached ? 'opacity-50 cursor-not-allowed' : ''}
             `}>
@@ -189,11 +364,11 @@ const MessageInput: React.FC<MessageInputProps> = ({
               minHeight: '24px',
               maxHeight: '120px'
             }} />
-              
+
               {/* Right side buttons */}
               <div className="flex items-center space-x-2 mr-3 flex-shrink-0">
                 {/* Attachment button */}
-                
+
 
                 {/* Send button */}
                 <AnimatePresence>
@@ -216,7 +391,64 @@ const MessageInput: React.FC<MessageInputProps> = ({
                 </AnimatePresence>
               </div>
             </div>
-            
+
+            <AnimatePresence>
+              {showCommandPalette && filteredCommands.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  transition={{ duration: 0.12 }}
+                  className="absolute bottom-[calc(100%+0.75rem)] left-4 w-[22rem] max-w-[calc(100%-2rem)] rounded-2xl border border-border/60 bg-background/95 shadow-xl backdrop-blur"
+                >
+                  <div className="px-4 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-muted-foreground/80">
+                    Shortcuts
+                  </div>
+                  <div className="max-h-72 overflow-y-auto">
+                    {filteredCommands.slice(0, 8).map((command, index) => {
+                      const isActive = index === highlightedCommandIndex;
+                      const cleanLabel = command.label.replace(/\s*\(beta\)$/i, '');
+
+                      return (
+                        <button
+                          type="button"
+                          key={command.key}
+                          className={`w-full px-4 py-3 text-left transition-colors ${
+                            isActive
+                              ? 'bg-primary/10 text-primary'
+                              : 'text-foreground hover:bg-muted/40'
+                          }`}
+                          onMouseDown={(event) => {
+                            event.preventDefault();
+                            applyCommandShortcut(command.key);
+                          }}
+                          onMouseEnter={() => setHighlightedCommandIndex(index)}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-sm font-semibold">{cleanLabel}</span>
+                            <span
+                              className={`text-[0.55rem] uppercase tracking-[0.35em] ${
+                                isActive ? 'text-primary' : 'text-muted-foreground/80'
+                              }`}
+                            >
+                              Beta
+                            </span>
+                          </div>
+                          <p
+                            className={`mt-1 text-xs leading-snug ${
+                              isActive ? 'text-primary/80' : 'text-muted-foreground/80'
+                            }`}
+                          >
+                            {command.description}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Glow effect when focused */}
             {isFocused && !isLoading && !isLimitReached && <motion.div className="absolute inset-0 rounded-3xl bg-primary/20 blur-xl -z-10" initial={{
             opacity: 0
