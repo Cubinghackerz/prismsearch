@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, Sparkles, ChevronRight, Star, ArrowRight, CheckCircle, FileText, ShieldAlert } from 'lucide-react';
+import { MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, Sparkles, ChevronRight, Star, ArrowRight, CheckCircle, FileText, ShieldAlert, TrendingUp, NotebookPen } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 
@@ -55,11 +55,33 @@ const Home = () => {
     color: "from-indigo-500 to-purple-600",
     isNew: true
   }, {
+    icon: <NotebookPen className="h-6 w-6" />,
+    title: "Research Preview",
+    description: "Compile sources, insights, and follow-ups in a guided research notebook experience.",
+    link: "/research",
+    color: "from-blue-500 to-indigo-600",
+    isNew: true
+  }, {
     icon: <Code2 className="h-6 w-6" />,
     title: "Code Generator",
     description: "Generate, edit, and deploy web applications with AI-powered development tools.",
     link: "/code",
     color: "from-cyan-500 to-blue-600",
+    isNew: true
+  }, {
+    icon: <FileText className="h-6 w-6" />,
+    title: "Prism Pages",
+    description: "Exclusive Gemini 2.5 Pro writing studio with AI revisions, local version history, and multi-format export.",
+    link: "/prism-pages",
+    color: "from-fuchsia-500 to-blue-600",
+    isNew: true,
+    exclusive: true
+  }, {
+    icon: <TrendingUp className="h-6 w-6" />,
+    title: "Prism Finance",
+    description: "Track live stock performance with customizable watchlists and market movers.",
+    link: "/finance",
+    color: "from-green-500 to-emerald-600",
     isNew: true
   }, {
     icon: <FileText className="h-6 w-6" />,
@@ -235,6 +257,11 @@ const Home = () => {
                     <CardTitle className="text-white text-xl font-semibold mb-3">
                       {feature.title}
                     </CardTitle>
+                    {feature.exclusive && (
+                      <Badge variant="outline" className="text-[11px] uppercase tracking-wide text-primary border-primary/40">
+                        Exclusive Access
+                      </Badge>
+                    )}
                   </CardHeader>
                   
                   <CardContent className="relative">
@@ -266,8 +293,8 @@ const Home = () => {
               <div className="max-w-4xl mx-auto space-y-10">
                 <div className="space-y-6">
                   <h2 className="text-4xl lg:text-5xl font-bold text-white leading-tight">
-                    Ready to Transform Your 
-                    <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent"> Workflow?</span>
+                    Ready to Transform Your
+                    <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent"> Productivity?</span>
                   </h2>
                   <p className="text-xl text-white/80 leading-relaxed max-w-2xl mx-auto">
                     Join thousands of users who have already discovered the power of AI-driven productivity

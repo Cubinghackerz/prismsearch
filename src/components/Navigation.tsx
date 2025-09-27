@@ -1,36 +1,75 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Menu, MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, MoreHorizontal, Search, RefreshCw, ShieldCheck } from 'lucide-react';
+import { Menu, MessageSquare, Shield, Calculator, Code2, Atom, Beaker, Zap, MoreHorizontal, Search, RefreshCw, ShieldCheck, TrendingUp, NotebookPen, FileText } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import AuthButtons from '@/components/AuthButtons';
+import { useUser } from '@clerk/clerk-react';
+import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
+
+const EXCLUSIVE_USER_IDS = new Set([
+  'user_30z8cmTlPMcTfCEvoXUTf9FuBhh',
+  'user_30dXgGX4sh2BzDZRix5yNEjdehx',
+  'user_30VC241Fkl0KuubR0hqkyQNaq6r',
+]);
+
+type NavItem = {
+  name: string;
+  href: string;
+  icon: typeof Menu;
+  exclusive?: boolean;
+  requiresAccess?: boolean;
+};
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useUser();
+  const { toast } = useToast();
 
   const isChatPage = location.pathname === '/chat';
 
-  const primaryNavItems = [
+  const hasAgentAccess = user ? EXCLUSIVE_USER_IDS.has(user.id) : false;
+
+  const primaryNavItems: NavItem[] = [
     { name: 'Chat', href: '/chat', icon: MessageSquare },
     { name: 'Deep Search', href: '/deep-search', icon: Search },
     { name: 'Vault', href: '/vault', icon: Shield },
     { name: 'Math', href: '/math', icon: Calculator },
   ];
 
-  const moreNavItems = [
+  const moreNavItems: NavItem[] = [
     { name: 'Physics', href: '/physics', icon: Atom },
     { name: 'Chemistry', href: '/chemistry', icon: Beaker },
     { name: 'Graphing', href: '/graphing', icon: Zap },
     { name: 'Code', href: '/code', icon: Code2 },
+    { name: 'Research Preview', href: '/research', icon: NotebookPen },
     { name: 'File Converter', href: '/conversions', icon: RefreshCw },
     { name: 'Threat Detector', href: '/detector', icon: ShieldCheck },
+    { name: 'Finance', href: '/finance', icon: TrendingUp },
+    { name: 'Prism Pages', href: '/prism-pages', icon: FileText, exclusive: true, requiresAccess: true },
   ];
 
   const allNavItems = [...primaryNavItems, ...moreNavItems];
+
+  const handleNavClick = (
+    event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+    item: NavItem
+  ) => {
+    if ('requiresAccess' in item && item.requiresAccess && !hasAgentAccess) {
+      event.preventDefault();
+      toast({
+        title: 'Exclusive feature',
+        description: 'Prism Pages is currently limited to early access members.',
+      });
+      return;
+    }
+
+    setIsOpen(false);
+  };
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-40 w-full bg-background/90 backdrop-blur-md border-b border-border transition-transform duration-300 ${
@@ -57,6 +96,7 @@ const Navigation = () => {
                 key={item.name}
                 to={item.href}
                 className="text-muted-foreground hover:text-primary transition-colors duration-200 font-medium"
+                onClick={(event) => handleNavClick(event, item)}
               >
                 {item.name}
               </Link>
@@ -75,9 +115,20 @@ const Navigation = () => {
                   const Icon = item.icon;
                   return (
                     <DropdownMenuItem key={item.name} asChild>
-                      <Link to={item.href} className="flex items-center">
-                        <Icon className="h-4 w-4 mr-2" />
-                        {item.name}
+                      <Link
+                        to={item.href}
+                        className="flex items-center justify-between"
+                        onClick={(event) => handleNavClick(event, item)}
+                      >
+                        <span className="flex items-center">
+                          <Icon className="h-4 w-4 mr-2" />
+                          {item.name}
+                        </span>
+                        {item.exclusive && (
+                          <Badge variant="outline" className="text-[10px] uppercase tracking-wide text-primary border-primary/40">
+                            Exclusive
+                          </Badge>
+                        )}
                       </Link>
                     </DropdownMenuItem>
                   );
@@ -110,10 +161,15 @@ const Navigation = () => {
                         key={item.name}
                         to={item.href}
                         className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-accent transition-colors duration-200"
-                        onClick={() => setIsOpen(false)}
+                        onClick={(event) => handleNavClick(event, item)}
                       >
                         <Icon className="h-5 w-5 text-muted-foreground" />
-                        <span className="font-medium">{item.name}</span>
+                        <span className="font-medium flex-1">{item.name}</span>
+                        {item.exclusive && (
+                          <Badge variant="outline" className="text-[10px] uppercase tracking-wide text-primary border-primary/40">
+                            Exclusive
+                          </Badge>
+                        )}
                       </Link>
                     );
                   })}

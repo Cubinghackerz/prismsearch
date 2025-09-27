@@ -12,6 +12,7 @@ import PhysicsKeyboard from './PhysicsKeyboard';
 import MathRenderer from '../math-assistant/MathRenderer';
 import ScientificCalculator from '../calculator/ScientificCalculator';
 import FileUpload from '../chat/FileUpload';
+import { useDailyQueryLimit } from '@/hooks/useDailyQueryLimit';
 
 interface PhysicsResult {
   id: string;
@@ -27,6 +28,15 @@ const PhysicsAssistant = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<any[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { canUse, consume, getRemaining, limits, isUnlimitedUser, isLoaded } = useDailyQueryLimit();
+
+  const remainingUses = isUnlimitedUser ? Infinity : getRemaining('physicsTool');
+  const hasRemainingUses = isUnlimitedUser || remainingUses > 0;
+  const remainingLabel = isUnlimitedUser
+    ? 'Unlimited Physics Assistant sessions today'
+    : isLoaded
+      ? `${remainingUses} of ${limits.physicsTool} solves left today`
+      : 'Checking remaining uses...';
 
   const insertAtCursor = (text: string) => {
     if (textareaRef.current) {
@@ -48,6 +58,13 @@ const PhysicsAssistant = () => {
   const solvePhysics = async () => {
     if (!input.trim()) {
       toast.error('Please enter a physics problem');
+      return;
+    }
+
+    if (!canUse('physicsTool')) {
+      toast.error('Daily limit reached', {
+        description: `You have used all ${limits.physicsTool} Physics Assistant runs for today.`,
+      });
       return;
     }
 
@@ -82,6 +99,7 @@ const PhysicsAssistant = () => {
       setResults(prev => [newResult, ...prev]);
       setInput('');
       setAttachedFiles([]);
+      consume('physicsTool');
       toast.success('Physics problem solved!');
     } catch (error) {
       console.error('Error solving physics:', error);
@@ -172,11 +190,16 @@ Examples:
                 
                 <div className="flex justify-between items-center">
                   <div className="text-sm text-prism-text-muted">
-                    Use Ctrl+Enter to solve quickly
+                    <div>Use Ctrl+Enter to solve quickly</div>
+                    <div className="text-xs text-prism-text-muted/70">{remainingLabel}</div>
                   </div>
-                  <Button 
-                    onClick={solvePhysics} 
-                    disabled={isLoading || (!input.trim() && attachedFiles.length === 0)}
+                  <Button
+                    onClick={solvePhysics}
+                    disabled={
+                      isLoading ||
+                      (!input.trim() && attachedFiles.length === 0) ||
+                      (!hasRemainingUses && !isUnlimitedUser)
+                    }
                     className="bg-prism-primary hover:bg-prism-primary/90"
                   >
                     {isLoading ? (

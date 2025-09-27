@@ -9,7 +9,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import AuthPromptDialog from "@/components/AuthPromptDialog";
 import useAuthPrompt from "@/hooks/useAuthPrompt";
 import PrismAssistant from "@/components/PrismAssistant";
-import Prism2AnnouncementDialog from "@/components/Prism2AnnouncementDialog";
+import PrismPagesEarlyAccessDialog from "@/components/PrismPagesEarlyAccessDialog";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Chat from "./pages/Chat";
@@ -24,10 +24,12 @@ import ClerkAuth from "./pages/ClerkAuth";
 import SecureRedirect from "./pages/SecureRedirect";
 import PrismCode from "./pages/PrismCode";
 import PrismPages from "./pages/PrismPages";
-import DocumentEditor from "./pages/DocumentEditor";
 import PrismMath from "./pages/PrismMath";
 import PrismPhysics from "./pages/PrismPhysics";
 import PrismChemistry from "./pages/PrismChemistry";
+import PrismFinance from "./pages/PrismFinance";
+import PrismResearch from "./pages/PrismResearch";
+import { PrismPagesProvider } from "@/context/PrismPagesContext";
 
 // Create QueryClient with optimized settings for better performance
 const queryClient = new QueryClient({
@@ -58,18 +60,20 @@ const AppContent: React.FC = () => {
         <Route path="/compressor" element={<PrismCompressor />} />
         <Route path="/detector" element={<PrismDetector />} />
         <Route path="/graphing" element={<PrismGraphing />} />
+        <Route path="/prism-pages" element={<PrismPages />} />
         <Route path="/docs" element={<PrismPages />} />
-        <Route path="/docs/:docId" element={<DocumentEditor />} />
         <Route path="/code" element={<PrismCode />} />
         <Route path="/math" element={<PrismMath />} />
         <Route path="/physics" element={<PrismPhysics />} />
         <Route path="/chemistry" element={<PrismChemistry />} />
+        <Route path="/finance" element={<PrismFinance />} />
+        <Route path="/research" element={<PrismResearch />} />
         <Route path="/auth" element={<ClerkAuth />} />
         <Route path="/secure-redirect" element={<SecureRedirect />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <AuthPromptDialog isOpen={showPrompt} onClose={closePrompt} />
-      <Prism2AnnouncementDialog />
+      <PrismPagesEarlyAccessDialog />
       <PrismAssistant />
       <SpeedInsights />
     </div>
@@ -81,7 +85,9 @@ const App: React.FC = () => (
     <ThemeProvider>
       <TooltipProvider>
         <BrowserRouter>
-          <AppContent />
+          <PrismPagesProvider>
+            <AppContent />
+          </PrismPagesProvider>
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>

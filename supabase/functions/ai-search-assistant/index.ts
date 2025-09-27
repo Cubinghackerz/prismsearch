@@ -26,6 +26,7 @@ const GEMINI_API_KEYS = [
 // Check which API keys are available
 const availableModels = {
   gemini: GEMINI_API_KEYS.length > 0,
+  'gemini-2.5-pro': GEMINI_API_KEYS.length > 0,
   mistral: !!MISTRAL_API_KEY,
   'mistral-medium-3': !!MISTRAL_API_KEY,
   groq: !!(GROQ_API_KEY || FALLBACK_GROQ_API_KEY),
@@ -67,6 +68,10 @@ class DeepResearchAgent {
     
     // Set API key and model ID based on the selected model
     switch (model) {
+      case 'gemini-2.5-pro':
+        this.apiKey = GEMINI_API_KEYS[0] || '';
+        this.modelId = 'gemini-2.5-pro';
+        break;
       case 'gemini':
         this.apiKey = GEMINI_API_KEYS[0] || '';
         this.modelId = 'gemini-2.0-flash-exp';
@@ -120,6 +125,7 @@ class DeepResearchAgent {
     try {
       switch (this.model) {
         case 'gemini':
+        case 'gemini-2.5-pro':
           return await this.sendGeminiPrompt(promptText, attachments);
         case 'mistral':
         case 'mistral-medium-3':
@@ -519,7 +525,7 @@ async function sendRegularChat(prompt: string, model: string, attachments?: any[
     console.error(`Error with regular chat for ${model}:`, error);
     
     // Fallback to Gemini if the selected model fails and Gemini keys are available
-    if (model !== 'gemini' && GEMINI_API_KEYS.length > 0) {
+    if (model !== 'gemini' && model !== 'gemini-2.5-pro' && GEMINI_API_KEYS.length > 0) {
       console.log('Falling back to Gemini...');
       try {
         const geminiAgent = new DeepResearchAgent('gemini');
@@ -550,7 +556,7 @@ async function processDeepResearch(query: string, model: string, attachments?: a
     console.error('Error in deep research:', error);
     
     // Fallback to Gemini for deep research if the selected model fails and Gemini keys are available
-    if (model !== 'gemini' && GEMINI_API_KEYS.length > 0) {
+    if (model !== 'gemini' && model !== 'gemini-2.5-pro' && GEMINI_API_KEYS.length > 0) {
       console.log('Falling back to Gemini for deep research...');
       try {
         const geminiAgent = new DeepResearchAgent('gemini');
