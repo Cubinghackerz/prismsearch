@@ -66,7 +66,7 @@ const PrismPagesEarlyAccessDialog = () => {
             You have unlocked early access to Prism Pages
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
-            Signed Nirneet — enjoy unlimited access to our AI-assisted document studio with live version history and multi-format export.
+            Signed Nirneet — enjoy early access to Prism Pages and unlimited use of every Prism tool with no restrictions or daily limits.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3">

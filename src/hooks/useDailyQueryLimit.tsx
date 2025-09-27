@@ -5,7 +5,10 @@ export type UsageCategory =
   | 'chatPrompts'
   | 'chatCommands'
   | 'codeGenerations'
-  | 'researchWords';
+  | 'researchWords'
+  | 'mathTool'
+  | 'physicsTool'
+  | 'chemistryTool';
 
 export type UsageSnapshot = Record<UsageCategory, number>;
 
@@ -14,6 +17,9 @@ const DEFAULT_USAGE: UsageSnapshot = {
   chatCommands: 0,
   codeGenerations: 0,
   researchWords: 0,
+  mathTool: 0,
+  physicsTool: 0,
+  chemistryTool: 0,
 };
 
 const DAILY_LIMITS: Record<UsageCategory, number> = {
@@ -21,6 +27,9 @@ const DAILY_LIMITS: Record<UsageCategory, number> = {
   chatCommands: 10,
   codeGenerations: 5,
   researchWords: 1000,
+  mathTool: 5,
+  physicsTool: 5,
+  chemistryTool: 5,
 };
 
 const UNLIMITED_USER_IDS = new Set([

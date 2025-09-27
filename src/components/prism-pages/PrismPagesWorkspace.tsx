@@ -76,7 +76,15 @@ const QUICK_INSERTS: Record<PrismPagesMode, { label: string; value: string }[]> 
   ],
 };
 
-const TEMPLATE_PRESETS: { id: string; title: string; description: string; mode: PrismPagesMode; accent: string }[] = [
+const TEMPLATE_PRESETS: {
+  id: string;
+  title: string;
+  description: string;
+  mode: PrismPagesMode;
+  accent: string;
+  pages?: string[];
+  initialTitle?: string;
+}[] = [
   {
     id: 'blank-standard',
     title: 'Blank document',
@@ -111,8 +119,59 @@ const TEMPLATE_PRESETS: { id: string; title: string; description: string; mode: 
     description: 'Structured sections for executive summaries and briefs.',
     mode: 'standard',
     accent: 'from-slate-500 via-slate-400 to-zinc-300',
+    initialTitle: 'Project report template',
+    pages: [
+      `<h1>Project Report</h1>
+<p><strong>Prepared by:</strong> [Your name]</p>
+<p><strong>Date:</strong> [Insert date]</p>
+<h2>Executive summary</h2>
+<p>[Summarise project objectives, major outcomes, and overall impact.]</p>
+<h2>Goals &amp; scope</h2>
+<ul>
+  <li>Describe the primary problem or opportunity</li>
+  <li>List measurable objectives and success criteria</li>
+  <li>Call out assumptions and constraints</li>
+</ul>
+<h2>Key findings</h2>
+<p>[Capture the most important discoveries, metrics, or research insights that support your recommendations.]</p>
+<h2>Recommendations</h2>
+<ol>
+  <li>Primary action and expected result</li>
+  <li>Supporting initiative with owner and timeline</li>
+  <li>Risk mitigation or contingency plan</li>
+</ol>
+<h2>Next steps</h2>
+<p>[Outline upcoming milestones, dependencies, and follow-up tasks.]</p>`
+    ],
   },
 ];
+
+const MODE_SYMBOL_SETS: Partial<Record<PrismPagesMode, { label: string; value: string }[]>> = {
+  sigma: [
+    { label: 'Summation Σ', value: 'Σ' },
+    { label: 'Integral ∫', value: '∫' },
+    { label: 'Pi π', value: 'π' },
+    { label: 'Derivative d/dx', value: 'd/dx' },
+    { label: 'Square root √', value: '√' },
+    { label: 'Infinity ∞', value: '∞' },
+  ],
+  vector: [
+    { label: 'Vector arrow →', value: '→' },
+    { label: 'Vector bold v', value: '𝐯' },
+    { label: 'Dot product ·', value: '·' },
+    { label: 'Cross product ×', value: '×' },
+    { label: 'Magnitude |v|', value: '|v|' },
+    { label: 'Delta Δ', value: 'Δ' },
+  ],
+  atomis: [
+    { label: 'Reaction arrow ⟶', value: '⟶' },
+    { label: 'Equilibrium ⇌', value: '⇌' },
+    { label: 'Half-life t½', value: 't½' },
+    { label: 'Alpha α', value: 'α' },
+    { label: 'Beta β', value: 'β' },
+    { label: 'Gamma γ', value: 'γ' },
+  ],
+};
 
 const turndown = new TurndownService({ headingStyle: 'atx' });
 
@@ -221,6 +280,7 @@ const PrismPagesWorkspace: React.FC = () => {
   const [isVersionSheetOpen, setIsVersionSheetOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [contentDraft, setContentDraft] = useState('');
+  const [isHighlightMode, setIsHighlightMode] = useState(false);
   const [activePageIndex, setActivePageIndex] = useState(0);
   const internalUpdateRef = useRef(false);
 
@@ -287,15 +347,26 @@ const PrismPagesWorkspace: React.FC = () => {
     }
   }, [contentDraft]);
 
+  useEffect(() => {
+    setIsHighlightMode(false);
+  }, [currentDocument?.id, activePageIndex]);
+
+  const syncEditorContent = () => {
+    if (!editorRef.current) {
+      return;
+    }
+    const updated = editorRef.current.innerHTML;
+    internalUpdateRef.current = true;
+    setContentDraft(updated);
+  };
+
   const runCommand = (command: string, value?: string) => {
     if (!editorRef.current) {
       return;
     }
     editorRef.current.focus();
     document.execCommand(command, false, value);
-    const updated = editorRef.current.innerHTML;
-    internalUpdateRef.current = true;
-    setContentDraft(updated);
+    syncEditorContent();
   };
 
   const insertSnippet = (snippet: string) => {
@@ -304,13 +375,57 @@ const PrismPagesWorkspace: React.FC = () => {
     }
     editorRef.current.focus();
     document.execCommand('insertHTML', false, snippet);
-    const updated = editorRef.current.innerHTML;
-    internalUpdateRef.current = true;
-    setContentDraft(updated);
+    syncEditorContent();
   };
 
-  const handleCreate = (mode: PrismPagesMode) => {
-    const doc = createDocument(mode);
+  const insertSymbol = (symbol: string) => {
+    if (!editorRef.current) {
+      return;
+    }
+    editorRef.current.focus();
+    const inserted = document.execCommand('insertText', false, symbol);
+    if (!inserted) {
+      document.execCommand('insertHTML', false, symbol);
+    }
+    syncEditorContent();
+  };
+
+  const toggleHighlightMode = () => {
+    if (!editorRef.current) {
+      return;
+    }
+    editorRef.current.focus();
+    const selection = window.getSelection();
+    const hasSelection = !!selection && selection.rangeCount > 0 && !selection.isCollapsed;
+
+    document.execCommand('styleWithCSS', false, true);
+
+    if (hasSelection) {
+      document.execCommand('hiliteColor', false, '#facc15');
+      selection?.collapseToEnd();
+      document.execCommand('hiliteColor', false, 'transparent');
+      document.execCommand('styleWithCSS', false, false);
+      syncEditorContent();
+      setIsHighlightMode(false);
+      return;
+    }
+
+    const next = !isHighlightMode;
+    document.execCommand('hiliteColor', false, next ? '#facc15' : 'transparent');
+    document.execCommand('styleWithCSS', false, false);
+    setIsHighlightMode(next);
+    syncEditorContent();
+  };
+
+  const handleCreate = (options?: { templateId?: string; mode?: PrismPagesMode }) => {
+    const template = options?.templateId
+      ? TEMPLATE_PRESETS.find((preset) => preset.id === options.templateId)
+      : undefined;
+    const doc = createDocument({
+      mode: template?.mode ?? options?.mode ?? 'standard',
+      title: template?.initialTitle ?? template?.title,
+      pages: template?.pages,
+    });
     if (!doc) {
       return;
     }
@@ -584,7 +699,7 @@ const PrismPagesWorkspace: React.FC = () => {
             <DropdownMenuItem
               key={option.value}
               className="focus:bg-indigo-500/10 focus:text-indigo-200"
-              onClick={() => handleCreate(option.value)}
+              onClick={() => handleCreate({ mode: option.value })}
             >
               <div className="flex items-center gap-2">
                 {option.icon}
@@ -693,7 +808,17 @@ const PrismPagesWorkspace: React.FC = () => {
         <Button variant="ghost" size="icon" className="text-slate-200 hover:bg-indigo-500/10" onClick={() => runCommand('underline')}>
           <Underline className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" className="text-slate-200 hover:bg-indigo-500/10" onClick={() => runCommand('hiliteColor', '#facc15')}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={
+            isHighlightMode
+              ? 'bg-amber-500/20 text-amber-200 hover:bg-amber-500/30'
+              : 'text-slate-200 hover:bg-indigo-500/10'
+          }
+          onClick={toggleHighlightMode}
+          aria-pressed={isHighlightMode}
+        >
           <Highlighter className="h-4 w-4" />
         </Button>
       </div>
@@ -803,6 +928,39 @@ const PrismPagesWorkspace: React.FC = () => {
     </div>
   );
 
+  const renderSymbolPanel = () => {
+    if (!currentDocument) {
+      return null;
+    }
+
+    const symbolSet = MODE_SYMBOL_SETS[currentDocument.mode];
+    if (!symbolSet?.length) {
+      return null;
+    }
+
+    return (
+      <div className="rounded-2xl border border-slate-800/70 bg-slate-900/70 px-4 py-4 text-sm text-slate-200 shadow-[0_10px_40px_-30px_rgba(14,116,144,0.8)]">
+        <div className="flex flex-wrap gap-2">
+          {symbolSet.map((symbol) => (
+            <Button
+              key={`${currentDocument.mode}-${symbol.label}`}
+              variant="outline"
+              size="sm"
+              className="flex h-auto w-28 flex-col items-center gap-1 border-slate-700/70 bg-slate-900/40 text-slate-100 hover:border-indigo-400/60 hover:bg-indigo-500/10"
+              onClick={() => insertSymbol(symbol.value)}
+            >
+              <span className="text-lg font-semibold">{symbol.value}</span>
+              <span className="text-[10px] uppercase tracking-wide text-slate-300">{symbol.label}</span>
+            </Button>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-slate-400">
+          Can't find what you are looking for? Try using Prism AI to input that symbol for you.
+        </p>
+      </div>
+    );
+  };
+
   const renderWorkspace = () => {
     if (!currentDocument) {
       return (
@@ -817,7 +975,7 @@ const PrismPagesWorkspace: React.FC = () => {
                 variant="outline"
                 size="sm"
                 className="gap-2 border-slate-700/70 bg-slate-900/40 text-slate-200 hover:border-indigo-400/60 hover:bg-indigo-500/10"
-                onClick={() => handleCreate('standard')}
+                onClick={() => handleCreate({ mode: 'standard' })}
               >
                 <FilePlus className="h-4 w-4" /> Blank page
               </Button>
@@ -826,7 +984,7 @@ const PrismPagesWorkspace: React.FC = () => {
               {TEMPLATE_PRESETS.map((template) => (
                 <button
                   key={template.id}
-                  onClick={() => handleCreate(template.mode)}
+                  onClick={() => handleCreate({ templateId: template.id })}
                   className="group relative flex flex-col rounded-2xl border border-slate-800/70 bg-slate-900/60 p-4 text-left transition hover:border-indigo-400/60 hover:bg-indigo-500/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/40"
                 >
                   <div className="relative h-32 overflow-hidden rounded-xl bg-slate-950/70 shadow-inner">
@@ -965,15 +1123,16 @@ const PrismPagesWorkspace: React.FC = () => {
             <Button variant="ghost" size="sm" className="gap-2 text-destructive hover:text-red-400" onClick={() => handleDelete(currentDocument.id)}>
               <Trash className="h-4 w-4" /> Delete
             </Button>
-          </div>
         </div>
-        {renderPageControls()}
-        {renderToolbar()}
-        <div
-          ref={editorRef}
-          className={`flex-1 min-h-0 overflow-auto rounded-3xl border border-slate-800 bg-slate-950/80 p-10 text-base leading-7 shadow-[inset_0_1px_0_rgba(148,163,184,0.08)] transition [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:ml-1 [&_li]:my-1 [&_blockquote]:border-l-2 [&_blockquote]:pl-4 ${
-            editorTheme === 'dark'
-              ? 'text-slate-100 [&_*]:selection:bg-indigo-500/30'
+      </div>
+      {renderPageControls()}
+      {renderToolbar()}
+      {renderSymbolPanel()}
+      <div
+        ref={editorRef}
+        className={`flex-1 min-h-0 overflow-auto rounded-3xl border border-slate-800 bg-slate-950/80 p-10 text-base leading-7 shadow-[inset_0_1px_0_rgba(148,163,184,0.08)] transition [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:ml-1 [&_li]:my-1 [&_blockquote]:border-l-2 [&_blockquote]:pl-4 ${
+          editorTheme === 'dark'
+            ? 'text-slate-100 [&_*]:selection:bg-indigo-500/30'
               : 'bg-white text-slate-900 [&_*]:selection:bg-indigo-500/20'
           }`}
           contentEditable

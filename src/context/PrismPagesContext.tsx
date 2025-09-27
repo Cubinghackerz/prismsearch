@@ -43,12 +43,18 @@ export interface PrismPagesRevisionProposal {
   mode: PrismPagesMode;
 }
 
+interface CreateDocumentOptions {
+  mode?: PrismPagesMode;
+  title?: string;
+  pages?: string[];
+}
+
 interface PrismPagesContextValue {
   documents: PrismPagesDocument[];
   selectedDocumentId: string | null;
   isLoading: boolean;
   selectDocument: (id: string | null) => void;
-  createDocument: (mode?: PrismPagesMode) => PrismPagesDocument | null;
+  createDocument: (options?: CreateDocumentOptions) => PrismPagesDocument | null;
   renameDocument: (id: string, title: string) => void;
   updateDocumentContent: (id: string, content: string, pageIndex?: number) => void;
   updateDocumentMode: (id: string, mode: PrismPagesMode) => void;
@@ -221,7 +227,7 @@ export const PrismPagesProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, []);
 
   const createDocument = useCallback(
-    (mode: PrismPagesMode = 'standard') => {
+    (options?: CreateDocumentOptions) => {
       if (!user) {
         toast.error('You need to be signed in to create documents.');
         return null;
@@ -242,10 +248,14 @@ export const PrismPagesProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       }
 
       const now = new Date().toISOString();
-      const initialPages = ['<p></p>'];
+      const mode = options?.mode ?? 'standard';
+      const initialPages = (options?.pages && options.pages.length > 0
+        ? options.pages
+        : ['<p></p>']
+      ).map((page) => sanitizePage(page));
       const newDocument: PrismPagesDocument = {
         id: uuidv4(),
-        title: 'Untitled page',
+        title: options?.title ?? 'Untitled page',
         content: joinPages(initialPages),
         createdAt: now,
         updatedAt: now,

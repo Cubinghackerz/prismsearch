@@ -4,6 +4,7 @@ import Footer from '@/components/Footer';
 import { Badge } from '@/components/ui/badge';
 import { FlaskConical } from 'lucide-react';
 import ChemistryAssistant from '@/components/chemistry-assistant/ChemistryAssistant';
+import ToolLimitDisplay from '@/components/usage/ToolLimitDisplay';
 
 const PrismChemistry = () => {
   return (
@@ -26,6 +27,14 @@ const PrismChemistry = () => {
           </p>
         </div>
         
+        <div className="mx-auto mb-8 max-w-4xl">
+          <ToolLimitDisplay
+            category="chemistryTool"
+            label="Chemistry Assistant daily usage"
+            description="Monitor how many Chemistry Assistant questions you can still ask today."
+          />
+        </div>
+
         <ChemistryAssistant />
       </main>
       
